@@ -25,4 +25,6 @@ build/
 *.swp
 *.swo
 *~
+.coverage
+coverage.json
 .DS_Store
