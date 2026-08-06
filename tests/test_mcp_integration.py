@@ -68,7 +68,7 @@ class TestMCPServer:
             async with app_lifespan(mcp):
                 res = await mcp.call_tool("lumen_status", {})
                 text = res[0][0].text if res and res[0] else ""
-                assert "Lumen Status" in text
+                assert "Lumena Status" in text
                 assert "Rooms:" in text
 
         asyncio.run(_run())

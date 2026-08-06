@@ -1,5 +1,5 @@
 """
-Performance Benchmark for Lumen.
+Performance Benchmark for Lumena.
 
 Measures query latency (p50/p95/p99), RAM footprint, storage size,
 and write amplification with/without WearAwareBatcher for 1k/10k/50k corpora.
@@ -38,7 +38,7 @@ except ImportError as exc:
 
 import contextlib
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.contextual.embed import FallbackEmbedder
 from lumen.force.mnemonic.store import store_memory
@@ -159,7 +159,7 @@ def run_benchmark() -> dict[str, Any]:
     for size in CORPUS_SIZES:
         print(f"[INFO] Benchmarking corpus size {size:,} ...")
         tmpdir = tempfile.mkdtemp(prefix=f"lumen_benchmark_perf_{size}_")
-        config = LumenConfig(
+        config = LumenaConfig(
             store_path=Path(tmpdir),
             embedding_dims=EMBED_DIMS,
             vector_index="sqlite-vec",

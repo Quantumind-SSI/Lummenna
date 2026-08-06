@@ -3,12 +3,12 @@ name: lumen-memory
 description: >
   Use when the user asks to remember, recall, persist, or search across
   project decisions, code snippets, architecture notes, or conversation
-  history stored in the Lumen memory palace. Trigger keywords:
+  history stored in the Lumena memory palace. Trigger keywords:
   "remember", "recall", "what did we decide", "search my notes",
-  "persist", "store this", "Lumen".
+  "persist", "store this", "Lumena".
 ---
 
-# Lumen Memory Skill
+# Lumena Memory Skill
 
 ## When to use
 - The user wants to save a decision, pattern, or insight for later retrieval.

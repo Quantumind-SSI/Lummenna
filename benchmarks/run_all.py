@@ -1,5 +1,5 @@
 """
-Unified Benchmark Orchestrator for Lumen.
+Unified Benchmark Orchestrator for Lumena.
 
 Runs retrieval, forgetting, and perf suites sequentially and generates
 a unified Markdown report at benchmarks/results/report.md.
@@ -53,7 +53,7 @@ def run_suite(name: str) -> dict[str, Any]:
 
 def generate_report(suite_results: list[dict[str, Any]]) -> Path:
     lines = [
-        "# Lumen Benchmark Suite Report",
+        "# Lumena Benchmark Suite Report",
         "",
         f"**Date:** {__import__('datetime').datetime.now().isoformat()}",
         "",

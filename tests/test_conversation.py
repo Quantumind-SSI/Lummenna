@@ -1,8 +1,8 @@
-"""Tests for lumen.lumen.conversation."""
+"""Tests for lumen.lumena.conversation."""
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.conversation import ConversationMemory, TurnResult
 from lumen.data.schema import get_connection
 from lumen.force.contextual.embed import MockEmbedder
@@ -10,7 +10,7 @@ from lumen.force.contextual.embed import MockEmbedder
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenConfig(
+    cfg = LumenaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",

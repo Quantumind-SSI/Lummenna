@@ -1,6 +1,6 @@
-"""MCP (Model Context Protocol) server for Lumen memory operations.
+"""MCP (Model Context Protocol) server for Lumena memory operations.
 
-Exposes Lumen's palace via stdio to any MCP-compatible host:
+Exposes Lumena's palace via stdio to any MCP-compatible host:
   OpenCode, GitHub Copilot, Claude Desktop, etc.
 
 Usage::
@@ -39,7 +39,7 @@ else:
     _MCP_ERROR = None
 
 from lumen._init import initialize_palace
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.conversation import ConversationMemory
 from lumen.force.mnemonic.store import store_memory
@@ -54,8 +54,8 @@ logger = get_console_logger(__name__)
 
 
 @dataclass
-class LumenAppState:
-    config: LumenConfig
+class LumenaAppState:
+    config: LumenaConfig
     conn: sqlite3.Connection
     embedder: object
     pipeline: SearchPipeline
@@ -64,20 +64,20 @@ class LumenAppState:
     embedding_model_available: bool
 
 
-_module_state: LumenAppState | None = None
+_module_state: LumenaAppState | None = None
 
 
 @asynccontextmanager
-async def app_lifespan(server: FastMCP) -> AsyncIterator[LumenAppState]:
-    """Initialize Lumen on server startup and close on shutdown."""
+async def app_lifespan(server: FastMCP) -> AsyncIterator[LumenaAppState]:
+    """Initialize Lumena on server startup and close on shutdown."""
     global _module_state
-    config = LumenConfig()
+    config = LumenaConfig()
     config.store_path.mkdir(parents=True, exist_ok=True)
     config.model_path.mkdir(parents=True, exist_ok=True)
 
     palace = initialize_palace(config)
 
-    state = LumenAppState(
+    state = LumenaAppState(
         config=config,
         conn=palace["conn"],
         embedder=palace["embedder"],
@@ -105,7 +105,7 @@ mcp = FastMCP("lumen-memory", lifespan=app_lifespan) if _MCP_AVAILABLE else None
 # ---------------------------------------------------------------------------
 
 
-def _state(ctx: Context | None = None) -> LumenAppState:
+def _state(ctx: Context | None = None) -> LumenaAppState:
     if ctx is not None:
         try:
             return ctx.request_context.lifespan_context
@@ -113,7 +113,7 @@ def _state(ctx: Context | None = None) -> LumenAppState:
             pass
     if _module_state is not None:
         return _module_state
-    raise RuntimeError("Lumen MCP server is not initialized. Run inside an active lifespan.")
+    raise RuntimeError("Lumena MCP server is not initialized. Run inside an active lifespan.")
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ def _state(ctx: Context | None = None) -> LumenAppState:
 
 @mcp.tool()
 async def lumen_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
-    """Search the Lumen memory palace with semantic + lexical hybrid retrieval.
+    """Search the Lumena memory palace with semantic + lexical hybrid retrieval.
 
     Args:
         query: Natural-language search query.
@@ -151,7 +151,7 @@ async def lumen_store(
     source_type: str = "user_input",
     ctx: Context = None,
 ) -> str:
-    """Store a memory chunk in the Lumen palace.
+    """Store a memory chunk in the Lumena palace.
 
     Args:
         content: Text to persist.
@@ -249,7 +249,7 @@ async def lumen_status(ctx: Context = None) -> str:
     ).fetchone()[0]
     env = state.tfc.to_env()
     return (
-        f"Lumen Status\n"
+        f"Lumena Status\n"
         f"  Device: {state.config.device}\n"
         f"  Rooms: {room_count}\n"
         f"  Active chunks: {chunk_count}\n"
@@ -257,14 +257,14 @@ async def lumen_status(ctx: Context = None) -> str:
         f"  TFC → e={env['e']:.2f} a={env['a']:.2f} tau={env['tau']:.1f} r={env['r']}\n"
         f"  Embedding model available: {state.embedding_model_available}\n"
         f"\nDashboard: http://localhost:{state.config.api_port}/dashboard\n"
-        f"Run `lumen serve` or `lumen_dashboard` for real-time effectiveness metrics."
+        f"Run `lumena serve` or `lumen_dashboard` for real-time effectiveness metrics."
     )
 
 
 @mcp.tool()
 async def lumen_dashboard(ctx: Context = None) -> str:
     """Display a real-time effectiveness dashboard with SOTA benchmarks, business metrics, and memory health.
-    Call this when the user asks about Lumen's effectiveness, performance, or wants to see the dashboard.
+    Call this when the user asks about Lumena's effectiveness, performance, or wants to see the dashboard.
     """
     state = _state(ctx)
     metrics = _dashboard_metrics(state)
@@ -278,7 +278,7 @@ async def lumen_dashboard(ctx: Context = None) -> str:
 
     return (
         f"╔══════════════════════════════════════════════╗\n"
-        f"║     Lumen Effectiveness Dashboard v0.2.0    ║\n"
+        f"║     Lumena Effectiveness Dashboard v0.2.0    ║\n"
         f"╠══════════════════════════════════════════════╣\n"
         f"║ System Health                               ║\n"
         f"╠══════════════════════════════════════════════╣\n"
@@ -341,7 +341,7 @@ async def lumen_dashboard(ctx: Context = None) -> str:
         f"\n"
         f"Web dashboard: http://localhost:{state.config.api_port}/dashboard\n"
         f"Machine metrics: http://localhost:{state.config.api_port}/metrics\n"
-        f"Run `lumen serve` to start the full API + dashboard."
+        f"Run `lumena serve` to start the full API + dashboard."
     )
 
 
@@ -422,7 +422,7 @@ def _load_retrieval_benchmarks() -> dict:
     return benchmarks
 
 
-def _dashboard_metrics(state: LumenAppState) -> dict:
+def _dashboard_metrics(state: LumenaAppState) -> dict:
     """Build dashboard metrics dict used by resources and tools."""
 
     conn = state.conn
@@ -490,7 +490,7 @@ def _dashboard_metrics(state: LumenAppState) -> dict:
             "degradation_stage": degradation_stage,
         },
         "sota_comparison": {
-            "bm25": "Lumen uses SQLite FTS5; standard BM25",
+            "bm25": "Lumena uses SQLite FTS5; standard BM25",
             "dense": "Cosine similarity via sqlite-vec or brute-force",
             "hybrid": "RRF fusion; no SOTA comparison available",
             "edge": "Runs on RPi5 with ~90 MB RAM",
@@ -501,7 +501,7 @@ def _dashboard_metrics(state: LumenAppState) -> dict:
 
 @mcp.resource("dashboard://lumen/effectiveness")
 async def dashboard_effectiveness(ctx: Context = None) -> str:
-    """Lumen memory store effectiveness overview.
+    """Lumena memory store effectiveness overview.
     Shows real-time system health, retrieval metrics (if benchmarks available), TFC state, and business impact.
     """
     state = _state(ctx)
@@ -510,7 +510,7 @@ async def dashboard_effectiveness(ctx: Context = None) -> str:
 
 @mcp.resource("dashboard://lumen/sota")
 async def dashboard_sota(ctx: Context = None) -> str:
-    """Lumen capability highlights and feature comparison.
+    """Lumena capability highlights and feature comparison.
     Includes retrieval metrics (if benchmarks have been run), TFC state, and business impact.
     """
     state = _state(ctx)
@@ -535,7 +535,7 @@ def main() -> None:
     if mcp is None:
         raise ImportError(
             "The 'mcp' package is required for the MCP server. "
-            "Install with: pip install lumen[mcp]"
+            "Install with: pip install lumena[mcp]"
         )
     mcp.run(transport="stdio")
 

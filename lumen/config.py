@@ -26,7 +26,7 @@ DEVICE_PROFILES: dict[str, dict[str, object]] = {
 }
 
 
-class LumenConfig(BaseSettings):
+class LumenaConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="LUMEN_",
         toml_file=_default_config_path(),
@@ -110,3 +110,7 @@ class LumenConfig(BaseSettings):
         if self.vector_index == "sqlite-vec":
             self.vector_index = str(profile.get("vector_index", self.vector_index))
         self._resolved = True
+
+
+# Backward-compatible alias
+LumenaConfig = LumenaConfig

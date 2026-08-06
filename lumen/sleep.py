@@ -9,7 +9,7 @@ from typing import Any
 
 import psutil
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.force.mnemonic.consolidation import run_consolidation_pass
 from lumen.logging import get_console_logger
 
@@ -19,7 +19,7 @@ logger = get_console_logger(__name__)
 class SleepScheduler:
     """Background scheduler that runs consolidation during idle periods."""
 
-    def __init__(self, config: LumenConfig):
+    def __init__(self, config: LumenaConfig):
         try:
             from apscheduler.schedulers.background import BackgroundScheduler
             from apscheduler.triggers.cron import CronTrigger

@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from lumen.config import LumenConfig
+    from lumen.config import LumenaConfig
 
 from pydantic import BaseModel, Field
 
@@ -28,7 +28,7 @@ class TFCState(BaseModel):
 class TwinForceController:
     """TFC state machine with deterministic update rules."""
 
-    def __init__(self, state: TFCState | None = None, config: LumenConfig | None = None):
+    def __init__(self, state: TFCState | None = None, config: LumenaConfig | None = None):
         self.state = state or TFCState()
         self.config = config
 

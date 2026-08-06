@@ -22,7 +22,7 @@ from typing import Any
 
 import msgspec
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.store import store_memory
 from lumen.security.crypto import P2PCrypto, P2PSign
@@ -95,7 +95,7 @@ async def decode_frame(
 class BeamNode:
     """Hardened household P2P memory sharing node."""
 
-    def __init__(self, config: LumenConfig):
+    def __init__(self, config: LumenaConfig):
         if not availability["zeroconf"]:
             raise RuntimeError(
                 "zeroconf is required for the P2P beam protocol but is not installed. "

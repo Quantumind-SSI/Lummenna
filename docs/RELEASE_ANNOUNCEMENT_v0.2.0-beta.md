@@ -1,27 +1,27 @@
-# Lumen v0.2.0-beta — Official Release Announcement
+# Lumena v0.2.0-beta — Official Release Announcement
 
 **Release Date:** 5 August 2026  
 **Version:** v0.2.0-beta  
-**Repository:** https://github.com/QuantumindSSI/lumen  
+**Repository:** https://github.com/QuantumindSSI/lumena  
 **License:** Apache 2.0  
 
 ---
 
 ## 1. Executive Summary
 
-Today we announce **Lumen v0.2.0-beta**, a local-first memory and context framework for sovereign AI agents. Lumen gives LLM agents persistent, structured, searchable memory—without sending a single byte to the cloud. It runs entirely on your hardware, stores everything in a single SQLite file, and generates embeddings locally via ONNX Runtime.
+Today we announce **Lumena v0.2.0-beta**, a local-first memory and context framework for sovereign AI agents. Lumena gives LLM agents persistent, structured, searchable memory—without sending a single byte to the cloud. It runs entirely on your hardware, stores everything in a single SQLite file, and generates embeddings locally via ONNX Runtime.
 
 We are moving from alpha to **beta** with an API-stability commitment, 273 passing tests, 74 % coverage, and a fully documented security posture.
 
 ---
 
-## 2. What Is Lumen?
+## 2. What Is Lumena?
 
 Most AI agents today are stateless. Every session starts from scratch. The few that remember rely on remote向量 databases, managed cloud services, or opaque SaaS pipelines.
 
-Lumen is different.
+Lumena is different.
 
-Lumen is a **local-first memory palace** for agents. It stores memories as structured *chunks* inside *rooms* and *loci*, retrieves them through a hybrid pipeline (BM25 lexical search + dense vector similarity + optional graph traversal), and actively manages their lifecycle with a three-layer forgetting model using decay, interference, and eviction.
+Lumena is a **local-first memory palace** for agents. It stores memories as structured *chunks* inside *rooms* and *loci*, retrieves them through a hybrid pipeline (BM25 lexical search + dense vector similarity + optional graph traversal), and actively manages their lifecycle with a three-layer forgetting model using decay, interference, and eviction.
 
 Your agents remember. Your data never leaves your machine.
 
@@ -31,7 +31,7 @@ Your agents remember. Your data never leaves your machine.
 
 ### New Integrations
 - **LangGraph checkpoint saver** — persist graph state and cross-thread long-term memory natively.
-- **LangChain memory adapter** — drop-in `LumenChatMemory` for any LangChain application.
+- **LangChain memory adapter** — drop-in `LumenaChatMemory` for any LangChain application.
 - **MCP server** — 7 tools exposed to OpenCode, Claude Desktop, and any MCP-compatible client.
 - **FastAPI REST API** — versioned (`/v1/`) endpoints with auth, rate limiting, CORS, and security headers.
 
@@ -90,8 +90,8 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 | Audit logging | SQLite table + request tracing |
 | API server | FastAPI, versioned, auth, rate-limited |
 | MCP server | 7 tools |
-| LangChain | `LumenChatMemory` adapter |
-| LangGraph | `LumenCheckpointSaver` + `LumenGraphStore` |
+| LangChain | `LumenaChatMemory` adapter |
+| LangGraph | `LumenaCheckpointSaver` + `LumenaGraphStore` |
 
 ---
 
@@ -99,10 +99,10 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 
 ```bash
 git clone https://github.com/QuantumindSSI/lumen.git
-cd lumen
+cd lumena
 pip install -e ".[dev]"
-lumen init --device generic
-lumen serve
+lumena init --device generic
+lumena serve
 # Dashboard → http://localhost:8848/dashboard
 # API docs  → http://localhost:8848/docs
 ```
@@ -113,11 +113,11 @@ lumen serve
 
 ### LinkedIn Post (Long Form)
 
-> 🚀 We just shipped **Lumen v0.2.0-beta** — a local-first memory framework for AI agents.
+> 🚀 We just shipped **Lumena v0.2.0-beta** — a local-first memory framework for AI agents.
 >
 > Most agents forget everything when you close the tab. The ones that remember usually send your data to someone else’s cloud.
 >
-> Lumen fixes both.
+> Lumena fixes both.
 >
 > It gives LLM agents a structured, searchable, long-term memory palace that runs entirely on your own hardware. No cloud向量 DBs. No API keys for storage. No telemetry.
 >
@@ -130,11 +130,11 @@ lumen serve
 >
 > We’re calling it beta because we’re honest — encryption-at-rest and full BEIR leaderboard runs are still in progress — but the API is stable, the architecture is solid, and the community is growing.
 >
-> If you believe AI agents should remember without sacrificing sovereignty, give Lumen a try.
+> If you believe AI agents should remember without sacrificing sovereignty, give Lumena a try.
 >
-> 👉 https://github.com/QuantumindSSI/lumen
-> 📖 Whitepaper: `docs/Lumen_Agentic_Memory_Whitepaper_v2.md`
-> 💬 Matrix: `#lumen:matrix.org`
+> 👉 https://github.com/QuantumindSSI/lumena
+> 📖 Whitepaper: `docs/Lumena_Agentic_Memory_Whitepaper_v2.md`
+> 💬 Matrix: `#lumena:matrix.org`
 >
 > #AI #LLM #OpenSource #AgenticAI #Memory #LocalFirst #Privacy #LangChain #LangGraph #MCP #BetaRelease
 
@@ -143,13 +143,13 @@ lumen serve
 ### Twitter / X Thread (5 Tweets)
 
 **Tweet 1 — Hook**
-> 🚀 Introducing Lumen v0.2.0-beta — local-first memory for AI agents.
+> 🚀 Introducing Lumena v0.2.0-beta — local-first memory for AI agents.
 >
 > Your agents remember. Your data never leaves your machine.
 >
 > Thread ↓
 >  
-> https://github.com/QuantumindSSI/lumen
+> https://github.com/QuantumindSSI/lumena
 
 **Tweet 2 — The Problem**
 > Most AI agents are stateless. The few that “remember” rely on cloud向量 DBs, managed APIs, or opaque SaaS pipelines.
@@ -157,7 +157,7 @@ lumen serve
 > That means: API keys, egress costs, and data you don’t control.
 
 **Tweet 3 — The Solution**
-> Lumen is a memory *palace* that runs entirely on your hardware.
+> Lumena is a memory *palace* that runs entirely on your hardware.
 >
 > • SQLite + ONNX — zero cloud deps
 > • BM25 + dense + graph retrieval
@@ -175,13 +175,13 @@ lumen serve
 > Try it in 4 commands:
 > ```bash
 > git clone https://github.com/QuantumindSSI/lumen.git
-> cd lumen && pip install -e ".[dev]"
-> lumen init --device generic && lumen serve
+> cd lumena && pip install -e ".[dev]"
+> lumena init --device generic && lumena serve
 > ```
 >
 > Dashboard opens at localhost:8848.
 >
-> Star the repo, open an issue, or join `#lumen:matrix.org`.
+> Star the repo, open an issue, or join `#lumena:matrix.org`.
 >
 > #LocalFirst #AgenticAI #OpenSource
 
@@ -190,13 +190,13 @@ lumen serve
 ### Short-form Blurbs (Twitter / Mastodon / Bluesky)
 
 **Blurbs 1 — Technical**
-> Lumen v0.2.0-beta is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 273 tests. Apache 2.0. → github.com/QuantumindSSI/lumen
+> Lumena v0.2.0-beta is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 273 tests. Apache 2.0. → github.com/QuantumindSSI/lumena
 
 **Blurbs 2 — Values-driven**
-> We built Lumen because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Beta today; production tomorrow. Check it out → github.com/QuantumindSSI/lumen
+> We built Lumena because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Beta today; production tomorrow. Check it out → github.com/QuantumindSSI/lumena
 
 **Blurbs 3 — One-liner**
-> Lumen: local-first memory for sovereign AI agents. Now in beta. github.com/QuantumindSSI/lumen
+> Lumena: local-first memory for sovereign AI agents. Now in beta. github.com/QuantumindSSI/lumena
 
 ---
 
@@ -213,11 +213,11 @@ lumen serve
 
 ## 9. Contacts & Resources
 
-- **Repository:** https://github.com/QuantumindSSI/lumen
+- **Repository:** https://github.com/QuantumindSSI/lumena
 - **Issue Tracker:** https://github.com/QuantumindSSI/lumen/issues
 - **Discussions:** https://github.com/QuantumindSSI/lumen/discussions
 - **Security:** https://github.com/QuantumindSSI/lumen/security/advisories
-- **Matrix:** `#lumen:matrix.org`
+- **Matrix:** `#lumena:matrix.org`
 - **License:** Apache 2.0
 
 ---

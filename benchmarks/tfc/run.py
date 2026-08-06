@@ -19,7 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
@@ -69,7 +69,7 @@ def _compute_recall(retrieved_lists: list[list[int]], query_relevant: list[dict[
 
 
 def run_single_config(e: float, a: float, tau: float, r: int, texts: list[str], embeddings: np.ndarray, query_embs: list[np.ndarray], query_relevant: list[dict[int, float]]):
-    config = LumenConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    config = LumenaConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     tmpdir = tempfile.mkdtemp(prefix="lumen_tfc_")
     config.store_path = Path(tmpdir) / "store"
 

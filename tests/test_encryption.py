@@ -2,7 +2,7 @@
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection, init_db
 from lumen.force.contextual.embed import MockEmbedder
 from lumen.force.mnemonic.store import store_memory
@@ -17,7 +17,7 @@ def encrypted_client(tmp_path, monkeypatch):
     store.mkdir()
     models.mkdir()
 
-    config = LumenConfig(
+    config = LumenaConfig(
         store_path=store,
         model_path=models,
         vector_index="sqlite-vec",

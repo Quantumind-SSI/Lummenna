@@ -1,17 +1,17 @@
-"""LangGraph integration for Lumen.
+"""LangGraph integration for Lumena.
 
-Provides ``LumenCheckpointSaver`` — implements LangGraph's
-``BaseCheckpointSaver`` protocol so Lumen can persist graph state
-sovereignly, and ``LumenGraphStore`` for cross-thread long-term memory.
+Provides ``LumenaCheckpointSaver`` — implements LangGraph's
+``BaseCheckpointSaver`` protocol so Lumena can persist graph state
+sovereignly, and ``LumenaGraphStore`` for cross-thread long-term memory.
 
 Usage::
 
     from langgraph.graph import StateGraph
-    from lumen.integrations.langgraph import LumenCheckpointSaver
+    from lumen.integrations.langgraph import LumenaCheckpointSaver
 
     graph = StateGraph(...)
     ...
-    checkpointer = LumenCheckpointSaver()
+    checkpointer = LumenaCheckpointSaver()
     app = graph.compile(checkpointer=checkpointer)
     app.invoke({"input": "hello"}, config={"configurable": {"thread_id": "t1"}})
 """
@@ -23,7 +23,7 @@ import json
 from collections.abc import Iterator
 from typing import Any
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.logging import get_console_logger
 
@@ -50,20 +50,20 @@ except Exception:
         ["config", "checkpoint", "metadata", "parent_config", "pending_writes"],
     )
 
-_LumenSaverBase = BaseCheckpointSaver if BaseCheckpointSaver is not None else object
+_LumenaSaverBase = BaseCheckpointSaver if BaseCheckpointSaver is not None else object
 
 
 # ---------------------------------------------------------------------------
-# LumenCheckpointSaver
+# LumenaCheckpointSaver
 # ---------------------------------------------------------------------------
-class LumenCheckpointSaver(_LumenSaverBase):
-    """Lumen-backed checkpoint saver for LangGraph.
+class LumenaCheckpointSaver(_LumenaSaverBase):
+    """Lumena-backed checkpoint saver for LangGraph.
 
     Stores LangGraph checkpoints as structured memories in the SQLite palace.
     Each ``thread_id`` gets its own locus inside a dedicated ``langgraph`` room,
     providing natural isolation and thread-scoped retrieval.
 
-    When ``langgraph`` is installed (``pip install lumen[langgraph]``), this
+    When ``langgraph`` is installed (``pip install lumena[langgraph]``), this
     class extends ``BaseCheckpointSaver`` for native compatibility.  When
     ``langgraph`` is absent it falls back to a standalone mode that still
     exposes the same API surface.
@@ -74,10 +74,10 @@ class LumenCheckpointSaver(_LumenSaverBase):
 
     def __init__(
         self,
-        config: LumenConfig | None = None,
+        config: LumenaConfig | None = None,
         room: str = ROOM_NAME,
     ) -> None:
-        self.config = config or LumenConfig()
+        self.config = config or LumenaConfig()
         self.room = room
         self._conn: Any = None
         self._room_id: int | None = None
@@ -362,31 +362,31 @@ class LumenCheckpointSaver(_LumenSaverBase):
 
 
 # ---------------------------------------------------------------------------
-# LumenGraphStore — cross-thread long-term memory for LangGraph
+# LumenaGraphStore — cross-thread long-term memory for LangGraph
 # ---------------------------------------------------------------------------
 try:
     from langgraph.store.base import BaseStore as LangGraphBaseStore
 except Exception:
     LangGraphBaseStore = None  # type: ignore[assignment,misc]
 
-_LumenGraphStoreBase = LangGraphBaseStore if LangGraphBaseStore is not None else object
+_LumenaGraphStoreBase = LangGraphBaseStore if LangGraphBaseStore is not None else object
 
 
-class LumenGraphStore(_LumenGraphStoreBase):
-    """Lumen-backed store for LangGraph cross-thread memory.
+class LumenaGraphStore(_LumenaGraphStoreBase):
+    """Lumena-backed store for LangGraph cross-thread memory.
 
     LangGraph's ``Store`` API lets graphs read and write long-term facts
-    that persist across conversation threads.  LumenGraphStore maps each
+    that persist across conversation threads.  LumenaGraphStore maps each
     ``namespace`` to a room and each ``key`` to a chunked memory.
     """
 
     def __init__(
         self,
-        config: LumenConfig | None = None,
+        config: LumenaConfig | None = None,
         default_namespace: str = "memories",
         embedder: Any = None,
     ) -> None:
-        self.config = config or LumenConfig()
+        self.config = config or LumenaConfig()
         self.default_namespace = default_namespace
         self._embedder = embedder
         self._conn: Any = None
@@ -484,7 +484,7 @@ class LumenGraphStore(_LumenGraphStoreBase):
         *,
         limit: int = 10,
     ) -> list[dict[str, Any]]:
-        """Semantic search within a namespace using Lumen's pipeline."""
+        """Semantic search within a namespace using Lumena's pipeline."""
         from lumen.search import SearchPipeline
 
         room = self._namespace_to_room(namespace)

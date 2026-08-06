@@ -142,10 +142,10 @@ def _clear_provenance_tree(conn: sqlite3.Connection, chunk_id: int) -> None:
 
 def get_recent_audit_events(n: int = 10) -> list[dict]:
     """Read last N compliance audit events from SQLite audit_log."""
-    from lumen.config import LumenConfig
+    from lumen.config import LumenaConfig
     from lumen.data.schema import get_connection
     try:
-        conn = get_connection(LumenConfig())
+        conn = get_connection(LumenaConfig())
         rows = conn.execute(
             """SELECT audit_id, event_type, actor, resource_type, resource_id,
                       action, metadata_json, client_ip, request_id, created_at

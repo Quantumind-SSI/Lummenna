@@ -1,5 +1,5 @@
 """
-Lumen Retrieval Benchmark — Scientific Evaluation Suite.
+Lumena Retrieval Benchmark — Scientific Evaluation Suite.
 
 Evaluates Hybrid (SearchPipeline), BM25-only (lexical), Dense-only (vector),
 and a standard rank-bm25 baseline on either MS MARCO v1.1 or a synthetic
@@ -28,7 +28,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
 from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
@@ -88,7 +88,7 @@ def _get_embedder(model_name):
         # Fallback chain
         try:
             from lumen.force.contextual.embed import LocalEmbedder
-            config = LumenConfig()
+            config = LumenaConfig()
             model_dir = config.model_path / config.embedding_model
             if model_dir.exists():
                 e = LocalEmbedder(model_dir, dims=config.embedding_dims)
@@ -367,11 +367,11 @@ def _bootstrap_ci(values, n_bootstrap=N_BOOTSTRAP):
 
 
 # ---------------------------------------------------------------------------
-# Standard BM25 baseline (rank-bm25 — independent of Lumen's FTS5)
+# Standard BM25 baseline (rank-bm25 — independent of Lumena's FTS5)
 # ---------------------------------------------------------------------------
 
 def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
-    """Independent rank-bm25 baseline, not using Lumen's FTS5 table."""
+    """Independent rank-bm25 baseline, not using Lumena's FTS5 table."""
     import re
     try:
         from rank_bm25 import BM25Okapi
@@ -402,7 +402,7 @@ def run_single_benchmark(seed, passages, queries, query_relevant_pids, corpus_na
     np.random.seed(seed)
 
     tmpdir = tempfile.mkdtemp(prefix=f"lumen_bench_retrieval_{seed}_")
-    config = LumenConfig(
+    config = LumenaConfig(
         store_path=Path(tmpdir),
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",

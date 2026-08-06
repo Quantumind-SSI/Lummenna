@@ -215,9 +215,9 @@ class VectorChannel:
     """Runtime switchable backend; config decides, not the caller."""
 
     def __init__(self, config, conn: sqlite3.Connection):
-        from lumen.config import LumenConfig
+        from lumen.config import LumenaConfig
 
-        cfg: LumenConfig = config
+        cfg: LumenaConfig = config
         if cfg.vector_index == "sqlite-vec":
             self.backend: VectorBackend = SqliteVecBackend(conn, cfg.embedding_dims)
         elif cfg.vector_index == "usearch":

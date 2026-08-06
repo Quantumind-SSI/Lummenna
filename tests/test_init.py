@@ -3,14 +3,14 @@ import sqlite3
 import pytest
 
 from lumen._init import initialize_palace
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.conversation import ConversationMemory
 from lumen.search import SearchPipeline
 
 
 @pytest.fixture
 def temp_config(tmp_path):
-    return LumenConfig(
+    return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / ".lumen"),

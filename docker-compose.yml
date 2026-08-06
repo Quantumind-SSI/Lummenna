@@ -1,15 +1,15 @@
 version: "3.8"
 
 services:
-  lumen:
+  lumena:
     build: .
-    image: lumen:latest
+    image: lumena:latest
     container_name: lumen-api
     restart: unless-stopped
     ports:
       - "${LUMEN_API_PORT:-8848}:8848"
     volumes:
-      - lumen_data:/root/.lumen
+      - lumen_data:/root/.lumena
     environment:
       - LUMEN_API_HOST=0.0.0.0
       - LUMEN_API_PORT=8848

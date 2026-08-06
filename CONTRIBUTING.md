@@ -1,6 +1,6 @@
-# Contributing to Lumen
+# Contributing to Lumena
 
-Thank you for considering contributing to Lumen. Every contribution — code, documentation, design, testing, or community support — helps local AI agents develop minds of their own.
+Thank you for considering contributing to Lumena. Every contribution — code, documentation, design, testing, or community support — helps local AI agents develop minds of their own.
 
 ---
 
@@ -28,7 +28,7 @@ When reporting, include:
 
 ```markdown
 **Device:** (e.g., Raspberry Pi 5 4GB, x86_64 desktop)
-**Lumen version:** (e.g., 0.1.0)
+**Lumena version:** (e.g., 0.1.0)
 **Python version:** (e.g., 3.12.3)
 **What happened:**
 **What you expected:**
@@ -38,7 +38,7 @@ When reporting, include:
 
 ### 2. Suggesting Features
 
-Feature requests should align with Lumen's core philosophy:
+Feature requests should align with Lumena's core philosophy:
 
 > Sovereign-first. Edge-native. Biologically-grounded. Palace-structured.
 
@@ -50,7 +50,7 @@ Open a GitHub Discussion first for major features. For small enhancements, an is
 
 ```bash
 git clone https://github.com/QuantumindSSI/lumen.git
-cd lumen
+cd lumena
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -58,7 +58,7 @@ pip install -e ".[dev]"
 
 #### Code Standards
 
-- **Lint:** `ruff check lumen/` must pass
+- **Lint:** `ruff check lumena/` must pass
 - **Tests:** `pytest tests/` must pass with >50% coverage (target: >70%)
 - **Types:** Add type hints for new public APIs
 - **Docstrings:** Google-style for all public modules/classes/functions
@@ -91,7 +91,7 @@ refactor: simplify TFC state machine transitions
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes with tests
-4. Run `ruff check lumen/` and `pytest tests/`
+4. Run `ruff check lumena/` and `pytest tests/`
 5. Update `CHANGELOG.md` under `[Unreleased]`
 6. Open a PR with a clear description and reference any related issues
 7. Address review feedback
@@ -107,15 +107,15 @@ Every change should respect the duality:
 
 - **Memory (Force A)** = substantive, concrete, archival
 - **Context (Force B)** = active, verbal, ephemeral
-- **Lumen (Unification)** = light, balance, the intersection
+- **Lumena (Unification)** = light, balance, the intersection
 
 ### Adding a New Room
 
 Rooms are top-level categories in the palace. To add one:
 
-1. Define in `lumen/data/schema.sql` (if schema change needed)
-2. Add retrieval path in `lumen/force/mnemonic/retrieval_*.py`
-3. Register in `lumen/search.py` pipeline
+1. Define in `lumena/data/schema.sql` (if schema change needed)
+2. Add retrieval path in `lumena/force/mnemonic/retrieval_*.py`
+3. Register in `lumena/search.py` pipeline
 4. Add test in `tests/test_retrieval_*.py`
 5. Document in `docs/palace.md`
 
@@ -123,8 +123,8 @@ Rooms are top-level categories in the palace. To add one:
 
 The forgetting stack is L1-L4. If you need L5:
 
-1. Create `lumen/force/mnemonic/forgetting_l5_*.py`
-2. Hook into `lumen/sleep.py` consolidation scheduler
+1. Create `lumena/force/mnemonic/forgetting_l5_*.py`
+2. Hook into `lumena/sleep.py` consolidation scheduler
 3. Add compliance audit logging
 4. Write test in `tests/test_forgetting_*.py`
 
@@ -139,7 +139,7 @@ Docs live in:
 - Inline docstrings — API reference
 
 When documenting:
-- Use the Lumen lexicon (Memory Palace, Context Window, Dimming, Consolidation, etc.)
+- Use the Lumena lexicon (Memory Palace, Context Window, Dimming, Consolidation, etc.)
 - Provide working code examples
 - Include expected output where helpful
 - Keep line length <= 100 characters
@@ -190,7 +190,7 @@ Contributors are recognized as **Luminary** members. Significant contributions r
 ## Questions?
 
 - GitHub Discussions: https://github.com/QuantumindSSI/lumen/discussions
-- Matrix: #lumen:matrix.org
+- Matrix: #lumena:matrix.org
 - Security: security@lumen.ai
 
 ---

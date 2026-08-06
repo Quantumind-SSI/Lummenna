@@ -22,7 +22,7 @@ except Exception:
 
 
 def _enforce_permissions(root_path: Path) -> None:
-    """Ensure ~/.lumen tree is 700 (dirs) and 600 (files). Fail-fast on error."""
+    """Ensure ~/.lumena tree is 700 (dirs) and 600 (files). Fail-fast on error."""
     if not root_path.exists():
         return
     try:
@@ -50,16 +50,16 @@ def init_db(conn: sqlite3.Connection) -> None:
 
 
 def get_connection(config) -> sqlite3.Connection:
-    """Return a SQLite connection initialised with the Lumen schema and optimised pragmas.
+    """Return a SQLite connection initialised with the Lumena schema and optimised pragmas.
 
     Supports three encryption modes:
       - sqlcipher : Transparent page-level AES-256 encryption via SQLCipher.
       - fernet    : Field-level encryption for chunk.content only (fallback).
       - none      : Plaintext SQLite (not recommended for production).
     """
-    from lumen.config import LumenConfig
+    from lumen.config import LumenaConfig
 
-    cfg: LumenConfig = config
+    cfg: LumenaConfig = config
     cfg.store_path.mkdir(parents=True, exist_ok=True)
     db_path = cfg.store_path / "lumen.db"
 

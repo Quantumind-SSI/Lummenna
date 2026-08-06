@@ -8,7 +8,7 @@
         └───┘
 </pre>
 
-<h1>Lumen</h1>
+<h1>Lumena</h1>
 
 <p><strong>Local-first memory and context framework for sovereign AI agents.</strong></p>
 
@@ -26,12 +26,12 @@
 
 ---
 
-## What is Lumen?
+## What is Lumena?
 
-Lumen is a **local-first memory store for LLM agents** — it organizes agent memories in a structured memory palace (rooms, loci, chunks) with hybrid retrieval, managed decay, and native integrations. It runs entirely on your hardware with no cloud dependencies.
+Lumena is a **local-first memory store for LLM agents** — it organizes agent memories in a structured memory palace (rooms, loci, chunks) with hybrid retrieval, managed decay, and native integrations. It runs entirely on your hardware with no cloud dependencies.
 
 - **No cloud.** Embeddings run locally via ONNX Runtime. Storage is single-file SQLite.
-- **Optional daemon.** Background scheduler auto-starts with `lumen serve`; can also run standalone with `lumen daemon start`.
+- **Optional daemon.** Background scheduler auto-starts with `lumena serve`; can also run standalone with `lumena daemon start`.
 - **Hybrid retrieval.** BM25 (SQLite FTS5), cosine-similarity vector search, and optional graph traversal with reciprocal rank fusion.
 - **Managed memory lifecycle.** Three-layer forgetting: time-based decay, similarity interference, and budget eviction.
 - **Integrations.** LangGraph checkpoint saver, LangChain memory adapter, MCP server, FastAPI REST API.
@@ -43,14 +43,14 @@ Lumen is a **local-first memory store for LLM agents** — it organizes agent me
 ```bash
 # Clone and install
 git clone https://github.com/QuantumindSSI/lumen.git
-cd lumen
+cd lumena
 pip install -e ".[dev]"
 
 # Initialize
-lumen init --device generic
+lumena init --device generic
 
 # Start the server
-lumen serve
+lumena serve
 # Dashboard at http://localhost:8848/dashboard
 # API docs at http://localhost:8848/docs
 ```
@@ -58,11 +58,11 @@ lumen serve
 ### Store and retrieve
 
 ```python
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.store import store_memory
 
-config = LumenConfig()
+config = LumenaConfig()
 conn = get_connection(config)
 
 chunk_id = store_memory(
@@ -75,11 +75,11 @@ conn.close()
 ```
 
 ```python
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.conversation import ConversationMemory
 
-config = LumenConfig()
+config = LumenaConfig()
 conn = get_connection(config)
 memory = ConversationMemory(config=config, conn=conn)
 
@@ -88,8 +88,8 @@ print(turn.assembled_context)
 ```
 
 ```bash
-$ lumen status
-Lumen Status
+$ lumena status
+Lumena Status
 Device: generic
 Rooms: 5
 Active chunks: 58
@@ -133,7 +133,7 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 
 ## State of the Project
 
-Lumen is **beta software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for evaluation, development, and trusted-LAN deployments.
+Lumena is **beta software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for evaluation, development, and trusted-LAN deployments.
 
 | Dimension | Status | Detail |
 |---|---|---|
@@ -145,8 +145,8 @@ Lumen is **beta software**. It works end-to-end with API versioning, comprehensi
 | **Audit logging** | Working | SQLite audit_log table with request tracing. |
 | **API server** | Working | FastAPI with `/v1/` versioning, auth, rate limiting, CORS, security headers. |
 | **MCP server** | Working | 7 tools (search, store, assemble, turn, feedback, status, dashboard). |
-| **LangChain** | Working | LumenChatMemory adapter (requires `langchain` package). |
-| **LangGraph** | Working | LumenCheckpointSaver (requires `langgraph` package). |
+| **LangChain** | Working | LumenaChatMemory adapter (requires `langchain` package). |
+| **LangGraph** | Working | LumenaCheckpointSaver (requires `langgraph` package). |
 | **Encryption-at-rest** | Not implemented | Use OS-level disk encryption (LUKS, FileVault, BitLocker). Planned for v0.3.0. |
 | **BEIR benchmarks** | Partially evaluated | 500-doc/20-query subset results available. Full-corpus evaluation deferred to HPC. |
 | **P2P sharing** | Working | Beam protocol with AES-256-GCM encryption, HMAC-SHA256 signing, replay protection. Requires p2p key. |
@@ -176,10 +176,10 @@ All run with a single command from the repo root:
 
 | Integration | What it does | How to use |
 |---|---|---|
-| **MCP Server** | Exposes Lumen tools to OpenCode, Claude Desktop | `python -m lumen.integrations.mcp_server` |
-| **LangChain** | `LumenChatMemory` adapter | `pip install langchain` |
-| **LangGraph** | `LumenCheckpointSaver` for graph state | `pip install langgraph` |
-| **FastAPI** | REST API with auth/rate-limiting | `lumen serve` |
+| **MCP Server** | Exposes Lumena tools to OpenCode, Claude Desktop | `python -m lumen.integrations.mcp_server` |
+| **LangChain** | `LumenaChatMemory` adapter | `pip install langchain` |
+| **LangGraph** | `LumenaCheckpointSaver` for graph state | `pip install langgraph` |
+| **FastAPI** | REST API with auth/rate-limiting | `lumena serve` |
 | **OpenCode** | Native skill for memory workflows | See `INTEGRATIONS.md` |
 
 ---
@@ -187,7 +187,7 @@ All run with a single command from the repo root:
 ## Project Structure
 
 ```
-lumen/
+lumena/
 ├── config.py          Configuration (pydantic-settings)
 ├── search.py          Search pipeline orchestration
 ├── fusion.py          RRF fusion + reranking
@@ -234,8 +234,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 pytest tests/                        # Run full suite
-pytest tests/ --cov=lumen            # With coverage
-ruff check lumen/ tests/             # Lint
+pytest tests/ --cov=lumena            # With coverage
+ruff check lumena/ tests/             # Lint
 ```
 
 ---
@@ -249,7 +249,7 @@ ruff check lumen/ tests/             # Lint
 | [`SECURITY.md`](SECURITY.md) | Security policy and known limitations |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | Integration guides for each platform |
 | [`ROADMAP.md`](ROADMAP.md) | Development milestones and open work |
-| [`docs/Lumen_Agentic_Memory_Whitepaper_v2.md`](docs/Lumen_Agentic_Memory_Whitepaper_v2.md) | Technical white paper |
+| [`docs/Lumena_Agentic_Memory_Whitepaper_v2.md`](docs/Lumena_Agentic_Memory_Whitepaper_v2.md) | Technical white paper |
 
 ---
 
@@ -258,7 +258,7 @@ ruff check lumen/ tests/             # Lint
 - [GitHub Discussions](https://github.com/QuantumindSSI/lumen/discussions)
 - [Issue Tracker](https://github.com/QuantumindSSI/lumen/issues)
 - [Security Advisories](https://github.com/QuantumindSSI/lumen/security/advisories)
-- Matrix: `#lumen:matrix.org`
+- Matrix: `#lumena:matrix.org`
 
 ---
 

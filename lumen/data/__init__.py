@@ -1,1 +1,1 @@
-"""Lumen data layer: schema, migrations, and connection helpers."""
+"""Lumena data layer: schema, migrations, and connection helpers."""

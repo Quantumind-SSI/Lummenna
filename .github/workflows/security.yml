@@ -93,17 +93,17 @@ jobs:
         run: python -m pip install bandit[toml]
 
       - name: Run bandit
-        run: bandit -r lumen/ -f json -o bandit-report.json -ll || true
+        run: bandit -r lumena/ -f json -o bandit-report.json -ll || true
 
       - name: Bandit summary
-        run: bandit -r lumen/ -ll
+        run: bandit -r lumena/ -ll
 
       - name: Upload bandit results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: bandit-report
-          path: lumen/bandit-report.json
+          path: lumena/bandit-report.json
           retention-days: 30
 
   license-check:
@@ -136,5 +136,5 @@ jobs:
         if: always()
         with:
           name: license-report
-          path: lumen/licenses.json
+          path: lumena/licenses.json
           retention-days: 30

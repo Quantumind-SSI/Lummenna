@@ -1,5 +1,5 @@
 """
-Palace seed script — populates Lumen rooms from the domain corpus JSON.
+Palace seed script — populates Lumena rooms from the domain corpus JSON.
 
 Usage:
     python -m datasets.seed [--corpus datasets/domain_corpus.json] [--embedder all-MiniLM-L6-v2]
@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import ensure_schema, get_connection
 from lumen.force.mnemonic.store import store_memory
 
@@ -52,14 +52,14 @@ def _get_embedder(model_name: str = "all-MiniLM-L6-v2"):
         print(f"[WARN] Real embedder unavailable ({exc}). Using MockEmbedder.")
         from lumen.force.contextual.embed import MockEmbedder
 
-        config = LumenConfig()
+        config = LumenaConfig()
         return MockEmbedder(dims=config.embedding_dims)
 
 
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Seed Lumen palace with domain corpus")
+    parser = argparse.ArgumentParser(description="Seed Lumena palace with domain corpus")
     parser.add_argument(
         "--corpus",
         default=str(Path(__file__).resolve().parent / "domain_corpus.json"),
@@ -80,8 +80,8 @@ def main():
     print(f"[INFO] Loaded corpus: {corpus['name']} — {corpus['description']}")
     print(f"[INFO] Rooms: {len(corpus['rooms'])}")
 
-    # Init Lumen
-    config = LumenConfig(store_path=Path("./data/store"), model_path=Path("./data/models"))
+    # Init Lumena
+    config = LumenaConfig(store_path=Path("./data/store"), model_path=Path("./data/models"))
     config.store_path.mkdir(parents=True, exist_ok=True)
     config.model_path.mkdir(parents=True, exist_ok=True)
 

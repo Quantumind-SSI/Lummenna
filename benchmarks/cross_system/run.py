@@ -1,5 +1,5 @@
 """
-Lumen vs Chroma vs FAISS Head-to-Head Benchmark.
+Lumena vs Chroma vs FAISS Head-to-Head Benchmark.
 
 Runs all three systems on the same corpus, same queries, same embedder
 (all-MiniLM-L6-v2), measuring recall@k, nDCG@k, MAP, MRR, latency,
@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
 from lumen.force.mnemonic.store import store_memory
@@ -109,14 +109,14 @@ def _bootstrap_ci(values):
 
 
 # ---------------------------------------------------------------------------
-# System: Lumen (sqlite-vec, brute-force)
+# System: Lumena (sqlite-vec, brute-force)
 # ---------------------------------------------------------------------------
 def _bench_lumen(docs, queries, relevant, seed):
     np.random.seed(seed)
     embedder = _get_embedder()
     tmpdir = tempfile.mkdtemp(prefix="lumen_cross_")
     store_path = Path(tmpdir) / "store"
-    config = LumenConfig(store_path=store_path, embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    config = LumenaConfig(store_path=store_path, embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     conn = get_connection(config)
 
     t0 = time.perf_counter()
@@ -270,7 +270,7 @@ def run():
             print(f"  Seed {seed}: {len(docs)} docs, {len(queries)} queries")
 
             for name, fn in [
-                ("lumen", _bench_lumen),
+                ("lumena", _bench_lumena),
                 ("chroma", _bench_chroma),
                 ("faiss", _bench_faiss),
             ]:

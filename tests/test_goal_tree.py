@@ -1,15 +1,15 @@
-"""Tests for lumen.lumen.goals persistence."""
+"""Tests for lumen.lumena.goals persistence."""
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.goals import GoalTree
 
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenConfig(
+    cfg = LumenaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",

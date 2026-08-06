@@ -11,7 +11,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 
 from lumen.brand.errors import BudgetExceededError
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TFCState
 from lumen.force.contextual.token_budget import get_token_counter
 from lumen.fusion import RetrievedChunk
@@ -40,7 +40,7 @@ def assemble_context(
     retrieved_chunks: list[RetrievedChunk],
     active_goals: list[str],
     tfc_state: TFCState,
-    config: LumenConfig,
+    config: LumenaConfig,
     token_counter=None,
     system_prompt_override: str | None = None,
 ) -> str:

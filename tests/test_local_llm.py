@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.sovereign.local_llm import LocalLLM, _get_llama_class
 
 
@@ -14,7 +14,7 @@ def enabled_config(tmp_path: Path):
     """Return a config with local LLM enabled and a temporary model path."""
     model_dir = tmp_path / "models"
     model_dir.mkdir(parents=True)
-    return LumenConfig(
+    return LumenaConfig(
         enable_local_llm=True,
         model_path=model_dir,
         local_llm_model="dummy.gguf",
@@ -25,7 +25,7 @@ def enabled_config(tmp_path: Path):
 @pytest.fixture
 def disabled_config(tmp_path: Path):
     """Return a config with local LLM disabled."""
-    return LumenConfig(
+    return LumenaConfig(
         enable_local_llm=False,
         model_path=tmp_path / "models",
         local_llm_model="dummy.gguf",
@@ -48,8 +48,8 @@ def test_is_available_returns_false_when_model_missing():
     """is_available() should be False when the model file does not exist."""
     # Ensure llama_cpp is importable by patching the inline import in is_available
     with patch(
-        "lumen.sovereign.local_llm.LumenConfig",
-        return_value=LumenConfig(
+        "lumen.sovereign.local_llm.LumenaConfig",
+        return_value=LumenaConfig(
             model_path=Path("/nonexistent"),
             local_llm_model="missing.gguf",
         ),
@@ -66,7 +66,7 @@ def test_is_available_returns_true_when_model_present():
     fake_cfg.local_llm_model = "dummy.gguf"
     fake_mod = MagicMock()
     with (
-        patch("lumen.sovereign.local_llm.LumenConfig", return_value=fake_cfg),
+        patch("lumen.sovereign.local_llm.LumenaConfig", return_value=fake_cfg),
         patch.dict("sys.modules", {"llama_cpp": fake_mod}),
     ):
         assert LocalLLM.is_available() is True

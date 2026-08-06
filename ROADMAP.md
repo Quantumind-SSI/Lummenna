@@ -1,6 +1,6 @@
-# Lumen Production Readiness Roadmap
+# Lumena Production Readiness Roadmap
 
-This document tracks the remaining work to move Lumen from beta (`v0.2.0-beta`) to production-ready (`v0.3.0-stable` and beyond).
+This document tracks the remaining work to move Lumena from beta (`v0.2.0-beta`) to production-ready (`v0.3.0-stable` and beyond).
 
 ---
 
@@ -76,6 +76,6 @@ This document tracks the remaining work to move Lumen from beta (`v0.2.0-beta`) 
 
 As stated in the whitepaper:
 
-> Lumen is a beta framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation pending HPC resources.
+> Lumena is a beta framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation pending HPC resources.
 
 This roadmap is about closing the gap between that honest claim and a production-ready system.

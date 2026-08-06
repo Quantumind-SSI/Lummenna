@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection, get_encryption, init_db
 from lumen.force.contextual.embed import MockEmbedder
 from lumen.force.mnemonic.store import store_memory
@@ -15,7 +15,7 @@ from lumen.security.crypto import derive_sqlcipher_passphrase
 
 @pytest.fixture
 def sqlcipher_config(tmp_path):
-    return LumenConfig(
+    return LumenaConfig(
         store_path=tmp_path / ".lumen" / "store",
         model_path=tmp_path / ".lumen" / "models",
         vector_index="sqlite-vec",
@@ -88,7 +88,7 @@ class TestSQLCipherIntegration:
 
     def test_plaintext_fallback_when_sqlcipher_unavailable(self, tmp_path, monkeypatch):
         monkeypatch.setattr("lumen.data.schema._HAS_SQLCIPHER", False)
-        config = LumenConfig(
+        config = LumenaConfig(
             store_path=tmp_path / ".lumen" / "store",
             model_path=tmp_path / ".lumen" / "models",
             vector_index="sqlite-vec",

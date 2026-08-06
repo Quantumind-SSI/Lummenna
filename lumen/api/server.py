@@ -1,4 +1,4 @@
-"""FastAPI server exposing Lumen memory operations.
+"""FastAPI server exposing Lumena memory operations.
 
 Endpoints:
   GET  /health           — liveness probe
@@ -33,7 +33,7 @@ from slowapi.util import get_remote_address
 
 from lumen._init import initialize_palace
 from lumen.audit import log_audit_event
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.conversation import ConversationMemory
 from lumen.fusion import RetrievedChunk
@@ -45,14 +45,14 @@ logger = get_console_logger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-_config = LumenConfig()
+_config = LumenaConfig()
 _config.store_path.mkdir(parents=True, exist_ok=True)
 _config.model_path.mkdir(parents=True, exist_ok=True)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[_config.api_rate_limit])
 
 app = FastAPI(
-    title="Lumen Memory API",
+    title="Lumena Memory API",
     version="0.2.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -278,7 +278,7 @@ class TurnResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _get_config() -> LumenConfig:
+def _get_config() -> LumenaConfig:
     return _state.get("config", _config)  # type: ignore[no-any-return]
 
 
@@ -575,7 +575,7 @@ _DASHBOARD_HTML_PATH = Path(__file__).with_name("dashboard.html")
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard() -> str:
-    """Serve the Lumen effectiveness dashboard."""
+    """Serve the Lumena effectiveness dashboard."""
     if _DASHBOARD_HTML_PATH.exists():
         return _DASHBOARD_HTML_PATH.read_text(encoding="utf-8")
     raise HTTPException(status_code=404, detail="Dashboard HTML not found")
@@ -737,7 +737,7 @@ def main() -> None:
     """CLI entrypoint for production server."""
     import uvicorn
 
-    cfg = LumenConfig()
+    cfg = LumenaConfig()
     uvicorn.run(
         "lumen.api.server:app",
         host=cfg.api_host,

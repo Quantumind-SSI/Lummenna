@@ -21,7 +21,7 @@ from lumen.sovereign.local_llm import LocalLLM
 from lumen.sovereign.wear import WearAwareBatcher
 
 if TYPE_CHECKING:
-    from lumen.config import LumenConfig
+    from lumen.config import LumenaConfig
     from lumen.force.mnemonic.event_buffer import EventMemoryBuffer
 
 from lumen.logging import get_console_logger
@@ -113,7 +113,7 @@ def _get_recent_fact_bullets(conn: sqlite3.Connection, room_id: int, days: int =
 
 
 def run_consolidation_pass(
-    config: LumenConfig,
+    config: LumenaConfig,
     event_buffer: EventMemoryBuffer | None = None,
     embedder: object | None = None,
     batcher: WearAwareBatcher | None = None,
@@ -121,7 +121,7 @@ def run_consolidation_pass(
     """Run one full consolidation pass: drain events, dedup, generate narratives.
 
     Args:
-        config: LumenConfig instance.
+        config: LumenaConfig instance.
         event_buffer: Optional EventMemoryBuffer to drain. If None, event-tier
             draining is skipped.
         embedder: Optional embedder with ``encode_single(text)``. If None, a

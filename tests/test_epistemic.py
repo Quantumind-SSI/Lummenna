@@ -1,15 +1,15 @@
-"""Tests for lumen.lumen.epistemic persistence."""
+"""Tests for lumen.lumena.epistemic persistence."""
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.epistemic import EpistemicTracker
 
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenConfig(
+    cfg = LumenaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",

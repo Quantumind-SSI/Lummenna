@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from lumen.api.server import app, _state, _config, _auth_failures
 from lumen._init import initialize_palace
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 
 
 @pytest.fixture

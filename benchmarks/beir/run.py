@@ -1,5 +1,5 @@
 """
-BEIR cross-dataset evaluation for Lumen.
+BEIR cross-dataset evaluation for Lumena.
 
 Runs retrieval benchmarks across BEIR subsets, computing standard IR metrics
 with bootstrap confidence intervals.
@@ -30,7 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
 from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
@@ -187,7 +187,7 @@ def _load_beir_dataset(name: str, path: str, max_passages: int | None = None, ma
 
 
 # ---------------------------------------------------------------------------
-# BM25 baseline (rank-bm25, independent of Lumen)
+# BM25 baseline (rank-bm25, independent of Lumena)
 # ---------------------------------------------------------------------------
 
 def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
@@ -293,7 +293,7 @@ def _bootstrap_ci(values, n_bootstrap=N_BOOTSTRAP):
 def run_single(seed, docs, query_texts, query_relevant_pids, dataset_name, embedder_model):
     np.random.seed(seed)
     tmpdir = tempfile.mkdtemp(prefix=f"lumen_beir_{dataset_name}_{seed}_")
-    config = LumenConfig(
+    config = LumenaConfig(
         store_path=Path(tmpdir) / ".lumen" / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",
@@ -506,7 +506,7 @@ def _append_config_table(lines, name, metrics_data):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Lumen BEIR benchmark harness")
+    parser = argparse.ArgumentParser(description="Lumena BEIR benchmark harness")
     parser.add_argument("--max-passages", type=int, default=None, help="Cap corpus size per dataset (default: full)")
     parser.add_argument("--max-queries", type=int, default=None, help="Cap query count per dataset (default: full)")
     parser.add_argument("--output", type=str, default=None, help="Override output JSON path")

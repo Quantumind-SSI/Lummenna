@@ -111,10 +111,10 @@ def fuse_and_rerank(
         cid, room_name, locus_name, content, vm, prov, age_hours, res, encrypted = row
         if encrypted:
             if _enc is None:
-                from lumen.config import LumenConfig
+                from lumen.config import LumenaConfig
                 from lumen.data.schema import get_encryption
 
-                _enc = get_encryption(config if config is not None else LumenConfig())
+                _enc = get_encryption(config if config is not None else LumenaConfig())
             if _enc.enabled:
                 content = _enc.decrypt(content)
         # Goal bonus

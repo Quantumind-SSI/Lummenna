@@ -13,7 +13,7 @@ Brief description of what this PR does and why.
 
 ## Checklist
 
-- [ ] `ruff check lumen/` passes
+- [ ] `ruff check lumena/` passes
 - [ ] `pytest tests/` passes
 - [ ] New code has tests
 - [ ] Public APIs have docstrings

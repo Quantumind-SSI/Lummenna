@@ -1,6 +1,6 @@
 """User-centric scenario integration tests.
 
-These tests simulate realistic user journeys through the Lumen memory
+These tests simulate realistic user journeys through the Lumena memory
 framework, exercising the CLI-adjacent programmatic API end-to-end.
 """
 
@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from lumen.compliance.safety_forgetting import safety_forget_chunk, safety_scan_chunk
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TFCState, TwinForceController
 from lumen.curiosity import curiosity_probe
 from lumen.data.schema import get_connection
@@ -29,7 +29,7 @@ from lumen.sovereign.optical import quantize_vector
 @pytest.fixture
 def fresh_config(tmp_path: Path):
     """A config pointing to a temporary store for scenario tests."""
-    return LumenConfig(
+    return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / "store"),
@@ -39,7 +39,7 @@ def fresh_config(tmp_path: Path):
 
 
 @pytest.fixture
-def fresh_conn(fresh_config: LumenConfig):
+def fresh_conn(fresh_config: LumenaConfig):
     """Yield a freshly initialised DB connection."""
     conn = get_connection(fresh_config)
     yield conn
@@ -47,7 +47,7 @@ def fresh_conn(fresh_config: LumenConfig):
 
 
 @pytest.fixture
-def embedder(fresh_config: LumenConfig):
+def embedder(fresh_config: LumenaConfig):
     return FallbackEmbedder(dims=fresh_config.embedding_dims)
 
 
@@ -58,7 +58,7 @@ class TestUserStoryDailyLogging:
         memories = [
             ("Buy oat milk and sourdough", " errands ", "grocery"),
             ("Call dentist to reschedule", "health", "appointments"),
-            ("Lumen FRQAD kernel needs ARM NEON SIMD", "work", "projects"),
+            ("Lumena FRQAD kernel needs ARM NEON SIMD", "work", "projects"),
         ]
         for content, room, locus in memories:
             emb = embedder.encode_single(content)

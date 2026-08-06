@@ -1,5 +1,5 @@
 """
-Lumen Component Ablation Benchmark.
+Lumena Component Ablation Benchmark.
 
 Systematically disables TFC, V(m) reranking, graph channel, and forgetting
 layers to isolate each component's contribution to end-to-end retrieval quality.
@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
@@ -214,7 +214,7 @@ def run_ablations():
         corpus = json.load(f)
 
     tmpdir = tempfile.mkdtemp(prefix="lumen_ablation_")
-    config = LumenConfig(store_path=Path(tmpdir), embedding_dims=384, vector_index="sqlite-vec")
+    config = LumenaConfig(store_path=Path(tmpdir), embedding_dims=384, vector_index="sqlite-vec")
     conn = get_connection(config)
 
     tfc = TwinForceController()

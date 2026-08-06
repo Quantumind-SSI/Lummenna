@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: pip
-    directory: /lumen
+    directory: /lumena
     schedule:
       interval: weekly
       day: monday

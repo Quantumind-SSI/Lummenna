@@ -7,14 +7,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.p2p.beam import BeamNode, decode_frame, encode_frame
 from lumen.security.crypto import P2PCrypto, P2PSign
 
 
 @pytest.fixture
 def secure_config(tmp_path):
-    return LumenConfig(
+    return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / ".lumen"),
@@ -86,7 +86,7 @@ class TestP2PSigning:
 
 class TestHardenedBeamProtocol:
     def test_plaintext_fallback_rejected(self, tmp_path):
-        config = LumenConfig(
+        config = LumenaConfig(
             device="generic",
             vector_index="sqlite-vec",
             store_path=str(tmp_path / ".lumen"),
@@ -99,7 +99,7 @@ class TestHardenedBeamProtocol:
 
     def test_insecure_override_allowed(self, tmp_path, monkeypatch):
         monkeypatch.setenv("LUMEN_P2P_INSECURE", "1")
-        config = LumenConfig(
+        config = LumenaConfig(
             device="generic",
             vector_index="sqlite-vec",
             store_path=str(tmp_path / ".lumen"),

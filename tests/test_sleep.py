@@ -1,17 +1,17 @@
-"""Tests for lumen.lumen.sleep."""
+"""Tests for lumen.lumena.sleep."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.sleep import SleepScheduler
 
 
 @pytest.fixture
 def scheduler(tmp_path):
     """Return a SleepScheduler with a default test config."""
-    config = LumenConfig(
+    config = LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
         store_path=str(tmp_path / ".lumen-test"),
@@ -118,7 +118,7 @@ def test_scheduler_has_expected_jobs(scheduler):
 
 def test_opportunistic_uses_configurable_cpu_threshold():
     """_opportunistic_check should respect config.consolidation_cpu_percent."""
-    config = LumenConfig(
+    config = LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
         store_path="/tmp/.lumen-test",
@@ -135,7 +135,7 @@ def test_opportunistic_uses_configurable_cpu_threshold():
 
 def test_should_run_uses_configurable_battery_threshold():
     """_should_run should respect config.consolidation_battery_threshold."""
-    config = LumenConfig(
+    config = LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
         store_path="/tmp/.lumen-test",

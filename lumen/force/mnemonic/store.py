@@ -35,9 +35,9 @@ def _get_vector_channel(conn: sqlite3.Connection, config=None):
     from lumen.force.mnemonic.retrieval_dense import VectorChannel
 
     if config is None:
-        from lumen.config import LumenConfig
+        from lumen.config import LumenaConfig
 
-        config = LumenConfig()
+        config = LumenaConfig()
     return VectorChannel(config, conn)
 
 
@@ -65,8 +65,8 @@ def store_memory(
     """
     # Pre-store safety scan — apply configured PII strategy at the write path
     if config is None:
-        from lumen.config import LumenConfig
-        config = LumenConfig()
+        from lumen.config import LumenaConfig
+        config = LumenaConfig()
 
     if config.pii_detection_enabled:
         from lumen.compliance.safety_forgetting import apply_pii_strategy, safety_scan_chunk

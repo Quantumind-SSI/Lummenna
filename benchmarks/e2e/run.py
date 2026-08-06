@@ -1,5 +1,5 @@
 """
-End-to-End Memory Quality Benchmark for Lumen.
+End-to-End Memory Quality Benchmark for Lumena.
 
 Simulates 10 multi-turn conversation sessions across 3 agent personas.
 Each session stores facts, asks questions that require recall, and
@@ -38,7 +38,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.contextual.embed import MockEmbedder
 from lumen.force.mnemonic.store import store_memory
@@ -536,7 +536,7 @@ def run_e2e_benchmark():
         print(f"{'='*60}")
 
         tmpdir = tempfile.mkdtemp(prefix=f"lumen_e2e_{session['room']}_")
-        config = LumenConfig(
+        config = LumenaConfig(
             store_path=Path(tmpdir),
             embedding_dims=EMBED_DIMS,
             vector_index="sqlite-vec",

@@ -20,7 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
 from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
@@ -82,7 +82,7 @@ def _compute_metrics(retrieved_lists: list[list[int]], query_relevant: list[dict
 
 def run_degradation_level(level: str, docs: list[str], corpus_embeddings: np.ndarray, query_embs: list[np.ndarray], query_relevant: list[dict[int, float]]):
     """Run retrieval benchmark at a specific quantization level."""
-    config = LumenConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    config = LumenaConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     tmpdir = tempfile.mkdtemp(prefix="lumen_optical_")
     config.store_path = Path(tmpdir) / "store"
 

@@ -2,13 +2,13 @@
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.force.contextual.embed import MockEmbedder
 
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenConfig(
+    cfg = LumenaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",
@@ -19,11 +19,11 @@ def fresh_config(tmp_path):
     return cfg
 
 
-class TestLumenCheckpointSaver:
+class TestLumenaCheckpointSaver:
     def test_put_and_get(self, fresh_config):
-        from lumen.integrations.langgraph import LumenCheckpointSaver
+        from lumen.integrations.langgraph import LumenaCheckpointSaver
 
-        saver = LumenCheckpointSaver(config=fresh_config)
+        saver = LumenaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t1"}}
 
         checkpoint = {
@@ -46,9 +46,9 @@ class TestLumenCheckpointSaver:
         assert tup.metadata["step"] == 0
 
     def test_list_checkpoints(self, fresh_config):
-        from lumen.integrations.langgraph import LumenCheckpointSaver
+        from lumen.integrations.langgraph import LumenaCheckpointSaver
 
-        saver = LumenCheckpointSaver(config=fresh_config)
+        saver = LumenaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t2"}}
 
         for i in range(3):
@@ -72,9 +72,9 @@ class TestLumenCheckpointSaver:
         assert cps[2].checkpoint["id"] == "cp-0"
 
     def test_thread_isolation(self, fresh_config):
-        from lumen.integrations.langgraph import LumenCheckpointSaver
+        from lumen.integrations.langgraph import LumenaCheckpointSaver
 
-        saver = LumenCheckpointSaver(config=fresh_config)
+        saver = LumenaCheckpointSaver(config=fresh_config)
 
         for tid in ("tA", "tB"):
             cfg = {"configurable": {"thread_id": tid}}
@@ -96,9 +96,9 @@ class TestLumenCheckpointSaver:
         assert tup_b.checkpoint["id"] == "cp-tB"
 
     def test_put_writes(self, fresh_config):
-        from lumen.integrations.langgraph import LumenCheckpointSaver
+        from lumen.integrations.langgraph import LumenaCheckpointSaver
 
-        saver = LumenCheckpointSaver(config=fresh_config)
+        saver = LumenaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t3"}}
         saver.put_writes([("channel1", "value1"), ("channel2", "value2")], config)
 
@@ -110,18 +110,18 @@ class TestLumenCheckpointSaver:
         assert rows[0] == 2
 
     def test_get_tuple_missing(self, fresh_config):
-        from lumen.integrations.langgraph import LumenCheckpointSaver
+        from lumen.integrations.langgraph import LumenaCheckpointSaver
 
-        saver = LumenCheckpointSaver(config=fresh_config)
+        saver = LumenaCheckpointSaver(config=fresh_config)
         result = saver.get_tuple({"configurable": {"thread_id": "missing"}})
         assert result is None
 
 
-class TestLumenGraphStore:
+class TestLumenaGraphStore:
     def test_put_and_get(self, fresh_config):
-        from lumen.integrations.langgraph import LumenGraphStore
+        from lumen.integrations.langgraph import LumenaGraphStore
 
-        store = LumenGraphStore(config=fresh_config)
+        store = LumenaGraphStore(config=fresh_config)
         store.put(("users", "alice"), "goal", {"text": "learn french"})
 
         item = store.get(("users", "alice"), "goal")
@@ -130,9 +130,9 @@ class TestLumenGraphStore:
         assert "learn french" in item["value"]
 
     def test_delete(self, fresh_config):
-        from lumen.integrations.langgraph import LumenGraphStore
+        from lumen.integrations.langgraph import LumenaGraphStore
 
-        store = LumenGraphStore(config=fresh_config)
+        store = LumenaGraphStore(config=fresh_config)
         store.put(("tmp",), "k1", "v1")
         store.delete(("tmp",), "k1")
 
@@ -141,9 +141,9 @@ class TestLumenGraphStore:
 
     def test_search(self, fresh_config):
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        from lumen.integrations.langgraph import LumenGraphStore
+        from lumen.integrations.langgraph import LumenaGraphStore
 
-        store = LumenGraphStore(config=fresh_config, embedder=embedder)
+        store = LumenaGraphStore(config=fresh_config, embedder=embedder)
         store.put(("docs",), "doc1", "machine learning is fascinating")
         store.put(("docs",), "doc2", "cloud computing scales well")
 
@@ -154,9 +154,9 @@ class TestLumenGraphStore:
         assert "doc1" in keys
 
     def test_list_namespaces(self, fresh_config):
-        from lumen.integrations.langgraph import LumenGraphStore
+        from lumen.integrations.langgraph import LumenaGraphStore
 
-        store = LumenGraphStore(config=fresh_config, default_namespace="ns")
+        store = LumenaGraphStore(config=fresh_config, default_namespace="ns")
         store.put(("ns", "a"), "k1", "v1")
         store.put(("ns", "b"), "k2", "v2")
 

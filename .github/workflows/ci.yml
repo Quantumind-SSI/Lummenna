@@ -33,10 +33,10 @@ jobs:
           pip install ruff==0.3.0
 
       - name: Ruff check
-        run: ruff check lumen/ tests/
+        run: ruff check lumena/ tests/
 
       - name: Ruff format check
-        run: ruff format --check lumen/ tests/
+        run: ruff format --check lumena/ tests/
 
   typecheck:
     name: Type Check
@@ -58,7 +58,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: MyPy type check
-        run: mypy lumen/ --ignore-missing-imports
+        run: mypy lumena/ --ignore-missing-imports
 
       - name: Dependency audit
         run: |
@@ -90,7 +90,7 @@ jobs:
           pip install -e ".[dev,langchain]"
 
       - name: Test with coverage
-        run: pytest -q --tb=short --cov=lumen --cov-report=term-missing --cov-report=json --cov-report=xml --cov-fail-under=50
+        run: pytest -q --tb=short --cov=lumena --cov-report=term-missing --cov-report=json --cov-report=xml --cov-fail-under=50
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'

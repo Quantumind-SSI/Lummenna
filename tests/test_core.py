@@ -1,4 +1,4 @@
-"""Real Integration Tests for Lumen Core."""
+"""Real Integration Tests for Lumena Core."""
 
 import os
 import sqlite3
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from lumen.compliance.safety_forgetting import safety_scan_chunk
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TFCState, TwinForceController
 from lumen.data.schema import init_db
 from lumen.force.contextual.assembly import assemble_context
@@ -31,7 +31,7 @@ def memory_db():
 
 @pytest.fixture
 def test_config():
-    return LumenConfig(
+    return LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
         store_path="/tmp/.lumen-test",
@@ -40,7 +40,7 @@ def test_config():
 
 def test_config_loads_from_env():
     os.environ["LUMEN_DEVICE"] = "rpi5"
-    cfg = LumenConfig()
+    cfg = LumenaConfig()
     assert cfg.device == "rpi5"
     del os.environ["LUMEN_DEVICE"]
 
