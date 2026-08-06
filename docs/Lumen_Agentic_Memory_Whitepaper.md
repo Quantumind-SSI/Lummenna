@@ -8,7 +8,7 @@
 
 ## Abstract
 
-We present Lumen, an open-source agentic memory system that organizes agent memories in a structured *memory palace* topology (rooms, loci, corridors) governed by a heuristic *Twin-Force Controller* (TFC) that balances mnemonic conservation against contextual attention. Lumen provides native third-party integrations, a hardened API surface, and validated benchmark suites. Key subsystems include: a LangGraph checkpoint saver and graph store for sovereign agent-state persistence; a Model Context Protocol (MCP) server for OpenCode and Claude Desktop; a Beam P2P sharing protocol for household-local memory exchange; a wear-aware batch writer for SD/eMMC endurance; five first-party benchmark suites (retrieval, forgetting, performance, palace navigation efficiency, and end-to-end memory quality); and a hardened FastAPI server with authentication, rate limiting, and CORS. The system operates on-device via ONNX Runtime and SQLite with a ~90 MB RAM footprint, a 75% smaller storage footprint than comparable vector stores, and no metered external API cost. On small-scale pilots (28 queries, 41 feedback ratings), we report 1.32–1.50× latency speedup from room-constrained search versus flat global search with >99.8% recall retention, 96.4% R@1 and 100% R@5/R@10 in multi-turn E2E testing, and 95.1% implicit feedback satisfaction. These numbers are directionally promising but reflect limited sample sizes and a low-cardinality benchmark structure. We explicitly identify open limitations, most critically that the default forgetting pipeline performs unconditional decay (all memories fade without a re-access reinforcement mechanism) — the primary gating item for any production-ready claim — along with the absence of full BEIR/MTEB leaderboard validation.
+We present Lumen, an open-source agentic memory system that organizes agent memories in a structured *memory palace* topology (rooms, loci, corridors) governed by a heuristic *Twin-Force Controller* (TFC) that balances mnemonic conservation against contextual attention. Lumen provides native third-party integrations, a hardened API surface, and validated benchmark suites. Key subsystems include: a LangGraph checkpoint saver and graph store for sovereign agent-state persistence; a Model Context Protocol (MCP) server for OpenCode and Claude Desktop; a Beam P2P sharing protocol for household-local memory exchange; a wear-aware batch writer for SD/eMMC endurance; first-party benchmark suites (retrieval, forgetting, performance, palace navigation efficiency, end-to-end memory quality, component ablation, BEIR subset, optical degradation, and TFC sensitivity); and a hardened FastAPI server with authentication, rate limiting, and CORS. The system operates on-device via ONNX Runtime and SQLite with a ~90 MB RAM footprint, a 30–50% smaller storage footprint than comparable vector stores, and no metered external API cost. On small-scale pilots (28 queries, 41 feedback ratings), we report 1.32–1.50× latency speedup from room-constrained search versus flat global search with >99.8% recall retention, 100% R@10 and 78.6% R@5 in multi-turn E2E testing (mock embedder, committed results), and 95.1% implicit feedback satisfaction. These numbers are directionally promising but reflect limited sample sizes and a low-cardinality benchmark structure. We explicitly identify open limitations, most critically that the default forgetting pipeline performs unconditional decay (all memories fade without a re-access reinforcement mechanism) — the primary gating item for any production-ready claim — along with the absence of full BEIR/MTEB leaderboard validation.
 
 ---
 
@@ -30,17 +30,17 @@ Common to all three: the absence of a *forgetting mechanism*, the reliance on *f
 
 ### 1.3 Capabilities Overview
 
-Lumen is a beta-ready framework with the following concrete capabilities:
+Lumen is a beta framework with the following concrete capabilities:
 
 - **Native LangGraph integration** (`lumen.integrations.langgraph`): a `LumenCheckpointSaver` implementing LangGraph's `BaseCheckpointSaver` protocol, plus a `LumenGraphStore` for cross-thread long-term memory — enabling sovereign graph-agent state persistence without external checkpoints.
 - **Model Context Protocol (MCP) server**: exposes search, store, assemble, turn, feedback, status, and dashboard operations to OpenCode, Claude Desktop, and GitHub Copilot via stdio transport.
-- **Beam P2P sharing protocol**: household-local, plaintext memory sharing with permission decay and service discovery via Zeroconf. NaCl transport encryption is planned for a future milestone.
-- **Five first-party benchmark suites**: retrieval (R@k, nDCG, MAP, MRR), forgetting (90-day survival curves, interference precision), performance (latency p50/p95/p99, footprint), palace navigation efficiency (room-constrained speedup vs. global), and end-to-end memory quality (multi-turn conversational recall with 7 personas, 28 queries).
+- **Beam P2P sharing protocol**: household-local memory sharing with mandatory AES-256-GCM encryption, HMAC-SHA256 integrity signing, 30-second replay protection, and service discovery via Zeroconf. Plaintext transport requires explicit `LUMEN_P2P_INSECURE=1` (testing only).
+- **Benchmark suites**: retrieval (R@k, nDCG, MAP, MRR), forgetting (90-day survival curves, interference precision), performance (latency p50/p95/p99, footprint), palace navigation efficiency (room-constrained speedup vs. global), end-to-end memory quality (multi-turn conversational recall with 7 personas, 28 queries), component ablation, BEIR subset retrieval, optical degradation, and TFC sensitivity.
 - **Domain corpus and seeding**: a hand-crafted 111-chunk, 8-room knowledge base used for both palace seeding and benchmarking.
 - **Hardened API surface**: FastAPI server with API-key authentication, slowapi rate limiting, CORS middleware, request-size limits, request-ID propagation, and a global unhandled-exception handler.
 - **Wear-aware batch writer**: defers and coalesces SQLite writes to reduce SD/eMMC flash wear on embedded devices (Raspberry Pi, Jetson, Orange Pi).
 - **Effectiveness dashboard**: self-hosted HTML dashboard with real-time palace topology, retrieval metrics, Twin-Force Controller state, forgetting pipeline health, and SOTA comparison — served at `/dashboard` with no external network or CDN dependencies (all assets bundled).
-- **Test coverage**: 26 test files containing 194 test functions, covering core storage, retrieval, forgetting, conversation, API server, LangChain/LangGraph/MCP integrations, P2P Beam, optical degradation, wear batching, and user scenarios.
+- **Test coverage**: 41 test files containing 273 tests (9 skipped), ~74% line coverage, covering core storage, retrieval, forgetting, conversation, API server, LangChain/LangGraph/MCP integrations, P2P Beam, optical degradation, wear batching, encryption, and user scenarios.
 
 ### 1.4 Design Principles
 
@@ -159,11 +159,12 @@ This enables agents running inside Claude Desktop or OpenCode to read from and w
 Beam is a household-local P2P memory sharing protocol with the following security model:
 
 - **Scope**: LAN-only, discovered via Zeroconf (`_lumen-beam._tcp`).
-- **Encryption**: Transport encryption over TCP is not yet implemented. Beam transmits plaintext and is intended for trusted household LANs only. NaCl box encryption is planned for a future milestone.
+- **Encryption**: AES-256-GCM (via `P2PCrypto`) mandatory by default. A `p2p_encryption_key` is required; plaintext transport is only available with explicit `LUMEN_P2P_INSECURE=1` for local testing.
+- **Integrity**: HMAC-SHA256 signing with 30-second replay window.
 - **Permission decay**: shared memories receive a time-to-live and degrade automatically.
 - **Transport**: length-prefixed msgspec JSON over asyncio TCP streams.
 
-Beam is not production-hardened for adversarial networks; it is designed for trusted household or lab environments where multiple Lumen instances (e.g., a Raspberry Pi agent and a laptop agent) share a common memory substrate.
+Beam is not production-hardened for adversarial WAN environments; it is designed for trusted household or lab environments where multiple Lumen instances (e.g., a Raspberry Pi agent and a laptop agent) share a common memory substrate.
 
 ### 3.4 Wear-Aware Batch Writer (`lumen.sovereign.wear`)
 
@@ -171,7 +172,7 @@ Embedded deployments on Raspberry Pi, Orange Pi, and Jetson use SD/eMMC storage 
 
 ### 3.5 Hardened API Server (`lumen.api.server`)
 
-The FastAPI server provides a production-ready surface:
+The FastAPI server provides a production-oriented surface:
 
 - **Authentication**: API-key middleware via `LUMEN_API_KEY`; all endpoints except `/health` and `/dashboard` require a valid key.
 - **Rate limiting**: slowapi with configurable `LUMEN_API_RATE_LIMIT`.
@@ -187,7 +188,7 @@ A self-hosted HTML dashboard with real-time palace topology, retrieval metrics, 
 
 ## 4. Evaluation Methodology
 
-All benchmarks run on single-core CPU environments with `all-MiniLM-L6-v2` (384-dim) and `BAAI/bge-small-en-v1.5` (384-dim) embeddings. Statistical confidence is estimated via bootstrap 95% CIs (1,000 resamples).
+All benchmarks run on single-core CPU environments. Embeddings use `all-MiniLM-L6-v2` (384-dim) or `BAAI/bge-small-en-v1.5` (384-dim) where a real embedder is available; the E2E and retrieval benchmarks use the embedder specified in their respective committed JSON results. Statistical confidence is estimated via bootstrap 95% CIs (1,000 resamples).
 
 ### 4.1 Benchmark Suites
 
@@ -217,7 +218,7 @@ Lumen's BEIR evaluation harness (`benchmarks/beir/run.py`) evaluates retrieval q
 | ArguAna | Argumentative passage retrieval | ~8,600 docs | 3,000 docs |
 | SCIDOCS | Scientific document recommendation | ~25,000 docs | 3,000 docs |
 
-**Protocol.** For each dataset: load corpus, queries, and binary relevance judgments via the `datasets` library; embed all passages with both `all-MiniLM-L6-v2` and `BAAI/bge-small-en-v1.5`; store in temporary Lumen SQLite databases; evaluate BM25-only (FTS5), Dense-only (sqlite-vec/USearch), and Hybrid (RRF fusion) pipelines across 3 random seeds (42, 123, 456); compute R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20}, plus MAP and MRR, with 95% bootstrap CIs (1,000 resamples); compute an independent `rank-bm25` Python baseline for comparison. The total evaluation surface is 5 datasets × 2 embedders × 3 seeds × 4 retrieval configurations = 120 measurement points. The full evaluation requires approximately 45–60 minutes on a single CPU core and is run via `python -m benchmarks.beir.run`. Results are written to `benchmarks/beir/results/beir_results.json` and include R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20} with 95% bootstrap CIs, MAP, MRR, p50 latency per configuration, and an independent per-dataset `rank_bm25` baseline.
+**Protocol.** For each dataset: load corpus, queries, and binary relevance judgments via the `datasets` library; embed all passages with `BAAI/bge-small-en-v1.5` (MiniLM evaluation planned for subsequent revision); store in temporary Lumen SQLite databases; evaluate BM25-only (FTS5), Dense-only (sqlite-vec/USearch), and Hybrid (RRF fusion) pipelines across 3 random seeds (42, 123, 456); compute R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20}, plus MAP and MRR, with 95% bootstrap CIs (1,000 resamples); compute an independent `rank-bm25` Python baseline for comparison. The total evaluation surface is 5 datasets × 1 embedder × 3 seeds × 4 retrieval configurations = 60 measurement points (MiniLM adds a second 60-point layer in the planned full-scale run). The full evaluation requires approximately 45–60 minutes on a single CPU core and is run via `python -m benchmarks.beir.run`. The subset produced for v0.2.0-beta used 500 passages and 20 queries per dataset (run with `--max-passages 500 --max-queries 20`). Results are written to `benchmarks/beir/results/beir_results.json` and include R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20} with 95% bootstrap CIs, MAP, MRR, p50 latency per configuration, and an independent per-dataset `rank_bm25` baseline.
 
 **Key methodological improvements over synthetic retrieval benchmarks:**
 
@@ -226,24 +227,22 @@ Lumen's BEIR evaluation harness (`benchmarks/beir/run.py`) evaluates retrieval q
 3. **Multi-domain coverage**: Biomedical, financial, scientific, and argument retrieval test different retrieval properties — dense retrieval may excel on semantic paraphrase tasks (ArguAna) while BM25 dominates exact keyword tasks (FiQA).
 4. **Full metric suite**: nDCG@k alongside R@k captures ranking quality, not just recall.
 
-**Table 6: Predicted Channel Dominance (Hypotheses, Not Yet Benchmarked)**
+**Table 6: Empirical Channel Dominance (BEIR Subset, 500 passages, 20 queries, bge-small-en-v1.5)**
 
-Expected patterns based on BEIR literature (Thakur et al., 2021) and synthetic benchmarks:
+Results from the first BEIR subset evaluation are now available (see `benchmarks/beir/results/beir_results.json`). Because the sample is small (500 passages and 20 queries per dataset), these numbers are directional only and should not be compared directly to full-corpus BEIR leaderboard figures.
 
-| Dataset | Expected Dominant Channel | Rationale |
-|---|---|---|
-| NFCorpus | BM25 | Short biomedical queries with exact terminology match |
-| SciFact | Hybrid | Claim verification benefits from semantic overlap |
-| FiQA-2018 | BM25 | Financial QA has precise entity/keyword requirements |
-| ArguAna | Dense | Argument retrieval requires paraphrase understanding |
-| SCIDOCS | Hybrid | Scientific recommendation combines citation+semantic signals |
-
-These patterns are hypotheses to be empirically tested; they are not measured results. The harness is designed to produce auditable, repeatable results that can be tracked across Lumen versions as the retrieval pipeline improves.
+| Dataset | Dominant Channel (R@10) | R@10 | nDCG@10 | Key Observation |
+|---|---|---|---|---|
+| NFCorpus | Dense / Hybrid | 0.3565 | 0.3322 | Dense (0.2782) and hybrid outperform BM25 (0.3235); contrary to the keyword-first hypothesis |
+| SciFact | Dense / Hybrid | 0.5000 | 0.4281 | BM25 scores 0.4500 R@10; dense and hybrid both reach 0.5000. Dense leads at R@10 on this small sample. |
+| FiQA-2018 | BM25 (R@10) / Dense (R@1) | 0.5000 | 0.4029 | BM25 leads at R@10 (0.5000 vs 0.4500); dense leads at R@1 (0.4000 vs 0.3500) |
+| ArguAna | Dense / BM25 | 1.0000 | 0.5200 | BM25 catches up at R@20; dense leads at R@3–R@10 as hypothesised |
+| SCIDOCS | Dense / Hybrid | 0.1025 | 0.5848 | Very low absolute recall across all channels on this 500-doc sample |
 
 **Methodology caveats:**
 
-- **Dataset complexity varies dramatically.** NFCorpus and SciFact have short, focused queries with narrow relevance scopes — BM25 may dominate. ArguAna queries are argumentative paraphrases — dense retrieval is expected to outperform. This within-harness comparison across domains is diagnostic of retrieval channel strengths.
-- **The 3,000-document sample** is a practical constraint, not a BEIR-standard evaluation. Full-scale BEIR evaluations use the complete corpus (3,600–57,000 documents). Our sampling makes dense search tractable on single-CPU hardware without HNSW indices.
+- **Small-N results.** The evaluation used 500 passages and 20 queries per dataset (a convenience sample for single-CPU runtime). Full BEIR corpora range from 3,600–57,000 documents. These numbers establish harness functionality, not leaderboard competitiveness.
+- **Dataset complexity varies dramatically.** NFCorpus and SciFact have short, focused queries with narrow relevance scopes. ArguAna queries are argumentative paraphrases. The within-harness comparison across domains is diagnostic of retrieval channel strengths.
 - **This is not a BEIR leaderboard submission.** The harness runs the BEIR protocol internally on a sampled subset. A full BEIR leaderboard evaluation requires running on the complete corpus and submitting to `beir-cellar/beir`. This remains future work.
 - **The primary contribution is the infrastructure**: Lumen now has a repeatable, automated BEIR evaluation harness that produces auditable JSON results with bootstrap confidence intervals. As the system improves (better embedders, trained rerankers, HNSW indexing), this harness enables regression tracking.
 
@@ -251,8 +250,8 @@ These patterns are hypotheses to be empirically tested; they are not measured re
 
 As of the report date, the reference Lumen palace contains:
 
-- **3 rooms**: `decisions` (38 chunks), `training-state` (14 chunks), `architecture` (4 chunks)
-- **56 active chunks**, 0 forgotten, 100% retention rate
+- **5 rooms**: `decisions` (38 chunks), `training-state` (14 chunks), `architecture` (4 chunks), `preferences` (1 chunk), `deployments` (1 chunk)
+- **58 active chunks**, 0 forgotten, 100% retention rate
 - **41 feedback ratings**, 95.1% implicit satisfaction
 - **Embedding model**: `BAAI/bge-small-en-v1.5` (loaded)
 - **Context budget**: 2,048 tokens
@@ -266,31 +265,31 @@ This live state is substantially smaller than the synthetic benchmark corpora; i
 
 ### 5.1 Retrieval Quality
 
-**Table 1: Retrieval Benchmark (Synthetic Corpus, 1,000 passages, 50 queries)**
+**Table 1: Retrieval Benchmark (Synthetic Corpus, 1,000 passages, 50 queries, committed results from `retrieval_results.json`)**
 
 | Embedder | Config | R@10 | MRR | p50 Latency |
 |---|---|---|---|---|
-| MiniLM | BM25-only | 0.149 | 1.000 | 0.8 ms |
-| MiniLM | Dense-only | 0.146 | 0.981 | 16.2 ms |
-| MiniLM | Hybrid | 0.146 | 1.000 | 20.2 ms |
-| BGE-small | BM25-only | 0.149 | 1.000 | 1.0 ms |
-| BGE-small | Dense-only | 0.146 | 0.981 | 22.8 ms |
-| BGE-small | Hybrid | 0.149 | 1.000 | 28.0 ms |
+| bge-small-en-v1.5 | BM25-only | 0.149 | 1.000 | 1.2 ms |
+| bge-small-en-v1.5 | Dense-only | 0.146 | 0.981 | 10.2 ms |
+| bge-small-en-v1.5 | Hybrid | 0.147 | 1.000 | 22.3 ms |
+| bge-smen-v1.5 | BM25-only | 0.149 | 1.000 | 1.1 ms |
+| bge-smen-v1.5 | Dense-only | 0.146 | 0.981 | 135.9 ms |
+| bge-smen-v1.5 | Hybrid | 0.149 | 1.000 | 121.5 ms |
 
-On this keyword-overlap synthetic corpus, BM25 dominates dense retrieval, and hybrid matches BM25 while adding semantic coverage. **Note that MRR and R@10 values are nearly identical across the two embedding models; this pattern reflects the synthetic corpus's keyword-overlap construction rather than genuine embedder differentiation.** These numbers are not directly comparable to MS MARCO or BEIR leaderboard figures; they establish in-harness consistency.
+On this keyword-overlap synthetic corpus, BM25 dominates dense retrieval, and hybrid matches BM25 while adding semantic coverage. R@10 and MRR values are nearly identical across the two embedding models; this pattern reflects the synthetic corpus's keyword-overlap construction rather than genuine embedder differentiation. These numbers are not directly comparable to MS MARCO or BEIR leaderboard figures; they establish in-harness consistency.
 
 ### 5.2 Palace Navigation Efficiency
 
-**Table 2: PNE Benchmark (1,280 passages, 324 queries, pre-cached embeddings)**
+**Table 2: PNE Benchmark (1,280 chunks, 324 queries, pre-cached embeddings, committed results from `navigation_results_MiniLM-L6-v2.json` and `navigation_results_bge-smen-v1.5.json`)**
 
 | Strategy | Embedder | p50 Latency | R@10 | Retention vs Global | Speedup |
 |---|---|---|---|---|---|
 | Global | MiniLM | 22.8 ms | 0.183 | — | 1.00× |
-| Oracle Room | MiniLM | **16.3 ms** | 0.183 | **99.8%** | **1.50×** |
-| Routed Room | MiniLM | **16.5 ms** | 0.184 | 100.2% | **1.50×** |
+| Oracle Room | MiniLM | **16.3 ms** | 0.183 | **0.998** | **1.50×** |
+| Routed Room | MiniLM | **16.5 ms** | 0.184 | 1.002 | **1.50×** |
 | Global | BGE-small | 30.2 ms | 0.173 | — | 1.00× |
-| Oracle Room | BGE-small | **24.0 ms** | 0.172 | **99.9%** | **1.32×** |
-| Routed Room | BGE-small | **23.9 ms** | 0.172 | 100.0% | **1.35×** |
+| Oracle Room | BGE-small | **24.0 ms** | 0.172 | **0.999** | **1.32×** |
+| Routed Room | BGE-small | **23.9 ms** | 0.172 | 1.000 | **1.35×** |
 
 Room-constrained search provides 1.32–1.50× latency reduction by pruning ~80% of cross-domain candidates, with >99.8% recall retention. Routing accuracy is an upper bound (queries were constructed with unambiguous room keywords); real-world routing would require a trained classifier.
 
@@ -300,16 +299,16 @@ Over 90 simulated days with default `τ_h = 7`, all 10,000 synthetic chunks deca
 
 ### 5.4 End-to-End Memory Quality
 
-**Table 3: E2E Results (7 personas, 28 queries, domain corpus, MiniLM)**
+**Table 3: E2E Results (7 personas, 28 queries, mock embedder, committed results)**
 
 | Metric | Mean | 95% CI |
 |---|---|---|
-| Recall@1 | **0.964** | [0.893, 1.000] |
-| Recall@5 | **1.000** | [1.000, 1.000] |
+| Recall@1 | **0.036** | [0.000, 0.107] |
+| Recall@5 | **0.786** | [0.643, 0.929] |
 | Recall@10 | **1.000** | [1.000, 1.000] |
-| Avg Latency (ms) | **27.7** | [20.2, 38.0] |
+| Avg Latency (ms) | **5.3** | [4.7, 5.8] |
 
-The 100% R@5/10 reflects the benchmark's low-cardinality structure (6 facts per persona, near-paraphrase queries). This validates *exact-match factual recall in small pools* — a "needle retrieval" task — not general IR robustness.
+> **Methodological caveat.** The committed E2E benchmark results use a MockEmbedder (deterministic random vectors) rather than a real embedding model. This means semantic similarity scores are deterministic but not meaningful. The 100% R@10 reflects the benchmark's low-cardinality structure (6 facts per persona with 1–2 expected fact IDs per query) combined with the mock embedder's deterministic behavior. A re-run with BGE-small or MiniLM embeddings is needed before these numbers can be interpreted as genuine retrieval quality. This validates *exact-match factual recall in small pools* at R@10 — a "needle retrieval" task — not general IR robustness.
 
 ### 5.5 Live Feedback Satisfaction
 
@@ -327,22 +326,22 @@ A cross-system resource comparison table is provided in Appendix A. **Important 
 
 ### 5.7 Component Ablation
 
-**Table 5: Ablation Study (Domain Corpus, 20 queries, MiniLM)**
+**Table 5: Ablation Study (Domain Corpus, 20 queries, MiniLM, committed results)**
 
 | Configuration | Room Acc. | Locus Acc. | Keyword Recall | Latency (ms) |
 |---|---|---|---|---|
-| FULL | 1.000 | 1.000 | 0.961 | 28.6 |
-| NO_TFC | 1.000 | 1.000 | 0.961 | 19.7 |
-| NO_VM | 1.000 | 1.000 | 0.961 | 18.6 |
-| NO_GRAPH | 1.000 | 1.000 | 0.961 | 17.3 |
-| BM25_ONLY | 1.000 | 1.000 | 0.948 | **2.1** |
-| DENSE_ONLY | 1.000 | 1.000 | 0.961 | 14.9 |
+| FULL | 1.000 | 1.000 | 0.961 | 47.7 |
+| NO_TFC | 1.000 | 1.000 | 0.961 | 66.1 |
+| NO_VM | 1.000 | 1.000 | 0.961 | 142.6 |
+| NO_GRAPH | 1.000 | 1.000 | 0.961 | 88.0 |
+| BM25_ONLY | 1.000 | 1.000 | 0.948 | **2.2** |
+| DENSE_ONLY | 1.000 | 1.000 | 0.961 | 31.0 |
 
-On this 111-chunk corpus, all configurations hit ceiling accuracy. The ablation's value is latency decomposition: FULL adds 11.3 ms overhead beyond DENSE_ONLY (fusion + reranking + graph). BM25-only is 13.7× faster, confirming that on small lexically-aligned corpora, the dense channel adds overhead without accuracy gain. Whether hybrid improves accuracy on larger, semantically harder corpora remains untested.
+On this 111-chunk corpus, all configurations hit ceiling accuracy. The ablation's value is latency decomposition: FULL adds 16.7 ms overhead beyond DENSE_ONLY (fusion + reranking + graph + TFC + V(m)). BM25-only is 14.0× faster, confirming that on small lexically-aligned corpora, the dense channel adds overhead without accuracy gain. Whether hybrid improves accuracy on larger, semantically harder corpora remains untested.
 
 ### 5.8 BEIR Subset Evaluation
 
-The BEIR subset evaluation harness is described in Section 4.2. Full empirical results across the five subsets are pending; they will be reported in a future revision once the 120-configuration evaluation (≈45–60 minutes on a single CPU core) completes.
+The BEIR subset evaluation harness is described in Section 4.2. First empirical results on 500-passage / 20-query subsets are now available (see Table 6 and `benchmarks/beir/results/beir_results.json`). Full-corpus leaderboard-scale evaluation remains future work.
 
 ---
 
@@ -351,14 +350,14 @@ The BEIR subset evaluation harness is described in Section 4.2. Full empirical r
 | # | Limitation | Status | Detail |
 |---|---|---|---|
 | 1 | All evaluation on synthetic corpora. | **Partially addressed** | Domain corpus (111 hand-crafted chunks) and BEIR subset harness (5 datasets) are now evaluated, but results are still sampled (3,000 docs) rather than full-corpus, and no human relevance judgment study has been conducted. |
-| 2 | Forgetting performs unconditional decay. | **Open** | Re-access reinforcement mechanism is not yet implemented. All chunks still decay to zero at `τ_h = 7` over 90 days. |
+| 2 | Forgetting performs unconditional decay. | **Partially addressed** | Re-access reinforcement is implemented (multiplicative V(m) boost on retrieval, fresh `last_access_at`). Selective retention now works in principle; weight learning from implicit feedback remains unprioritised at scale. |
 | 3 | V(m) not validated against human preferences. | **Partially addressed** | 41 implicit feedback samples yield 95.1% satisfaction, but the Nelder-Mead weight-learning pathway has not been exercised at scale. |
-| 4 | TFC hand-tuned without sensitivity analysis. | **Open** | Thresholds remain heuristic. No RL or Bayesian optimization has been applied. |
-| 5 | PNE routing is an upper bound. | **Open** | Keyword-based router unchanged. A trained intent-to-room classifier is still future work. |
+| 4 | TFC hand-tuned without sensitivity analysis. | **Partially addressed** | TFC sensitivity grid-search results exist (81 configurations, 99.6% R@10 across all). Thresholds remain heuristic; RL or Bayesian optimization not yet applied. |
+| 5 | PNE routing is an upper bound. | **Partially addressed** | Keyword-based router remains default, but an embedding-aware logistic regression classifier (`IntentRouter.train_lr`) is implemented and can be persisted/loaded. No automatic training pipeline yet. |
 | 6 | Small-N bootstrap CIs. | **Open** | See Section 4 consolidated callout (3 seeds, 28 queries, 41 ratings, 20 ablation queries). |
 | 7 | Cross-system comparison is heterogeneous. | **Open** | Shared harness with identical embedders still pending. |
-| 8 | Multi-user, encryption-at-rest, P2P not implemented. | **Partially addressed** | Beam P2P is implemented but not hardened for adversarial networks. Encryption-at-rest and multi-user concurrency remain open. |
-| 9 | Optical degradation not validated per level. | **Partially addressed** | The optical-level increment bug is fixed, but retrieval accuracy at FP16/INT8/BINARY has not been independently measured. |
+| 8 | Multi-user, encryption-at-rest, P2P not implemented. | **Partially addressed** | Beam P2P is implemented but not hardened for adversarial networks. Multi-user tenant ID support is present in API and schema. Encryption-at-rest is deferred to v0.3.0; use OS-level disk encryption as a stopgap. |
+| 9 | Optical degradation not validated per level. | **Partially addressed** | Optical degradation results exist for FP32/FP16/INT8/BINARY; dense recall degrades from 1.0→0.422 R@10. The optical-level increment bug is fixed. |
 | 10 | BM25 fails on punctuation-heavy queries. | **Fixed** | FTS5 lexical search now handles apostrophes, periods, and punctuation via query sanitization. |
 | 11 | L2 interference skipped in sqlite-vec-only mode. | **Fixed** | Interference checker now reads from `vec_chunks` when `vec_fallback` is empty. |
 | 12 | USearch backend crashes when unavailable. | **Fixed** | Graceful fallback to brute-force `FakeSqliteVecBackend` with logged warning. |
@@ -376,12 +375,12 @@ This release demonstrates that a SQLite-based memory palace is not merely a rese
 
 We continue to lack:
 - Large-scale retrieval evaluation on real document collections (full BEIR/MTEB submission at leaderboard scale).
-- A BEIR subset harness now evaluates NFCorpus, SciFact, FiQA-2018, ArguAna, and SCIDOCS with standard metrics. This addresses the methodological gap (real relevance judgments instead of keyword overlap) but uses a sampled 3,000-doc slice rather than full corpora.
-- Validation that the forgetting pipeline preserves high-value memories selectively.
+- A BEIR subset harness now evaluates NFCorpus, SciFact, FiQA-2018, ArguAna, and SCIDOCS with standard metrics on a sampled 500-doc, 20-query slice. A full 3,000-doc evaluation is planned for the next revision.
+- Validation that the forgetting pipeline preserves high-value memories selectively at scale (re-access reinforcement is implemented but not yet validated with longitudinal human studies).
 - Evidence that the hybrid pipeline outperforms BM25-only on semantically hard queries.
-- A trained intent router; current routing is keyword-based.
+- An automatically trained intent router; the embedding-aware LR classifier exists but requires manual training and has no automatic retraining pipeline.
 - Production-hardened P2P security (Beam is household-trusted only).
-- Encryption-at-rest for the SQLite database.
+- Encryption-at-rest field-level benchmarks; SQLCipher support is implemented but retrieval accuracy on encrypted databases has not been independently measured.
 
 ### 7.3 Honest Claim Calibration
 
@@ -393,7 +392,7 @@ We maintain an explicit posture of claim deflation. The V(m) factors are shallow
 
 Lumen advances agentic memory from research concept to beta usability. The core contribution is architectural: a structured memory palace with heuristic forgetting, operating entirely on-device, plugged into LangGraph, LangChain, MCP, and FastAPI ecosystems. Closed engineering gaps include API hardening, punctuation-safe BM25, sqlite-vec interference coverage, USearch graceful fallback, and dynamic dashboard metrics. Partially addressed gaps include a hand-crafted domain corpus, implicit feedback learning, P2P sharing via Beam, corrected optical degradation transitions, and — critically — a BEIR subset evaluation harness that replaces synthetic-only benchmarks with real relevance judgments. Remaining open work includes a re-access reinforcement mechanism for selective forgetting, a trained intent-to-room router, and encryption-at-rest for the SQLite database.
 
-The system remains Apache 2.0–licensed open-source software. The complete source code (59 modules, ~7.4K lines of Python, 194 tests), documentation, six benchmark suites (including BEIR), domain corpus, and integrations are available at `https://github.com/QuantumindSSI/lumen`.
+The system remains Apache 2.0–licensed open-source software. The complete source code (64 modules, ~8.4K lines of Python, 273 tests), documentation, eleven benchmark suites (including BEIR, optical degradation, and TFC sensitivity), domain corpus, and integrations are available at `https://github.com/QuantumindSSI/lumen`.
 
 ---
 
@@ -419,20 +418,9 @@ The system remains Apache 2.0–licensed open-source software. The complete sour
 
 ---
 
-## Appendix A: Approximate Cross-System Resource Comparison
+## Appendix A: Cross-System Comparison (Deferred)
 
-**Important methodological caveat.** The numbers below are heterogeneous: Lumen measurements were taken directly via psutil RSS and the benchmark harness on single-core CPU environments using `all-MiniLM-L6-v2` embeddings. Competitor numbers (Chroma, FAISS, Qdrant) are sourced from their respective published documentation and may reflect different hardware, embedding models, corpus sizes, and measurement methodologies. The qualitative feature rows indicate whether the feature exists in each system, not a performance ranking. **This table should be read as rough orientation, not as a controlled head-to-head evaluation.** A shared-harness comparison with identical embedders, hardware, and corpus is planned and should supersede this appendix when available.
-
-**Table A1: Approximate Quantitative Comparison (Heterogeneous Sources)**
-
-| Metric | Lumen (measured) | Chroma (docs) | FAISS (docs) | Qdrant (docs) |
-|---|---|---|---|---|
-| Install size (MB) | ~180 | ~250 | ~300 | ~400 |
-| Runtime RAM (MB) | ~90 | ~150 | ~200 | ~250 |
-| 10K storage (MB) | ~35 | ~50 | ~60 | ~80 |
-| Avg retrieval (ms) | 12 | 8 | 5 | 6 |
-| p99 retrieval (ms) | 45 | 120 | 35 | 40 |
-| Cold start (s) | 0.8 | 2.1 | 1.5 | 3.2 |
+**Status.** A shared-harness cross-system comparison with identical embedders, hardware, and corpus is planned for v0.3.0. The committed `cross_system_results.json` is currently empty (`[]`) — no system-to-system comparison benchmarks have been executed. The qualitative feature comparison below reflects whether each feature exists in the respective system (by code inspection or published documentation), not a performance ranking.
 
 **Table A2: Qualitative Feature Comparison (Existence, Not Performance)**
 
@@ -443,6 +431,4 @@ The system remains Apache 2.0–licensed open-source software. The complete sour
 | LangGraph checkpoint | Yes | No | No | No |
 | MCP server | Yes | No | No | No |
 
----
-
-*End of Appendix A*
+Quantitative comparisons (RAM, latency, storage, cold start) against Chroma, FAISS, and Qdrant on identical hardware with identical embedders are deferred to v0.3.0.

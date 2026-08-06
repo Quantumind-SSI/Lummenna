@@ -10,7 +10,7 @@ Lumen provides a persistent, searchable memory store for LLM agents. It organize
 
 ### Proven
 
-- **243 tests (73% coverage)** — all passing, 2 skipped (optional integration deps)
+- **273 tests (74% coverage)** — all passing, 9 skipped (optional integration deps, SQLCipher)
 - **End-to-end flow:** store → search → assemble → feedback → forget
 - **API server:** FastAPI with auth, rate limiting, CORS
 - **MCP server:** 7 tools exposed via stdio
@@ -19,12 +19,11 @@ Lumen provides a persistent, searchable memory store for LLM agents. It organize
 
 ### Honest Limitations
 
-- **No encryption-at-rest** — use OS-level disk encryption
-- **P2P is plaintext TCP** — trusted LAN only
-- **No BEIR results** — benchmarks use synthetic corpora; harness for real datasets exists
-- **API unversioned** — no `/v1/` prefix yet
-- **Several modules await wiring** (backup, spreading activation, user profile, log rotation)
-- **Benchmark numbers are from synthetic data** — not validated on standard leaderboards
+- **Encryption-at-rest partially implemented** — SQLCipher schema support exists; use OS-level disk encryption as stopgap
+- **P2P is LAN-only** — Beam uses AES-256-GCM + HMAC-SHA256; not hardened for WAN
+- **BEIR subset results available** — 500-doc/20-query subset evaluated; full corpus pending
+- **Several modules await wiring** (backup, user profile, log rotation)
+- **Benchmark numbers mixed** — synthetic corpora validated; BEIR subset results available; full leaderboard submission pending
 
 ---
 
@@ -62,7 +61,7 @@ Background → Consolidation → L1 Decay → L2 Interference → L3 Eviction �
 
 ## State of Development
 
-Lumen is **functional alpha software**. It works end-to-end for storing, searching, and assembling agent memories. It has been audited through six exhaustive rounds of truth-in-engineering review and is honest about what works and what doesn't.
+Lumen is **beta software**. It works end-to-end for storing, searching, and assembling agent memories. All capability claims have been verified against the current codebase.
 
 ### Works End-to-End
 
@@ -77,12 +76,11 @@ Lumen is **functional alpha software**. It works end-to-end for storing, searchi
 
 ### In Progress / Planned
 
-- Encryption-at-rest (SQLCipher integration)
-- BEIR benchmark validation
-- API versioning
+- Encryption-at-rest validation (SQLCipher integration implemented, tests pending)
+- Full-corpus BEIR benchmark validation
 - Transport encryption for P2P
 - Full MARS consolidation lifecycle (currently: dedup only without LocalLLM)
-- Module wiring (backup, spreading, user_profile)
+- Module wiring (backup, user_profile)
 
 ---
 
@@ -110,10 +108,9 @@ store_memory(conn, content="The user prefers dark mode", room_name="preferences"
 ## Contributing
 
 See CONTRIBUTING.md for setup and guidelines. High-impact areas:
-- Run BEIR harness for real-world retrieval benchmarks
-- Add encryption-at-rest support
+- Validate encryption-at-rest with SQLCipher
 - Wire unwired modules into production paths
-- Add API versioning
+- Full-corpus BEIR benchmark leaderboard submission
 
 ---
 

@@ -4,6 +4,8 @@
 
 **Version: 0.1.0 (Alpha) — July 2026**
 
+> **ARCHIVED DRAFT — SUPERSEDED BY v0.2.0-beta.** This document contains claims from v0.1.0-alpha that do not reflect the current codebase. Several benchmark numbers (E2E R@1, ColBERTv2 comparison, Raspberry Pi latency, MS MARCO) were aspirational or based on uncommitted runs and have been corrected in `Lumen_Agentic_Memory_Whitepaper.md`. Refer to the current whitepaper for v0.2.0-beta results verified against committed benchmark JSON files. This draft is retained for historical context only.
+
 ---
 
 ## Abstract

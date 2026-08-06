@@ -26,17 +26,14 @@ Lumen is a local-first, self-contained memory and context framework for AI agent
 | LangChain adapter | Working | LumenChatMemory (requires `langchain` package) |
 | LangGraph adapter | Working | LumenCheckpointSaver (requires `langgraph` package) |
 | Dashboard | Working | Real-time palace topology, TFC state, memory health (http://localhost:8848/dashboard) |
-| P2P sharing | Working (trusted LAN) | Beam protocol over plaintext TCP; blocked by default (sovereign mode) |
-| Encryption-at-rest | Not implemented | Use OS-level encryption (LUKS, FileVault, BitLocker) |
+| P2P sharing | Working (LAN) | Beam protocol with AES-256-GCM + HMAC-SHA256; blocked by default (sovereign mode) |
+| Encryption-at-rest | Partially implemented | SQLCipher schema support implemented; tests skipped pending v0.3.0. Use OS-level encryption as stopgap. |
 
 ### Not Yet Implemented
 
 - Transport encryption for P2P beam
-- BEIR benchmark validation (harness exists, results pending)
 - `lumen.api.backup` CLI command
-- `lumen.spreading.activation` runtime integration
 - Per-user adaptive decay (schema column exists, not wired)
-- API versioning (`/v1/` prefix)
 
 ---
 
@@ -275,7 +272,7 @@ from lumen.integrations.langgraph import LumenCheckpointSaver
 
 ## 10. Benchmarks
 
-Eight benchmark suites in `benchmarks/`. All run from the repo root.
+Eleven benchmark suites in `benchmarks/`. All run from the repo root.
 
 | Suite | Status | Command |
 |---|---|---|
@@ -283,9 +280,11 @@ Eight benchmark suites in `benchmarks/`. All run from the repo root.
 | E2E quality | Implemented | `python -m benchmarks.e2e.run` |
 | Navigation | Implemented | `python -m benchmarks.navigation.run` |
 | Ablation | Implemented | `python -m benchmarks.ablation.run` |
-| Forgetting | Harness ready | `python -m benchmarks.forgetting.run` |
+| Forgetting | Run (results available) | `python -m benchmarks.forgetting.run` |
 | Performance | Harness ready | `python -m benchmarks.perf.run` |
-| BEIR subset | Harness ready | `python -m benchmarks.beir.run` |
+| BEIR subset | Run (500-doc/20-query subset results available) | `python -m benchmarks.beir.run` |
+| Optical degradation | Run (results available) | `python -m benchmarks.optical.run` |
+| TFC sensitivity | Run (results available) | `python -m benchmarks.tfc.run` |
 | All suites | Wrapper | `python -m benchmarks.run_all` |
 
 Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are explicitly loaded. Install benchmark dependencies with `pip install "lumen[benchmarks]"`.
@@ -308,13 +307,12 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 
 ## 12. Known Limitations
 
-1. **No encryption-at-rest** — storage is plaintext SQLite
-2. **P2P is plaintext** — Beam transmits over unencrypted TCP (trusted LAN only)
-3. **API unversioned** — no `/v1/` prefix
-4. **Benchmark results unvalidated** — numbers are from synthetic corpora; real-world BEIR results pending
-5. **No CDN SRI** — dashboard loads Chart.js from CDN without integrity hash
-6. **Some modules unwired** — backup, spreading, user_profile, log_rotation exist but await integration
-7. **Dual scheduler risk** — running both `lumen serve` and `lumen daemon start` creates duplicate schedulers
+1. **Encryption-at-rest partially implemented** — SQLCipher schema support exists; full validation deferred to v0.3.0. Use OS-level disk encryption as a stopgap.
+2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN
+3. **Benchmark results partially validated** — synthetic corpora are validated; BEIR subset results (500 docs, 20 queries) are available. Full-corpus BEIR leaderboard submission remains pending.
+4. **No CDN SRI** — dashboard loads Chart.js from CDN without integrity hash
+5. **Some modules unwired** — backup, user_profile, log_rotation exist but await integration
+6. **Dual scheduler risk** — running both `lumen serve` and `lumen daemon start` creates duplicate schedulers
 
 ---
 
@@ -342,6 +340,6 @@ lumen/
 ├── integrations/          # LangChain, LangGraph, MCP server
 ├── p2p/                   # Beam P2P sharing protocol
 ├── sovereign/             # FRQAD, optical quantization, local LLM
-tests/                     # 39 test files, 243 tests
-benchmarks/                # 8 benchmark suites
+tests/                     # 41 test files, 273 tests
+benchmarks/                # 11 benchmark suites (including BEIR, optical, TFC sensitivity, stress, cross-system)
 ```
