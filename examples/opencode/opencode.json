@@ -1,13 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "lumen-memory": {
+    "lumena-memory": {
       "type": "local",
-      "command": ["python", "-m", "lumen.integrations.mcp_server"],
+      "command": ["python", "-m", "lumena.integrations.mcp_server"],
       "enabled": true,
       "env": {
-        "LUMEN_DEVICE": "generic",
-        "LUMEN_API_KEY": ""
+        "LUMENA_DEVICE": "generic",
+        "LUMENA_API_KEY": ""
       }
     }
   }

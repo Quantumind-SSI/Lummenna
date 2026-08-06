@@ -9,8 +9,8 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import init_db
+from lumena.config import LumenaConfig
+from lumena.data.schema import init_db
 
 
 @pytest.fixture
@@ -46,5 +46,5 @@ def test_config():
     return LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumen-test",
+        store_path="/tmp/.lumena-test",
     )

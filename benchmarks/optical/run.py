@@ -20,13 +20,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
-from lumen.sovereign.optical import quantize_vector
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
+from lumena.sovereign.optical import quantize_vector
 
 RESULTS_DIR = Path(__file__).with_suffix("").parent / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -83,7 +83,7 @@ def _compute_metrics(retrieved_lists: list[list[int]], query_relevant: list[dict
 def run_degradation_level(level: str, docs: list[str], corpus_embeddings: np.ndarray, query_embs: list[np.ndarray], query_relevant: list[dict[int, float]]):
     """Run retrieval benchmark at a specific quantization level."""
     config = LumenaConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
-    tmpdir = tempfile.mkdtemp(prefix="lumen_optical_")
+    tmpdir = tempfile.mkdtemp(prefix="lumena_optical_")
     config.store_path = Path(tmpdir) / "store"
 
     conn = get_connection(config)

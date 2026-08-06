@@ -1,10 +1,10 @@
-"""Tests for lumen.lumena.goals persistence."""
+"""Tests for lumena.goals persistence."""
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.goals import GoalTree
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.goals import GoalTree
 
 
 @pytest.fixture

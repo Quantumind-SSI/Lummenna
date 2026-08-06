@@ -5,9 +5,9 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from lumen.api.server import app, _state, _config, _auth_failures
-from lumen._init import initialize_palace
-from lumen.config import LumenaConfig
+from lumena.api.server import app, _state, _config, _auth_failures
+from lumena._init import initialize_palace
+from lumena.config import LumenaConfig
 
 
 @pytest.fixture

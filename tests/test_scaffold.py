@@ -2,21 +2,21 @@
 
 import sqlite3
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import init_db
-from lumen.force.mnemonic.event_buffer import Event, EventMemoryBuffer
+from lumena.config import LumenaConfig
+from lumena.data.schema import init_db
+from lumena.force.mnemonic.event_buffer import Event, EventMemoryBuffer
 
 
 def test_imports():
     """Smoke-test that all scaffold modules are importable."""
-    import lumen
-    import lumen.brand.errors
-    import lumen.config
-    import lumen.data.migrate
-    import lumen.data.schema
-    import lumen.force.mnemonic.event_buffer
+    import lumena
+    import lumena.brand.errors
+    import lumena.config
+    import lumena.data.migrate
+    import lumena.data.schema
+    import lumena.force.mnemonic.event_buffer
 
-    assert lumen.__version__ == "0.2.0"
+    assert lumena.__version__ == "0.2.0"
 
 
 def test_schema_init():

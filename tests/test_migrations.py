@@ -2,8 +2,8 @@ import sqlite3
 
 import pytest
 
-from lumen.data.migrate import CURRENT_SCHEMA_VERSION, get_current_version, migrate
-from lumen.data.schema import init_db
+from lumena.data.migrate import CURRENT_SCHEMA_VERSION, get_current_version, migrate
+from lumena.data.schema import init_db
 
 
 @pytest.fixture

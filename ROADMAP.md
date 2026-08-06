@@ -16,7 +16,7 @@ This document tracks the remaining work to move Lumena from beta (`v0.2.0-beta`)
 - [ ] Implement SQLCipher integration (`PRAGMA key = ...`) in `get_connection()`
 - [ ] Support Fernet field-level encryption fallback for standard sqlite3
 - [x] OS-level encryption guidance (FileVault, BitLocker, LUKS) documented in DEPLOYMENT.md and SECURITY.md
-- [x] File permissions enforcement: `~/.lumen` is `700` by default
+- [x] File permissions enforcement: `~/.lumena` is `700` by default
 
 ### 1.3 API Hardening
 - [x] Document `X-API-Key` and `X-Tenant-ID` headers in API docs

@@ -1,12 +1,12 @@
-"""Tests for lumen.sovereign.local_llm."""
+"""Tests for lumena.sovereign.local_llm."""
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.sovereign.local_llm import LocalLLM, _get_llama_class
+from lumena.config import LumenaConfig
+from lumena.sovereign.local_llm import LocalLLM, _get_llama_class
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def test_is_available_returns_false_when_model_missing():
     """is_available() should be False when the model file does not exist."""
     # Ensure llama_cpp is importable by patching the inline import in is_available
     with patch(
-        "lumen.sovereign.local_llm.LumenaConfig",
+        "lumena.sovereign.local_llm.LumenaConfig",
         return_value=LumenaConfig(
             model_path=Path("/nonexistent"),
             local_llm_model="missing.gguf",
@@ -66,7 +66,7 @@ def test_is_available_returns_true_when_model_present():
     fake_cfg.local_llm_model = "dummy.gguf"
     fake_mod = MagicMock()
     with (
-        patch("lumen.sovereign.local_llm.LumenaConfig", return_value=fake_cfg),
+        patch("lumena.sovereign.local_llm.LumenaConfig", return_value=fake_cfg),
         patch.dict("sys.modules", {"llama_cpp": fake_mod}),
     ):
         assert LocalLLM.is_available() is True
@@ -97,7 +97,7 @@ def test_load_unload_lifecycle(enabled_config):
     mock_instance = MagicMock()
     mock_llama_class = MagicMock(return_value=mock_instance)
 
-    with patch("lumen.sovereign.local_llm._get_llama_class", return_value=mock_llama_class):
+    with patch("lumena.sovereign.local_llm._get_llama_class", return_value=mock_llama_class):
         llm._load()
         assert llm._model is mock_instance
         mock_llama_class.assert_called_once()
@@ -121,7 +121,7 @@ def test_generate_calls_load_and_unload(enabled_config):
     mock_instance.return_value = {"choices": [{"text": "  generated text  "}]}
     mock_llama_class = MagicMock(return_value=mock_instance)
 
-    with patch("lumen.sovereign.local_llm._get_llama_class", return_value=mock_llama_class):
+    with patch("lumena.sovereign.local_llm._get_llama_class", return_value=mock_llama_class):
         result = llm.generate("test prompt", max_tokens=128)
         assert result == "generated text"
         mock_instance.assert_called_once_with("test prompt", max_tokens=128, stop=["\n"])
@@ -138,7 +138,7 @@ def test_summarize_calls_load_and_unload(enabled_config):
     mock_instance.return_value = {"choices": [{"text": "  summary result  "}]}
     mock_llama_class = MagicMock(return_value=mock_instance)
 
-    with patch("lumen.sovereign.local_llm._get_llama_class", return_value=mock_llama_class):
+    with patch("lumena.sovereign.local_llm._get_llama_class", return_value=mock_llama_class):
         result = llm.summarize(["text one", "text two"], "Summarise these")
         assert result == "summary result"
         assert llm._model is None

@@ -2,15 +2,15 @@ import * as vscode from 'vscode';
 
 /**
  * Minimal VS Code extension that registers a Copilot Chat participant
- * for Lumen memory. Requires VS Code 1.90+ with chat participant API.
+ * for Lumena memory. Requires VS Code 1.90+ with chat participant API.
  */
 export function activate(context: vscode.ExtensionContext) {
   const participant = vscode.chat.createChatParticipant(
-    'copilot.lumen',
+    'copilot.lumena',
     async (request, _context, response, _token) => {
       const query = request.prompt;
 
-      // Assemble context from Lumen
+      // Assemble context from Lumena
       try {
         const res = await fetch('http://localhost:8848/assemble', {
           method: 'POST',
@@ -18,26 +18,26 @@ export function activate(context: vscode.ExtensionContext) {
           body: JSON.stringify({ query, top_k: 5 }),
         });
         if (!res.ok) {
-          response.markdown(`Lumen server error: ${res.statusText}. Is \\"lumen serve\\" running?`);
+          response.markdown(`Lumena server error: ${res.statusText}. Is \\"lumena serve\\" running?`);
           return;
         }
         const data = await res.json();
         if (data.assembled_context) {
-          response.markdown(`**Lumen context retrieved:**\n\n${data.assembled_context}`);
+          response.markdown(`**Lumena context retrieved:**\\n\\n${data.assembled_context}`);
         } else {
-          response.markdown('No relevant memories found in the Lumen palace.');
+          response.markdown('No relevant memories found in the Lumena palace.');
         }
       } catch (err) {
         response.markdown(
-          `Failed to reach Lumen server at localhost:8848. ` +
-          `Please start it with: \`lumen serve\``
+          `Failed to reach Lumena server at localhost:8848. ` +
+          `Please start it with: \`lumena serve\``
         );
       }
     }
   );
 
   participant.iconPath = new vscode.ThemeIcon('database');
-  participant.description = 'Lumen Memory Palace';
+  participant.description = 'Lumena Memory Palace';
 
   context.subscriptions.push(participant);
 }

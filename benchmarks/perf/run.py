@@ -31,19 +31,19 @@ except Exception:
     _HAS_PSUTIL = False
 
 try:
-    import lumen  # noqa: F401
+    import lumena  # noqa: F401
 except ImportError as exc:
-    print(f"[ERROR] Cannot import lumen: {exc}")
+    print(f"[ERROR] Cannot import lumena: {exc}")
     sys.exit(1)
 
 import contextlib
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.contextual.embed import FallbackEmbedder
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
-from lumen.sovereign.wear import WearAwareBatcher
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.contextual.embed import FallbackEmbedder
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
+from lumena.sovereign.wear import WearAwareBatcher
 
 SEED = 42
 EMBED_DIMS = 384
@@ -158,7 +158,7 @@ def run_benchmark() -> dict[str, Any]:
 
     for size in CORPUS_SIZES:
         print(f"[INFO] Benchmarking corpus size {size:,} ...")
-        tmpdir = tempfile.mkdtemp(prefix=f"lumen_benchmark_perf_{size}_")
+        tmpdir = tempfile.mkdtemp(prefix=f"lumena_benchmark_perf_{size}_")
         config = LumenaConfig(
             store_path=Path(tmpdir),
             embedding_dims=EMBED_DIMS,

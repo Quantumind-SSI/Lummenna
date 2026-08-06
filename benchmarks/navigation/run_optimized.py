@@ -27,13 +27,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import DenseHit
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
-from lumen.force.mnemonic.store import store_memory
-from lumen.fusion import fuse_and_rerank
-from lumen.intent import IntentRouter
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import DenseHit
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
+from lumena.force.mnemonic.store import store_memory
+from lumena.fusion import fuse_and_rerank
+from lumena.intent import IntentRouter
 
 # ---------------------------------------------------------------------------
 # Configuration — same as standard PNE but with real embedder enforced
@@ -301,7 +301,7 @@ def _run_single_seed(seed, embedder_model):
     print(f"[INFO] Embedding {len(passages)} passages with {embedder_model} ...")
     embeddings = embedder.encode(texts)
 
-    tmpdir = tempfile.mkdtemp(prefix=f"lumen_pne_real_{seed}_")
+    tmpdir = tempfile.mkdtemp(prefix=f"lumena_pne_real_{seed}_")
     config = LumenaConfig(store_path=Path(tmpdir), embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     conn = get_connection(config)
 

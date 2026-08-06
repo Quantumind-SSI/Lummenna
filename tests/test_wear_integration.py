@@ -4,11 +4,11 @@ import sqlite3
 
 import pytest
 
-from lumen.data.schema import init_db
-from lumen.force.mnemonic.consolidation import run_consolidation_pass
-from lumen.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumen.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
-from lumen.sovereign.wear import WearAwareBatcher
+from lumena.data.schema import init_db
+from lumena.force.mnemonic.consolidation import run_consolidation_pass
+from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+from lumena.sovereign.wear import WearAwareBatcher
 
 
 @pytest.fixture

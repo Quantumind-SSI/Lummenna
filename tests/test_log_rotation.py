@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from lumen.sovereign import log_rotation
+from lumena.sovereign import log_rotation
 
 
 @pytest.fixture

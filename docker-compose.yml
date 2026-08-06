@@ -4,22 +4,22 @@ services:
   lumena:
     build: .
     image: lumena:latest
-    container_name: lumen-api
+    container_name: lumena-api
     restart: unless-stopped
     ports:
-      - "${LUMEN_API_PORT:-8848}:8848"
+      - "${LUMENA_API_PORT:-8848}:8848"
     volumes:
-      - lumen_data:/root/.lumena
+      - lumena_data:/root/.lumena
     environment:
-      - LUMEN_API_HOST=0.0.0.0
-      - LUMEN_API_PORT=8848
-      - LUMEN_LOG_LEVEL=${LUMEN_LOG_LEVEL:-info}
-      - LUMEN_API_KEY=${LUMEN_API_KEY:-}
-      - LUMEN_API_RATE_LIMIT=${LUMEN_API_RATE_LIMIT:-60/minute}
-      - LUMEN_ALLOWED_ORIGINS=${LUMEN_ALLOWED_ORIGINS:-*}
-      - LUMEN_DEVICE=${LUMEN_DEVICE:-generic}
-      - LUMEN_CONTEXT_BUDGET=${LUMEN_CONTEXT_BUDGET:-2048}
-      - LUMEN_MEMORY_LIMIT_MB=${LUMEN_MEMORY_LIMIT_MB:-512}
+      - LUMENA_API_HOST=0.0.0.0
+      - LUMENA_API_PORT=8848
+      - LUMENA_LOG_LEVEL=${LUMENA_LOG_LEVEL:-info}
+      - LUMENA_API_KEY=${LUMENA_API_KEY:-}
+      - LUMENA_API_RATE_LIMIT=${LUMENA_API_RATE_LIMIT:-60/minute}
+      - LUMENA_ALLOWED_ORIGINS=${LUMENA_ALLOWED_ORIGINS:-*}
+      - LUMENA_DEVICE=${LUMENA_DEVICE:-generic}
+      - LUMENA_CONTEXT_BUDGET=${LUMENA_CONTEXT_BUDGET:-2048}
+      - LUMENA_MEMORY_LIMIT_MB=${LUMENA_MEMORY_LIMIT_MB:-512}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8848/health')"]
       interval: 30s
@@ -28,5 +28,5 @@ services:
       start_period: 10s
 
 volumes:
-  lumen_data:
+  lumena_data:
     driver: local

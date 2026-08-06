@@ -1,10 +1,10 @@
-"""Tests for lumen.lumena.epistemic persistence."""
+"""Tests for lumena.epistemic persistence."""
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.epistemic import EpistemicTracker
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.epistemic import EpistemicTracker
 
 
 @pytest.fixture

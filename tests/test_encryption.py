@@ -2,11 +2,11 @@
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection, init_db
-from lumen.force.contextual.embed import MockEmbedder
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection, init_db
+from lumena.force.contextual.embed import MockEmbedder
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
 
 
 @pytest.fixture

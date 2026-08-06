@@ -63,7 +63,7 @@ coverage.json
 # Jupyter
 .ipynb_checkpoints
 
-# Lumen-specific artifacts
+# Lumena-specific artifacts
 *.log
 *.db
 *.db-wal
@@ -93,4 +93,4 @@ dev-docs/
 .opencode/
 ios/
 tmp/
-lumen/benchmarks/*/results/
+lumena/benchmarks/*/results/

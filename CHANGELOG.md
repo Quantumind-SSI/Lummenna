@@ -11,11 +11,11 @@ All notable changes to Lumena will be documented in this file.
 - Palace seed script (`datasets/seed.py`) — populates a Lumena instance from the domain corpus JSON with real embeddings, creating a production-ready knowledge base in ~2 seconds.
 - Palace Navigation Efficiency (PNE) benchmark (`benchmarks/navigation/`) — proprietary evaluation suite measuring latency speedup, recall retention, intent-routing accuracy, and pruning efficiency of Lumena's room/locus topology vs. flat global search. Outputs JSON + Markdown.
 - End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 14 sessions. Measures R@k semantic recall, similarity scores, and per-query latency. Bridges Lumena to the SOTA evaluation standards used by MemGPT/Mem0/Zep.
-- LangGraph integration (`lumen.integrations.langgraph`) — `LumenaCheckpointSaver` for graph state persistence and `LumenaGraphStore` for cross-thread long-term memory. Installable via `pip install lumena[langgraph]`. Includes 9 test cases.
-- Centralized logging helper (`lumen.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
+- LangGraph integration (`lumena.integrations.langgraph`) — `LumenaCheckpointSaver` for graph state persistence and `LumenaGraphStore` for cross-thread long-term memory. Installable via `pip install lumena[langgraph]`. Includes 9 test cases.
+- Centralized logging helper (`lumena.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
 - API versioning (`/v1/` prefix) for all operational endpoints with backward-compatible public paths (`/health`, `/dashboard`, `/metrics`).
 - Subresource Integrity (SRI) hash for Chart.js CDN resource in dashboard HTML.
-- PGP key for `security@lumen.ai` published in `SECURITY.md`.
+- PGP key for `security@lumena.ai` published in `SECURITY.md`.
 - Optical degradation benchmark (`benchmarks/optical/run.py`) — evaluates retrieval quality at FP32, FP16, INT8, and BINARY quantization levels.
 - TFC sensitivity benchmark (`benchmarks/tfc/run.py`) — grid search across Twin-Force Controller parameters.
 - Stress test benchmark (`benchmarks/stress/run.py`) — 100k+ chunk ingestion, multi-threaded query throughput, and L3 budget eviction validation.

@@ -2,7 +2,7 @@
 
 import pytest
 
-from lumen.force.mnemonic.spreading import SPREAD_GAMMA, spread_activation
+from lumena.force.mnemonic.spreading import SPREAD_GAMMA, spread_activation
 
 
 @pytest.fixture

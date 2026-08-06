@@ -19,12 +19,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.controller import TwinForceController
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
+from lumena.config import LumenaConfig
+from lumena.controller import TwinForceController
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
 
 RESULTS_DIR = Path(__file__).with_suffix("").parent / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -70,7 +70,7 @@ def _compute_recall(retrieved_lists: list[list[int]], query_relevant: list[dict[
 
 def run_single_config(e: float, a: float, tau: float, r: int, texts: list[str], embeddings: np.ndarray, query_embs: list[np.ndarray], query_relevant: list[dict[int, float]]):
     config = LumenaConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
-    tmpdir = tempfile.mkdtemp(prefix="lumen_tfc_")
+    tmpdir = tempfile.mkdtemp(prefix="lumena_tfc_")
     config.store_path = Path(tmpdir) / "store"
 
     conn = get_connection(config)
@@ -129,7 +129,7 @@ def run_single_config(e: float, a: float, tau: float, r: int, texts: list[str], 
     ], TOP_K)
 
     # Simulate decay after tau days to measure survival
-    from lumen.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+    from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
     ebbinghaus_decay(conn, user_half_life_days=tau)
     active = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
     survival_rate = active / max(1, N_PASSAGES)

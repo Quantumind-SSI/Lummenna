@@ -6,18 +6,18 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumen.compliance.safety_forgetting import safety_scan_chunk
-from lumen.config import LumenaConfig
-from lumen.controller import TFCState, TwinForceController
-from lumen.data.schema import init_db
-from lumen.force.contextual.assembly import assemble_context
-from lumen.force.contextual.embed import FallbackEmbedder
-from lumen.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumen.force.mnemonic.retrieval_dense import SqliteVecBackend
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumen.force.mnemonic.store import store_memory
-from lumen.force.mnemonic.value_model import compute_vm
-from lumen.fusion import fuse_and_rerank
+from lumena.compliance.safety_forgetting import safety_scan_chunk
+from lumena.config import LumenaConfig
+from lumena.controller import TFCState, TwinForceController
+from lumena.data.schema import init_db
+from lumena.force.contextual.assembly import assemble_context
+from lumena.force.contextual.embed import FallbackEmbedder
+from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lumena.force.mnemonic.retrieval_dense import SqliteVecBackend
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
+from lumena.force.mnemonic.store import store_memory
+from lumena.force.mnemonic.value_model import compute_vm
+from lumena.fusion import fuse_and_rerank
 
 
 @pytest.fixture
@@ -34,15 +34,15 @@ def test_config():
     return LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumen-test",
+        store_path="/tmp/.lumena-test",
     )
 
 
 def test_config_loads_from_env():
-    os.environ["LUMEN_DEVICE"] = "rpi5"
+    os.environ["LUMENA_DEVICE"] = "rpi5"
     cfg = LumenaConfig()
     assert cfg.device == "rpi5"
-    del os.environ["LUMEN_DEVICE"]
+    del os.environ["LUMENA_DEVICE"]
 
 
 def test_schema_creates_all_tables(memory_db):
@@ -152,7 +152,7 @@ def test_safety_scan_detects_email():
 
 
 def test_context_assembly_respects_budget(memory_db, test_config):
-    from lumen.fusion import RetrievedChunk
+    from lumena.fusion import RetrievedChunk
 
     chunks = [
         RetrievedChunk(

@@ -12,11 +12,11 @@
 
 Lumena takes security seriously. If you discover a vulnerability, please report it via the GitHub Security Advisory page or email.
 
-**Report via:** https://github.com/QuantumindSSI/lumen/security/advisories/new
+**Report via:** https://github.com/QuantumindSSI/lumena/security/advisories/new
 
 **PGP Key:** For sensitive disclosures, encrypt emails to:
 ```
-security@lumen.ai
+security@lumena.ai
 ```
 
 Public key (ED25519):
@@ -55,7 +55,7 @@ WQYWQOYpjP4A
 ### Sovereign-by-Default
 
 - Lumena **never** sends data to external APIs unless explicitly configured
-- `LUMEN_SOVEREIGN=true` (default) blocks P2P sharing, model downloads from HuggingFace, and clamps API CORS to localhost origins
+- `LUMENA_SOVEREIGN=true` (default) blocks P2P sharing, model downloads from HuggingFace, and clamps API CORS to localhost origins
 - Embedding models run locally via ONNX Runtime
 
 ### Forgetting as Security
@@ -67,15 +67,15 @@ WQYWQOYpjP4A
 ### Storage Security
 
 - SQLite WAL mode with configurable sync levels
-- File permissions enforced: `~/.lumen` should be `700`
+- File permissions enforced: `~/.lumena` should be `700`
 - Audit logs are stored in the SQLite `audit_log` table with structured entries
 
 ## Known Limitations (Beta)
 
 1. **No encryption at rest** — Lumena stores data in plaintext SQLite. Use OS-level disk encryption (FileVault, BitLocker, LUKS) as a stopgap. SQLCipher integration is planned for v0.3.0.
-2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMEN_API_KEY` is unset. Set it before exposing the server to any network.
+2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMENA_API_KEY` is unset. Set it before exposing the server to any network.
 3. **P2P sharing is plaintext** — Beam protocol transmits over TCP without transport encryption. It is intended for trusted household LANs only. Do not expose Beam to untrusted networks.
-4. **Sovereign mode blocks P2P and downloads** — When `LUMEN_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lumena processes from making network calls.
+4. **Sovereign mode blocks P2P and downloads** — When `LUMENA_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lumena processes from making network calls.
 
 ## Dependency Security
 

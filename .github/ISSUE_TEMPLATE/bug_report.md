@@ -24,7 +24,7 @@ Steps to reproduce the behaviour:
 A clear and concise description of what you expected to happen.
 
 **Logs**
-Paste relevant log output (lines starting with `[LUMEN:*]`):
+Paste relevant log output (lines starting with `[LUMENA:*]`):
 ```
 ```
 

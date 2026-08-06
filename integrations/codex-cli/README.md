@@ -9,13 +9,13 @@ Add to your `~/.codex/config.json` (or project-local `.codex/config.json`):
 ```json
 {
   "mcp_servers": {
-    "lumen-memory": {
+    "lumena-memory": {
       "command": "python",
-      "args": ["-m", "lumen.integrations.mcp_server"],
+      "args": ["-m", "lumena.integrations.mcp_server"],
       "env": {
-        "LUMEN_DEVICE": "generic",
-        "LUMEN_STORE_PATH": "${HOME}/.lumen/store",
-        "LUMEN_MODEL_PATH": "${HOME}/.lumen/models"
+        "LUMENA_DEVICE": "generic",
+        "LUMENA_STORE_PATH": "${HOME}/.lumena/store",
+        "LUMENA_MODEL_PATH": "${HOME}/.lumena/models"
       }
     }
   }
@@ -25,9 +25,9 @@ Add to your `~/.codex/config.json` (or project-local `.codex/config.json`):
 Or use the CLI to add it:
 
 ```bash
-codex mcp add lumen-memory \
-  --command "python -m lumen.integrations.mcp_server" \
-  --env LUMEN_DEVICE=generic
+codex mcp add lumena-memory \
+  --command "python -m lumena.integrations.mcp_server" \
+  --env LUMENA_DEVICE=generic
 ```
 
 ## Usage
@@ -41,10 +41,10 @@ codex "Assemble relevant context for implementing user authentication"
 ```
 
 Codex will invoke:
-- `lumen_search` for recall queries
-- `lumen_store` for persistence requests
-- `lumen_assemble` for context-rich tasks
-- `lumen_turn` after completing conversation turns
+- `lumena_search` for recall queries
+- `lumena_store` for persistence requests
+- `lumena_assemble` for context-rich tasks
+- `lumena_turn` after completing conversation turns
 
 ## Full Agent Mode
 
@@ -58,7 +58,7 @@ Make sure your `~/.codex/instructions.md` includes:
 
 ```markdown
 ## Memory Management
-- Use lumen_store to persist important decisions, patterns, and architectural notes.
-- Use lumen_search to recall prior decisions before making changes.
-- After completing a task, call lumen_turn to log the conversation.
+- Use lumena_store to persist important decisions, patterns, and architectural notes.
+- Use lumena_search to recall prior decisions before making changes.
+- After completing a task, call lumena_turn to log the conversation.
 ```

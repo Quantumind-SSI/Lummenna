@@ -4,8 +4,8 @@ import sqlite3
 
 import pytest
 
-from lumen.curiosity import curiosity_probe, curiosity_score
-from lumen.data.schema import init_db
+from lumena.curiosity import curiosity_probe, curiosity_score
+from lumena.data.schema import init_db
 
 
 @pytest.fixture

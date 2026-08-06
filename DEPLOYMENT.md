@@ -47,13 +47,13 @@ sudo systemctl disable dphys-swapfile
 ```bash
 # Create a dedicated virtual environment
 python3 -m venv ~/.venvs/lumena
-source ~/.venvs/lumen/bin/activate
+source ~/.venvs/lumena/bin/activate
 
 # Install Lumena from PyPI (when published)
 pip install lumena
 
 # Or install from source
-git clone https://github.com/QuantumindSSI/lumen.git
+git clone https://github.com/QuantumindSSI/lumena.git
 cd lumena
 pip install -e ".[dev]"
 ```
@@ -84,8 +84,8 @@ docker run -d \
   --name lumena \
   -p 8848:8848 \
   -v ~/.lumena:/root/.lumena \
-  -e LUMEN_DEVICE=generic \
-  -e LUMEN_LOG_LEVEL=info \
+  -e LUMENA_DEVICE=generic \
+  -e LUMENA_LOG_LEVEL=info \
   --restart unless-stopped \
   lumena:latest
 
@@ -104,10 +104,10 @@ services:
     volumes:
       - ~/.lumena:/root/.lumena
     environment:
-      - LUMEN_DEVICE=generic
-      - LUMEN_LOG_LEVEL=info
-      - LUMEN_API_HOST=0.0.0.0
-      - LUMEN_API_PORT=8848
+      - LUMENA_DEVICE=generic
+      - LUMENA_LOG_LEVEL=info
+      - LUMENA_API_HOST=0.0.0.0
+      - LUMENA_API_PORT=8848
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8848/health')"]
@@ -123,7 +123,7 @@ services:
 
 ### 3.1 Device Profiles
 
-Create `~/.lumen/config.toml`:
+Create `~/.lumena/config.toml`:
 
 ```toml
 # Raspberry Pi 5
@@ -156,25 +156,25 @@ enable_frqad = true
 
 ```bash
 # Required
-export LUMEN_DEVICE="generic"          # rpi5 | jetson-orin | orange-pi | generic
-export LUMEN_CONTEXT_BUDGET="4096"     # tokens
-export LUMEN_MEMORY_LIMIT="500mb"      # RAM cap
+export LUMENA_DEVICE="generic"          # rpi5 | jetson-orin | orange-pi | generic
+export LUMENA_CONTEXT_BUDGET="4096"     # tokens
+export LUMENA_MEMORY_LIMIT="500mb"      # RAM cap
 
 # Twin-Force Controller defaults
-export LUMEN_TFC_E="0.5"               # conservation bias (0-1)
-export LUMEN_TFC_A="0.5"               # attentional temperature (0-1)
-export LUMEN_TFC_TAU="7d"              # temporal horizon
-export LUMEN_TFC_R="3"                 # resolution level (0-5)
+export LUMENA_TFC_E="0.5"               # conservation bias (0-1)
+export LUMENA_TFC_A="0.5"               # attentional temperature (0-1)
+export LUMENA_TFC_TAU="7d"              # temporal horizon
+export LUMENA_TFC_R="3"                 # resolution level (0-5)
 
 # Sovereign mode
-export LUMEN_SOVEREIGN="true"          # block all external API calls
-export LUMEN_LOG_LEVEL="info"          # debug | info | warning | error
+export LUMENA_SOVEREIGN="true"          # block all external API calls
+export LUMENA_LOG_LEVEL="info"          # debug | info | warning | error
 ```
 
 ### 3.3 SQLite Tuning for Production
 
 ```bash
-sqlite3 ~/.lumen/store/lumen.db <<EOF
+sqlite3 ~/.lumena/store/lumena.db <<EOF
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
 PRAGMA mmap_size=268435456;  -- 256 MB
@@ -220,10 +220,10 @@ lumena status
 
 ```bash
 # Structured JSON logs
-tail -f ~/.lumen/logs/audit.jsonl | jq .
+tail -f ~/.lumena/logs/audit.jsonl | jq .
 
 # Log format:
-# {"timestamp":"2026-07-20T12:00:00Z","component":"LUMEN:FORCE:MNEMONIC",
+# {"timestamp":"2026-07-20T12:00:00Z","component":"LUMENA:FORCE:MNEMONIC",
 #  "level":"info","event":"CONSOLIDATE","room":"preferences","new_chunks":12}
 ```
 
@@ -237,27 +237,27 @@ Lumena supports optional API key authentication via the `X-API-Key` header.
 
 ```bash
 # 1. Generate a strong key
-export LUMEN_API_KEY=$(openssl rand -hex 32)
+export LUMENA_API_KEY=$(openssl rand -hex 32)
 
 # 2. Add it to your config
-export LUMEN_API_KEY="$LUMEN_API_KEY"
+export LUMENA_API_KEY="$LUMENA_API_KEY"
 ```
 
 **Authenticated request:**
 ```bash
-curl -H "X-API-Key: $LUMEN_API_KEY" http://localhost:8848/v1/search \
+curl -H "X-API-Key: $LUMENA_API_KEY" http://localhost:8848/v1/search \
   -H "Content-Type: application/json" \
   -d '{"query": "sovereign AI memory", "top_k": 5}'
 ```
 
 **Multi-tenant headers:**
 ```bash
-curl -H "X-API-Key: $LUMEN_API_KEY" \
+curl -H "X-API-Key: $LUMENA_API_KEY" \
   -H "X-Tenant-ID: customer-acme" \
   http://localhost:8848/v1/status
 ```
 
-> **Warning:** When `LUMEN_API_KEY` is unset, the API is open. Always set it before exposing Lumena to any network.
+> **Warning:** When `LUMENA_API_KEY` is unset, the API is open. Always set it before exposing Lumena to any network.
 
 ### 5.2 Encryption at Rest
 
@@ -279,18 +279,18 @@ recommendation='Use OS-level disk encryption (FileVault, BitLocker, LUKS) for pr
 
 ### 5.3 File Permissions
 
-File permissions are enforced automatically on startup (fail-fast if the process cannot chmod). The entire `~/.lumen` tree is set to `700` for directories and `600` for files. Ensure the Lumena process owns the path:
+File permissions are enforced automatically on startup (fail-fast if the process cannot chmod). The entire `~/.lumena` tree is set to `700` for directories and `600` for files. Ensure the Lumena process owns the path:
 
 ```bash
 # Secure the Lumena home directory
 chmod 700 ~/.lumena
-chmod 600 ~/.lumen/config.toml
-chmod 600 ~/.lumen/store/lumen.db
+chmod 600 ~/.lumena/config.toml
+chmod 600 ~/.lumena/store/lumena.db
 ```
 
 ### 5.4 Systemd Service (Linux)
 
-Create `/etc/systemd/system/lumen.service`:
+Create `/etc/systemd/system/lumena.service`:
 
 ```ini
 [Unit]
@@ -302,12 +302,12 @@ Type=simple
 User=lumena
 Group=lumena
 WorkingDirectory=/home/lumena
-Environment="LUMEN_DEVICE=generic"
-Environment="LUMEN_LOG_LEVEL=info"
-Environment="LUMEN_SOVEREIGN=true"
-Environment="LUMEN_API_KEY=your-api-key-here"
-Environment="PATH=/home/lumen/.venvs/lumen/bin"
-ExecStart=/home/lumen/.venvs/lumen/bin/uvicorn lumen.api.server:app --host 0.0.0.0 --port 8848
+Environment="LUMENA_DEVICE=generic"
+Environment="LUMENA_LOG_LEVEL=info"
+Environment="LUMENA_SOVEREIGN=true"
+Environment="LUMENA_API_KEY=your-api-key-here"
+Environment="PATH=/home/lumena/.venvs/lumena/bin"
+ExecStart=/home/lumena/.venvs/lumena/bin/uvicorn lumena.api.server:app --host 0.0.0.0 --port 8848
 Restart=always
 RestartSec=5
 MemoryMax=900M
@@ -315,7 +315,7 @@ CPUQuota=80%
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/home/lumen/.lumena
+ReadWritePaths=/home/lumena/.lumena
 
 [Install]
 WantedBy=multi-user.target
@@ -323,8 +323,8 @@ WantedBy=multi-user.target
 
 ```bash
 sudo useradd -r -s /bin/false lumena
-sudo mkdir -p /home/lumen/.lumena
-sudo chown -R lumena:lumena /home/lumen/.lumena
+sudo mkdir -p /home/lumena/.lumena
+sudo chown -R lumena:lumena /home/lumena/.lumena
 sudo systemctl daemon-reload
 sudo systemctl enable --now lumena
 ```
@@ -334,10 +334,10 @@ sudo systemctl enable --now lumena
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name lumen.local;
+    server_name lumena.local;
 
-    ssl_certificate /etc/ssl/certs/lumen.crt;
-    ssl_certificate_key /etc/ssl/private/lumen.key;
+    ssl_certificate /etc/ssl/certs/lumena.crt;
+    ssl_certificate_key /etc/ssl/private/lumena.key;
 
     location / {
         proxy_pass http://127.0.0.1:8848;
@@ -360,32 +360,32 @@ server {
 ### 6.1 What to Back Up
 
 ```bash
-~/.lumen/config.toml          # Device profile and TFC settings
-~/.lumen/palace.toml          # Room topology
-~/.lumen/user.toml            # Per-user weights
-~/.lumen/store/lumen.db       # SQLite database (WAL mode)
-~/.lumen/store/lumen.db-wal   # WAL file (must be backed up together)
-~/.lumen/store/vectors.usearch # USearch index (if used)
-~/.lumen/logs/audit.jsonl     # Compliance audit trail
+~/.lumena/config.toml          # Device profile and TFC settings
+~/.lumena/palace.toml          # Room topology
+~/.lumena/user.toml            # Per-user weights
+~/.lumena/store/lumena.db       # SQLite database (WAL mode)
+~/.lumena/store/lumena.db-wal   # WAL file (must be backed up together)
+~/.lumena/store/vectors.usearch # USearch index (if used)
+~/.lumena/logs/audit.jsonl     # Compliance audit trail
 ```
 
 ### 6.2 Automated Backup Script
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/lumen-backup.sh
+# /usr/local/bin/lumena-backup.sh
 
-BACKUP_DIR="/backup/lumen/$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="/backup/lumena/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Checkpoint WAL before backup
-sqlite3 ~/.lumen/store/lumen.db "PRAGMA wal_checkpoint(TRUNCATE);"
+sqlite3 ~/.lumena/store/lumena.db "PRAGMA wal_checkpoint(TRUNCATE);"
 
 # Atomic copy
-cp ~/.lumen/config.toml "$BACKUP_DIR/"
-cp ~/.lumen/palace.toml "$BACKUP_DIR/"
-cp ~/.lumen/store/lumen.db "$BACKUP_DIR/"
-cp -r ~/.lumen/logs "$BACKUP_DIR/"
+cp ~/.lumena/config.toml "$BACKUP_DIR/"
+cp ~/.lumena/palace.toml "$BACKUP_DIR/"
+cp ~/.lumena/store/lumena.db "$BACKUP_DIR/"
+cp -r ~/.lumena/logs "$BACKUP_DIR/"
 
 # Compress
 tar czf "${BACKUP_DIR}.tar.gz" -C "$(dirname "$BACKUP_DIR")" "$(basename "$BACKUP_DIR")"
@@ -425,11 +425,11 @@ sudo sysctl -w vm.dirty_background_ratio=2
 ### 7.3 Monitoring Metrics
 
 Key metrics to alert on:
-- `lumen_memory_usage_mb` > 80% of `LUMEN_MEMORY_LIMIT`
-- `lumen_context_usage_ratio` > 0.95
-- `lumen_forgetting_queue_depth` > 1000
-- `lumen_retrieval_latency_p99` > 500ms
-- `lumen_consolidation_failures` > 0 in 1h
+- `lumena_memory_usage_mb` > 80% of `LUMENA_MEMORY_LIMIT`
+- `lumena_context_usage_ratio` > 0.95
+- `lumena_forgetting_queue_depth` > 1000
+- `lumena_retrieval_latency_p99` > 500ms
+- `lumena_consolidation_failures` > 0 in 1h
 
 ---
 
@@ -439,13 +439,13 @@ Key metrics to alert on:
 
 ```bash
 # 1. Backup
-lumen-backup.sh
+lumena-backup.sh
 
 # 2. Stop service
 sudo systemctl stop lumena
 
 # 3. Upgrade
-source ~/.venvs/lumen/bin/activate
+source ~/.venvs/lumena/bin/activate
 pip install --upgrade lumena
 
 # 4. Migrations run automatically on DB connect; nothing to do manually
@@ -462,7 +462,7 @@ curl http://localhost:8848/health
 ```bash
 # Restore from backup
 sudo systemctl stop lumena
-sqlite3 ~/.lumen/store/lumen.db ".restore '${BACKUP_DIR}/lumen.db'"
+sqlite3 ~/.lumena/store/lumena.db ".restore '${BACKUP_DIR}/lumena.db'"
 # Reinstall previous version
 pip install lumena==$PREVIOUS_VERSION
 sudo systemctl start lumena
@@ -479,7 +479,7 @@ sudo systemctl start lumena
 | `sqlite3.OperationalError: database is locked` | WAL checkpoint stuck | `PRAGMA wal_checkpoint(TRUNCATE);` |
 | High RAM usage | USearch index loaded into RAM | Switch to `vector_index = "sqlite-vec"` |
 | Slow retrieval | No FTS5 index | Ensure schema is initialized with `lumena init` |
-| `SovereignViolation` error | External API blocked | Set `LUMEN_SOVEREIGN=false` or use offline embedder |
+| `SovereignViolation` error | External API blocked | Set `LUMENA_SOVEREIGN=false` or use offline embedder |
 | SD card wear | Too many random writes | Enable WAL + `synchronous=NORMAL` |
 
 ### 9.2 Diagnostic Commands
@@ -489,7 +489,7 @@ sudo systemctl start lumena
 lumena status
 
 # Check database integrity
-sqlite3 ~/.lumen/store/lumen.db "PRAGMA integrity_check;"
+sqlite3 ~/.lumena/store/lumena.db "PRAGMA integrity_check;"
 
 # View recent audit events (last N entries)
 lumena compliance audit --n 10
@@ -504,10 +504,10 @@ curl -X POST http://localhost:8848/v1/search \
 
 ## 10. Support & Community
 
-- **Documentation:** https://github.com/QuantumindSSI/lumen/tree/main/docs
-- **Issues:** https://github.com/QuantumindSSI/lumen/issues
-- **Discussions:** https://github.com/QuantumindSSI/lumen/discussions
-- **Security:** security@lumen.ai
+- **Documentation:** https://github.com/QuantumindSSI/lumena/tree/main/docs
+- **Issues:** https://github.com/QuantumindSSI/lumena/issues
+- **Discussions:** https://github.com/QuantumindSSI/lumena/discussions
+- **Security:** security@lumena.ai
 - **Matrix:** #lumena:matrix.org
 
 ---

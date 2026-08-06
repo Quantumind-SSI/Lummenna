@@ -1,13 +1,13 @@
 {
   "github.copilot.chat.mcp.servers": [
     {
-      "name": "lumen-memory",
+      "name": "lumena-memory",
       "command": "python",
-      "args": ["-m", "lumen.integrations.mcp_server"],
+      "args": ["-m", "lumena.integrations.mcp_server"],
       "env": {
-        "LUMEN_DEVICE": "generic",
-        "LUMEN_STORE_PATH": "${userHome}/.lumen/store",
-        "LUMEN_MODEL_PATH": "${userHome}/.lumen/models"
+        "LUMENA_DEVICE": "generic",
+        "LUMENA_STORE_PATH": "${userHome}/.lumena/store",
+        "LUMENA_MODEL_PATH": "${userHome}/.lumena/models"
       }
     }
   ]

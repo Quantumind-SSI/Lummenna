@@ -45,7 +45,7 @@ Your agents remember. Your data never leaves your machine.
 ### New Datasets & Tooling
 - **Domain Corpus** — 111 curated fact chunks across 8 rooms (ML, NLP, cybersecurity, distributed systems, healthcare AI, quantum computing, open source, climate tech) with a one-command seed script.
 - **Centralized logging** — structlog-first, replacing every silent `except: pass` in the codebase.
-- **PGP key** for `security@lumen.ai` published in `SECURITY.md`.
+- **PGP key** for `security@lumena.ai` published in `SECURITY.md`.
 
 ### Critical Fixes
 - USearch backend now gracefully falls back to brute-force when unavailable.
@@ -98,7 +98,7 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 ## 6. Quick Start
 
 ```bash
-git clone https://github.com/QuantumindSSI/lumen.git
+git clone https://github.com/QuantumindSSI/lumena.git
 cd lumena
 pip install -e ".[dev]"
 lumena init --device generic
@@ -174,7 +174,7 @@ lumena serve
 **Tweet 5 — CTA**
 > Try it in 4 commands:
 > ```bash
-> git clone https://github.com/QuantumindSSI/lumen.git
+> git clone https://github.com/QuantumindSSI/lumena.git
 > cd lumena && pip install -e ".[dev]"
 > lumena init --device generic && lumena serve
 > ```
@@ -214,9 +214,9 @@ lumena serve
 ## 9. Contacts & Resources
 
 - **Repository:** https://github.com/QuantumindSSI/lumena
-- **Issue Tracker:** https://github.com/QuantumindSSI/lumen/issues
-- **Discussions:** https://github.com/QuantumindSSI/lumen/discussions
-- **Security:** https://github.com/QuantumindSSI/lumen/security/advisories
+- **Issue Tracker:** https://github.com/QuantumindSSI/lumena/issues
+- **Discussions:** https://github.com/QuantumindSSI/lumena/discussions
+- **Security:** https://github.com/QuantumindSSI/lumena/security/advisories
 - **Matrix:** `#lumena:matrix.org`
 - **License:** Apache 2.0
 

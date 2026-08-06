@@ -19,9 +19,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-LUMEN_BASE = os.environ.get("LUMEN_API_URL", "http://localhost:8848")
-LUMEN_METRICS_URL = f"{LUMEN_BASE}/metrics"
-LUMEN_DATA_URL = f"{LUMEN_BASE}/dashboard-data"
+LUMENA_BASE = os.environ.get("LUMENA_API_URL", "http://localhost:8848")
+LUMENA_METRICS_URL = f"{LUMENA_BASE}/metrics"
+LUMENA_DATA_URL = f"{LUMENA_BASE}/dashboard-data"
 PORT = int(os.environ.get("OPENCODE_BOARD_PORT", "8850"))
 
 _HTML = """<!DOCTYPE html>
@@ -102,8 +102,8 @@ _HTML = """<!DOCTYPE html>
     Lumena v0.1.0-alpha &middot; OpenCode Integration &middot; Press Ctrl+C to stop
   </footer>
   <script>
-    const LUMEN_API = "<!--LUMEN_API-->";
-    document.getElementById('apiUrl').textContent = LUMEN_API;
+    const LUMENA_API = "<!--LUMENA_API-->";
+    document.getElementById('apiUrl').textContent = LUMENA_API;
 
     async function fetchMetrics() {
       try {
@@ -117,7 +117,7 @@ _HTML = """<!DOCTYPE html>
         document.getElementById('content').innerHTML = `
           <div class="error">
             <h3>Cannot reach Lumena server</h3>
-            <p>Make sure Lumena is running on ${LUMEN_API}</p>
+            <p>Make sure Lumena is running on ${LUMENA_API}</p>
             <code style="display:block;margin-top:1rem;padding:1rem;background:#111827;border-radius:.5rem;">${e.message}</code>
           </div>`;
         document.getElementById('liveBadge').className = 'badge err';
@@ -140,7 +140,7 @@ _HTML = """<!DOCTYPE html>
       const loci = palace.loci ?? sys.loci ?? '\u2014';
       const chunks = palace.active_chunks ?? sys.active_chunks ?? '\u2014';
       const retention = (palace.retention_rate_pct ?? sys.retention_rate_pct ?? '\u2014');
-      const embedder = sys.embedding_model ?? p(data, 'lumen.embedding_model', '\u2014');
+      const embedder = sys.embedding_model ?? p(data, 'lumena.embedding_model', '\u2014');
       const embedReady = sys.embedding_model_available ?? false;
 
       let forgetHtml = '';
@@ -242,7 +242,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
 
     def _serve_html(self):
-        html = _HTML.replace("<!--LUMEN_API-->", LUMEN_BASE)
+        html = _HTML.replace("<!--LUMENA_API-->", LUMENA_BASE)
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -251,7 +251,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 
     def _proxy_metrics(self):
         try:
-            with urllib.request.urlopen(LUMEN_METRICS_URL, timeout=5) as resp:
+            with urllib.request.urlopen(LUMENA_METRICS_URL, timeout=5) as resp:
                 data = resp.read()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -277,7 +277,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 def main():
     with socketserver.TCPServer(("", PORT), _Handler) as httpd:
         print(f"OpenCode Metrics Board running at http://localhost:{PORT}")
-        print(f"Proxying Lumena API from {LUMEN_BASE}")
+        print(f"Proxying Lumena API from {LUMENA_BASE}")
         print("Press Ctrl+C to stop")
         try:
             httpd.serve_forever()
