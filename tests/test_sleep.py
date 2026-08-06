@@ -1,11 +1,11 @@
-"""Tests for lumen.lumena.sleep."""
+"""Tests for lumena.sleep."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.sleep import SleepScheduler
+from lumena.config import LumenaConfig
+from lumena.sleep import SleepScheduler
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def scheduler(tmp_path):
     config = LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path=str(tmp_path / ".lumen-test"),
+        store_path=str(tmp_path / ".lumena-test"),
         consolidation_cpu_percent=10.0,
         consolidation_battery_threshold=50,
     )
@@ -86,8 +86,8 @@ def test_opportunistic_check_skips_when_on_battery(scheduler):
 def test_run_now_calls_consolidation(scheduler):
     """run_now should manually trigger a consolidation pass."""
     with (
-        patch("lumen.sleep.run_consolidation_pass") as mock_run,
-        patch("lumen.data.schema._enforce_permissions"),
+        patch("lumena.sleep.run_consolidation_pass") as mock_run,
+        patch("lumena.data.schema._enforce_permissions"),
     ):
         scheduler.run_now()
         mock_run.assert_called_once()
@@ -97,9 +97,9 @@ def test_run_now_calls_consolidation(scheduler):
 def test_exception_in_consolidation_caught_and_logged(scheduler):
     """An exception in run_consolidation_pass should be caught and logged."""
     with (
-        patch("lumen.sleep.run_consolidation_pass") as mock_run,
-        patch("lumen.data.schema._enforce_permissions"),
-        patch("lumen.sleep.logger") as mock_logger,
+        patch("lumena.sleep.run_consolidation_pass") as mock_run,
+        patch("lumena.data.schema._enforce_permissions"),
+        patch("lumena.sleep.logger") as mock_logger,
     ):
         mock_run.side_effect = RuntimeError("boom")
         scheduler._maybe_consolidate()
@@ -121,7 +121,7 @@ def test_opportunistic_uses_configurable_cpu_threshold():
     config = LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumen-test",
+        store_path="/tmp/.lumena-test",
         consolidation_cpu_percent=20.0,
     )
     scheduler = SleepScheduler(config=config)
@@ -138,7 +138,7 @@ def test_should_run_uses_configurable_battery_threshold():
     config = LumenaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumen-test",
+        store_path="/tmp/.lumena-test",
         consolidation_battery_threshold=30,
     )
     scheduler = SleepScheduler(config=config)

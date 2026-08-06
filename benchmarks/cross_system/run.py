@@ -24,10 +24,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
-from lumen.force.mnemonic.store import store_memory
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.force.mnemonic.store import store_memory
 
 SEEDS = [42, 123]
 CORPUS_SIZES = [1_000, 5_000, 10_000]
@@ -111,10 +111,10 @@ def _bootstrap_ci(values):
 # ---------------------------------------------------------------------------
 # System: Lumena (sqlite-vec, brute-force)
 # ---------------------------------------------------------------------------
-def _bench_lumen(docs, queries, relevant, seed):
+def _bench_lumena(docs, queries, relevant, seed):
     np.random.seed(seed)
     embedder = _get_embedder()
-    tmpdir = tempfile.mkdtemp(prefix="lumen_cross_")
+    tmpdir = tempfile.mkdtemp(prefix="lumena_cross_")
     store_path = Path(tmpdir) / "store"
     config = LumenaConfig(store_path=store_path, embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     conn = get_connection(config)
@@ -270,7 +270,7 @@ def run():
             print(f"  Seed {seed}: {len(docs)} docs, {len(queries)} queries")
 
             for name, fn in [
-                ("lumena", _bench_lumena),
+                ("lumena", _bench_lumenaa),
                 ("chroma", _bench_chroma),
                 ("faiss", _bench_faiss),
             ]:

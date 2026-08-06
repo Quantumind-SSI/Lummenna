@@ -7,10 +7,10 @@ from __future__ import annotations
 
 import sqlite3
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.contextual.embed import get_embedder
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.contextual.embed import get_embedder
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
 
 
 def reembed_all(config: LumenaConfig | None = None) -> int:

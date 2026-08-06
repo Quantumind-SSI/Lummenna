@@ -5,7 +5,7 @@
 /.github/ @QuantumindSSI/maintainers
 
 # Core source code
-/lumen/ @QuantumindSSI/maintainers
+/lumena/ @QuantumindSSI/maintainers
 
 # Tests
 /tests/ @QuantumindSSI/maintainers

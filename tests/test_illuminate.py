@@ -5,7 +5,7 @@ import sqlite3
 import pytest
 from rich.console import Console
 
-from lumen.data.schema import init_db
+from lumena.data.schema import init_db
 
 
 class MockChunk:
@@ -66,7 +66,7 @@ class MockDoc:
 
 
 def test_extract_sub_entities():
-    from lumen.illuminate import _extract_sub_entities
+    from lumena.illuminate import _extract_sub_entities
 
     t1 = MockToken("software", "NOUN", "software")
     t2 = MockToken("engineering", "NOUN", "engineering")
@@ -85,29 +85,29 @@ def test_extract_sub_entities():
 
 
 def test_pairwise_rank_prefers_first():
-    from lumen.illuminate import _pairwise_rank
+    from lumena.illuminate import _pairwise_rank
 
     result = _pairwise_rank(["a", "b", "c"], ask_fn=lambda prompt: "1")
     assert result == ["a", "b", "c"]
 
 
 def test_pairwise_rank_prefers_second():
-    from lumen.illuminate import _pairwise_rank
+    from lumena.illuminate import _pairwise_rank
 
     result = _pairwise_rank(["a", "b", "c"], ask_fn=lambda prompt: "2")
     assert result == ["c", "b", "a"]
 
 
 def test_pairwise_rank_caps_at_seven():
-    from lumen.illuminate import _pairwise_rank
+    from lumena.illuminate import _pairwise_rank
 
     result = _pairwise_rank(list("abcdefgh"), ask_fn=lambda prompt: "1")
     assert len(result) == 7
 
 
 def test_run_onboarding_wizard(monkeypatch):
-    import lumen.illuminate as illum
-    from lumen.illuminate import run_onboarding_wizard
+    import lumena.illuminate as illum
+    from lumena.illuminate import run_onboarding_wizard
 
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
@@ -159,7 +159,7 @@ def test_run_onboarding_wizard(monkeypatch):
 
 
 def test_load_nlp_graceful_failure():
-    import lumen.illuminate as illum
+    import lumena.illuminate as illum
 
     illum._NLP_CACHE = None
     with pytest.raises(RuntimeError, match="en_core_web_sm"):

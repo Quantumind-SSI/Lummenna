@@ -12,7 +12,7 @@ Add to your `~/.aider.conf.yml`:
 # Custom slash commands
 commands:
   # Search Lumena palace
-  - name: lumen-search
+  - name: lumena-search
     description: Search the Lumena memory palace
     run: |
       curl -s -X POST http://localhost:8848/v1/search \
@@ -20,7 +20,7 @@ commands:
         -d "{\"query\":\"$args\",\"top_k\":5}"
 
   # Store a decision in Lumena
-  - name: lumen-store
+  - name: lumena-store
     description: Store a memory in the Lumena palace
     run: |
       curl -s -X POST http://localhost:8848/v1/store \
@@ -28,7 +28,7 @@ commands:
         -d "{\"content\":\"$args\",\"room\":\"decisions\"}"
 
   # Assemble context from Lumena
-  - name: lumen-context
+  - name: lumena-context
     description: Assemble relevant context from Lumena
     run: |
       curl -s -X POST http://localhost:8848/v1/assemble \
@@ -38,14 +38,14 @@ commands:
 
 Usage in Aider:
 ```
-/lumen-search database indexing decision
-/lumen-store We will use composite indexes on (user_id, created_at)
-/lumen-context implement retry logic
+/lumena-search database indexing decision
+/lumena-store We will use composite indexes on (user_id, created_at)
+/lumena-context implement retry logic
 ```
 
 ## Option 2: Python Hook (Advanced)
 
-Create `~/.aider/lumen_hook.py`:
+Create `~/.aider/lumena_hook.py`:
 
 ```python
 """Aider pre-commit hook that stores file changes in Lumena."""
@@ -81,7 +81,7 @@ Add to your shell profile:
 
 ```bash
 # Aider with Lumena context injection
-aider-lumen() {
+aider-lumena() {
   context=$(curl -s -X POST http://localhost:8848/v1/assemble \
     -H "Content-Type: application/json" \
     -d "{\"query\":\"$*\",\"top_k\":3}" | jq -r '.assembled_context // empty')
@@ -95,5 +95,5 @@ aider-lumen() {
 
 Usage:
 ```bash
-aider-lumena "Refactor the database layer to use connection pooling"
+aider-lumenaa "Refactor the database layer to use connection pooling"
 ```

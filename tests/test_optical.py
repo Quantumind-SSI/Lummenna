@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-from lumen.sovereign.optical import (
+from lumena.sovereign.optical import (
     QUANTIZERS,
     degrade_chunk_vector,
     quantize_binary,

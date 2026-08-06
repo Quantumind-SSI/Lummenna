@@ -7,9 +7,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.p2p.beam import BeamNode, decode_frame, encode_frame
-from lumen.security.crypto import P2PCrypto, P2PSign
+from lumena.config import LumenaConfig
+from lumena.p2p.beam import BeamNode, decode_frame, encode_frame
+from lumena.security.crypto import P2PCrypto, P2PSign
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def secure_config(tmp_path):
     return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumen"),
+        store_path=str(tmp_path / ".lumena"),
         beam_port=9998,
         sovereign=False,
         p2p_encryption_key="test-p2p-key-9876",
@@ -89,7 +89,7 @@ class TestHardenedBeamProtocol:
         config = LumenaConfig(
             device="generic",
             vector_index="sqlite-vec",
-            store_path=str(tmp_path / ".lumen"),
+            store_path=str(tmp_path / ".lumena"),
             beam_port=9997,
             sovereign=False,
             p2p_encryption_key=None,
@@ -98,11 +98,11 @@ class TestHardenedBeamProtocol:
             BeamNode(config)
 
     def test_insecure_override_allowed(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("LUMEN_P2P_INSECURE", "1")
+        monkeypatch.setenv("LUMENA_P2P_INSECURE", "1")
         config = LumenaConfig(
             device="generic",
             vector_index="sqlite-vec",
-            store_path=str(tmp_path / ".lumen"),
+            store_path=str(tmp_path / ".lumena"),
             beam_port=9996,
             sovereign=False,
             p2p_encryption_key=None,
@@ -132,9 +132,9 @@ class TestHardenedBeamProtocol:
         framed = encode_frame(old_packet, crypto=node._crypto, signer=node._signer)
 
         calls = []
-        monkeypatch.setattr("lumen.p2p.beam.store_memory", lambda *a, **k: calls.append(k))
+        monkeypatch.setattr("lumena.p2p.beam.store_memory", lambda *a, **k: calls.append(k))
         monkeypatch.setattr(
-            "lumen.p2p.beam.get_connection",
+            "lumena.p2p.beam.get_connection",
             lambda cfg: type("C", (), {
                 "execute": lambda *a, **k: None,
                 "close": lambda: None,

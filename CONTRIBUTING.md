@@ -33,7 +33,7 @@ When reporting, include:
 **What happened:**
 **What you expected:**
 **Steps to reproduce:**
-**Relevant logs:** (with `[LUMEN:*]` prefix lines)
+**Relevant logs:** (with `[LUMENA:*]` prefix lines)
 ```
 
 ### 2. Suggesting Features
@@ -49,7 +49,7 @@ Open a GitHub Discussion first for major features. For small enhancements, an is
 #### Development Setup
 
 ```bash
-git clone https://github.com/QuantumindSSI/lumen.git
+git clone https://github.com/QuantumindSSI/lumena.git
 cd lumena
 python3 -m venv .venv
 source .venv/bin/activate
@@ -153,7 +153,7 @@ When documenting:
 ```python
 def test_consolidation_creates_summary_chunk(db_conn, mock_embedder):
     """Consolidation should produce a summary chunk with V(m) > 0.5."""
-    from lumen.force.mnemonic.consolidation import consolidate_room
+    from lumena.force.mnemonic.consolidation import consolidate_room
 
     result = consolidate_room(db_conn, room_name="test_room")
     assert result > 0
@@ -189,9 +189,9 @@ Contributors are recognized as **Luminary** members. Significant contributions r
 
 ## Questions?
 
-- GitHub Discussions: https://github.com/QuantumindSSI/lumen/discussions
+- GitHub Discussions: https://github.com/QuantumindSSI/lumena/discussions
 - Matrix: #lumena:matrix.org
-- Security: security@lumen.ai
+- Security: security@lumena.ai
 
 ---
 

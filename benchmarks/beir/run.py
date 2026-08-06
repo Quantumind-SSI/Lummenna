@@ -30,12 +30,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
 
 SEEDS = [42, 123, 456]
 EMBEDDER_MODELS = ["BAAI/bge-small-en-v1.5"]
@@ -87,7 +87,7 @@ def _get_embedder(model_name: str):
         _embedders[model_name] = e
         return e
     except Exception:
-        from lumen.force.contextual.embed import MockEmbedder
+        from lumena.force.contextual.embed import MockEmbedder
 
         print(f"[WARN] No real embedder for {model_name} — using MockEmbedder")
         e = MockEmbedder(dims=EMBED_DIMS)
@@ -292,9 +292,9 @@ def _bootstrap_ci(values, n_bootstrap=N_BOOTSTRAP):
 
 def run_single(seed, docs, query_texts, query_relevant_pids, dataset_name, embedder_model):
     np.random.seed(seed)
-    tmpdir = tempfile.mkdtemp(prefix=f"lumen_beir_{dataset_name}_{seed}_")
+    tmpdir = tempfile.mkdtemp(prefix=f"lumena_beir_{dataset_name}_{seed}_")
     config = LumenaConfig(
-        store_path=Path(tmpdir) / ".lumen" / "store",
+        store_path=Path(tmpdir) / ".lumena" / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",
     )

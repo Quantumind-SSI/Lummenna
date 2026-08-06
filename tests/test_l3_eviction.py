@@ -4,18 +4,18 @@ import sqlite3
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection, init_db
-from lumen.force.contextual.embed import MockEmbedder
-from lumen.force.mnemonic.store import store_memory
-from lumen.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection, init_db
+from lumena.force.contextual.embed import MockEmbedder
+from lumena.force.mnemonic.store import store_memory
+from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
 
 
 @pytest.fixture
 def l3_config(tmp_path):
     return LumenaConfig(
-        store_path=tmp_path / ".lumen" / "store",
-        model_path=tmp_path / ".lumen" / "models",
+        store_path=tmp_path / ".lumena" / "store",
+        model_path=tmp_path / ".lumena" / "models",
         vector_index="sqlite-vec",
         device="generic",
         memory_limit_mb=16,  # Very low to force eviction with few chunks

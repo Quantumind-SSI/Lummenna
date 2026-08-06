@@ -1,4 +1,4 @@
-"""Tests for lumen.integrations.mcp_server."""
+"""Tests for lumena.integrations.mcp_server."""
 
 import asyncio
 
@@ -9,7 +9,7 @@ pytestmark = pytest.mark.skipif(
     reason="mcp package not installed",
 )
 
-from lumen.integrations.mcp_server import app_lifespan, mcp  # noqa: E402
+from lumena.integrations.mcp_server import app_lifespan, mcp  # noqa: E402
 
 
 class TestMCPServer:
@@ -19,25 +19,25 @@ class TestMCPServer:
             return [t.name for t in tools]
 
         tool_names = asyncio.run(_list())
-        assert "lumen_search" in tool_names
-        assert "lumen_store" in tool_names
-        assert "lumen_assemble" in tool_names
-        assert "lumen_turn" in tool_names
-        assert "lumen_feedback" in tool_names
-        assert "lumen_status" in tool_names
+        assert "lumena_search" in tool_names
+        assert "lumena_store" in tool_names
+        assert "lumena_assemble" in tool_names
+        assert "lumena_turn" in tool_names
+        assert "lumena_feedback" in tool_names
+        assert "lumena_status" in tool_names
 
-    def test_lumen_store_and_search(self, tmp_path, monkeypatch):
+    def test_lumena_store_and_search(self, tmp_path, monkeypatch):
         store = tmp_path / "store"
         models = tmp_path / "models"
         store.mkdir()
         models.mkdir()
-        monkeypatch.setenv("LUMEN_STORE_PATH", str(store))
-        monkeypatch.setenv("LUMEN_MODEL_PATH", str(models))
+        monkeypatch.setenv("LUMENA_STORE_PATH", str(store))
+        monkeypatch.setenv("LUMENA_MODEL_PATH", str(models))
 
         async def _run():
             async with app_lifespan(mcp):
                 store_res = await mcp.call_tool(
-                    "lumen_store",
+                    "lumena_store",
                     {
                         "content": "Use SQLite for the cache layer because it is zero-config.",
                         "room": "decisions",
@@ -48,7 +48,7 @@ class TestMCPServer:
                 assert "Stored chunk_id=" in store_text
 
                 search_res = await mcp.call_tool(
-                    "lumen_search",
+                    "lumena_search",
                     {"query": "SQLite cache", "top_k": 5},
                 )
                 search_text = search_res[0][0].text if search_res and search_res[0] else ""
@@ -56,17 +56,17 @@ class TestMCPServer:
 
         asyncio.run(_run())
 
-    def test_lumen_status(self, tmp_path, monkeypatch):
+    def test_lumena_status(self, tmp_path, monkeypatch):
         store = tmp_path / "store"
         models = tmp_path / "models"
         store.mkdir()
         models.mkdir()
-        monkeypatch.setenv("LUMEN_STORE_PATH", str(store))
-        monkeypatch.setenv("LUMEN_MODEL_PATH", str(models))
+        monkeypatch.setenv("LUMENA_STORE_PATH", str(store))
+        monkeypatch.setenv("LUMENA_MODEL_PATH", str(models))
 
         async def _run():
             async with app_lifespan(mcp):
-                res = await mcp.call_tool("lumen_status", {})
+                res = await mcp.call_tool("lumena_status", {})
                 text = res[0][0].text if res and res[0] else ""
                 assert "Lumena Status" in text
                 assert "Rooms:" in text

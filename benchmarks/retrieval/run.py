@@ -28,12 +28,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -87,7 +87,7 @@ def _get_embedder(model_name):
     except Exception:
         # Fallback chain
         try:
-            from lumen.force.contextual.embed import LocalEmbedder
+            from lumena.force.contextual.embed import LocalEmbedder
             config = LumenaConfig()
             model_dir = config.model_path / config.embedding_model
             if model_dir.exists():
@@ -98,7 +98,7 @@ def _get_embedder(model_name):
         except Exception:
             pass
 
-        from lumen.force.contextual.embed import MockEmbedder
+        from lumena.force.contextual.embed import MockEmbedder
         print("[WARN] No real embedder — using MockEmbedder")
         e = MockEmbedder(dims=EMBED_DIMS)
         _embedders[model_name] = e
@@ -401,7 +401,7 @@ def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
 def run_single_benchmark(seed, passages, queries, query_relevant_pids, corpus_name, embedder_model):
     np.random.seed(seed)
 
-    tmpdir = tempfile.mkdtemp(prefix=f"lumen_bench_retrieval_{seed}_")
+    tmpdir = tempfile.mkdtemp(prefix=f"lumena_bench_retrieval_{seed}_")
     config = LumenaConfig(
         store_path=Path(tmpdir),
         embedding_dims=EMBED_DIMS,

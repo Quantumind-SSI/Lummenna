@@ -30,14 +30,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.contextual.embed import MockEmbedder
-from lumen.force.mnemonic.retrieval_dense import DenseHit, VectorChannel
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
-from lumen.force.mnemonic.store import store_memory
-from lumen.fusion import fuse_and_rerank
-from lumen.intent import IntentRouter
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.contextual.embed import MockEmbedder
+from lumena.force.mnemonic.retrieval_dense import DenseHit, VectorChannel
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
+from lumena.force.mnemonic.store import store_memory
+from lumena.fusion import fuse_and_rerank
+from lumena.intent import IntentRouter
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -388,7 +388,7 @@ def _run_single_seed(seed: int):
     texts = [p["text"] for p in passages]
     embeddings = embedder.encode(texts)
 
-    tmpdir = tempfile.mkdtemp(prefix=f"lumen_bench_pne_{seed}_")
+    tmpdir = tempfile.mkdtemp(prefix=f"lumena_bench_pne_{seed}_")
     config = LumenaConfig(
         store_path=Path(tmpdir),
         embedding_dims=EMBED_DIMS,

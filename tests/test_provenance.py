@@ -3,8 +3,8 @@ import time
 
 import pytest
 
-from lumen.data.schema import init_db
-from lumen.force.mnemonic.provenance import (
+from lumena.data.schema import init_db
+from lumena.force.mnemonic.provenance import (
     create_provenance,
     get_effective_fact,
     supersede_chunk,

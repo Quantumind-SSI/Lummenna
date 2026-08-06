@@ -26,17 +26,17 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
-    import lumen  # noqa: F401
+    import lumena  # noqa: F401
 except ImportError as exc:
-    print(f"[ERROR] Cannot import lumen: {exc}")
+    print(f"[ERROR] Cannot import lumena: {exc}")
     sys.exit(1)
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumen.force.mnemonic.forgetting_l2_interference import check_locus_interference
-from lumen.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
-from lumen.force.mnemonic.store import store_memory
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lumena.force.mnemonic.forgetting_l2_interference import check_locus_interference
+from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+from lumena.force.mnemonic.store import store_memory
 
 # Real embedder for meaningful interference metrics
 _EMBEDDER = None
@@ -60,7 +60,7 @@ def _get_real_embedder():
         print("[INFO] Forgetting benchmark using real embedder: all-MiniLM-L6-v2")
         return _EMBEDDER
     except Exception:
-        from lumen.force.contextual.embed import FallbackEmbedder
+        from lumena.force.contextual.embed import FallbackEmbedder
         print("[WARN] Forgetting benchmark using MockEmbedder — interference metrics will be zero")
         _EMBEDDER = FallbackEmbedder(dims=EMBED_DIMS)
         return _EMBEDDER
@@ -80,7 +80,7 @@ def _compute_cosine(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def run_benchmark() -> dict[str, Any]:
-    tmpdir = tempfile.mkdtemp(prefix="lumen_benchmark_forgetting_")
+    tmpdir = tempfile.mkdtemp(prefix="lumena_benchmark_forgetting_")
     config = LumenaConfig(
         store_path=Path(tmpdir),
         embedding_dims=EMBED_DIMS,
@@ -115,8 +115,8 @@ def run_benchmark() -> dict[str, Any]:
         })
         return weakened
 
-    import lumen.force.mnemonic.forgetting_l2_interference as interference_module
-    import lumen.force.mnemonic.store as store_module
+    import lumena.force.mnemonic.forgetting_l2_interference as interference_module
+    import lumena.force.mnemonic.store as store_module
 
     # Monkey-patch the module-level function used by store._trigger_interference_check
     interference_module.check_locus_interference = _instrumented_interference

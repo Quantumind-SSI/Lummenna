@@ -1,5 +1,5 @@
 {
-  "name": "lumen-copilot",
+  "name": "lumena-copilot",
   "displayName": "Lumena Memory for Copilot",
   "description": "Connects GitHub Copilot Chat to the Lumena memory palace.",
   "version": "0.1.0",
@@ -7,12 +7,12 @@
     "vscode": "^1.90.0"
   },
   "categories": ["Machine Learning", "Other"],
-  "activationEvents": ["onChatParticipant:copilot.lumen"],
+  "activationEvents": ["onChatParticipant:copilot.lumena"],
   "main": "./out/extension.js",
   "contributes": {
     "chatParticipants": [
       {
-        "id": "copilot.lumen",
+        "id": "copilot.lumena",
         "name": "lumena",
         "description": "Search and retrieve memories from the Lumena palace",
         "isSticky": true

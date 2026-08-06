@@ -1,4 +1,4 @@
-"""Tests for lumen.force.mnemonic.consolidation."""
+"""Tests for lumena.force.mnemonic.consolidation."""
 
 import sqlite3
 from pathlib import Path
@@ -6,15 +6,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection, init_db
-from lumen.force.mnemonic.consolidation import (
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection, init_db
+from lumena.force.mnemonic.consolidation import (
     _get_recent_fact_bullets,
     _get_rooms_with_new_activity,
     _group_similar_chunks,
     run_consolidation_pass,
 )
-from lumen.force.mnemonic.event_buffer import Event, EventMemoryBuffer
+from lumena.force.mnemonic.event_buffer import Event, EventMemoryBuffer
 
 
 @pytest.fixture
@@ -88,7 +88,7 @@ def test_dedup_merge_supersedes_losers(tmp_config):
     conn.commit()
     conn.close()
 
-    with patch("lumen.force.mnemonic.consolidation.LocalLLM") as MockLLM:
+    with patch("lumena.force.mnemonic.consolidation.LocalLLM") as MockLLM:
         MockLLM.is_available.return_value = False
         ops = run_consolidation_pass(tmp_config, event_buffer=None, embedder=None)
 
@@ -121,7 +121,7 @@ def test_narrative_generation_skipped_when_llm_unavailable(tmp_config):
     conn.commit()
     conn.close()
 
-    with patch("lumen.force.mnemonic.consolidation.LocalLLM") as MockLLM:
+    with patch("lumena.force.mnemonic.consolidation.LocalLLM") as MockLLM:
         MockLLM.is_available.return_value = False
         ops = run_consolidation_pass(tmp_config, event_buffer=None, embedder=None)
 
@@ -158,7 +158,7 @@ def test_narrative_generation_when_llm_available(tmp_config):
     mock_llm_instance.summarize.return_value = "User enjoys facts."
 
     with patch(
-        "lumen.force.mnemonic.consolidation.LocalLLM",
+        "lumena.force.mnemonic.consolidation.LocalLLM",
         return_value=mock_llm_instance,
     ) as MockLLMClass:
         MockLLMClass.is_available.return_value = True
@@ -238,7 +238,7 @@ def test_event_buffer_drained_into_db(tmp_config):
     buf.append(Event(raw_text="hello world", session_id="sess_1"))
     buf.append(Event(raw_text="goodbye world", session_id="sess_2"))
 
-    with patch("lumen.force.mnemonic.consolidation.LocalLLM") as MockLLM:
+    with patch("lumena.force.mnemonic.consolidation.LocalLLM") as MockLLM:
         MockLLM.is_available.return_value = False
         ops = run_consolidation_pass(tmp_config, event_buffer=buf, embedder=None)
 
@@ -268,7 +268,7 @@ def test_no_circular_supersession(tmp_config):
     conn.commit()
     conn.close()
 
-    with patch("lumen.force.mnemonic.consolidation.LocalLLM") as MockLLM:
+    with patch("lumena.force.mnemonic.consolidation.LocalLLM") as MockLLM:
         MockLLM.is_available.return_value = False
         ops = run_consolidation_pass(tmp_config, event_buffer=None, embedder=None)
 

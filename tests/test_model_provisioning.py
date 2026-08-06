@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from lumen.cli.main import app
-from lumen.cli.models import KNOWN_MODELS, provision_embedding_model
+from lumena.cli.main import app
+from lumena.cli.models import KNOWN_MODELS, provision_embedding_model
 
 runner = CliRunner()
 
@@ -23,7 +23,7 @@ def test_provision_returns_existing_onnx(tmp_path: Path) -> None:
 def test_provision_calls_export_when_missing(tmp_path: Path) -> None:
     """If model.onnx is missing, export is attempted."""
     with patch(
-        "lumen.cli.models._export_via_optimum",
+        "lumena.cli.models._export_via_optimum",
         return_value=tmp_path / "bge-small-en-v1.5" / "model.onnx",
     ):
         path = provision_embedding_model("bge-small-en-v1.5", tmp_path)
@@ -42,7 +42,7 @@ def test_model_download_existing_model(tmp_path: Path) -> None:
     model_dir = tmp_path / "bge-small-en-v1.5"
     model_dir.mkdir()
     (model_dir / "model.onnx").write_text("fake")
-    with patch("lumen.config.LumenaConfig") as MockCfg:
+    with patch("lumena.config.LumenaConfig") as MockCfg:
         MockCfg.return_value.model_path = tmp_path
         result = runner.invoke(app, ["model", "download", "bge-small-en-v1.5"])
         assert result.exit_code == 0

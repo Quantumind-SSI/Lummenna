@@ -9,21 +9,21 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from lumen.compliance.safety_forgetting import safety_forget_chunk, safety_scan_chunk
-from lumen.config import LumenaConfig
-from lumen.controller import TFCState, TwinForceController
-from lumen.curiosity import curiosity_probe
-from lumen.data.schema import get_connection
-from lumen.force.contextual.assembly import assemble_context
-from lumen.force.contextual.embed import FallbackEmbedder
-from lumen.force.mnemonic.event_buffer import Event, EventMemoryBuffer
-from lumen.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumen.force.mnemonic.retrieval_temporal import temporal_point_query
-from lumen.force.mnemonic.store import store_memory
-from lumen.force.mnemonic.value_model import compute_vm
-from lumen.fusion import RetrievedChunk
-from lumen.search import SearchPipeline
-from lumen.sovereign.optical import quantize_vector
+from lumena.compliance.safety_forgetting import safety_forget_chunk, safety_scan_chunk
+from lumena.config import LumenaConfig
+from lumena.controller import TFCState, TwinForceController
+from lumena.curiosity import curiosity_probe
+from lumena.data.schema import get_connection
+from lumena.force.contextual.assembly import assemble_context
+from lumena.force.contextual.embed import FallbackEmbedder
+from lumena.force.mnemonic.event_buffer import Event, EventMemoryBuffer
+from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lumena.force.mnemonic.retrieval_temporal import temporal_point_query
+from lumena.force.mnemonic.store import store_memory
+from lumena.force.mnemonic.value_model import compute_vm
+from lumena.fusion import RetrievedChunk
+from lumena.search import SearchPipeline
+from lumena.sovereign.optical import quantize_vector
 
 
 @pytest.fixture

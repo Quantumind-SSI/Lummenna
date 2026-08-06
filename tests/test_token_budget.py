@@ -1,6 +1,6 @@
-"""Tests for lumen.force.contextual.token_budget."""
+"""Tests for lumena.force.contextual.token_budget."""
 
-from lumen.force.contextual.token_budget import (
+from lumena.force.contextual.token_budget import (
     CharHeuristicCounter,
     get_token_counter,
 )

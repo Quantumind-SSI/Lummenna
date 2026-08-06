@@ -1,4 +1,4 @@
-"""Tests for lumen.force.contextual.embed."""
+"""Tests for lumena.force.contextual.embed."""
 
 import warnings
 from pathlib import Path
@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from lumen.brand.errors import ModelNotAvailableError
-from lumen.force.contextual.embed import (
+from lumena.brand.errors import ModelNotAvailableError
+from lumena.force.contextual.embed import (
     FallbackEmbedder,
     LocalEmbedder,
     MockEmbedder,

@@ -5,7 +5,7 @@
 Register this tool definition in your Devin workspace settings:
 
 ```yaml
-name: lumen_memory
+name: lumena_memory
 description: >
   Search, store, and manage long-term memory in the Lumena palace.
   Use this when you need to recall prior decisions, persist new insights,
@@ -50,7 +50,7 @@ If custom tools are unavailable, use these bash commands in Devin:
 
 ```bash
 # Start Lumena server in background (one-time)
-nohup lumena serve --host 0.0.0.0 --port 8848 > /tmp/lumen.log 2>&1 &
+nohup lumena serve --host 0.0.0.0 --port 8848 > /tmp/lumena.log 2>&1 &
 
 # Search memories
 curl -s -X POST http://localhost:8848/v1/search \
@@ -86,14 +86,14 @@ FROM cognition/devin:latest
 RUN pip install "lumena @ git+https://github.com/QuantumindSSI/lumena"
 RUN lumena init --device generic
 
-COPY lumen-entrypoint.sh /entrypoint.sh
+COPY lumena-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 ```
 
 ```bash
 #!/bin/sh
-# lumen-entrypoint.sh
+# lumena-entrypoint.sh
 lumena serve --host 0.0.0.0 --port 8848 &
 exec /usr/local/bin/devin-start
 ```

@@ -13,8 +13,8 @@
 <p><strong>Local-first memory and context framework for sovereign AI agents.</strong></p>
 
 <p>
-  <a href="https://github.com/QuantumindSSI/lumen/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lumen/ci.yml?branch=main&style=flat-square" alt="CI"></a>
-  <a href="https://github.com/QuantumindSSI/lumen/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
+  <a href="https://github.com/QuantumindSSI/lumena/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lumena/ci.yml?branch=main&style=flat-square" alt="CI"></a>
+  <a href="https://github.com/QuantumindSSI/lumena/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
   <img src="https://img.shields.io/badge/coverage-74%25-brightgreen?style=flat-square" alt="Coverage">
   <img src="https://img.shields.io/badge/tests-273%20passed-brightgreen?style=flat-square" alt="Tests">
@@ -42,7 +42,7 @@ Lumena is a **local-first memory store for LLM agents** — it organizes agent m
 
 ```bash
 # Clone and install
-git clone https://github.com/QuantumindSSI/lumen.git
+git clone https://github.com/QuantumindSSI/lumena.git
 cd lumena
 pip install -e ".[dev]"
 
@@ -58,9 +58,9 @@ lumena serve
 ### Store and retrieve
 
 ```python
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.store import store_memory
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.store import store_memory
 
 config = LumenaConfig()
 conn = get_connection(config)
@@ -75,9 +75,9 @@ conn.close()
 ```
 
 ```python
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.conversation import ConversationMemory
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.conversation import ConversationMemory
 
 config = LumenaConfig()
 conn = get_connection(config)
@@ -176,7 +176,7 @@ All run with a single command from the repo root:
 
 | Integration | What it does | How to use |
 |---|---|---|
-| **MCP Server** | Exposes Lumena tools to OpenCode, Claude Desktop | `python -m lumen.integrations.mcp_server` |
+| **MCP Server** | Exposes Lumena tools to OpenCode, Claude Desktop | `python -m lumena.integrations.mcp_server` |
 | **LangChain** | `LumenaChatMemory` adapter | `pip install langchain` |
 | **LangGraph** | `LumenaCheckpointSaver` for graph state | `pip install langgraph` |
 | **FastAPI** | REST API with auth/rate-limiting | `lumena serve` |
@@ -217,7 +217,7 @@ benchmarks/           11 benchmark suites
 We welcome contributions. The best way to start:
 
 1. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md)** — setup, branch naming, code standards.
-2. **Pick a `good first issue`** from the [issues tracker](https://github.com/QuantumindSSI/lumen/issues).
+2. **Pick a `good first issue`** from the [issues tracker](https://github.com/QuantumindSSI/lumena/issues).
 3. **Run the tests:** `pytest tests/` (must pass with ≥50% coverage).
 4. **Submit a PR** against `main`.
 
@@ -255,9 +255,9 @@ ruff check lumena/ tests/             # Lint
 
 ## Community
 
-- [GitHub Discussions](https://github.com/QuantumindSSI/lumen/discussions)
-- [Issue Tracker](https://github.com/QuantumindSSI/lumen/issues)
-- [Security Advisories](https://github.com/QuantumindSSI/lumen/security/advisories)
+- [GitHub Discussions](https://github.com/QuantumindSSI/lumena/discussions)
+- [Issue Tracker](https://github.com/QuantumindSSI/lumena/issues)
+- [Security Advisories](https://github.com/QuantumindSSI/lumena/security/advisories)
 - Matrix: `#lumena:matrix.org`
 
 ---

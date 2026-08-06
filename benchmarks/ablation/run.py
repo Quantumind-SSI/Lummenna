@@ -32,14 +32,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.controller import TwinForceController
-from lumen.data.schema import get_connection
-from lumen.force.mnemonic.retrieval_dense import VectorChannel
-from lumen.force.mnemonic.retrieval_graph import GraphChannel
-from lumen.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumen.force.mnemonic.store import store_memory
-from lumen.fusion import RetrievedChunk, fuse_and_rerank
+from lumena.config import LumenaConfig
+from lumena.controller import TwinForceController
+from lumena.data.schema import get_connection
+from lumena.force.mnemonic.retrieval_dense import VectorChannel
+from lumena.force.mnemonic.retrieval_graph import GraphChannel
+from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
+from lumena.force.mnemonic.store import store_memory
+from lumena.fusion import RetrievedChunk, fuse_and_rerank
 
 # ---------------------------------------------------------------------------
 # Corpus
@@ -213,7 +213,7 @@ def run_ablations():
     with open(CORPUS_PATH, encoding="utf-8") as f:
         corpus = json.load(f)
 
-    tmpdir = tempfile.mkdtemp(prefix="lumen_ablation_")
+    tmpdir = tempfile.mkdtemp(prefix="lumena_ablation_")
     config = LumenaConfig(store_path=Path(tmpdir), embedding_dims=384, vector_index="sqlite-vec")
     conn = get_connection(config)
 

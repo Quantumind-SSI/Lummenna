@@ -1,9 +1,9 @@
 """D12: Tests for Search Repair Loop."""
 
-from lumen.controller import TFCState, TwinForceController
-from lumen.fusion import RetrievedChunk
-from lumen.repair import SearchRepair
-from lumen.search import SearchPipeline
+from lumena.controller import TFCState, TwinForceController
+from lumena.fusion import RetrievedChunk
+from lumena.repair import SearchRepair
+from lumena.search import SearchPipeline
 
 
 class FakePipeline:
@@ -122,7 +122,7 @@ def test_no_repair_when_results_good(monkeypatch, memory_db, test_config, mock_e
         call_count[0] += 1
         return [_make_chunk(final_score=0.5)]
 
-    monkeypatch.setattr("lumen.search.fuse_and_rerank", fake_fuse)
+    monkeypatch.setattr("lumena.search.fuse_and_rerank", fake_fuse)
 
     results = pipe.execute("good query")
     assert len(results) == 1
@@ -140,7 +140,7 @@ def test_repair_triggered_on_empty_results(monkeypatch, memory_db, test_config, 
         call_count[0] += 1
         return []
 
-    monkeypatch.setattr("lumen.search.fuse_and_rerank", fake_fuse)
+    monkeypatch.setattr("lumena.search.fuse_and_rerank", fake_fuse)
 
     results = pipe.execute("empty query", max_repair_attempts=1)
     assert results == []
@@ -158,7 +158,7 @@ def test_repair_triggered_on_low_confidence(monkeypatch, memory_db, test_config,
         call_count[0] += 1
         return [_make_chunk(final_score=0.005)]
 
-    monkeypatch.setattr("lumen.search.fuse_and_rerank", fake_fuse)
+    monkeypatch.setattr("lumena.search.fuse_and_rerank", fake_fuse)
 
     pipe.execute("low confidence query", max_repair_attempts=1)
     assert call_count[0] == 2
@@ -175,7 +175,7 @@ def test_max_repair_attempts_zero(monkeypatch, memory_db, test_config, mock_embe
         call_count[0] += 1
         return []
 
-    monkeypatch.setattr("lumen.search.fuse_and_rerank", fake_fuse)
+    monkeypatch.setattr("lumena.search.fuse_and_rerank", fake_fuse)
 
     results = pipe.execute("empty query", max_repair_attempts=0)
     assert results == []
@@ -195,7 +195,7 @@ def test_repair_returns_original_if_repair_also_empty(
         call_count[0] += 1
         return []
 
-    monkeypatch.setattr("lumen.search.fuse_and_rerank", fake_fuse)
+    monkeypatch.setattr("lumena.search.fuse_and_rerank", fake_fuse)
 
     results = pipe.execute("empty query", max_repair_attempts=1)
     assert results == []

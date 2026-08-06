@@ -8,9 +8,9 @@ import sys
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import init_db
-from lumen.p2p.beam import BeamNode, decode_frame, encode_frame
+from lumena.config import LumenaConfig
+from lumena.data.schema import init_db
+from lumena.p2p.beam import BeamNode, decode_frame, encode_frame
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def beam_config(tmp_path):
     return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumen"),
+        store_path=str(tmp_path / ".lumena"),
         beam_port=9999,
         sovereign=False,
         p2p_encryption_key="test-beam-key-1234",
@@ -82,15 +82,15 @@ def test_discovery_mock(beam_config):
         def get_service_info(self, type_, name):
             return MockInfo()
 
-    node.add_service(MockZc(), "_lumen-beam._tcp.local.", "device1._lumen-beam._tcp.local.")
-    assert "device1._lumen-beam._tcp.local." in node.peers
-    assert node.peers["device1._lumen-beam._tcp.local."] == ("192.168.1.5", 8847)
+    node.add_service(MockZc(), "_lumena-beam._tcp.local.", "device1._lumena-beam._tcp.local.")
+    assert "device1._lumena-beam._tcp.local." in node.peers
+    assert node.peers["device1._lumena-beam._tcp.local."] == ("192.168.1.5", 8847)
 
-    node.update_service(MockZc(), "_lumen-beam._tcp.local.", "device1._lumen-beam._tcp.local.")
-    assert node.peers["device1._lumen-beam._tcp.local."] == ("192.168.1.5", 8847)
+    node.update_service(MockZc(), "_lumena-beam._tcp.local.", "device1._lumena-beam._tcp.local.")
+    assert node.peers["device1._lumena-beam._tcp.local."] == ("192.168.1.5", 8847)
 
-    node.remove_service(MockZc(), "_lumen-beam._tcp.local.", "device1._lumen-beam._tcp.local.")
-    assert "device1._lumen-beam._tcp.local." not in node.peers
+    node.remove_service(MockZc(), "_lumena-beam._tcp.local.", "device1._lumena-beam._tcp.local.")
+    assert "device1._lumena-beam._tcp.local." not in node.peers
 
 
 def test_share_room_packet(memory_db, beam_config, monkeypatch):
@@ -99,7 +99,7 @@ def test_share_room_packet(memory_db, beam_config, monkeypatch):
         "INSERT INTO chunk(locus_id, room_id, content, content_hash, vm_score) "
         "VALUES (NULL, 1, 'shared memory', 'hash123', 0.7)"
     )
-    monkeypatch.setattr("lumen.p2p.beam.get_connection", lambda cfg: memory_db)
+    monkeypatch.setattr("lumena.p2p.beam.get_connection", lambda cfg: memory_db)
 
     node = BeamNode(beam_config)
     node.peers = {"peer1": ("192.168.1.2", 8847)}
@@ -142,7 +142,7 @@ class _NoCloseConnection:
 
 
 def test_receive_stores_memory(memory_db, beam_config, monkeypatch):
-    monkeypatch.setattr("lumen.p2p.beam.get_connection", lambda cfg: _NoCloseConnection(memory_db))
+    monkeypatch.setattr("lumena.p2p.beam.get_connection", lambda cfg: _NoCloseConnection(memory_db))
 
     node = BeamNode(beam_config)
 
@@ -199,15 +199,15 @@ def test_zeroconf_missing():
         if key.startswith("zeroconf"):
             real_modules[key] = sys.modules.pop(key)
 
-    if "lumen.p2p.beam" in sys.modules:
-        del sys.modules["lumen.p2p.beam"]
+    if "lumena.p2p.beam" in sys.modules:
+        del sys.modules["lumena.p2p.beam"]
 
     broken = type(sys)("zeroconf")
     sys.modules["zeroconf"] = broken
 
     try:
-        import lumen.p2p.beam as beam_module
-        from lumen.config import LumenaConfig
+        import lumena.p2p.beam as beam_module
+        from lumena.config import LumenaConfig
 
         _ = beam_module.BeamNode(LumenaConfig())
         pytest.fail("Expected RuntimeError on missing zeroconf")

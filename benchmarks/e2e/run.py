@@ -38,11 +38,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.contextual.embed import MockEmbedder
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.contextual.embed import MockEmbedder
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -535,7 +535,7 @@ def run_e2e_benchmark():
         print(f"Session {session_idx+1}: {session['persona']} in room '{session['room']}'")
         print(f"{'='*60}")
 
-        tmpdir = tempfile.mkdtemp(prefix=f"lumen_e2e_{session['room']}_")
+        tmpdir = tempfile.mkdtemp(prefix=f"lumena_e2e_{session['room']}_")
         config = LumenaConfig(
             store_path=Path(tmpdir),
             embedding_dims=EMBED_DIMS,

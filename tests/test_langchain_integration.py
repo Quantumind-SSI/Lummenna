@@ -1,11 +1,11 @@
-"""Tests for lumen.integrations.langchain."""
+"""Tests for lumena.integrations.langchain."""
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection
-from lumen.force.contextual.embed import MockEmbedder
-from lumen.integrations.langchain import LumenaChatMemory
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection
+from lumena.force.contextual.embed import MockEmbedder
+from lumena.integrations.langchain import LumenaChatMemory
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ class TestLumenaChatMemory:
             embedder=embedder,
         )
         # Seed feedback
-        from lumen.force.mnemonic.store import store_memory
+        from lumena.force.mnemonic.store import store_memory
 
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
         conn = mem.memory.conn
@@ -97,7 +97,7 @@ class TestLumenaChatMemory:
 class TestLumenaStore:
     def test_mset_mget(self, fresh_config):
         try:
-            from lumen.integrations.langchain import LumenaStore
+            from lumena.integrations.langchain import LumenaStore
         except Exception as exc:
             pytest.skip(f"LumenaStore unavailable: {exc}")
 
@@ -111,7 +111,7 @@ class TestLumenaStore:
 
     def test_mdelete_and_yield_keys(self, fresh_config):
         try:
-            from lumen.integrations.langchain import LumenaStore
+            from lumena.integrations.langchain import LumenaStore
         except Exception as exc:
             pytest.skip(f"LumenaStore unavailable: {exc}")
 

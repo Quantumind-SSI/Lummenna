@@ -9,13 +9,13 @@ Add to your Zed `settings.json` (via `cmd+,` or `ctrl+,`):
 ```json
 {
   "context_servers": {
-    "lumen-memory": {
+    "lumena-memory": {
       "command": {
         "path": "python",
-        "args": ["-m", "lumen.integrations.mcp_server"]
+        "args": ["-m", "lumena.integrations.mcp_server"]
       },
       "settings": {
-        "LUMEN_DEVICE": "generic"
+        "LUMENA_DEVICE": "generic"
       }
     }
   }
@@ -45,11 +45,11 @@ Then create a Zed extension or use the inline assistant with a custom prompt tha
 
 ## Option 3: Zed Extension (Advanced)
 
-Create `~/.config/zed/extensions/lumen/extension.json`:
+Create `~/.config/zed/extensions/lumena/extension.json`:
 
 ```json
 {
-  "id": "lumen-memory",
+  "id": "lumena-memory",
   "name": "Lumena Memory",
   "version": "0.1.0",
   "authors": ["Lumena Contributors"],
@@ -58,10 +58,10 @@ Create `~/.config/zed/extensions/lumen/extension.json`:
 }
 ```
 
-And `~/.config/zed/extensions/lumen/src/lib.rs` (WASM extension that calls Lumena HTTP API). This requires Rust/WASM knowledge. For a pilot, Option 1 (context server) is sufficient.
+And `~/.config/zed/extensions/lumena/src/lib.rs` (WASM extension that calls Lumena HTTP API). This requires Rust/WASM knowledge. For a pilot, Option 1 (context server) is sufficient.
 
 ## Quick Test
 
 1. Start Lumena: `lumena serve`
 2. Open Zed AI panel (`ctrl+~` or `cmd+~`)
-3. Type: `@lumen-memory search for decisions about caching`
+3. Type: `@lumena-memory search for decisions about caching`

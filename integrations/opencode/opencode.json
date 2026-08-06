@@ -4,23 +4,23 @@
     "paths": [".opencode/skills"]
   },
   "mcp": {
-    "lumen-memory": {
+    "lumena-memory": {
       "type": "local",
       "command": [
         "python",
         "-m",
-        "lumen.integrations.mcp_server"
+        "lumena.integrations.mcp_server"
       ],
       "enabled": true,
       "env": {
-        "LUMEN_DEVICE": "generic",
-        "LUMEN_STORE_PATH": "./.lumen/store",
-        "LUMEN_MODEL_PATH": "./.lumen/models"
+        "LUMENA_DEVICE": "generic",
+        "LUMENA_STORE_PATH": "./.lumena/store",
+        "LUMENA_MODEL_PATH": "./.lumena/models"
       }
     }
   },
   "instructions": [
     "AGENTS.md",
-    ".opencode/skills/lumen-memory/SKILL.md"
+    ".opencode/skills/lumena-memory/SKILL.md"
   ]
 }

@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.backup import backup_database
-from lumen.data.schema import get_connection
+from lumena.config import LumenaConfig
+from lumena.data.backup import backup_database
+from lumena.data.schema import get_connection
 
 
 @pytest.fixture
@@ -13,7 +13,7 @@ def db_conn(tmp_path):
     config = LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumen"),
+        store_path=str(tmp_path / ".lumena"),
     )
     conn = get_connection(config)
     conn.execute(

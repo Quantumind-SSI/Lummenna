@@ -5,19 +5,19 @@ from pathlib import Path
 
 import pytest
 
-from lumen.config import LumenaConfig
-from lumen.data.schema import get_connection, get_encryption, init_db
-from lumen.force.contextual.embed import MockEmbedder
-from lumen.force.mnemonic.store import store_memory
-from lumen.search import SearchPipeline
-from lumen.security.crypto import derive_sqlcipher_passphrase
+from lumena.config import LumenaConfig
+from lumena.data.schema import get_connection, get_encryption, init_db
+from lumena.force.contextual.embed import MockEmbedder
+from lumena.force.mnemonic.store import store_memory
+from lumena.search import SearchPipeline
+from lumena.security.crypto import derive_sqlcipher_passphrase
 
 
 @pytest.fixture
 def sqlcipher_config(tmp_path):
     return LumenaConfig(
-        store_path=tmp_path / ".lumen" / "store",
-        model_path=tmp_path / ".lumen" / "models",
+        store_path=tmp_path / ".lumena" / "store",
+        model_path=tmp_path / ".lumena" / "models",
         vector_index="sqlite-vec",
         device="generic",
         encryption_key="test-sqlcipher-key-12345",
@@ -54,7 +54,7 @@ class TestSQLCipherIntegration:
         conn = get_connection(sqlcipher_config)
         init_db(conn)
         conn.close()
-        salt_path = sqlcipher_config.store_path / ".lumen_salt"
+        salt_path = sqlcipher_config.store_path / ".lumena_salt"
         assert salt_path.exists()
         assert salt_path.stat().st_size == 16
 
@@ -87,10 +87,10 @@ class TestSQLCipherIntegration:
         conn.close()
 
     def test_plaintext_fallback_when_sqlcipher_unavailable(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("lumen.data.schema._HAS_SQLCIPHER", False)
+        monkeypatch.setattr("lumena.data.schema._HAS_SQLCIPHER", False)
         config = LumenaConfig(
-            store_path=tmp_path / ".lumen" / "store",
-            model_path=tmp_path / ".lumen" / "models",
+            store_path=tmp_path / ".lumena" / "store",
+            model_path=tmp_path / ".lumena" / "models",
             vector_index="sqlite-vec",
             device="generic",
             encryption_key="key",

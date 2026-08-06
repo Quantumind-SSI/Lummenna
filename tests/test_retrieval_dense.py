@@ -3,8 +3,8 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumen.data.schema import init_db
-from lumen.force.mnemonic.retrieval_dense import DenseHit, SqliteVecBackend
+from lumena.data.schema import init_db
+from lumena.force.mnemonic.retrieval_dense import DenseHit, SqliteVecBackend
 
 
 @pytest.fixture
