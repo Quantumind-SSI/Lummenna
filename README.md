@@ -16,8 +16,8 @@
   <a href="https://github.com/QuantumindSSI/lumen/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lumen/ci.yml?branch=main&style=flat-square" alt="CI"></a>
   <a href="https://github.com/QuantumindSSI/lumen/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
-  <img src="https://img.shields.io/badge/coverage-73%25-brightgreen?style=flat-square" alt="Coverage">
-  <img src="https://img.shields.io/badge/tests-243%20passed-brightgreen?style=flat-square" alt="Tests">
+  <img src="https://img.shields.io/badge/coverage-74%25-brightgreen?style=flat-square" alt="Coverage">
+  <img src="https://img.shields.io/badge/tests-273%20passed-brightgreen?style=flat-square" alt="Tests">
 </p>
 
 <p><em>Beta software. API-stable; actively developed. Contributions welcome.</em></p>
@@ -91,8 +91,8 @@ print(turn.assembled_context)
 $ lumen status
 Lumen Status
 Device: generic
-Rooms: 3
-Active chunks: 56
+Rooms: 5
+Active chunks: 58
 Context budget: 2048 tokens
 TFC → e=0.50 a=0.50 tau=7.0 r=3
 ```
@@ -137,7 +137,7 @@ Lumen is **beta software**. It works end-to-end with API versioning, comprehensi
 
 | Dimension | Status | Detail |
 |---|---|---|
-| **Tests** | 243 passing, 2 skipped | 73% coverage. 36 test files. |
+| **Tests** | 273 passing, 9 skipped | 74% coverage. 41 test files. |
 | **Storage** | Working | SQLite with WAL, FTS5, bi-temporal tracking, provenance chains. |
 | **Retrieval** | Working | BM25 + dense + graph with RRF fusion. |
 | **Forgetting** | Working | L1 decay (Ebbinghaus), L2 interference, L3 budget eviction. |
@@ -148,8 +148,8 @@ Lumen is **beta software**. It works end-to-end with API versioning, comprehensi
 | **LangChain** | Working | LumenChatMemory adapter (requires `langchain` package). |
 | **LangGraph** | Working | LumenCheckpointSaver (requires `langgraph` package). |
 | **Encryption-at-rest** | Not implemented | Use OS-level disk encryption (LUKS, FileVault, BitLocker). Planned for v0.3.0. |
-| **BEIR benchmarks** | Harness ready | Runner at `benchmarks/beir/run.py`. Full evaluation deferred to HPC. |
-| **P2P sharing** | Plaintext only | Beam protocol works on trusted LANs. No transport encryption. |
+| **BEIR benchmarks** | Partially evaluated | 500-doc/20-query subset results available. Full-corpus evaluation deferred to HPC. |
+| **P2P sharing** | Working | Beam protocol with AES-256-GCM encryption, HMAC-SHA256 signing, replay protection. Requires p2p key. |
 
 ---
 
@@ -163,12 +163,12 @@ All run with a single command from the repo root:
 | E2E memory quality | `python -m benchmarks.e2e.run` | Run (28 queries) |
 | Navigation efficiency | `python -m benchmarks.navigation.run` | Run |
 | Ablation (component isolation) | `python -m benchmarks.ablation.run` | Run |
-| Forgetting (90-day survival) | `python -m benchmarks.forgetting.run` | Harness ready; no results yet |
+| Forgetting (90-day survival) | `python -m benchmarks.forgetting.run` | Run (results available) |
 | Performance (latency/footprint) | `python -m benchmarks.perf.run` | Harness ready; no results yet |
-| BEIR subset evaluation | `python -m benchmarks.beir.run` | Harness ready; no results yet |
+| BEIR subset evaluation | `python -m benchmarks.beir.run` | Run (500-doc/20-query subset results available) |
 | All suites | `python -m benchmarks.run_all` | Wraps the above |
 
-> **Note on results:** Retrieval benchmarks currently use a synthetic keyword-overlap corpus (1,000 passages, 50 queries). The nDCG formula was fixed in a recent commit; re-run `python -m benchmarks.retrieval.run` to generate updated scores.
+> **Note on results:** Retrieval benchmarks use a synthetic keyword-overlap corpus (1,000 passages, 50 queries) plus BEIR subset evaluation (500-passages, 20-query subsets across 5 standard datasets). The nDCG formula was fixed in a recent commit; re-run `python -m benchmarks.retrieval.run` to generate updated scores.
 
 ---
 
@@ -180,7 +180,7 @@ All run with a single command from the repo root:
 | **LangChain** | `LumenChatMemory` adapter | `pip install langchain` |
 | **LangGraph** | `LumenCheckpointSaver` for graph state | `pip install langgraph` |
 | **FastAPI** | REST API with auth/rate-limiting | `lumen serve` |
-| **OpenCode** | Native skill for memory workflows | See `docs/INTEGRATIONS.md` |
+| **OpenCode** | Native skill for memory workflows | See `INTEGRATIONS.md` |
 
 ---
 
@@ -206,8 +206,8 @@ lumen/
 ├── sovereign/         FRQAD, optical quantization, local LLM
 ├── brand/             Error hierarchy
 └── compliance/        Safety forgetting, PII audit
-tests/                36 test files, 243 tests
-benchmarks/           8 benchmark suites
+tests/                41 test files, 273 tests
+benchmarks/           11 benchmark suites
 ```
 
 ---
@@ -223,9 +223,9 @@ We welcome contributions. The best way to start:
 
 ### High-impact areas to contribute
 
-- **Run the BEIR harness** — generate the first real-world retrieval benchmark results.
+- **Run the full BEIR harness** — generate leaderboard-scale retrieval benchmark results.
 - **Add encryption-at-rest** — SQLCipher integration is the highest-priority security feature.
-- **Write tests** — 28 modules lack dedicated test files. Pick one and add coverage.
+- **Write tests** — several modules lack dedicated test files. Pick one and add coverage.
 
 ### Development setup
 

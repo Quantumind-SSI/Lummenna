@@ -4,7 +4,7 @@ Input wire: Kùzu / NetworkX entity graph, TFC attentional temperature `a`
 Output wire: C8 (prefetch buffer)
 Secret sauce: Controlled echo-location; gamma decay prevents explosion
 
-NOTE: This module is not yet wired into any production code path.
+NOTE: This module is wired into the search pipeline via search.py Stage 2c.
 """
 
 from typing import Any

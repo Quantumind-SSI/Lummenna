@@ -270,7 +270,7 @@ Lumen does not yet implement built-in database encryption. Use OS-level full-dis
 | Linux | LUKS/dm-crypt | `cryptsetup luksFormat /dev/sdX` |
 | Raspberry Pi | LUKS + initramfs | See [Raspberry Pi LUKS guide](https://www.raspberrypi.com/documentation/computers/configuration.html) |
 
-SQLCipher integration is planned for v0.2.0. On startup, Lumen logs a reminder:
+SQLCipher integration is planned for v0.3.0. On startup, Lumen logs a reminder:
 
 ```
 encryption_at_rest_disabled

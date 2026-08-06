@@ -591,13 +591,14 @@ def _load_retrieval_benchmarks() -> dict:
         return {}
     try:
         data = _json.loads(result_path.read_text())
-        # Extract latest hybrid config results
-        for run in reversed(data.get("runs", [])):
-            if run.get("config", {}).get("hybrid", False):
+        for embedder in data.get("embedders", []):
+            results = embedder.get("results", {})
+            hybrid = results.get("hybrid", {})
+            if hybrid:
                 return {
-                    "hybrid_r10_bge": run.get("recall_10"),
-                    "ndcg10": run.get("ndcg_10"),
-                    "latency_hybrid_ms": run.get("latency_ms"),
+                    "hybrid_r10": hybrid.get("recall_10", {}).get("mean"),
+                    "ndcg10": hybrid.get("ndcg_10", {}).get("mean"),
+                    "latency_hybrid_ms": hybrid.get("latency_ms", {}).get("mean"),
                 }
         return {}
     except Exception:
