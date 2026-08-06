@@ -9,7 +9,7 @@ Add to your `~/.codex/config.json` (or project-local `.codex/config.json`):
 ```json
 {
   "mcp_servers": {
-    "lumena-memory": {
+    "lumena": {
       "command": "python",
       "args": ["-m", "lumena.integrations.mcp_server"],
       "env": {
@@ -25,7 +25,7 @@ Add to your `~/.codex/config.json` (or project-local `.codex/config.json`):
 Or use the CLI to add it:
 
 ```bash
-codex mcp add lumena-memory \
+codex mcp add lumena \
   --command "python -m lumena.integrations.mcp_server" \
   --env LUMENA_DEVICE=generic
 ```

@@ -9,7 +9,7 @@ Add to your Zed `settings.json` (via `cmd+,` or `ctrl+,`):
 ```json
 {
   "context_servers": {
-    "lumena-memory": {
+    "lumena": {
       "command": {
         "path": "python",
         "args": ["-m", "lumena.integrations.mcp_server"]
@@ -49,7 +49,7 @@ Create `~/.config/zed/extensions/lumena/extension.json`:
 
 ```json
 {
-  "id": "lumena-memory",
+  "id": "lumena",
   "name": "Lumena Memory",
   "version": "0.1.0",
   "authors": ["Lumena Contributors"],
@@ -64,4 +64,4 @@ And `~/.config/zed/extensions/lumena/src/lib.rs` (WASM extension that calls Lume
 
 1. Start Lumena: `lumena serve`
 2. Open Zed AI panel (`ctrl+~` or `cmd+~`)
-3. Type: `@lumena-memory search for decisions about caching`
+3. Type: `@lumena search for decisions about caching`
