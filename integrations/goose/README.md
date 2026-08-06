@@ -9,7 +9,7 @@ Add Lumena to your Goose configuration:
 ```bash
 goose configure
 # Select "Add Extension" → "Command-line Extension"
-# Name: lumena-memory
+# Name: lumena
 # Command: python -m lumena.integrations.mcp_server
 # Environment variables:
 #   LUMENA_DEVICE=generic
@@ -19,7 +19,7 @@ Or edit `~/.config/goose/config.yaml` directly:
 
 ```yaml
 extensions:
-  lumena-memory:
+  lumena:
     type: stdio
     cmd: python
     args:

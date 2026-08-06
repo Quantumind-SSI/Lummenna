@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "lumena-memory": {
+    "lumena": {
       "command": "python",
       "args": ["-m", "lumena.integrations.mcp_server"],
       "env": {

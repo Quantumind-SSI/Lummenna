@@ -1,5 +1,5 @@
 ---
-name: lumena-memory
+name: lumena
 description: >
   Use when the user asks to remember, recall, persist, or search across
   project decisions, code snippets, architecture notes, or conversation

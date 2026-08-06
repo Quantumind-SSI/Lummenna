@@ -4,7 +4,7 @@
     "paths": [".opencode/skills"]
   },
   "mcp": {
-    "lumena-memory": {
+    "lumena": {
       "type": "local",
       "command": [
         "python",
@@ -21,6 +21,6 @@
   },
   "instructions": [
     "AGENTS.md",
-    ".opencode/skills/lumena-memory/SKILL.md"
+    ".opencode/skills/lumena/SKILL.md"
   ]
 }

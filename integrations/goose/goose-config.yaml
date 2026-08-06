@@ -1,5 +1,5 @@
 extensions:
-  lumena-memory:
+  lumena:
     type: stdio
     cmd: python
     args:

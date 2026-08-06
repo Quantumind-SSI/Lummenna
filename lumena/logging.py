@@ -20,6 +20,14 @@ def get_console_logger(name: str | None = None) -> Any:
 
     try:
         import structlog
+        import sys
+
+        # Ensure structlog writes to stderr rather than stdout so that
+        # stdio-based transports (e.g. MCP) are not corrupted by log output.
+        if hasattr(structlog, "is_configured") and not structlog.is_configured():
+            structlog.configure(
+                logger_factory=structlog.PrintLoggerFactory(file=sys.stderr)
+            )
 
         log = structlog.get_logger(name)
     except Exception:

@@ -52,7 +52,7 @@ Create `.opencode/opencode.json` in your project root:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "lumena-memory": {
+    "lumena": {
       "type": "local",
       "command": ["python", "-m", "lumena.integrations.mcp_server"],
       "enabled": true,
@@ -98,12 +98,12 @@ If Lumena runs on a remote host or in Docker:
 Skills teach the agent *when* and *how* to use Lumena. Create:
 
 ```
-.opencode/skills/lumena-memory/SKILL.md
+.opencode/skills/lumena/SKILL.md
 ```
 
 ```markdown
 ---
-name: lumena-memory
+name: lumena
 description: >
   Use when the user asks to remember, recall, persist, or search across
   project decisions, code snippets, architecture notes, or conversation

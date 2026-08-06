@@ -1,7 +1,7 @@
 {
   "github.copilot.chat.mcp.servers": [
     {
-      "name": "lumena-memory",
+      "name": "lumena",
       "command": "python",
       "args": ["-m", "lumena.integrations.mcp_server"],
       "env": {

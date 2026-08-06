@@ -11,7 +11,7 @@ Or configured as an MCP server in host config::
 
     {
       "mcp": {
-        "lumena-memory": {
+        "lumena": {
           "type": "local",
           "command": ["python", "-m", "lumena.integrations.mcp_server"],
           "env": {"LUMENA_DEVICE": "generic"}
@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -71,33 +72,37 @@ _module_state: LumenaAppState | None = None
 async def app_lifespan(server: FastMCP) -> AsyncIterator[LumenaAppState]:
     """Initialize Lumena on server startup and close on shutdown."""
     global _module_state
-    config = LumenaConfig()
-    config.store_path.mkdir(parents=True, exist_ok=True)
-    config.model_path.mkdir(parents=True, exist_ok=True)
-
-    palace = initialize_palace(config)
-
-    state = LumenaAppState(
-        config=config,
-        conn=palace["conn"],
-        embedder=palace["embedder"],
-        pipeline=palace["pipeline"],
-        conversation=palace["conversation"],
-        tfc=palace["tfc"],
-        embedding_model_available=palace["embedding_model_available"],
-    )
-    _module_state = state
-
-    logger.info("mcp_server_started", device=config.device, db=str(config.db_path))
     try:
-        yield state
-    finally:
-        palace["conn"].close()
-        _module_state = None
-        logger.info("mcp_server_stopped")
+        config = LumenaConfig()
+        config.store_path.mkdir(parents=True, exist_ok=True)
+        config.model_path.mkdir(parents=True, exist_ok=True)
+
+        palace = initialize_palace(config)
+
+        state = LumenaAppState(
+            config=config,
+            conn=palace["conn"],
+            embedder=palace["embedder"],
+            pipeline=palace["pipeline"],
+            conversation=palace["conversation"],
+            tfc=palace["tfc"],
+            embedding_model_available=palace["embedding_model_available"],
+        )
+        _module_state = state
+
+        logger.info("mcp_server_started", device=config.device, db=str(config.db_path))
+        try:
+            yield state
+        finally:
+            palace["conn"].close()
+            _module_state = None
+            logger.info("mcp_server_stopped")
+    except Exception as exc:
+        logger.error("mcp_lifespan_init_failed", exc=str(exc))
+        raise
 
 
-mcp = FastMCP("lumena-memory", lifespan=app_lifespan) if _MCP_AVAILABLE else None
+mcp = FastMCP("lumena", lifespan=app_lifespan) if _MCP_AVAILABLE else None
 
 
 # ---------------------------------------------------------------------------
@@ -572,11 +577,17 @@ async def dashboard_sota(ctx: Context = None) -> str:
 
 def main() -> None:
     if mcp is None:
-        raise ImportError(
-            "The 'mcp' package is required for the MCP server. "
-            "Install with: pip install lumena[mcp]"
+        print(
+            "ERROR: The 'mcp' package is required for the MCP server. "
+            "Install with: pip install lumena[mcp]",
+            file=sys.stderr,
         )
-    mcp.run(transport="stdio")
+        sys.exit(1)
+    try:
+        mcp.run(transport="stdio")
+    except Exception as exc:
+        logger.error("mcp_server_fatal_error", exc=str(exc))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
