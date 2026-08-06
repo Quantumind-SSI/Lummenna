@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "lumen"
+name = "lumena"
 version = "0.2.0-beta"
 description = "Twin-force memory and context framework for sovereign AI agents"
 requires-python = ">=3.10"
