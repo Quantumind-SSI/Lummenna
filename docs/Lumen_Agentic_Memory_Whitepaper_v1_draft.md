@@ -1,16 +1,16 @@
-# Lumen: A Twin-Force Agentic Memory Framework with Biologically-Grounded Forgetting and Sovereign Deployment
+# Lumena: A Twin-Force Agentic Memory Framework with Biologically-Grounded Forgetting and Sovereign Deployment
 
 **QuantumindSSI Research**
 
 **Version: 0.1.0 (Alpha) — July 2026**
 
-> **ARCHIVED DRAFT — SUPERSEDED BY v0.2.0-beta.** This document contains claims from v0.1.0-alpha that do not reflect the current codebase. Several benchmark numbers (E2E R@1, ColBERTv2 comparison, Raspberry Pi latency, MS MARCO) were aspirational or based on uncommitted runs and have been corrected in `Lumen_Agentic_Memory_Whitepaper.md`. Refer to the current whitepaper for v0.2.0-beta results verified against committed benchmark JSON files. This draft is retained for historical context only.
+> **ARCHIVED DRAFT — SUPERSEDED BY v0.2.0-beta.** This document contains claims from v0.1.0-alpha that do not reflect the current codebase. Several benchmark numbers (E2E R@1, ColBERTv2 comparison, Raspberry Pi latency, MS MARCO) were aspirational or based on uncommitted runs and have been corrected in `Lumena_Agentic_Memory_Whitepaper.md`. Refer to the current whitepaper for v0.2.0-beta results verified against committed benchmark JSON files. This draft is retained for historical context only.
 
 ---
 
 ## Abstract
 
-Contemporary large language model (LLM) agents suffer from context-window saturation, memory degradation, and forced reliance on cloud-hosted vector databases that violate data sovereignty guarantees. We present Lumen, an open-source, locally-deployed agentic memory framework that models agent memory as a structured *memory palace* — rooms, loci, and corridors organized as a graph-based SQLite topology — governed by a biologically-inspired *Twin-Force Controller* (TFC) that balances mnemonic conservation against contextual attention. Lumen implements a four-layer forgetting pipeline (Ebbinghaus L1 decay, L2 interference-based weakening, L3 budget-curated eviction, and L4 compliance-triggered deletion) alongside a learnable seven-factor value model V(m) that ranks memories by personal relevance. The system operates entirely on-device with a ~90 MB runtime footprint, achieving 12 ms average retrieval latency on a Raspberry Pi 5 and 100% recall@10 in end-to-end multi-turn memory quality benchmarks. Compared to Chroma, FAISS, and Qdrant, Lumen provides a 40%-60% smaller memory footprint, unique graceful forgetting, and sovereign offline operation at a 0% external API cost. We demonstrate that biologically-grounded memory management, combined with structured palace topology, achieves retrieval parity with flat vector databases while enabling emergent cognitive behaviors — temporal degradation, semantic interference, and value-guided curation — that no existing agentic memory system provides.
+Contemporary large language model (LLM) agents suffer from context-window saturation, memory degradation, and forced reliance on cloud-hosted vector databases that violate data sovereignty guarantees. We present Lumena, an open-source, locally-deployed agentic memory framework that models agent memory as a structured *memory palace* — rooms, loci, and corridors organized as a graph-based SQLite topology — governed by a biologically-inspired *Twin-Force Controller* (TFC) that balances mnemonic conservation against contextual attention. Lumena implements a four-layer forgetting pipeline (Ebbinghaus L1 decay, L2 interference-based weakening, L3 budget-curated eviction, and L4 compliance-triggered deletion) alongside a learnable seven-factor value model V(m) that ranks memories by personal relevance. The system operates entirely on-device with a ~90 MB runtime footprint, achieving 12 ms average retrieval latency on a Raspberry Pi 5 and 100% recall@10 in end-to-end multi-turn memory quality benchmarks. Compared to Chroma, FAISS, and Qdrant, Lumena provides a 40%-60% smaller memory footprint, unique graceful forgetting, and sovereign offline operation at a 0% external API cost. We demonstrate that biologically-grounded memory management, combined with structured palace topology, achieves retrieval parity with flat vector databases while enabling emergent cognitive behaviors — temporal degradation, semantic interference, and value-guided curation — that no existing agentic memory system provides.
 
 ---
 
@@ -28,7 +28,7 @@ The agentic memory landscape in 2026 is dominated by three architectural approac
 
 All three approaches share critical limitations: they are *append-only* (no forgetting mechanism beyond manual deletion), *cloud-dependent* (embedding computation and storage require external API calls), *flat-structured* (no explicit topological memory organization), and *passive* (no learned value model that ranks memories by personal relevance).
 
-Lumen addresses these limitations through four architectural innovations:
+Lumena addresses these limitations through four architectural innovations:
 
 1. **A structured memory palace** with explicit rooms, loci, and corridors as a graph topology, enabling spatial navigation, scoped retrieval, and cross-room interference modeling.
 
@@ -44,7 +44,7 @@ All computation — embedding, storage, retrieval, and consolidation — runs en
 
 ## 2. System Architecture
 
-Lumen's architecture is organized around two *forces* — Mnemonic (memory) and Contextual (attention) — mediated by a unification controller that maintains their dynamic equilibrium (Figure 1).
+Lumena's architecture is organized around two *forces* — Mnemonic (memory) and Contextual (attention) — mediated by a unification controller that maintains their dynamic equilibrium (Figure 1).
 
 ### 2.1 The Memory Palace Topology
 
@@ -137,7 +137,7 @@ V(m) = σ(z) = 1 / (1 + e^{-z})
 
 ### 2.5 The Forgetting Pipeline
 
-Lumen implements four layers of biologically-inspired forgetting, applied at different timescales:
+Lumena implements four layers of biologically-inspired forgetting, applied at different timescales:
 
 **L1 — Ebbinghaus Passive Decay** (daily). Memory retention follows an exponential decay function:
 
@@ -157,7 +157,7 @@ where *t* is memory age in seconds, τ_h is the user-specific half-life (default
 
 ## 3. Evaluation Methodology
 
-We evaluate Lumen across six dimensions designed to capture both standard retrieval quality and the unique cognitive properties of the framework.
+We evaluate Lumena across six dimensions designed to capture both standard retrieval quality and the unique cognitive properties of the framework.
 
 ### 3.1 Retrieval Benchmark
 
@@ -265,7 +265,7 @@ All seven agent personas achieved 100% R@10 across all query turns, demonstratin
 
 **Table 3: Cross-System Resource Comparison (Raspberry Pi 5)**
 
-| Metric | Lumen | Chroma | FAISS | Qdrant |
+| Metric | Lumena | Chroma | FAISS | Qdrant |
 |---|---|---|---|---|
 | Install size (MB) | **~180** | ~250 | ~300 | ~400 |
 | Runtime RAM (MB) | **~90** | ~150 | ~200 | ~250 |
@@ -276,7 +276,7 @@ All seven agent personas achieved 100% R@10 across all query turns, demonstratin
 | Graceful forgetting | **✅** | ❌ | ❌ | ❌ |
 | Offline operation | **✅** | ⚠️ | ✅ | ❌ |
 
-At 50,000 passages, Lumen's per-query latency scales as: p50 = sub-10 ms (BM25-only), 43 ms (dense-only with MiniLM), and 54 ms (hybrid). The WearAwareBatcher achieves a 2–15× speedup on bulk writes compared to naive per-row SQL execution by deferring and coalescing SQLite writes, reducing SD/eMMC flash wear on embedded devices.
+At 50,000 passages, Lumena's per-query latency scales as: p50 = sub-10 ms (BM25-only), 43 ms (dense-only with MiniLM), and 54 ms (hybrid). The WearAwareBatcher achieves a 2–15× speedup on bulk writes compared to naive per-row SQL execution by deferring and coalescing SQLite writes, reducing SD/eMMC flash wear on embedded devices.
 
 ---
 
@@ -284,11 +284,11 @@ At 50,000 passages, Lumen's per-query latency scales as: p50 = sub-10 ms (BM25-o
 
 ### 5.1 Comparison with Existing Agentic Memory Systems
 
-Lumen occupies a unique position in the agentic memory landscape. Unlike vector databases (Chroma, FAISS, Qdrant) that provide fast retrieval but no memory lifecycle management, Lumen implements a complete *remember → decay → interfere → evict* pipeline. Unlike cloud-hosted solutions (MemGPT, Zep, Mem0) that require persistent network connections and external embedding APIs, Lumen runs entirely on-device with ONNX Runtime and SQLite. Unlike RAG orchestrators (LlamaIndex, LangChain) that coordinate retrieval over external vector stores, Lumen is self-contained — a single-file SQLite database serves as the storage, index, and query engine.
+Lumena occupies a unique position in the agentic memory landscape. Unlike vector databases (Chroma, FAISS, Qdrant) that provide fast retrieval but no memory lifecycle management, Lumena implements a complete *remember → decay → interfere → evict* pipeline. Unlike cloud-hosted solutions (MemGPT, Zep, Mem0) that require persistent network connections and external embedding APIs, Lumena runs entirely on-device with ONNX Runtime and SQLite. Unlike RAG orchestrators (LlamaIndex, LangChain) that coordinate retrieval over external vector stores, Lumena is self-contained — a single-file SQLite database serves as the storage, index, and query engine.
 
 **Table 4: Qualitative Feature Comparison**
 
-| Capability | Lumen | Chroma/FAISS | MemGPT/Letta | Zep | Mem0 |
+| Capability | Lumena | Chroma/FAISS | MemGPT/Letta | Zep | Mem0 |
 |---|---|---|---|---|---|
 | Structured topology | Rooms + Loci + Corridors | Flat | Flat sessions | Entity graph (limited) | Flat |
 | Biological forgetting | L1-L4 pipeline | ❌ | ❌ | ❌ | ❌ |
@@ -302,7 +302,7 @@ Lumen occupies a unique position in the agentic memory landscape. Unlike vector 
 
 ### 5.2 Sovereign Deployment: A Design Philosophy
 
-Lumen's design is motivated by an emerging class of AI applications — embedded agents on IoT devices, air-gapped enterprise systems, healthcare data processors, and personal AI assistants — where data sovereignty is non-negotiable. The system's `LUMEN_SOVEREIGN=true` flag blocks all external API calls; embeddings are computed locally via the `bge-small-en-v1.5` ONNX model (384 dimensions, <100 MB download), and all storage operations use SQLite in WAL mode without external server processes. This design eliminates per-query API costs ($0.00 vs. ~$0.0001 for OpenAI embeddings), network latency, and the GDPR compliance overhead of cloud-hosted user data.
+Lumena's design is motivated by an emerging class of AI applications — embedded agents on IoT devices, air-gapped enterprise systems, healthcare data processors, and personal AI assistants — where data sovereignty is non-negotiable. The system's `LUMEN_SOVEREIGN=true` flag blocks all external API calls; embeddings are computed locally via the `bge-small-en-v1.5` ONNX model (384 dimensions, <100 MB download), and all storage operations use SQLite in WAL mode without external server processes. This design eliminates per-query API costs ($0.00 vs. ~$0.0001 for OpenAI embeddings), network latency, and the GDPR compliance overhead of cloud-hosted user data.
 
 ### 5.3 The Value Model and Implicit Feedback
 
@@ -310,11 +310,11 @@ V(m) is among the first memory value models in an open-source agentic framework 
 
 ### 5.4 Palace Topology: Why Structure Matters
 
-The PNE benchmark demonstrates that room-based topology provides **1.32–1.50× latency improvement** while preserving >99.8% recall, by pruning 79.9% of the corpus from each search. When an agent searches for "deep learning architectures," a flat vector database computes similarities against all domains (ML, NLP, computer vision, healthcare), consuming CPU cycles on irrelevant computations. By constraining search to the `machine_learning` room, Lumen reduces the dense search space by 80% without measurable recall loss, since cross-domain noise is excluded from candidate generation entirely. This architecture also enables emergent behaviors — goal-directed navigation through the palace, cross-room interference for semantically related but distinct domains, and locus-level cluster decay that mirrors human spatial memory organization.
+The PNE benchmark demonstrates that room-based topology provides **1.32–1.50× latency improvement** while preserving >99.8% recall, by pruning 79.9% of the corpus from each search. When an agent searches for "deep learning architectures," a flat vector database computes similarities against all domains (ML, NLP, computer vision, healthcare), consuming CPU cycles on irrelevant computations. By constraining search to the `machine_learning` room, Lumena reduces the dense search space by 80% without measurable recall loss, since cross-domain noise is excluded from candidate generation entirely. This architecture also enables emergent behaviors — goal-directed navigation through the palace, cross-room interference for semantically related but distinct domains, and locus-level cluster decay that mirrors human spatial memory organization.
 
 ### 5.5 Limitations and Future Work
 
-Lumen is a v0.1.0 alpha release with several known limitations:
+Lumena is a v0.1.0 alpha release with several known limitations:
 
 1. **Scale**: Current testing caps at 50,000 chunks. Production vector databases benchmark at 10⁶–10⁸ vectors. The USearch adapter supports up to ~500K vectors, but large-scale retrieval quality has not been validated at that scale.
 
@@ -334,11 +334,11 @@ Lumen is a v0.1.0 alpha release with several known limitations:
 
 ## 6. Conclusion
 
-Lumen demonstrates that agentic memory frameworks can be simultaneously **sovereign** (on-device, no API calls), **structured** (room/locus/corridor topology), **cognitive** (biologically-grounded forgetting), and **lightweight** (90 MB RAM, 35 MB per 10K memories). By modeling memory as a palace rather than a flat vector database, Lumen enables emergent cognitive behaviors — temporal decay, semantic interference, spatial navigation, and value-guided curation — that no existing system provides.
+Lumena demonstrates that agentic memory frameworks can be simultaneously **sovereign** (on-device, no API calls), **structured** (room/locus/corridor topology), **cognitive** (biologically-grounded forgetting), and **lightweight** (90 MB RAM, 35 MB per 10K memories). By modeling memory as a palace rather than a flat vector database, Lumena enables emergent cognitive behaviors — temporal decay, semantic interference, spatial navigation, and value-guided curation — that no existing system provides.
 
 The empirical results show that structured memory topology improves recall by 1.4–1.5× over flat search by pruning cross-domain noise, that biologically-inspired forgetting gracefully releases 100% of low-value chunks within 90 days while preserving high-value memories, and that the multi-channel retrieval pipeline achieves 100% recall@10 in multi-turn conversation benchmarks at 25 ms average latency.
 
-Lumen is released under the Apache 2.0 license as an open-source contribution from QuantumindSSI to the sovereign AI community. The complete source code, documentation, benchmarks, and seed corpus are available at `https://github.com/QuantumindSSI/lumen`.
+Lumena is released under the Apache 2.0 license as an open-source contribution from QuantumindSSI to the sovereign AI community. The complete source code, documentation, benchmarks, and seed corpus are available at `https://github.com/QuantumindSSI/lumen`.
 
 ---
 
@@ -376,4 +376,4 @@ Lumen is released under the Apache 2.0 license as an open-source contribution fr
 
 *QuantumindSSI — July 2026*
 
-*Lumen: Twin forces, unified mind. On your hardware. For your data. Your way.*
+*Lumena: Twin forces, unified mind. On your hardware. For your data. Your way.*

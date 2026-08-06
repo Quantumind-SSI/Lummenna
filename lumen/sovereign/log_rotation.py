@@ -19,7 +19,7 @@ logger = get_console_logger(__name__)
 
 
 def get_log_dir() -> Path:
-    """Return the canonical Lumen log directory."""
+    """Return the canonical Lumena log directory."""
     return Path.home() / ".lumen" / "logs"
 
 

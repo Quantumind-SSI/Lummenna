@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import init_db
 from lumen.p2p.beam import BeamNode, decode_frame, encode_frame
 
@@ -24,7 +24,7 @@ def memory_db():
 
 @pytest.fixture
 def beam_config(tmp_path):
-    return LumenConfig(
+    return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / ".lumen"),
@@ -207,9 +207,9 @@ def test_zeroconf_missing():
 
     try:
         import lumen.p2p.beam as beam_module
-        from lumen.config import LumenConfig
+        from lumen.config import LumenaConfig
 
-        _ = beam_module.BeamNode(LumenConfig())
+        _ = beam_module.BeamNode(LumenaConfig())
         pytest.fail("Expected RuntimeError on missing zeroconf")
     except RuntimeError as exc:
         assert "zeroconf is required" in str(exc)

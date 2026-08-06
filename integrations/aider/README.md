@@ -1,35 +1,35 @@
-# Aider + Lumen Integration
+# Aider + Lumena Integration
 
-[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively, but you can integrate Lumen via **custom commands** and the **HTTP API**.
+[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively, but you can integrate Lumena via **custom commands** and the **HTTP API**.
 
 ## Option 1: Aider Custom Commands
 
 Add to your `~/.aider.conf.yml`:
 
 ```yaml
-# Aider configuration with Lumen integration
+# Aider configuration with Lumena integration
 
 # Custom slash commands
 commands:
-  # Search Lumen palace
+  # Search Lumena palace
   - name: lumen-search
-    description: Search the Lumen memory palace
+    description: Search the Lumena memory palace
     run: |
       curl -s -X POST http://localhost:8848/v1/search \
         -H "Content-Type: application/json" \
         -d "{\"query\":\"$args\",\"top_k\":5}"
 
-  # Store a decision in Lumen
+  # Store a decision in Lumena
   - name: lumen-store
-    description: Store a memory in the Lumen palace
+    description: Store a memory in the Lumena palace
     run: |
       curl -s -X POST http://localhost:8848/v1/store \
         -H "Content-Type: application/json" \
         -d "{\"content\":\"$args\",\"room\":\"decisions\"}"
 
-  # Assemble context from Lumen
+  # Assemble context from Lumena
   - name: lumen-context
-    description: Assemble relevant context from Lumen
+    description: Assemble relevant context from Lumena
     run: |
       curl -s -X POST http://localhost:8848/v1/assemble \
         -H "Content-Type: application/json" \
@@ -48,7 +48,7 @@ Usage in Aider:
 Create `~/.aider/lumen_hook.py`:
 
 ```python
-"""Aider pre-commit hook that stores file changes in Lumen."""
+"""Aider pre-commit hook that stores file changes in Lumena."""
 
 import subprocess
 import sys
@@ -60,7 +60,7 @@ def main():
     if not content.strip():
         return
 
-    # Store the commit/context in Lumen
+    # Store the commit/context in Lumena
     subprocess.run(
         [
             "curl", "-s", "-X", "POST", "http://localhost:8848/v1/store",
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 Add to your shell profile:
 
 ```bash
-# Aider with Lumen context injection
+# Aider with Lumena context injection
 aider-lumen() {
   context=$(curl -s -X POST http://localhost:8848/v1/assemble \
     -H "Content-Type: application/json" \
@@ -95,5 +95,5 @@ aider-lumen() {
 
 Usage:
 ```bash
-aider-lumen "Refactor the database layer to use connection pooling"
+aider-lumena "Refactor the database layer to use connection pooling"
 ```

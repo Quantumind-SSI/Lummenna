@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import init_db
 from lumen.force.mnemonic.event_buffer import Event, EventMemoryBuffer
 
@@ -32,7 +32,7 @@ def test_schema_init():
 
 def test_config_defaults():
     """D1: Config must instantiate with sensible defaults."""
-    cfg = LumenConfig()
+    cfg = LumenaConfig()
     assert cfg.device == "generic"
     assert cfg.embedding_dims == 384
     assert cfg.vector_index == "sqlite-vec"

@@ -1,4 +1,4 @@
-# OpenAI Codex CLI + Lumen Integration
+# OpenAI Codex CLI + Lumena Integration
 
 [OpenAI Codex CLI](https://github.com/openai/codex) is an open-source coding agent from OpenAI. It supports **MCP servers** natively.
 
@@ -32,7 +32,7 @@ codex mcp add lumen-memory \
 
 ## Usage
 
-Once configured, Codex can call Lumen tools automatically:
+Once configured, Codex can call Lumena tools automatically:
 
 ```bash
 codex "Search my memory palace for decisions about the database layer"
@@ -48,7 +48,7 @@ Codex will invoke:
 
 ## Full Agent Mode
 
-In **agent mode**, Codex will automatically persist its reasoning and decisions to Lumen:
+In **agent mode**, Codex will automatically persist its reasoning and decisions to Lumena:
 
 ```bash
 codex --mode agent "Refactor the API to use dependency injection"

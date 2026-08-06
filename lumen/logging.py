@@ -1,4 +1,4 @@
-"""Shared logger acquisition for Lumen.
+"""Shared logger acquisition for Lumena.
 
 Provides ``get_console_logger`` that tries structlog but falls back
 to stdlib ``logging`` so no module ever silently loses log output.
@@ -23,7 +23,7 @@ def get_console_logger(name: str | None = None) -> Any:
 
         log = structlog.get_logger(name)
     except Exception:
-        log = _stdlib_logging.getLogger(name or "lumen")
+        log = _stdlib_logging.getLogger(name or "lumena")
         if not log.handlers:
             handler = _stdlib_logging.StreamHandler()
             handler.setFormatter(

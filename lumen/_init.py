@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from lumen.brand.errors import ModelNotAvailableError
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.conversation import ConversationMemory
 from lumen.data.schema import ensure_schema, get_connection
@@ -14,7 +14,7 @@ from lumen.search import SearchPipeline
 logger = get_console_logger(__name__)
 
 
-def initialize_palace(config: LumenConfig) -> dict:
+def initialize_palace(config: LumenaConfig) -> dict:
     """Initialize the memory palace: schema, embedder, pipeline, conversation.
 
     Returns a dictionary with keys: conn, embedder, pipeline, conversation,

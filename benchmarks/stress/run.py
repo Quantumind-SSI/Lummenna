@@ -16,7 +16,7 @@ import time
 import tracemalloc
 from pathlib import Path
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection, init_db
 from lumen.force.contextual.embed import MockEmbedder
 from lumen.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
@@ -24,8 +24,8 @@ from lumen.force.mnemonic.store import store_memory
 from lumen.search import SearchPipeline
 
 
-def _make_config(store_path: Path) -> LumenConfig:
-    return LumenConfig(
+def _make_config(store_path: Path) -> LumenaConfig:
+    return LumenaConfig(
         store_path=store_path,
         model_path=store_path / "models",
         vector_index="sqlite-vec",
@@ -35,7 +35,7 @@ def _make_config(store_path: Path) -> LumenConfig:
     )
 
 
-def _ingest_chunks(conn: sqlite3.Connection, config: LumenConfig, embedder, count: int):
+def _ingest_chunks(conn: sqlite3.Connection, config: LumenaConfig, embedder, count: int):
     t0 = time.perf_counter()
     for i in range(count):
         content = f"stress_test_chunk_{i:06d} " + "word " * 20
@@ -54,7 +54,7 @@ def _ingest_chunks(conn: sqlite3.Connection, config: LumenConfig, embedder, coun
     return total
 
 
-def _query_throughput(conn: sqlite3.Connection, config: LumenConfig, embedder, queries: int, workers: int):
+def _query_throughput(conn: sqlite3.Connection, config: LumenaConfig, embedder, queries: int, workers: int):
     queries_list = [f"stress_test_chunk_{i % 100:03d}" for i in range(queries)]
 
     def _run(q: str) -> float:
@@ -80,7 +80,7 @@ def _query_throughput(conn: sqlite3.Connection, config: LumenConfig, embedder, q
     return total, p50, p99
 
 
-def _trigger_l3_eviction(conn: sqlite3.Connection, config: LumenConfig):
+def _trigger_l3_eviction(conn: sqlite3.Connection, config: LumenaConfig):
     """Trigger L3 eviction by lowering the memory limit so chunk count exceeds 85%% threshold."""
     # After ingestion we know the chunk count. Compute a limit that forces eviction.
     row = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()
@@ -103,7 +103,7 @@ def _trigger_l3_eviction(conn: sqlite3.Connection, config: LumenConfig):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Lumen stress benchmark")
+    parser = argparse.ArgumentParser(description="Lumena stress benchmark")
     parser.add_argument("--chunks", type=int, default=100_000, help="Number of chunks to ingest")
     parser.add_argument("--queries", type=int, default=1_000, help="Number of query requests")
     parser.add_argument("--workers", type=int, default=4, help="Concurrent query workers")

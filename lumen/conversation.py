@@ -10,7 +10,7 @@ import sqlite3
 from dataclasses import dataclass
 
 from lumen.brand.errors import ModelNotAvailableError
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.data.schema import get_connection
 from lumen.epistemic import EpistemicTracker
@@ -58,7 +58,7 @@ class ConversationMemory:
         )
 
     Attributes:
-        config: :class:`LumenConfig` instance.
+        config: :class:`LumenaConfig` instance.
         conn: Shared SQLite connection (caller may manage lifecycle).
         tfc: :class:`TwinForceController` instance.
         embedder: Production embedder (raises if model missing).
@@ -70,14 +70,14 @@ class ConversationMemory:
 
     def __init__(
         self,
-        config: LumenConfig | None = None,
+        config: LumenaConfig | None = None,
         conn: sqlite3.Connection | None = None,
         tfc: TwinForceController | None = None,
         embedder=None,
         user_id: str = "default",
         tenant_id: str = "default",
     ) -> None:
-        self.config = config or LumenConfig()
+        self.config = config or LumenaConfig()
         self.conn = conn or get_connection(self.config)
         self.tfc = tfc or TwinForceController()
         self._own_conn = conn is None

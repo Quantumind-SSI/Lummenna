@@ -1,4 +1,4 @@
-# Lumen App Icon — Design Specification
+# Lumena App Icon — Design Specification
 
 **Version:** 1.0
 **Date:** 2026-08-04
@@ -8,16 +8,16 @@
 
 ## 1. Overview
 
-This document specifies the primary app icon and favicon for the Lumen local-first agentic memory framework. The icon must communicate four ideas simultaneously:
+This document specifies the primary app icon and favicon for the Lumena local-first agentic memory framework. The icon must communicate four ideas simultaneously:
 
 1. **Memory** — structured, retrievable, persistent
-2. **Light / Illumination** — the Latin root of *Lumen*; context brought forth from darkness
+2. **Light / Illumination** — the Latin root of *Lumena*; context brought forth from darkness
 3. **Sovereignty** — local, protected, under the user's control
 4. **Twin-Force Balance** — the dynamic equilibrium between mnemonic conservation and contextual attention
 
 ---
 
-## 2. Core Symbol: The Lumen Core
+## 2. Core Symbol: The Lumena Core
 
 ### Primary Geometry
 
@@ -127,7 +127,7 @@ The following are **easter eggs** visible only at high resolution or when explai
 
 1. **The Keystone Gap** — The lower-right gap in the outer ring is shaped like a tiny shield, referencing data sovereignty.
 2. **TFC State** — In animated or dynamic versions, the angle between the two rings can shift to reflect the live `e` (conservation) and `a` (attention) values.
-3. **Resolution Degradation** — In states where Lumen has downgraded memory precision (INT8, BINARY), the star can dim or the rings can lose saturation — a literal visualization of the optical degradation pipeline.
+3. **Resolution Degradation** — In states where Lumena has downgraded memory precision (INT8, BINARY), the star can dim or the rings can lose saturation — a literal visualization of the optical degradation pipeline.
 
 ---
 
@@ -154,7 +154,7 @@ The following are **easter eggs** visible only at high resolution or when explai
 | Chat bubbles | Reduces the product to a chatbot attachment |
 | Gradient meshes or photorealistic glass | Do not scale; fail at 16×16 |
 | Human faces or figures | Irrelevant to the system; introduces bias |
-| Cold blue-only palettes | Feels corporate and sterile; Lumen is warm, ember-like |
+| Cold blue-only palettes | Feels corporate and sterile; Lumena is warm, ember-like |
 
 ---
 
@@ -162,7 +162,7 @@ The following are **easter eggs** visible only at high resolution or when explai
 
 Paste this directly into Midjourney, DALL-E 3, or Stable Diffusion:
 
-> A minimalist vector app icon for "Lumen," an AI memory system. Dark charcoal rounded-square background. Centered is a geometric lantern or crystal core: a hexagon with a bright four-pointed star inside. Two thin concentric rings — one emerald green, one amber — orbit the star at slightly different angles, suggesting balanced forces. Single-pixel crisp linework. Flat color blocks, no gradients. Clean enough to read at 64×64 pixels. Transparent safe margin. Style of art-deco precision, sober and architectural.
+> A minimalist vector app icon for "Lumena," an AI memory system. Dark charcoal rounded-square background. Centered is a geometric lantern or crystal core: a hexagon with a bright four-pointed star inside. Two thin concentric rings — one emerald green, one amber — orbit the star at slightly different angles, suggesting balanced forces. Single-pixel crisp linework. Flat color blocks, no gradients. Clean enough to read at 64×64 pixels. Transparent safe margin. Style of art-deco precision, sober and architectural.
 
 For **Midjourney**, append: `--v 6 --style raw --ar 1:1`
 

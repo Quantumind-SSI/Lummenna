@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection, init_db
 from lumen.force.contextual.embed import MockEmbedder
 from lumen.force.mnemonic.store import store_memory
@@ -13,7 +13,7 @@ from lumen.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
 
 @pytest.fixture
 def l3_config(tmp_path):
-    return LumenConfig(
+    return LumenaConfig(
         store_path=tmp_path / ".lumen" / "store",
         model_path=tmp_path / ".lumen" / "models",
         vector_index="sqlite-vec",

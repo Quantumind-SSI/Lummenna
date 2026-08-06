@@ -1,4 +1,4 @@
-# Lumen: A Production-Oriented Agentic Memory Framework with Structured Topology, Twin-Force Control, and Native Integrations
+# Lumena: A Production-Oriented Agentic Memory Framework with Structured Topology, Twin-Force Control, and Native Integrations
 
 **QuantumindSSI Research — Engineering Report v0.2.0 (Beta)**
 
@@ -8,7 +8,7 @@
 
 ## Abstract
 
-We present Lumen, an open-source agentic memory system that organizes agent memories in a structured *memory palace* topology (rooms, loci, corridors) governed by a heuristic *Twin-Force Controller* (TFC) that balances mnemonic conservation against contextual attention. Lumen provides native third-party integrations, a hardened API surface, and validated benchmark suites. Key subsystems include: a LangGraph checkpoint saver and graph store for sovereign agent-state persistence; a Model Context Protocol (MCP) server for OpenCode and Claude Desktop; a Beam P2P sharing protocol for household-local memory exchange; a wear-aware batch writer for SD/eMMC endurance; first-party benchmark suites (retrieval, forgetting, performance, palace navigation efficiency, end-to-end memory quality, component ablation, BEIR subset, optical degradation, and TFC sensitivity); and a hardened FastAPI server with authentication, rate limiting, and CORS. The system operates on-device via ONNX Runtime and SQLite with a ~90 MB RAM footprint, a 30–50% smaller storage footprint than comparable vector stores, and no metered external API cost. On small-scale pilots (28 queries, 41 feedback ratings), we report 1.32–1.50× latency speedup from room-constrained search versus flat global search with >99.8% recall retention, 100% R@10 and 78.6% R@5 in multi-turn E2E testing (mock embedder, committed results), and 95.1% implicit feedback satisfaction. These numbers are directionally promising but reflect limited sample sizes and a low-cardinality benchmark structure. We explicitly identify open limitations, most critically that the default forgetting pipeline performs unconditional decay (all memories fade without a re-access reinforcement mechanism) — the primary gating item for any production-ready claim — along with the absence of full BEIR/MTEB leaderboard validation.
+We present Lumena, an open-source agentic memory system that organizes agent memories in a structured *memory palace* topology (rooms, loci, corridors) governed by a heuristic *Twin-Force Controller* (TFC) that balances mnemonic conservation against contextual attention. Lumena provides native third-party integrations, a hardened API surface, and validated benchmark suites. Key subsystems include: a LangGraph checkpoint saver and graph store for sovereign agent-state persistence; a Model Context Protocol (MCP) server for OpenCode and Claude Desktop; a Beam P2P sharing protocol for household-local memory exchange; a wear-aware batch writer for SD/eMMC endurance; first-party benchmark suites (retrieval, forgetting, performance, palace navigation efficiency, end-to-end memory quality, component ablation, BEIR subset, optical degradation, and TFC sensitivity); and a hardened FastAPI server with authentication, rate limiting, and CORS. The system operates on-device via ONNX Runtime and SQLite with a ~90 MB RAM footprint, a 30–50% smaller storage footprint than comparable vector stores, and no metered external API cost. On small-scale pilots (28 queries, 41 feedback ratings), we report 1.32–1.50× latency speedup from room-constrained search versus flat global search with >99.8% recall retention, 100% R@10 and 78.6% R@5 in multi-turn E2E testing (mock embedder, committed results), and 95.1% implicit feedback satisfaction. These numbers are directionally promising but reflect limited sample sizes and a low-cardinality benchmark structure. We explicitly identify open limitations, most critically that the default forgetting pipeline performs unconditional decay (all memories fade without a re-access reinforcement mechanism) — the primary gating item for any production-ready claim — along with the absence of full BEIR/MTEB leaderboard validation.
 
 ---
 
@@ -30,9 +30,9 @@ Common to all three: the absence of a *forgetting mechanism*, the reliance on *f
 
 ### 1.3 Capabilities Overview
 
-Lumen is a beta framework with the following concrete capabilities:
+Lumena is a beta framework with the following concrete capabilities:
 
-- **Native LangGraph integration** (`lumen.integrations.langgraph`): a `LumenCheckpointSaver` implementing LangGraph's `BaseCheckpointSaver` protocol, plus a `LumenGraphStore` for cross-thread long-term memory — enabling sovereign graph-agent state persistence without external checkpoints.
+- **Native LangGraph integration** (`lumen.integrations.langgraph`): a `LumenaCheckpointSaver` implementing LangGraph's `BaseCheckpointSaver` protocol, plus a `LumenaGraphStore` for cross-thread long-term memory — enabling sovereign graph-agent state persistence without external checkpoints.
 - **Model Context Protocol (MCP) server**: exposes search, store, assemble, turn, feedback, status, and dashboard operations to OpenCode, Claude Desktop, and GitHub Copilot via stdio transport.
 - **Beam P2P sharing protocol**: household-local memory sharing with mandatory AES-256-GCM encryption, HMAC-SHA256 integrity signing, 30-second replay protection, and service discovery via Zeroconf. Plaintext transport requires explicit `LUMEN_P2P_INSECURE=1` (testing only).
 - **Benchmark suites**: retrieval (R@k, nDCG, MAP, MRR), forgetting (90-day survival curves, interference precision), performance (latency p50/p95/p99, footprint), palace navigation efficiency (room-constrained speedup vs. global), end-to-end memory quality (multi-turn conversational recall with 7 personas, 28 queries), component ablation, BEIR subset retrieval, optical degradation, and TFC sensitivity.
@@ -44,12 +44,12 @@ Lumen is a beta framework with the following concrete capabilities:
 
 ### 1.4 Design Principles
 
-Lumen is governed by four design principles:
+Lumena is governed by four design principles:
 
 1. **Sovereignty first**: all computation — embedding, storage, retrieval, consolidation — runs on-device via ONNX Runtime and SQLite. `LUMEN_SOVEREIGN=true` blocks every external API call.
 2. **Structured by default**: memories are not flat vectors; they live in rooms, loci, and corridors with provenance chains and bi-temporal validity markers.
 3. **Lifecycle-aware**: memories are born, ranked, decay, interfere, degrade, and are released — not merely inserted and deleted.
-4. **Integrable, not isolated**: native adapters for LangChain, LangGraph, MCP, and FastAPI REST allow Lumen to plug into existing agent stacks without architectural lock-in.
+4. **Integrable, not isolated**: native adapters for LangChain, LangGraph, MCP, and FastAPI REST allow Lumena to plug into existing agent stacks without architectural lock-in.
 
 ---
 
@@ -57,7 +57,7 @@ Lumen is governed by four design principles:
 
 ### 2.1 Memory Palace Topology
 
-Lumen structures memory as a graph with three entity types spanning 10 SQLite tables (WAL mode):
+Lumena structures memory as a graph with three entity types spanning 10 SQLite tables (WAL mode):
 
 - **Rooms** (*n* configurable, typically 8–50): top-level categories with a domain-type classification (`domain`, `project`, `person`, `ephemeral`).
 - **Loci** (*m* per room, typically 4–20): sub-locations acting as semantic clusters, each maintaining a cached vector centroid.
@@ -133,16 +133,16 @@ At default `τ_h = 7`, all 10,000 synthetic chunks decay below threshold within 
 
 ### 3.1 LangGraph Integration (`lumen.integrations.langgraph`)
 
-Lumen ships with two LangGraph-native adapters, installable via `pip install lumen[langgraph]`:
+Lumena ships with two LangGraph-native adapters, installable via `pip install lumena[langgraph]`:
 
-- **`LumenCheckpointSaver`**: implements LangGraph's `BaseCheckpointSaver` protocol. Each `thread_id` receives its own locus inside a dedicated `langgraph` room, providing natural isolation and thread-scoped retrieval. Checkpoints are stored as structured memories with provenance chains referencing parent checkpoints.
-- **`LumenGraphStore`**: provides cross-thread long-term memory for LangGraph graphs, enabling agents to reference facts learned in one thread while executing another.
+- **`LumenaCheckpointSaver`**: implements LangGraph's `BaseCheckpointSaver` protocol. Each `thread_id` receives its own locus inside a dedicated `langgraph` room, providing natural isolation and thread-scoped retrieval. Checkpoints are stored as structured memories with provenance chains referencing parent checkpoints.
+- **`LumenaGraphStore`**: provides cross-thread long-term memory for LangGraph graphs, enabling agents to reference facts learned in one thread while executing another.
 
 The integration includes 9 test cases verifying checkpoint round-trips, async iteration (`alist`), and state consistency across writes.
 
 ### 3.2 Model Context Protocol (MCP) Server
 
-The MCP server (`lumen.integrations.mcp_server`) exposes Lumen operations to MCP-compatible hosts (OpenCode, Claude Desktop, GitHub Copilot) via stdio transport:
+The MCP server (`lumen.integrations.mcp_server`) exposes Lumena operations to MCP-compatible hosts (OpenCode, Claude Desktop, GitHub Copilot) via stdio transport:
 
 - `lumen_search` — hybrid semantic + lexical search
 - `lumen_store` — store a memory chunk with room/locus/source-type
@@ -152,7 +152,7 @@ The MCP server (`lumen.integrations.mcp_server`) exposes Lumen operations to MCP
 - `lumen_status` — palace overview with room/chunk counts and TFC state
 - `lumen_dashboard` — display real-time effectiveness dashboard with benchmarks
 
-This enables agents running inside Claude Desktop or OpenCode to read from and write to the user's local Lumen palace without custom API clients.
+This enables agents running inside Claude Desktop or OpenCode to read from and write to the user's local Lumena palace without custom API clients.
 
 ### 3.3 Beam P2P Sharing Protocol (`lumen.p2p.beam`)
 
@@ -164,7 +164,7 @@ Beam is a household-local P2P memory sharing protocol with the following securit
 - **Permission decay**: shared memories receive a time-to-live and degrade automatically.
 - **Transport**: length-prefixed msgspec JSON over asyncio TCP streams.
 
-Beam is not production-hardened for adversarial WAN environments; it is designed for trusted household or lab environments where multiple Lumen instances (e.g., a Raspberry Pi agent and a laptop agent) share a common memory substrate.
+Beam is not production-hardened for adversarial WAN environments; it is designed for trusted household or lab environments where multiple Lumena instances (e.g., a Raspberry Pi agent and a laptop agent) share a common memory substrate.
 
 ### 3.4 Wear-Aware Batch Writer (`lumen.sovereign.wear`)
 
@@ -206,7 +206,7 @@ All benchmarks run on single-core CPU environments. Embeddings use `all-MiniLM-L
 
 ### 4.2 BEIR Subset Protocol and Predicted Channel Dominance
 
-Lumen's BEIR evaluation harness (`benchmarks/beir/run.py`) evaluates retrieval quality on real document collections from the BEIR benchmark (Thakur et al., 2021). This is a significant methodological advance over the synthetic corpus: the passages and relevance judgments are sourced from published academic datasets with human annotations.
+Lumena's BEIR evaluation harness (`benchmarks/beir/run.py`) evaluates retrieval quality on real document collections from the BEIR benchmark (Thakur et al., 2021). This is a significant methodological advance over the synthetic corpus: the passages and relevance judgments are sourced from published academic datasets with human annotations.
 
 **Datasets.** Five BEIR subsets spanning biomedical (NFCorpus, SciFact), financial QA (FiQA-2018), argument retrieval (ArguAna), and scientific document retrieval (SCIDOCS):
 
@@ -218,12 +218,12 @@ Lumen's BEIR evaluation harness (`benchmarks/beir/run.py`) evaluates retrieval q
 | ArguAna | Argumentative passage retrieval | ~8,600 docs | 3,000 docs |
 | SCIDOCS | Scientific document recommendation | ~25,000 docs | 3,000 docs |
 
-**Protocol.** For each dataset: load corpus, queries, and binary relevance judgments via the `datasets` library; embed all passages with `BAAI/bge-small-en-v1.5` (MiniLM evaluation planned for subsequent revision); store in temporary Lumen SQLite databases; evaluate BM25-only (FTS5), Dense-only (sqlite-vec/USearch), and Hybrid (RRF fusion) pipelines across 3 random seeds (42, 123, 456); compute R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20}, plus MAP and MRR, with 95% bootstrap CIs (1,000 resamples); compute an independent `rank-bm25` Python baseline for comparison. The total evaluation surface is 5 datasets × 1 embedder × 3 seeds × 4 retrieval configurations = 60 measurement points (MiniLM adds a second 60-point layer in the planned full-scale run). The full evaluation requires approximately 45–60 minutes on a single CPU core and is run via `python -m benchmarks.beir.run`. The subset produced for v0.2.0-beta used 500 passages and 20 queries per dataset (run with `--max-passages 500 --max-queries 20`). Results are written to `benchmarks/beir/results/beir_results.json` and include R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20} with 95% bootstrap CIs, MAP, MRR, p50 latency per configuration, and an independent per-dataset `rank_bm25` baseline.
+**Protocol.** For each dataset: load corpus, queries, and binary relevance judgments via the `datasets` library; embed all passages with `BAAI/bge-small-en-v1.5` (MiniLM evaluation planned for subsequent revision); store in temporary Lumena SQLite databases; evaluate BM25-only (FTS5), Dense-only (sqlite-vec/USearch), and Hybrid (RRF fusion) pipelines across 3 random seeds (42, 123, 456); compute R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20}, plus MAP and MRR, with 95% bootstrap CIs (1,000 resamples); compute an independent `rank-bm25` Python baseline for comparison. The total evaluation surface is 5 datasets × 1 embedder × 3 seeds × 4 retrieval configurations = 60 measurement points (MiniLM adds a second 60-point layer in the planned full-scale run). The full evaluation requires approximately 45–60 minutes on a single CPU core and is run via `python -m benchmarks.beir.run`. The subset produced for v0.2.0-beta used 500 passages and 20 queries per dataset (run with `--max-passages 500 --max-queries 20`). Results are written to `benchmarks/beir/results/beir_results.json` and include R@k and nDCG@k for k ∈ {1, 3, 5, 10, 20} with 95% bootstrap CIs, MAP, MRR, p50 latency per configuration, and an independent per-dataset `rank_bm25` baseline.
 
 **Key methodological improvements over synthetic retrieval benchmarks:**
 
 1. **Real relevance judgments**: Relevance is determined by human annotators, not keyword overlap.
-2. **Independent BM25 baseline**: The `rank_bm25` library provides an external reference point, making Lumen's internal BM25 (SQLite FTS5) auditable.
+2. **Independent BM25 baseline**: The `rank_bm25` library provides an external reference point, making Lumena's internal BM25 (SQLite FTS5) auditable.
 3. **Multi-domain coverage**: Biomedical, financial, scientific, and argument retrieval test different retrieval properties — dense retrieval may excel on semantic paraphrase tasks (ArguAna) while BM25 dominates exact keyword tasks (FiQA).
 4. **Full metric suite**: nDCG@k alongside R@k captures ranking quality, not just recall.
 
@@ -244,11 +244,11 @@ Results from the first BEIR subset evaluation are now available (see `benchmarks
 - **Small-N results.** The evaluation used 500 passages and 20 queries per dataset (a convenience sample for single-CPU runtime). Full BEIR corpora range from 3,600–57,000 documents. These numbers establish harness functionality, not leaderboard competitiveness.
 - **Dataset complexity varies dramatically.** NFCorpus and SciFact have short, focused queries with narrow relevance scopes. ArguAna queries are argumentative paraphrases. The within-harness comparison across domains is diagnostic of retrieval channel strengths.
 - **This is not a BEIR leaderboard submission.** The harness runs the BEIR protocol internally on a sampled subset. A full BEIR leaderboard evaluation requires running on the complete corpus and submitting to `beir-cellar/beir`. This remains future work.
-- **The primary contribution is the infrastructure**: Lumen now has a repeatable, automated BEIR evaluation harness that produces auditable JSON results with bootstrap confidence intervals. As the system improves (better embedders, trained rerankers, HNSW indexing), this harness enables regression tracking.
+- **The primary contribution is the infrastructure**: Lumena now has a repeatable, automated BEIR evaluation harness that produces auditable JSON results with bootstrap confidence intervals. As the system improves (better embedders, trained rerankers, HNSW indexing), this harness enables regression tracking.
 
 ### 4.3 Live Palace State
 
-As of the report date, the reference Lumen palace contains:
+As of the report date, the reference Lumena palace contains:
 
 - **5 rooms**: `decisions` (38 chunks), `training-state` (14 chunks), `architecture` (4 chunks), `preferences` (1 chunk), `deployments` (1 chunk)
 - **58 active chunks**, 0 forgotten, 100% retention rate
@@ -322,7 +322,7 @@ This is a self-reported dashboard metric derived from the `/feedback` endpoint, 
 
 ### 5.6 Cross-System Resource Comparison
 
-A cross-system resource comparison table is provided in Appendix A. **Important caveat:** Lumen numbers are measured directly via psutil RSS and benchmark harness; competitor numbers are sourced from their published documentation, which may reflect different hardware, embedders, and corpus sizes. The table is provided for rough orientation only. A shared-harness evaluation with identical embedders is pending and should supersede the appendix table when available.
+A cross-system resource comparison table is provided in Appendix A. **Important caveat:** Lumena numbers are measured directly via psutil RSS and benchmark harness; competitor numbers are sourced from their published documentation, which may reflect different hardware, embedders, and corpus sizes. The table is provided for rough orientation only. A shared-harness evaluation with identical embedders is pending and should supersede the appendix table when available.
 
 ### 5.7 Component Ablation
 
@@ -369,7 +369,7 @@ The BEIR subset evaluation harness is described in Section 4.2. First empirical 
 
 ### 7.1 What This Work Demonstrates
 
-This release demonstrates that a SQLite-based memory palace is not merely a research curiosity but a **usable, integrable component** in real agent stacks. The LangGraph checkpoint saver and MCP server are not wrappers around external APIs; they are first-class adapters that let Lumen replace cloud-based memory and checkpoint services entirely. The PNE benchmark confirms that topological structure delivers measurable latency wins with negligible recall loss. The E2E benchmark confirms that multi-turn factual recall works in controlled settings.
+This release demonstrates that a SQLite-based memory palace is not merely a research curiosity but a **usable, integrable component** in real agent stacks. The LangGraph checkpoint saver and MCP server are not wrappers around external APIs; they are first-class adapters that let Lumena replace cloud-based memory and checkpoint services entirely. The PNE benchmark confirms that topological structure delivers measurable latency wins with negligible recall loss. The E2E benchmark confirms that multi-turn factual recall works in controlled settings.
 
 ### 7.2 What Remains Open
 
@@ -384,13 +384,13 @@ We continue to lack:
 
 ### 7.3 Honest Claim Calibration
 
-We maintain an explicit posture of claim deflation. The V(m) factors are shallow lexical heuristics, not validated psychological measurements. The TFC thresholds are hand-tuned without sensitivity analysis. The additions (integrations, benchmarks, API hardening) improve *usability* and *robustness*; they do not yet validate *superiority* over flat vector databases on general retrieval tasks. The honest claim is: **Lumen is a feature-complete beta framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings but not yet validated at leaderboard scale.**
+We maintain an explicit posture of claim deflation. The V(m) factors are shallow lexical heuristics, not validated psychological measurements. The TFC thresholds are hand-tuned without sensitivity analysis. The additions (integrations, benchmarks, API hardening) improve *usability* and *robustness*; they do not yet validate *superiority* over flat vector databases on general retrieval tasks. The honest claim is: **Lumena is a feature-complete beta framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings but not yet validated at leaderboard scale.**
 
 ---
 
 ## 8. Conclusion
 
-Lumen advances agentic memory from research concept to beta usability. The core contribution is architectural: a structured memory palace with heuristic forgetting, operating entirely on-device, plugged into LangGraph, LangChain, MCP, and FastAPI ecosystems. Closed engineering gaps include API hardening, punctuation-safe BM25, sqlite-vec interference coverage, USearch graceful fallback, and dynamic dashboard metrics. Partially addressed gaps include a hand-crafted domain corpus, implicit feedback learning, P2P sharing via Beam, corrected optical degradation transitions, and — critically — a BEIR subset evaluation harness that replaces synthetic-only benchmarks with real relevance judgments. Remaining open work includes a re-access reinforcement mechanism for selective forgetting, a trained intent-to-room router, and encryption-at-rest for the SQLite database.
+Lumena advances agentic memory from research concept to beta usability. The core contribution is architectural: a structured memory palace with heuristic forgetting, operating entirely on-device, plugged into LangGraph, LangChain, MCP, and FastAPI ecosystems. Closed engineering gaps include API hardening, punctuation-safe BM25, sqlite-vec interference coverage, USearch graceful fallback, and dynamic dashboard metrics. Partially addressed gaps include a hand-crafted domain corpus, implicit feedback learning, P2P sharing via Beam, corrected optical degradation transitions, and — critically — a BEIR subset evaluation harness that replaces synthetic-only benchmarks with real relevance judgments. Remaining open work includes a re-access reinforcement mechanism for selective forgetting, a trained intent-to-room router, and encryption-at-rest for the SQLite database.
 
 The system remains Apache 2.0–licensed open-source software. The complete source code (64 modules, ~8.4K lines of Python, 273 tests), documentation, eleven benchmark suites (including BEIR, optical degradation, and TFC sensitivity), domain corpus, and integrations are available at `https://github.com/QuantumindSSI/lumen`.
 
@@ -424,7 +424,7 @@ The system remains Apache 2.0–licensed open-source software. The complete sour
 
 **Table A2: Qualitative Feature Comparison (Existence, Not Performance)**
 
-| Feature | Lumen | Chroma | FAISS | Qdrant |
+| Feature | Lumena | Chroma | FAISS | Qdrant |
 |---|---|---|---|---|
 | Graceful forgetting | Yes | No | No | No |
 | Offline operation | Yes | Partial | Yes | No |

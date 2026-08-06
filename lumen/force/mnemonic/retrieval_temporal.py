@@ -34,7 +34,7 @@ def temporal_point_query(
     """Find facts that were valid at a specific point in time.
 
     Args:
-        conn: SQLite connection initialised with the Lumen schema.
+        conn: SQLite connection initialised with the Lumena schema.
         content_keywords: List of substrings to search for in ``chunk.content``.
             If empty, an empty list is returned immediately.
         as_of_unix: Unix timestamp defining the point-in-time query horizon.

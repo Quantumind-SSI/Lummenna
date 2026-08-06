@@ -1,4 +1,4 @@
-"""Lumen integrations for third-party agent frameworks."""
+"""Lumena integrations for third-party agent frameworks."""
 
 from __future__ import annotations
 
@@ -7,16 +7,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     with contextlib.suppress(Exception):
-        from lumen.integrations.langchain import LumenChatMemory, LumenStore
+        from lumen.integrations.langchain import LumenaChatMemory, LumenaStore
     with contextlib.suppress(Exception):
-        from lumen.integrations.langgraph import LumenCheckpointSaver, LumenGraphStore
+        from lumen.integrations.langgraph import LumenaCheckpointSaver, LumenaGraphStore
     with contextlib.suppress(Exception):
         from lumen.integrations.mcp_server import mcp
 
 __all__ = [
-    "LumenChatMemory",
-    "LumenStore",
-    "LumenCheckpointSaver",
-    "LumenGraphStore",
+    "LumenaChatMemory",
+    "LumenaStore",
+    "LumenaCheckpointSaver",
+    "LumenaGraphStore",
     "mcp",
 ]

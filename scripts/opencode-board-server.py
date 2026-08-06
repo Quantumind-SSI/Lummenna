@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""OpenCode Metrics Board Server for Lumen.
+"""OpenCode Metrics Board Server for Lumena.
 
 Serves a lightweight, auto-refreshing real-time dashboard on port 8850.
-Fetches live data from the Lumen API (default localhost:8848).
+Fetches live data from the Lumena API (default localhost:8848).
 
 Usage:
     python3 scripts/opencode-board-server.py
@@ -29,7 +29,7 @@ _HTML = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumen + OpenCode — Real-Time Metrics Board</title>
+  <title>Lumena + OpenCode — Real-Time Metrics Board</title>
   <style>
     :root {
       --bg: #0b0f19;
@@ -89,17 +89,17 @@ _HTML = """<!DOCTYPE html>
 </head>
 <body>
   <header>
-    <h1>Lumen + OpenCode <span id="liveBadge" class="badge ok">LIVE</span></h1>
+    <h1>Lumena + OpenCode <span id="liveBadge" class="badge ok">LIVE</span></h1>
     <p>Real-Time Memory Palace Metrics Board</p>
   </header>
   <div class="container">
     <div id="content">
       <p style="text-align:center;color:var(--muted);padding:2rem;">Loading metrics...</p>
     </div>
-    <div class="refresh">Auto-refreshes every 3 seconds &middot; Lumen API: <span id="apiUrl">...</span></div>
+    <div class="refresh">Auto-refreshes every 3 seconds &middot; Lumena API: <span id="apiUrl">...</span></div>
   </div>
   <footer>
-    Lumen v0.1.0-alpha &middot; OpenCode Integration &middot; Press Ctrl+C to stop
+    Lumena v0.1.0-alpha &middot; OpenCode Integration &middot; Press Ctrl+C to stop
   </footer>
   <script>
     const LUMEN_API = "<!--LUMEN_API-->";
@@ -116,8 +116,8 @@ _HTML = """<!DOCTYPE html>
       } catch (e) {
         document.getElementById('content').innerHTML = `
           <div class="error">
-            <h3>Cannot reach Lumen server</h3>
-            <p>Make sure Lumen is running on ${LUMEN_API}</p>
+            <h3>Cannot reach Lumena server</h3>
+            <p>Make sure Lumena is running on ${LUMEN_API}</p>
             <code style="display:block;margin-top:1rem;padding:1rem;background:#111827;border-radius:.5rem;">${e.message}</code>
           </div>`;
         document.getElementById('liveBadge').className = 'badge err';
@@ -277,7 +277,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 def main():
     with socketserver.TCPServer(("", PORT), _Handler) as httpd:
         print(f"OpenCode Metrics Board running at http://localhost:{PORT}")
-        print(f"Proxying Lumen API from {LUMEN_BASE}")
+        print(f"Proxying Lumena API from {LUMEN_BASE}")
         print("Press Ctrl+C to stop")
         try:
             httpd.serve_forever()

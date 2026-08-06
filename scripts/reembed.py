@@ -1,4 +1,4 @@
-"""Re-embed all valid chunks in the Lumen database with the production embedder.
+"""Re-embed all valid chunks in the Lumena database with the production embedder.
 
 Used after installing a real embedding model to replace mock/dummy embeddings
 that were created before the model was available.
@@ -7,19 +7,19 @@ from __future__ import annotations
 
 import sqlite3
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.contextual.embed import get_embedder
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
 
 
-def reembed_all(config: LumenConfig | None = None) -> int:
+def reembed_all(config: LumenaConfig | None = None) -> int:
     """Regenerate embeddings for every valid chunk and update vector indexes.
 
     Returns:
         Number of chunks re-embedded.
     """
-    cfg = config or LumenConfig()
+    cfg = config or LumenaConfig()
     conn = get_connection(cfg)
     embedder = get_embedder(cfg, allow_mock=False)
     vector = VectorChannel(cfg, conn)

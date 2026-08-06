@@ -27,7 +27,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.retrieval_dense import DenseHit
 from lumen.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
@@ -302,7 +302,7 @@ def _run_single_seed(seed, embedder_model):
     embeddings = embedder.encode(texts)
 
     tmpdir = tempfile.mkdtemp(prefix=f"lumen_pne_real_{seed}_")
-    config = LumenConfig(store_path=Path(tmpdir), embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    config = LumenaConfig(store_path=Path(tmpdir), embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     conn = get_connection(config)
 
     room_name_to_id = {}

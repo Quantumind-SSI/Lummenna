@@ -1,6 +1,6 @@
 {
   "name": "lumen_domain_corpus_v1",
-  "description": "Structured knowledge corpus for Lumen memory palace seeding. 8 rooms × 4 loci, with deliberate cross-room references for testing palace navigation efficiency and multi-turn memory recall.",
+  "description": "Structured knowledge corpus for Lumena memory palace seeding. 8 rooms × 4 loci, with deliberate cross-room references for testing palace navigation efficiency and multi-turn memory recall.",
   "rooms": [
     {
       "name": "machine_learning",

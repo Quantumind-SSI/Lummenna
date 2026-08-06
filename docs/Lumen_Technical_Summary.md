@@ -1,12 +1,12 @@
-# Lumen: Technical Summary
+# Lumena: Technical Summary
 
 **Version:** v0.2.0-beta | **Type:** Local-first agentic memory framework | **License:** Apache 2.0
 
 ---
 
-## What Lumen Does
+## What Lumena Does
 
-Lumen provides a persistent, searchable memory store for LLM agents. It organizes information in a spatial metaphor (rooms, loci, chunks), retrieves via multi-channel hybrid search (BM25 + vector + graph), and manages memory lifecycle through controlled forgetting (decay, interference, eviction).
+Lumena provides a persistent, searchable memory store for LLM agents. It organizes information in a spatial metaphor (rooms, loci, chunks), retrieves via multi-channel hybrid search (BM25 + vector + graph), and manages memory lifecycle through controlled forgetting (decay, interference, eviction).
 
 ### Proven
 
@@ -61,7 +61,7 @@ Background → Consolidation → L1 Decay → L2 Interference → L3 Eviction �
 
 ## State of Development
 
-Lumen is **beta software**. It works end-to-end for storing, searching, and assembling agent memories. All capability claims have been verified against the current codebase.
+Lumena is **beta software**. It works end-to-end for storing, searching, and assembling agent memories. All capability claims have been verified against the current codebase.
 
 ### Works End-to-End
 
@@ -88,17 +88,17 @@ Lumen is **beta software**. It works end-to-end for storing, searching, and asse
 
 ```bash
 pip install -e ".[dev]"
-lumen init --device generic
-lumen serve
+lumena init --device generic
+lumena serve
 # Dashboard at http://localhost:8848/dashboard
 ```
 
 ```python
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.store import store_memory
 
-config = LumenConfig()
+config = LumenaConfig()
 conn = get_connection(config)
 store_memory(conn, content="The user prefers dark mode", room_name="preferences", config=config)
 ```

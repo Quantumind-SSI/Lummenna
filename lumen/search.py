@@ -6,7 +6,7 @@ Orchestrates: intent classify → parallel BM25 + dense retrieval → fusion →
 import sqlite3
 import time
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.controller import TwinForceController
 from lumen.force.mnemonic.retrieval_dense import VectorChannel
 from lumen.force.mnemonic.retrieval_graph import GraphChannel
@@ -25,7 +25,7 @@ class SearchPipeline:
     def __init__(
         self,
         conn: sqlite3.Connection,
-        config: LumenConfig,
+        config: LumenaConfig,
         tfc: TwinForceController | None = None,
         embedder=None,
         graph: GraphChannel | None = None,

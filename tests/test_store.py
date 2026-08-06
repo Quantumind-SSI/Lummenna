@@ -3,7 +3,7 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import init_db
 from lumen.force.mnemonic.store import store_memory
 
@@ -19,7 +19,7 @@ def db_conn():
 
 @pytest.fixture
 def config():
-    return LumenConfig(
+    return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path="/tmp/.lumen-test-store",

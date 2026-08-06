@@ -1,5 +1,5 @@
 """
-Forgetting Benchmark for Lumen.
+Forgetting Benchmark for Lumena.
 
 Injects 10,000 synthetic chunks with random VM scores across 90 simulated days,
 runs ebbinghaus decay daily, and triggers budget-curated eviction periodically.
@@ -31,7 +31,7 @@ except ImportError as exc:
     print(f"[ERROR] Cannot import lumen: {exc}")
     sys.exit(1)
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
 from lumen.force.mnemonic.forgetting_l2_interference import check_locus_interference
@@ -81,7 +81,7 @@ def _compute_cosine(a: np.ndarray, b: np.ndarray) -> float:
 
 def run_benchmark() -> dict[str, Any]:
     tmpdir = tempfile.mkdtemp(prefix="lumen_benchmark_forgetting_")
-    config = LumenConfig(
+    config = LumenaConfig(
         store_path=Path(tmpdir),
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",

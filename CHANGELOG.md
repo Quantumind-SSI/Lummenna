@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Lumen will be documented in this file.
+All notable changes to Lumena will be documented in this file.
 
 ## [Unreleased]
 
@@ -8,10 +8,10 @@ All notable changes to Lumen will be documented in this file.
 
 ### Added
 - Domain corpus dataset (`datasets/domain_corpus.json`) — a hand-crafted knowledge corpus with 111 fact chunks across 8 rooms (machine_learning, nlp, cybersecurity, distributed_systems, healthcare_ai, quantum_computing, open_source, climate_tech), each with 4 structured loci. Designed for both palace seeding (`python -m datasets.seed`) and benchmarking.
-- Palace seed script (`datasets/seed.py`) — populates a Lumen instance from the domain corpus JSON with real embeddings, creating a production-ready knowledge base in ~2 seconds.
-- Palace Navigation Efficiency (PNE) benchmark (`benchmarks/navigation/`) — proprietary evaluation suite measuring latency speedup, recall retention, intent-routing accuracy, and pruning efficiency of Lumen's room/locus topology vs. flat global search. Outputs JSON + Markdown.
-- End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 14 sessions. Measures R@k semantic recall, similarity scores, and per-query latency. Bridges Lumen to the SOTA evaluation standards used by MemGPT/Mem0/Zep.
-- LangGraph integration (`lumen.integrations.langgraph`) — `LumenCheckpointSaver` for graph state persistence and `LumenGraphStore` for cross-thread long-term memory. Installable via `pip install lumen[langgraph]`. Includes 9 test cases.
+- Palace seed script (`datasets/seed.py`) — populates a Lumena instance from the domain corpus JSON with real embeddings, creating a production-ready knowledge base in ~2 seconds.
+- Palace Navigation Efficiency (PNE) benchmark (`benchmarks/navigation/`) — proprietary evaluation suite measuring latency speedup, recall retention, intent-routing accuracy, and pruning efficiency of Lumena's room/locus topology vs. flat global search. Outputs JSON + Markdown.
+- End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 14 sessions. Measures R@k semantic recall, similarity scores, and per-query latency. Bridges Lumena to the SOTA evaluation standards used by MemGPT/Mem0/Zep.
+- LangGraph integration (`lumen.integrations.langgraph`) — `LumenaCheckpointSaver` for graph state persistence and `LumenaGraphStore` for cross-thread long-term memory. Installable via `pip install lumena[langgraph]`. Includes 9 test cases.
 - Centralized logging helper (`lumen.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
 - API versioning (`/v1/` prefix) for all operational endpoints with backward-compatible public paths (`/health`, `/dashboard`, `/metrics`).
 - Subresource Integrity (SRI) hash for Chart.js CDN resource in dashboard HTML.
@@ -35,12 +35,12 @@ All notable changes to Lumen will be documented in this file.
 - L2 interference checking (`forgetting_l2_interference.py`) now reads embeddings from `vec_chunks` when `vec_fallback` is empty, fixing a blind spot for sqlite-vec-only deployments.
 - API `/turn` endpoint (`server.py`) now resolves real `room_name`, `locus_name`, `vm_score`, and `age_hours` from the database instead of using hardcoded placeholder values.
 - LangGraph `alist()` async method now yields items as a proper async generator instead of returning a sync Iterator.
-- Removed trailing whitespace in `lumen/api/server.py` docstring.
-- Removed unused `os` import in `lumen/api/server.py`.
+- Removed trailing whitespace in `lumena/api/server.py` docstring.
+- Removed unused `os` import in `lumena/api/server.py`.
 - Replaced unused local variable assignments with `_` in `tests/test_beam.py` and `tests/test_core.py`.
 - Sorted and cleaned import blocks across multiple test files (auto-fixed by ruff).
 - Removed dead `pass` in `benchmarks/beir/run.py` except block.
-- Removed empty `if TYPE_CHECKING: pass` block in `lumen/curiosity.py`.
+- Removed empty `if TYPE_CHECKING: pass` block in `lumena/curiosity.py`.
 - Fixed FTS5 lexical search failing on apostrophes, periods, and other punctuation characters in query strings (`retrieval_lexical.py`).
 - Fixed benchmark scripts failing when `_enforce_permissions` attempted to chmod `/tmp` by ensuring store paths are nested under temp directories.
 
@@ -77,7 +77,7 @@ All notable changes to Lumen will be documented in this file.
 - D8: Model download & ONNX export pipeline
 - D12: Search repair with feedback-driven widening
 - D13: Wear-aware batch writer for SD/eMMC endurance
-- LangChain integration (`LumenChatMemory` + `LumenStore`)
+- LangChain integration (`LumenaChatMemory` + `LumenaStore`)
 - 24 test suites with 177 tests
 - Retrieval, forgetting, and performance benchmarks
 - GitHub Actions CI workflow (lint, typecheck, test, coverage)
@@ -110,7 +110,7 @@ All notable changes to Lumen will be documented in this file.
 - Healthcheck instructions in Dockerfile and docker-compose
 
 ### Changed
-- `LumenConfig.model_post_init` replaced with explicit `resolve_device_defaults()`
+- `LumenaConfig.model_post_init` replaced with explicit `resolve_device_defaults()`
 - `FallbackEmbedder` is now `MockEmbedder` with a compatibility alias
 - `budget_curated_eviction` no longer increments `optical_level` per degradation step
 - API server `_state` dict access guarded with null checks

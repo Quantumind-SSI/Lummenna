@@ -1,4 +1,4 @@
-"""Audit logging helpers for the Lumen memory palace."""
+"""Audit logging helpers for the Lumena memory palace."""
 
 import json
 import sqlite3

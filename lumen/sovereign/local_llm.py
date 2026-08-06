@@ -12,7 +12,7 @@ from pathlib import Path
 
 import psutil
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.logging import get_console_logger
 
 logger = get_console_logger(__name__)
@@ -46,7 +46,7 @@ class LocalLLM:
     minimise RAM pressure on single-board computers.
     """
 
-    def __init__(self, config: LumenConfig) -> None:
+    def __init__(self, config: LumenaConfig) -> None:
         self.config = config
         self._model: object | None = None
         self._path: Path = config.model_path / config.local_llm_model
@@ -61,7 +61,7 @@ class LocalLLM:
             return False
 
         try:
-            cfg = LumenConfig()
+            cfg = LumenaConfig()
             return (cfg.model_path / cfg.local_llm_model).is_file()
         except Exception:
             return False

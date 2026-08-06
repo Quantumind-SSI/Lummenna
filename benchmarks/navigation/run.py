@@ -1,7 +1,7 @@
 """
-Palace Navigation Efficiency (PNE) Benchmark for Lumen.
+Palace Navigation Efficiency (PNE) Benchmark for Lumena.
 
-Measures the architectural benefit of Lumen's structured room/locus topology
+Measures the architectural benefit of Lumena's structured room/locus topology
 by comparing three retrieval strategies on an identical corpus:
 
   1. Global — standard SearchPipeline across all rooms (baseline)
@@ -30,7 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import get_connection
 from lumen.force.contextual.embed import MockEmbedder
 from lumen.force.mnemonic.retrieval_dense import DenseHit, VectorChannel
@@ -389,7 +389,7 @@ def _run_single_seed(seed: int):
     embeddings = embedder.encode(texts)
 
     tmpdir = tempfile.mkdtemp(prefix=f"lumen_bench_pne_{seed}_")
-    config = LumenConfig(
+    config = LumenaConfig(
         store_path=Path(tmpdir),
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",

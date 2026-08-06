@@ -6,13 +6,13 @@ Secret sauce: Unified error identity across CLI, logs, and API
 """
 
 
-class LumenError(Exception):
-    """Base for all Lumen exceptions."""
+class LumenaError(Exception):
+    """Base for all Lumena exceptions."""
 
     code = "LME-0000"
 
 
-class PalaceError(LumenError):
+class PalaceError(LumenaError):
     """Errors within the memory palace (Force A)."""
 
     pass
@@ -51,7 +51,7 @@ class ConsolidationFailedError(PalaceError):
         super().__init__(msg)
 
 
-class ContextError(LumenError):
+class ContextError(LumenaError):
     """Errors within the context window (Force B)."""
 
     pass
@@ -87,7 +87,7 @@ class AssemblyTimeoutError(ContextError):
         super().__init__(msg)
 
 
-class TFCError(LumenError):
+class TFCError(LumenaError):
     """Twin-Force Controller state error."""
 
     code = "LLM-3001"
@@ -101,7 +101,7 @@ class TFCStuckError(TFCError):
     def __init__(self) -> None:
         super().__init__(
             "The Twin-Force Controller is stuck. Resetting attention to neutral. "
-            "Run 'lumen tfc set --a 0.5 --e 0.5' to recover."
+            "Run 'lumena tfc set --a 0.5 --e 0.5' to recover."
         )
 
 
@@ -117,7 +117,7 @@ class ValueModelUncalibratedError(TFCError):
         )
 
 
-class SovereignViolationError(LumenError):
+class SovereignViolationError(LumenaError):
     """Attempted external API call when sovereign mode is enabled."""
 
     code = "LLM-3003"
@@ -126,7 +126,7 @@ class SovereignViolationError(LumenError):
         super().__init__(f"Sovereign boundary: external API call blocked ({attempted_call}).")
 
 
-class ModelNotAvailableError(LumenError):
+class ModelNotAvailableError(LumenaError):
     """Required ONNX embedding model is missing or cannot be loaded."""
 
     code = "LME-2001"
@@ -134,11 +134,11 @@ class ModelNotAvailableError(LumenError):
     def __init__(self, model_path: str) -> None:
         super().__init__(
             f"Embedding model not available at '{model_path}'. "
-            "Run 'lumen model download <alias>' or 'lumen init --download-model' to provision it."
+            "Run 'lumena model download <alias>' or 'lumena init --download-model' to provision it."
         )
 
 
-class FeedbackLogError(LumenError):
+class FeedbackLogError(LumenaError):
     """Could not write or read feedback log."""
 
     code = "LME-2002"

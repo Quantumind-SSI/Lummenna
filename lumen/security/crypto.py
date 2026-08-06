@@ -1,4 +1,4 @@
-"""S1: Encryption primitives for Lumen.
+"""S1: Encryption primitives for Lumena.
 
 Provides:
   - Fernet field-level encryption (fallback when SQLCipher is unavailable).

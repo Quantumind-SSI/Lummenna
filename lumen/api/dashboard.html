@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumen Memory Palace — Effectiveness Dashboard</title>
+  <title>Lumena Memory Palace — Effectiveness Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
   <style>
     :root {
@@ -96,7 +96,7 @@
 </head>
 <body>
   <header>
-    <h1>Lumen <span class="badge ok">LIVE</span></h1>
+    <h1>Lumena <span class="badge ok">LIVE</span></h1>
     <p>Local-First Memory for Agents — Effectiveness Dashboard</p>
   </header>
 
@@ -241,12 +241,12 @@
 
     <!-- SOTA Comparison -->
     <div class="card" style="margin-bottom: 1.5rem;">
-      <h2>Feature Comparison — Lumen vs. Common Vector Stores</h2>
+      <h2>Feature Comparison — Lumena vs. Common Vector Stores</h2>
       <table class="comparison-table">
         <thead>
           <tr>
             <th>Feature</th>
-            <th>Lumen</th>
+            <th>Lumena</th>
             <th>Chroma</th>
             <th>FAISS</th>
             <th>pgvector</th>
@@ -347,14 +347,14 @@
           <canvas id="costChart"></canvas>
         </div>
         <p style="font-size:.75rem; color:var(--muted); margin-top:.5rem;">
-          Lumen runs entirely on-device. Compare to OpenAI embeddings API at ~$0.10/1M tokens + LLM context costs.
+          Lumena runs entirely on-device. Compare to OpenAI embeddings API at ~$0.10/1M tokens + LLM context costs.
         </p>
       </div>
     </div>
   </div>
 
   <footer>
-    Lumen — Local-First Memory for Agents — Single-file SQLite — No Cloud Required
+    Lumena — Local-First Memory for Agents — Single-file SQLite — No Cloud Required
   </footer>
 
   <script>
@@ -440,7 +440,7 @@
         data: {
           labels: ['Retrieval Accuracy', 'Latency', 'Privacy', 'Cost Efficiency', 'Scalability', 'RTBF Capability', 'Context Assembly'],
           datasets: [{
-            label: 'Lumen (Beta)',
+            label: 'Lumena (Beta)',
             data: [null, null, null, null, null, null, null],
             backgroundColor: 'rgba(16, 185, 129, 0.2)',
             borderColor: '#10b981',
@@ -473,7 +473,7 @@
       costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
         type: 'bar',
         data: {
-          labels: ['Lumen (on-device)', 'Cloud Embeddings API (est.)', 'Cloud LLM RAG (est.)'],
+          labels: ['Lumena (on-device)', 'Cloud Embeddings API (est.)', 'Cloud LLM RAG (est.)'],
           datasets: [{
             label: 'USD per 10K queries (approximate)',
             data: [0.00, 1.50, 5.00],
@@ -491,7 +491,7 @@
       // Add a note below the cost chart
       const costNote = document.createElement('p');
       costNote.style.cssText = 'font-size:.75rem; color:var(--muted); margin-top:.5rem;';
-      costNote.textContent = 'Cloud estimates are illustrative only (OpenAI pricing at time of writing). Lumen cost is $0 because it runs entirely on-device.';
+      costNote.textContent = 'Cloud estimates are illustrative only (OpenAI pricing at time of writing). Lumena cost is $0 because it runs entirely on-device.';
       document.getElementById('costChart').parentNode.appendChild(costNote);
     }
 

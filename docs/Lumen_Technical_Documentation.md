@@ -1,4 +1,4 @@
-# Lumen — Technical Documentation
+# Lumena — Technical Documentation
 
 **Version:** v0.2.0-beta
 **License:** Apache 2.0
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Lumen is a local-first, self-contained memory and context framework for AI agents. It provides persistent storage, hybrid retrieval, and managed memory lifecycle for LLM-powered applications. All operations run entirely on-device — no cloud dependencies, no external APIs, no telemetry.
+Lumena is a local-first, self-contained memory and context framework for AI agents. It provides persistent storage, hybrid retrieval, and managed memory lifecycle for LLM-powered applications. All operations run entirely on-device — no cloud dependencies, no external APIs, no telemetry.
 
 ### Core Capabilities
 
@@ -23,8 +23,8 @@ Lumen is a local-first, self-contained memory and context framework for AI agent
 | Conversation tracking | Working | Turn storage, implicit feedback, context assembly |
 | REST API | Working | FastAPI with auth (header key comparison), rate limiting, CORS |
 | MCP server | Working | 7 tools: search, store, assemble, turn, feedback, status, dashboard |
-| LangChain adapter | Working | LumenChatMemory (requires `langchain` package) |
-| LangGraph adapter | Working | LumenCheckpointSaver (requires `langgraph` package) |
+| LangChain adapter | Working | LumenaChatMemory (requires `langchain` package) |
+| LangGraph adapter | Working | LumenaCheckpointSaver (requires `langgraph` package) |
 | Dashboard | Working | Real-time palace topology, TFC state, memory health (http://localhost:8848/dashboard) |
 | P2P sharing | Working (LAN) | Beam protocol with AES-256-GCM + HMAC-SHA256; blocked by default (sovereign mode) |
 | Encryption-at-rest | Partially implemented | SQLCipher schema support implemented; tests skipped pending v0.3.0. Use OS-level encryption as stopgap. |
@@ -56,29 +56,29 @@ User Input → IntentRouter → Parallel Retrieval (BM25 + Dense + Graph)
 
 | Layer | Module | Purpose |
 |---|---|---|
-| Storage | `lumen/data/schema.py` | SQLite schema, connection management, permissions |
-| Retrieval | `lumen/search.py` | Orchestrates BM25, dense, graph channels |
-| Retrieval | `lumen/force/mnemonic/retrieval_lexical.py` | FTS5 full-text search |
-| Retrieval | `lumen/force/mnemonic/retrieval_dense.py` | Vector similarity with sqlite-vec or usearch |
-| Retrieval | `lumen/force/mnemonic/retrieval_graph.py` | NetworkX-based graph traversal |
-| Fusion | `lumen/fusion.py` | RRF fusion with V(m), FRQAD/cosine, recency boost |
-| Memory | `lumen/force/mnemonic/store.py` | Chunk insertion with PII scanning, dedup, provenance |
-| Memory | `lumen/force/mnemonic/consolidation.py` | Background consolidation with dedup merging |
-| Forgetting | `lumen/force/mnemonic/forgetting_l1_decay.py` | Ebbinghaus exponential decay |
-| Forgetting | `lumen/force/mnemonic/forgetting_l2_interference.py` | Similarity-based interference weakening |
-| Forgetting | `lumen/force/mnemonic/forgetting_l3_budget.py` | Budget-curated eviction |
-| Context | `lumen/force/contextual/assembly.py` | Context assembly with token budget |
-| Context | `lumen/force/contextual/embed.py` | ONNX embedding with real/mock fallback |
-| Context | `lumen/force/contextual/token_budget.py` | Token counting |
-| Controller | `lumen/controller.py` | Twin-Force Controller (mnemonic bias α / attention temperature τ) |
-| Repair | `lumen/repair.py` | Self-healing retrieval with TFC-driven re-query |
-| Compliance | `lumen/compliance/safety_forgetting.py` | PII detection, safety-triggered deletion |
-| Audit | `lumen/audit.py` | SQLite audit event logging |
-| Scheduler | `lumen/sleep.py` | Background consolidation, decay, eviction, curiosity |
-| P2P | `lumen/p2p/beam.py` | LAN-scoped plaintext memory sharing |
-| API | `lumen/api/server.py` | FastAPI REST API with auth, rate limiting |
-| CLI | `lumen/cli/main.py` | Typer CLI for init, store, retrieve, status, daemon |
-| Integrations | `lumen/integrations/` | MCP server, LangChain, LangGraph adapters |
+| Storage | `lumena/data/schema.py` | SQLite schema, connection management, permissions |
+| Retrieval | `lumena/search.py` | Orchestrates BM25, dense, graph channels |
+| Retrieval | `lumena/force/mnemonic/retrieval_lexical.py` | FTS5 full-text search |
+| Retrieval | `lumena/force/mnemonic/retrieval_dense.py` | Vector similarity with sqlite-vec or usearch |
+| Retrieval | `lumena/force/mnemonic/retrieval_graph.py` | NetworkX-based graph traversal |
+| Fusion | `lumena/fusion.py` | RRF fusion with V(m), FRQAD/cosine, recency boost |
+| Memory | `lumena/force/mnemonic/store.py` | Chunk insertion with PII scanning, dedup, provenance |
+| Memory | `lumena/force/mnemonic/consolidation.py` | Background consolidation with dedup merging |
+| Forgetting | `lumena/force/mnemonic/forgetting_l1_decay.py` | Ebbinghaus exponential decay |
+| Forgetting | `lumena/force/mnemonic/forgetting_l2_interference.py` | Similarity-based interference weakening |
+| Forgetting | `lumena/force/mnemonic/forgetting_l3_budget.py` | Budget-curated eviction |
+| Context | `lumena/force/contextual/assembly.py` | Context assembly with token budget |
+| Context | `lumena/force/contextual/embed.py` | ONNX embedding with real/mock fallback |
+| Context | `lumena/force/contextual/token_budget.py` | Token counting |
+| Controller | `lumena/controller.py` | Twin-Force Controller (mnemonic bias α / attention temperature τ) |
+| Repair | `lumena/repair.py` | Self-healing retrieval with TFC-driven re-query |
+| Compliance | `lumena/compliance/safety_forgetting.py` | PII detection, safety-triggered deletion |
+| Audit | `lumena/audit.py` | SQLite audit event logging |
+| Scheduler | `lumena/sleep.py` | Background consolidation, decay, eviction, curiosity |
+| P2P | `lumena/p2p/beam.py` | LAN-scoped plaintext memory sharing |
+| API | `lumena/api/server.py` | FastAPI REST API with auth, rate limiting |
+| CLI | `lumena/cli/main.py` | Typer CLI for init, store, retrieve, status, daemon |
+| Integrations | `lumena/integrations/` | MCP server, LangChain, LangGraph adapters |
 
 ---
 
@@ -156,7 +156,7 @@ When retrieval yields no results, the repair module:
 - Batched writes via `WearAwareBatcher` for SD/eMMC endurance
 
 ### L4: Safety Forgetting (Manual)
-- Triggered via API endpoint or `lumen compliance audit`
+- Triggered via API endpoint or `lumena compliance audit`
 - Permanently deletes chunks with provenance-chain clearance
 - Writes audit events before mutation
 
@@ -164,7 +164,7 @@ When retrieval yields no results, the repair module:
 
 ## 6. Configuration
 
-All configuration via environment variables (`LUMEN_` prefix), TOML file (`~/.lumen/config.toml`), or programmatic `LumenConfig()`.
+All configuration via environment variables (`LUMEN_` prefix), TOML file (`~/.lumen/config.toml`), or programmatic `LumenaConfig()`.
 
 ### Key Settings
 
@@ -213,33 +213,33 @@ When `LUMEN_API_KEY` is set, all endpoints require `X-API-Key` header. Compariso
 ## 8. CLI Reference
 
 ```bash
-lumen init [--device generic|rpi5|jetson-orin|orange-pi] [--download-model]
-lumen serve [--host 0.0.0.0] [--port 8848]
-lumen status
+lumena init [--device generic|rpi5|jetson-orin|orange-pi] [--download-model]
+lumena serve [--host 0.0.0.0] [--port 8848]
+lumena status
 
 # Memory operations
-lumen memory store "content text" --room decisions [--locus topic]
-lumen memory retrieve "search query" [--top-k 5]
+lumena memory store "content text" --room decisions [--locus topic]
+lumena memory retrieve "search query" [--top-k 5]
 
 # Palace operations
-lumen palace rooms
-lumen palace stats [--room name]
+lumena palace rooms
+lumena palace stats [--room name]
 
 # Compliance
-lumen compliance audit [--n 10]
+lumena compliance audit [--n 10]
 
 # Daemon (background scheduler)
-lumen daemon start
-lumen daemon status
-lumen daemon run-once
+lumena daemon start
+lumena daemon status
+lumena daemon run-once
 
 # P2P sharing (requires LUMEN_SOVEREIGN=false)
-lumen p2p share --room name [--ttl 24]
+lumena p2p share --room name [--ttl 24]
 
 # Model management
-lumen model list
-lumen model download bge-small-en-v1.5
-lumen model export bge-small-en-v1.5
+lumena model list
+lumena model download bge-small-en-v1.5
+lumena model export bge-small-en-v1.5
 ```
 
 ---
@@ -257,15 +257,15 @@ Exposes 7 tools via stdio: `lumen_search`, `lumen_store`, `lumen_assemble`, `lum
 ### LangChain
 
 ```python
-from lumen.integrations.langchain import LumenChatMemory
-# Requires: pip install "lumen[langchain]"
+from lumen.integrations.langchain import LumenaChatMemory
+# Requires: pip install "lumena[langchain]"
 ```
 
 ### LangGraph
 
 ```python
-from lumen.integrations.langgraph import LumenCheckpointSaver
-# Requires: pip install "lumen[langgraph]"
+from lumen.integrations.langgraph import LumenaCheckpointSaver
+# Requires: pip install "lumena[langgraph]"
 ```
 
 ---
@@ -287,7 +287,7 @@ Eleven benchmark suites in `benchmarks/`. All run from the repo root.
 | TFC sensitivity | Run (results available) | `python -m benchmarks.tfc.run` |
 | All suites | Wrapper | `python -m benchmarks.run_all` |
 
-Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are explicitly loaded. Install benchmark dependencies with `pip install "lumen[benchmarks]"`.
+Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are explicitly loaded. Install benchmark dependencies with `pip install "lumena[benchmarks]"`.
 
 ---
 
@@ -312,14 +312,14 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 3. **Benchmark results partially validated** — synthetic corpora are validated; BEIR subset results (500 docs, 20 queries) are available. Full-corpus BEIR leaderboard submission remains pending.
 4. **No CDN SRI** — dashboard loads Chart.js from CDN without integrity hash
 5. **Some modules unwired** — backup, user_profile, log_rotation exist but await integration
-6. **Dual scheduler risk** — running both `lumen serve` and `lumen daemon start` creates duplicate schedulers
+6. **Dual scheduler risk** — running both `lumena serve` and `lumena daemon start` creates duplicate schedulers
 
 ---
 
 ## 13. Project Structure
 
 ```
-lumen/
+lumena/
 ├── config.py              # Pydantic-settings configuration
 ├── controller.py          # Twin-Force state controller
 ├── search.py              # Search pipeline orchestration

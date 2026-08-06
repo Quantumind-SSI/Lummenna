@@ -1,6 +1,6 @@
 name: lumen_memory
 description: >
-  Search, store, and manage long-term memory in the Lumen palace.
+  Search, store, and manage long-term memory in the Lumena palace.
   Use this when you need to recall prior decisions, persist new insights,
   or assemble relevant context before writing code.
 parameters:
@@ -33,6 +33,6 @@ parameters:
 endpoint:
   type: http
   base_url: http://host.docker.internal:8848
-  # If Lumen runs inside Devin's environment, use localhost:8848 instead.
+  # If Lumena runs inside Devin's environment, use localhost:8848 instead.
   headers:
     Content-Type: application/json

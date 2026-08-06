@@ -1,10 +1,10 @@
-# Goose (Block) + Lumen Integration
+# Goose (Block) + Lumena Integration
 
 [Goose](https://github.com/block/goose) is an open-source AI agent from Block (formerly Square) that supports **MCP servers** natively.
 
 ## Configuration
 
-Add Lumen to your Goose configuration:
+Add Lumena to your Goose configuration:
 
 ```bash
 goose configure
@@ -33,7 +33,7 @@ extensions:
 
 ## Usage
 
-Start Goose with Lumen enabled:
+Start Goose with Lumena enabled:
 
 ```bash
 goose session
@@ -48,13 +48,13 @@ Inside the session:
 > What is the status of my memory palace?
 ```
 
-Goose will automatically route these to the Lumen MCP tools.
+Goose will automatically route these to the Lumena MCP tools.
 
-## Advanced: Goose + Lumen in CI/CD
+## Advanced: Goose + Lumena in CI/CD
 
-Use Goose with Lumen for persistent CI/CD agents:
+Use Goose with Lumena for persistent CI/CD agents:
 
 ```bash
 export LUMEN_API_KEY=your-key
-goose session --instructions "Always search Lumen before making architectural decisions."
+goose session --instructions "Always search Lumena before making architectural decisions."
 ```

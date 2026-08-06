@@ -1,4 +1,4 @@
-# Lumen Production Deployment Guide
+# Lumena Production Deployment Guide
 
 **Version:** v0.2.0-beta  
 **Platforms:** Raspberry Pi 5, Jetson Orin Nano, Generic x86_64, ARM64 SBCs
@@ -46,15 +46,15 @@ sudo systemctl disable dphys-swapfile
 
 ```bash
 # Create a dedicated virtual environment
-python3 -m venv ~/.venvs/lumen
+python3 -m venv ~/.venvs/lumena
 source ~/.venvs/lumen/bin/activate
 
-# Install Lumen from PyPI (when published)
-pip install lumen
+# Install Lumena from PyPI (when published)
+pip install lumena
 
 # Or install from source
 git clone https://github.com/QuantumindSSI/lumen.git
-cd lumen
+cd lumena
 pip install -e ".[dev]"
 ```
 
@@ -62,7 +62,7 @@ pip install -e ".[dev]"
 
 ```bash
 # For Raspberry Pi 5 (low-RAM, flash-wear conscious)
-pip install lumen \
+pip install lumena \
   --no-binary :all: \
   --prefer-binary onnxruntime
 
@@ -77,17 +77,17 @@ pip install llama-cpp-python
 
 ```bash
 # Build
-docker build -t lumen:latest .
+docker build -t lumena:latest .
 
 # Run (production)
 docker run -d \
-  --name lumen \
+  --name lumena \
   -p 8848:8848 \
-  -v ~/.lumen:/root/.lumen \
+  -v ~/.lumena:/root/.lumena \
   -e LUMEN_DEVICE=generic \
   -e LUMEN_LOG_LEVEL=info \
   --restart unless-stopped \
-  lumen:latest
+  lumena:latest
 
 # Or use docker-compose
 docker compose up -d
@@ -97,12 +97,12 @@ docker compose up -d
 ```yaml
 version: "3.8"
 services:
-  lumen:
+  lumena:
     build: .
     ports:
       - "8848:8848"
     volumes:
-      - ~/.lumen:/root/.lumen
+      - ~/.lumena:/root/.lumena
     environment:
       - LUMEN_DEVICE=generic
       - LUMEN_LOG_LEVEL=info
@@ -204,10 +204,10 @@ curl http://localhost:8848/health
 ### 4.2 CLI Status
 
 ```bash
-lumen status
+lumena status
 
 # Output:
-# Lumen Status
+# Lumena Status
 # Device: generic
 # Rooms: 12
 # Active chunks: 2341
@@ -233,7 +233,7 @@ tail -f ~/.lumen/logs/audit.jsonl | jq .
 
 ### 5.1 API Authentication
 
-Lumen supports optional API key authentication via the `X-API-Key` header.
+Lumena supports optional API key authentication via the `X-API-Key` header.
 
 ```bash
 # 1. Generate a strong key
@@ -257,11 +257,11 @@ curl -H "X-API-Key: $LUMEN_API_KEY" \
   http://localhost:8848/v1/status
 ```
 
-> **Warning:** When `LUMEN_API_KEY` is unset, the API is open. Always set it before exposing Lumen to any network.
+> **Warning:** When `LUMEN_API_KEY` is unset, the API is open. Always set it before exposing Lumena to any network.
 
 ### 5.2 Encryption at Rest
 
-Lumen does not yet implement built-in database encryption. Use OS-level full-disk encryption:
+Lumena does not yet implement built-in database encryption. Use OS-level full-disk encryption:
 
 | OS | Technology | Enable |
 |---|---|---|
@@ -270,7 +270,7 @@ Lumen does not yet implement built-in database encryption. Use OS-level full-dis
 | Linux | LUKS/dm-crypt | `cryptsetup luksFormat /dev/sdX` |
 | Raspberry Pi | LUKS + initramfs | See [Raspberry Pi LUKS guide](https://www.raspberrypi.com/documentation/computers/configuration.html) |
 
-SQLCipher integration is planned for v0.3.0. On startup, Lumen logs a reminder:
+SQLCipher integration is planned for v0.3.0. On startup, Lumena logs a reminder:
 
 ```
 encryption_at_rest_disabled
@@ -279,11 +279,11 @@ recommendation='Use OS-level disk encryption (FileVault, BitLocker, LUKS) for pr
 
 ### 5.3 File Permissions
 
-File permissions are enforced automatically on startup (fail-fast if the process cannot chmod). The entire `~/.lumen` tree is set to `700` for directories and `600` for files. Ensure the Lumen process owns the path:
+File permissions are enforced automatically on startup (fail-fast if the process cannot chmod). The entire `~/.lumen` tree is set to `700` for directories and `600` for files. Ensure the Lumena process owns the path:
 
 ```bash
-# Secure the Lumen home directory
-chmod 700 ~/.lumen
+# Secure the Lumena home directory
+chmod 700 ~/.lumena
 chmod 600 ~/.lumen/config.toml
 chmod 600 ~/.lumen/store/lumen.db
 ```
@@ -294,14 +294,14 @@ Create `/etc/systemd/system/lumen.service`:
 
 ```ini
 [Unit]
-Description=Lumen Memory API Server
+Description=Lumena Memory API Server
 After=network.target
 
 [Service]
 Type=simple
-User=lumen
-Group=lumen
-WorkingDirectory=/home/lumen
+User=lumena
+Group=lumena
+WorkingDirectory=/home/lumena
 Environment="LUMEN_DEVICE=generic"
 Environment="LUMEN_LOG_LEVEL=info"
 Environment="LUMEN_SOVEREIGN=true"
@@ -315,18 +315,18 @@ CPUQuota=80%
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/home/lumen/.lumen
+ReadWritePaths=/home/lumen/.lumena
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-sudo useradd -r -s /bin/false lumen
-sudo mkdir -p /home/lumen/.lumen
-sudo chown -R lumen:lumen /home/lumen/.lumen
+sudo useradd -r -s /bin/false lumena
+sudo mkdir -p /home/lumen/.lumena
+sudo chown -R lumena:lumena /home/lumen/.lumena
 sudo systemctl daemon-reload
-sudo systemctl enable --now lumen
+sudo systemctl enable --now lumena
 ```
 
 ### 5.5 Reverse Proxy (Nginx)
@@ -392,7 +392,7 @@ tar czf "${BACKUP_DIR}.tar.gz" -C "$(dirname "$BACKUP_DIR")" "$(basename "$BACKU
 rm -rf "$BACKUP_DIR"
 
 # Retention: keep last 14 days
-find /backup/lumen -name "*.tar.gz" -mtime +14 -delete
+find /backup/lumena -name "*.tar.gz" -mtime +14 -delete
 ```
 
 ---
@@ -442,18 +442,18 @@ Key metrics to alert on:
 lumen-backup.sh
 
 # 2. Stop service
-sudo systemctl stop lumen
+sudo systemctl stop lumena
 
 # 3. Upgrade
 source ~/.venvs/lumen/bin/activate
-pip install --upgrade lumen
+pip install --upgrade lumena
 
 # 4. Migrations run automatically on DB connect; nothing to do manually
 # 5. Restart
-sudo systemctl start lumen
+sudo systemctl start lumena
 
 # 6. Verify
-lumen status
+lumena status
 curl http://localhost:8848/health
 ```
 
@@ -461,11 +461,11 @@ curl http://localhost:8848/health
 
 ```bash
 # Restore from backup
-sudo systemctl stop lumen
+sudo systemctl stop lumena
 sqlite3 ~/.lumen/store/lumen.db ".restore '${BACKUP_DIR}/lumen.db'"
 # Reinstall previous version
-pip install lumen==$PREVIOUS_VERSION
-sudo systemctl start lumen
+pip install lumena==$PREVIOUS_VERSION
+sudo systemctl start lumena
 ```
 
 ---
@@ -478,7 +478,7 @@ sudo systemctl start lumen
 |---|---|---|
 | `sqlite3.OperationalError: database is locked` | WAL checkpoint stuck | `PRAGMA wal_checkpoint(TRUNCATE);` |
 | High RAM usage | USearch index loaded into RAM | Switch to `vector_index = "sqlite-vec"` |
-| Slow retrieval | No FTS5 index | Ensure schema is initialized with `lumen init` |
+| Slow retrieval | No FTS5 index | Ensure schema is initialized with `lumena init` |
 | `SovereignViolation` error | External API blocked | Set `LUMEN_SOVEREIGN=false` or use offline embedder |
 | SD card wear | Too many random writes | Enable WAL + `synchronous=NORMAL` |
 
@@ -486,13 +486,13 @@ sudo systemctl start lumen
 
 ```bash
 # Full system report
-lumen status
+lumena status
 
 # Check database integrity
 sqlite3 ~/.lumen/store/lumen.db "PRAGMA integrity_check;"
 
 # View recent audit events (last N entries)
-lumen compliance audit --n 10
+lumena compliance audit --n 10
 
 # Test retrieval latency via the API
 curl -X POST http://localhost:8848/v1/search \
@@ -508,9 +508,9 @@ curl -X POST http://localhost:8848/v1/search \
 - **Issues:** https://github.com/QuantumindSSI/lumen/issues
 - **Discussions:** https://github.com/QuantumindSSI/lumen/discussions
 - **Security:** security@lumen.ai
-- **Matrix:** #lumen:matrix.org
+- **Matrix:** #lumena:matrix.org
 
 ---
 
 *Last updated: 2026-07-20*  
-*Maintainer: Lumen Engineering Team*
+*Maintainer: Lumena Engineering Team*

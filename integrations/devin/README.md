@@ -1,4 +1,4 @@
-# Devin + Lumen Integration
+# Devin + Lumena Integration
 
 ## Option 1: Devin Custom Tool (Recommended)
 
@@ -7,7 +7,7 @@ Register this tool definition in your Devin workspace settings:
 ```yaml
 name: lumen_memory
 description: >
-  Search, store, and manage long-term memory in the Lumen palace.
+  Search, store, and manage long-term memory in the Lumena palace.
   Use this when you need to recall prior decisions, persist new insights,
   or assemble relevant context before writing code.
 parameters:
@@ -49,8 +49,8 @@ endpoint:
 If custom tools are unavailable, use these bash commands in Devin:
 
 ```bash
-# Start Lumen server in background (one-time)
-nohup lumen serve --host 0.0.0.0 --port 8848 > /tmp/lumen.log 2>&1 &
+# Start Lumena server in background (one-time)
+nohup lumena serve --host 0.0.0.0 --port 8848 > /tmp/lumen.log 2>&1 &
 
 # Search memories
 curl -s -X POST http://localhost:8848/v1/search \
@@ -78,13 +78,13 @@ curl -s http://localhost:8848/v1/status | jq .
 
 ## Option 3: Devin Docker Image (Advanced)
 
-Embed Lumen directly into your Devin sandbox Dockerfile:
+Embed Lumena directly into your Devin sandbox Dockerfile:
 
 ```dockerfile
 FROM cognition/devin:latest
 
-RUN pip install "lumen @ git+https://github.com/QuantumindSSI/lumen"
-RUN lumen init --device generic
+RUN pip install "lumena @ git+https://github.com/QuantumindSSI/lumena"
+RUN lumena init --device generic
 
 COPY lumen-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
@@ -94,6 +94,6 @@ ENTRYPOINT ["/entrypoint.sh"]
 ```bash
 #!/bin/sh
 # lumen-entrypoint.sh
-lumen serve --host 0.0.0.0 --port 8848 &
+lumena serve --host 0.0.0.0 --port 8848 &
 exec /usr/local/bin/devin-start
 ```

@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lumen.api.server import app
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.conversation import ConversationMemory
 from lumen.data.schema import get_connection, init_db
 from lumen.force.contextual.embed import MockEmbedder
@@ -18,7 +18,7 @@ def client(tmp_path, monkeypatch):
     store.mkdir()
     models.mkdir()
 
-    config = LumenConfig(
+    config = LumenaConfig(
         store_path=store,
         model_path=models,
         vector_index="sqlite-vec",
@@ -272,7 +272,7 @@ class TestDashboard:
         resp = client.get("/dashboard")
         assert resp.status_code == 200
         assert "text/html" in resp.headers.get("content-type", "")
-        assert "Lumen Memory Palace" in resp.text
+        assert "Lumena Memory Palace" in resp.text
 
     def test_dashboard_data(self, client):
         # Seed a room

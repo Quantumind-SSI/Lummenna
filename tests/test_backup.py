@@ -3,14 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.backup import backup_database
 from lumen.data.schema import get_connection
 
 
 @pytest.fixture
 def db_conn(tmp_path):
-    config = LumenConfig(
+    config = LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / ".lumen"),

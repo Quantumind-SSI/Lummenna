@@ -2,13 +2,13 @@ import sqlite3
 
 import pytest
 
-from lumen.config import LumenConfig
+from lumen.config import LumenaConfig
 from lumen.data.schema import ensure_schema, get_connection, init_db
 
 
 @pytest.fixture
 def temp_config(tmp_path):
-    return LumenConfig(
+    return LumenaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / ".lumen"),

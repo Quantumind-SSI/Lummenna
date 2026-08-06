@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [
-    { name = "Lumen Contributors" },
+    { name = "Lumena Contributors" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -22,7 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-urls = { Repository = "https://github.com/QuantumindSSI/lumen" }
+urls = { Repository = "https://github.com/QuantumindSSI/lumena" }
 dependencies = [
     # Force A: Mnemonic
     "sqlite-vec>=0.1.0",
@@ -35,7 +35,7 @@ dependencies = [
     "scikit-learn>=1.4",
     "jinja2>=3.1",
     "structlog>=24.1",
-    # Lumen: Unification
+    # Lumena: Unification
     "pydantic>=2.0",
     "pydantic-settings>=2.2",
     "typer>=0.12",
@@ -88,7 +88,7 @@ benchmarks = [
 ]
 
 [project.scripts]
-lumen = "lumen.cli.main:app"
+lumena = "lumen.cli.main:app"
 
 [tool.ruff]
 target-version = "py310"
@@ -116,7 +116,7 @@ testpaths = ["tests"]
 addopts = "-q --tb=short"
 
 [tool.coverage.paths]
-source = ["lumen"]
+source = ["lumena"]
 
 [tool.coverage.report]
 fail_under = 50
