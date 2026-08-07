@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lumena"
-version = "0.2.0-beta"
+version = "1.0.0"
 description = "Twin-force memory and context framework for sovereign AI agents"
 requires-python = ">=3.10"
 readme = "README.md"
@@ -13,7 +13,7 @@ authors = [
     { name = "Lumena Contributors" },
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",

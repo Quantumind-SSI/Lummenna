@@ -16,7 +16,7 @@ def test_imports():
     import lumena.data.schema
     import lumena.force.mnemonic.event_buffer
 
-    assert lumena.__version__ == "0.2.0"
+    assert lumena.__version__ == "1.0.0"
 
 
 def test_schema_init():

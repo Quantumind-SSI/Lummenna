@@ -298,7 +298,7 @@ class TestDashboard:
         resp = client.get("/metrics")
         assert resp.status_code == 200
         body = resp.json()
-        assert body["lumena_version"] == "0.2.0-beta"
+        assert body["lumena_version"] == "1.0.0"
         assert "system" in body
         assert "palace" in body
         assert "business" in body

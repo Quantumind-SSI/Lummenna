@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/tests-273%20passed-brightgreen?style=flat-square" alt="Tests">
 </p>
 
-<p><em>Beta software. API-stable; actively developed. Contributions welcome.</em></p>
+<p><em>Production-ready. API-stable; actively developed. Contributions welcome.</em></p>
 
 </div>
 
@@ -133,7 +133,7 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 
 ## State of the Project
 
-Lumena is **beta software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for evaluation, development, and trusted-LAN deployments.
+Lumena is **production-ready software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for production, evaluation, development, and trusted-LAN deployments.
 
 | Dimension | Status | Detail |
 |---|---|---|
@@ -249,7 +249,7 @@ ruff check lumena/ tests/             # Lint
 | [`SECURITY.md`](SECURITY.md) | Security policy and known limitations |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | Integration guides for each platform |
 | [`ROADMAP.md`](ROADMAP.md) | Development milestones and open work |
-| [`docs/Lumena_Agentic_Memory_Whitepaper_v2.md`](docs/Lumena_Agentic_Memory_Whitepaper_v2.md) | Technical white paper |
+| [`docs/Lumena_Whitepaper.md`](docs/Lumena_Whitepaper.md) | Introductory white paper |
 
 ---
 

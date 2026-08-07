@@ -4,8 +4,9 @@
 
 | Version | Supported |
 |---|---|
-| 0.2.x (beta) | Security patches and bug fixes |
-| 0.1.x (alpha) | Security patches only |
+| 1.0.x | Security patches and bug fixes |
+| 0.2.x (beta) | Security patches only |
+| 0.1.x (alpha) | Not supported |
 | < 0.1.0 | Not supported |
 
 ## Reporting a Vulnerability

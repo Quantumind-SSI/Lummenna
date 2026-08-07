@@ -314,7 +314,7 @@ async def lumena_dashboard(ctx: Context = None) -> str:
 
         return (
             f"╔══════════════════════════════════════════════╗\n"
-            f"║     Lumena Effectiveness Dashboard v0.2.0    ║\n"
+            f"║     Lumena Effectiveness Dashboard v1.0.0    ║\n"
             f"╠══════════════════════════════════════════════╣\n"
             f"║ System Health                               ║\n"
             f"╠══════════════════════════════════════════════╣\n"
@@ -490,7 +490,7 @@ def _dashboard_metrics(state: LumenaAppState) -> dict:
     degradation_stage = stage_map.get(env["r"], "FP32")
 
     return {
-        "version": "0.2.0-beta",
+        "version": "1.0.0",
         "system": {
             "device": state.config.device,
             "embedder": state.config.embedding_model,

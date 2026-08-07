@@ -2,7 +2,30 @@
 
 All notable changes to Lumena will be documented in this file.
 
+# Changelog
+
+All notable changes to Lumena will be documented in this file.
+
 ## [Unreleased]
+
+## [1.0.0] — 2026-08-07
+
+### Overview
+
+**Inaugural public release.** Lumena v1.0.0 is the first stable, production-ready release of the sovereign agentic memory framework. This release consolidates all beta-phase development into a publicly documented, benchmark-validated, and integration-ready system.
+
+### Added
+- Consolidated introductory whitepaper (`docs/Lumena_Whitepaper.md`) for public review.
+- Unified version numbering across source code, documentation, and APIs.
+
+### Changed
+- Project status upgraded from **beta** to **production-ready/stable**.
+- Version bumped from `0.2.0-beta` to `1.0.0` across `pyproject.toml`, package `__version__`, API server, MCP server, and all documentation.
+
+### Known Limitations (from v0.2.0-beta, still applicable)
+- Encryption-at-rest partially implemented — SQLCipher schema support exists; use OS-level disk encryption as stopgap.
+- Full-corpus BEIR leaderboard submission remains future work.
+- P2P Beam protocol is hardened for trusted LANs but not adversarial WANs.
 
 ## [0.2.0-beta] — 2026-08-05
 

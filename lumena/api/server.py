@@ -53,7 +53,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[_config.api_rate_
 
 app = FastAPI(
     title="Lumena Memory API",
-    version="0.2.0",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -697,7 +697,7 @@ async def metrics() -> dict:
     config = _get_config()
 
     return {
-        "lumena_version": "0.2.0-beta",
+        "lumena_version": "1.0.0",
         "system": {
             "device": config.device,
             "embedding_model": config.embedding_model,

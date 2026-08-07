@@ -1,7 +1,7 @@
-# Lumena v0.2.0-beta — Official Release Announcement
+# Lumena v1.0.0 — Inaugural Public Release
 
-**Release Date:** 5 August 2026  
-**Version:** v0.2.0-beta  
+**Release Date:** 7 August 2026  
+**Version:** v1.0.0  
 **Repository:** https://github.com/QuantumindSSI/lumena  
 **License:** Apache 2.0  
 
@@ -9,9 +9,9 @@
 
 ## 1. Executive Summary
 
-Today we announce **Lumena v0.2.0-beta**, a local-first memory and context framework for sovereign AI agents. Lumena gives LLM agents persistent, structured, searchable memory—without sending a single byte to the cloud. It runs entirely on your hardware, stores everything in a single SQLite file, and generates embeddings locally via ONNX Runtime.
+Today we announce **Lumena v1.0.0**, the inaugural public release of our local-first memory and context framework for sovereign AI agents. Lumena gives LLM agents persistent, structured, searchable memory—without sending a single byte to the cloud. It runs entirely on your hardware, stores everything in a single SQLite file, and generates embeddings locally via ONNX Runtime.
 
-We are moving from alpha to **beta** with an API-stability commitment, 273 passing tests, 74 % coverage, and a fully documented security posture.
+This release marks the transition from beta to **production-ready**, with an API-stability commitment, 273 passing tests, 74 % coverage, and a fully documented security posture.
 
 ---
 
@@ -27,7 +27,7 @@ Your agents remember. Your data never leaves your machine.
 
 ---
 
-## 3. What’s New in v0.2.0-beta
+## 3. What’s New in v1.0.0
 
 ### New Integrations
 - **LangGraph checkpoint saver** — persist graph state and cross-thread long-term memory natively.
@@ -113,7 +113,7 @@ lumena serve
 
 ### LinkedIn Post (Long Form)
 
-> 🚀 We just shipped **Lumena v0.2.0-beta** — a local-first memory framework for AI agents.
+> 🚀 We just shipped **Lumena v1.0.0** — a local-first memory framework for AI agents.
 >
 > Most agents forget everything when you close the tab. The ones that remember usually send your data to someone else’s cloud.
 >
@@ -128,22 +128,22 @@ lumena serve
 > • 273 tests, stress harness for 100k+ chunks
 > • Single-file SQLite, ONNX embeddings, Apache 2.0
 >
-> We’re calling it beta because we’re honest — encryption-at-rest and full BEIR leaderboard runs are still in progress — but the API is stable, the architecture is solid, and the community is growing.
+> This is our production-ready debut. Encryption-at-rest and full BEIR leaderboard runs remain in active development, but the API is stable, the architecture is solid, and the community is growing.
 >
 > If you believe AI agents should remember without sacrificing sovereignty, give Lumena a try.
 >
 > 👉 https://github.com/QuantumindSSI/lumena
-> 📖 Whitepaper: `docs/Lumena_Agentic_Memory_Whitepaper_v2.md`
+> 📖 Whitepaper: `docs/Lumena_Whitepaper.md`
 > 💬 Matrix: `#lumena:matrix.org`
 >
-> #AI #LLM #OpenSource #AgenticAI #Memory #LocalFirst #Privacy #LangChain #LangGraph #MCP #BetaRelease
+> #AI #LLM #OpenSource #AgenticAI #Memory #LocalFirst #Privacy #LangChain #LangGraph #MCP #Release
 
 ---
 
 ### Twitter / X Thread (5 Tweets)
 
 **Tweet 1 — Hook**
-> 🚀 Introducing Lumena v0.2.0-beta — local-first memory for AI agents.
+> 🚀 Introducing Lumena v1.0.0 — local-first memory for AI agents.
 >
 > Your agents remember. Your data never leaves your machine.
 >
@@ -165,7 +165,7 @@ lumena serve
 > • LangChain, LangGraph, MCP, FastAPI integrations
 
 **Tweet 4 — Proof**
-> We’re beta — but we’re not fragile.
+> We’re production-ready — and we’re not fragile.
 >
 > 273 tests. Stress harness for 100k+ chunks. 74 % coverage. API-stable.
 >
@@ -190,13 +190,13 @@ lumena serve
 ### Short-form Blurbs (Twitter / Mastodon / Bluesky)
 
 **Blurbs 1 — Technical**
-> Lumena v0.2.0-beta is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 273 tests. Apache 2.0. → github.com/QuantumindSSI/lumena
+> Lumena v1.0.0 is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 273 tests. Apache 2.0. → github.com/QuantumindSSI/lumena
 
 **Blurbs 2 — Values-driven**
-> We built Lumena because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Beta today; production tomorrow. Check it out → github.com/QuantumindSSI/lumena
+> We built Lumena because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Production-ready today. Check it out → github.com/QuantumindSSI/lumena
 
 **Blurbs 3 — One-liner**
-> Lumena: local-first memory for sovereign AI agents. Now in beta. github.com/QuantumindSSI/lumena
+> Lumena: local-first memory for sovereign AI agents. Now in v1.0.0. github.com/QuantumindSSI/lumena
 
 ---
 

@@ -1,6 +1,6 @@
 # Lumena Production Deployment Guide
 
-**Version:** v0.2.0-beta  
+**Version:** v1.0.0  
 **Platforms:** Raspberry Pi 5, Jetson Orin Nano, Generic x86_64, ARM64 SBCs
 
 ---
