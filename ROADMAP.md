@@ -1,6 +1,6 @@
 # Lumena Production Readiness Roadmap
 
-This document tracks the remaining work to move Lumena from beta (`v0.2.0-beta`) to production-ready (`v0.3.0-stable` and beyond).
+This document tracks ongoing and future work for Lumena following the v1.0.0 public release.
 
 ---
 
@@ -68,6 +68,7 @@ This document tracks the remaining work to move Lumena from beta (`v0.2.0-beta`)
 - [x] PGP key for vulnerability reporting — generated and published in SECURITY.md
 - [ ] CI/CD: add `pip-audit`, fuzz tests, backend matrix tests
 - [x] Tag `v0.2.0-beta`
+- [x] Tag `v1.0.0` — inaugural public release
 - [x] Publish release notes with closed/open gaps
 
 ---
@@ -76,6 +77,6 @@ This document tracks the remaining work to move Lumena from beta (`v0.2.0-beta`)
 
 As stated in the whitepaper:
 
-> Lumena is a beta framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation pending HPC resources.
+> Lumena is a production-grade framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation as ongoing work.
 
-This roadmap is about closing the gap between that honest claim and a production-ready system.
+This roadmap tracks continued improvement beyond the v1.0.0 public release.

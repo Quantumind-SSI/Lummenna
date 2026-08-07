@@ -1,6 +1,6 @@
 # Lumena — Technical Documentation
 
-**Version:** v0.2.0-beta
+**Version:** v1.0.0
 **License:** Apache 2.0
 **Python:** 3.10+
 
