@@ -31,7 +31,11 @@ User: {{ query }}
 Agent:
 """
 
-env = Environment(loader=BaseLoader())
+# autoescape is intentionally disabled: this template renders a plain-text
+# LLM prompt, never HTML/XML. Enabling autoescape would corrupt memory
+# content (e.g. '&' -> '&amp;', quotes -> entities) before it reaches the
+# model. No template output is ever served to a browser.
+env = Environment(loader=BaseLoader(), autoescape=False)  # nosec B701
 ASSEMBLY_TEMPLATE = env.from_string(ASSEMBLY_TEMPLATE_STRING)
 
 

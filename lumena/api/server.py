@@ -92,9 +92,7 @@ def _check_brute_force(remote_addr: str) -> bool:
         # Window expired; reset
         _auth_failures[remote_addr] = (0, now)
         return False
-    if count >= 5:
-        return True
-    return False
+    return count >= 5
 
 
 # ---------------------------------------------------------------------------
@@ -314,7 +312,12 @@ async def lifespan(app: FastAPI):
         _state["scheduler"] = scheduler
         logger.info("background_scheduler_started")
     except Exception as exc:
-        logger.warning("background_scheduler_failed", error=str(exc))
+        logger.error(
+            "background_scheduler_failed",
+            error=str(exc),
+            effect="memory lifecycle DISABLED: L1 decay and L3 eviction will not run",
+            remedy="install APScheduler or run 'lumena daemon start' separately",
+        )
     logger.info("server_started", device=_config.device, model_available=_state.get("embedding_model_available", False))
     yield
     if "scheduler" in _state:
@@ -582,27 +585,15 @@ async def dashboard() -> str:
 
 
 def _load_retrieval_benchmarks() -> dict:
-    """Load benchmark JSON if it exists, otherwise return empty dict."""
-    import json as _json
-    from pathlib import Path
+    """Load committed retrieval benchmark metrics (shared loader).
 
-    result_path = Path(__file__).parent.parent.parent / "benchmarks" / "retrieval" / "results" / "retrieval_results.json"
-    if not result_path.exists():
-        return {}
-    try:
-        data = _json.loads(result_path.read_text())
-        for embedder in data.get("embedders", []):
-            results = embedder.get("results", {})
-            hybrid = results.get("hybrid", {})
-            if hybrid:
-                return {
-                    "hybrid_r10": hybrid.get("recall_10", {}).get("mean"),
-                    "ndcg10": hybrid.get("ndcg_10", {}).get("mean"),
-                    "latency_hybrid_ms": hybrid.get("latency_ms", {}).get("mean"),
-                }
-        return {}
-    except Exception:
-        return {}
+    Returns the same artifact-backed keys as the MCP server so every
+    user-facing surface reports identical numbers; unmeasured metrics
+    are ``None``.
+    """
+    from lumena.bench_results import load_retrieval_benchmarks
+
+    return load_retrieval_benchmarks()
 
 
 @v1_router.get("/dashboard-data")
@@ -625,13 +616,15 @@ async def dashboard_data() -> dict:
 
     total_chunks = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
 
-    # Estimate memory budget from config
+    # Measure actual on-disk store size instead of estimating from constants
     config = _get_config()
     budget_target_mb = getattr(config, "memory_budget_mb", 64)
-    # Rough estimate: 2.8KB per chunk including embeddings
-    estimated_mb = total_chunks * 2.8 / 1024
+    try:
+        db_size_mb = config.db_path.stat().st_size / (1024 * 1024)
+    except OSError:
+        db_size_mb = 0.0
     budget_pct = (
-        min(100, round((estimated_mb / budget_target_mb) * 100, 1)) if budget_target_mb else 0
+        min(100, round((db_size_mb / budget_target_mb) * 100, 1)) if budget_target_mb else 0
     )
 
     # Determine degradation stage based on TFC resolution
@@ -650,13 +643,15 @@ async def dashboard_data() -> dict:
     retrieval = _load_retrieval_benchmarks()
 
     # Recent feedback stats
+    # created_at is INTEGER unixepoch; comparing it against a TEXT
+    # datetime('now', ...) is always false in SQLite, so use unixepoch().
     feedback_stats = conn.execute(
         """
         SELECT
             COUNT(*) AS total_feedback,
             SUM(CASE WHEN positive = 1 THEN 1 ELSE 0 END) AS positive_feedback
         FROM feedback_log
-        WHERE created_at >= datetime('now', '-7 days')
+        WHERE created_at >= unixepoch('now', '-7 days')
         """
     ).fetchone()
 
@@ -665,7 +660,7 @@ async def dashboard_data() -> dict:
         "total_chunks": total_chunks,
         "memory_budget_pct": budget_pct,
         "memory_budget_target_mb": budget_target_mb,
-        "estimated_mb": round(estimated_mb, 2),
+        "db_size_mb": round(db_size_mb, 2),
         "degradation_stage": degradation_stage,
         "tfc": tfc.to_env(),
         "embedding_model_available": _state.get("embedding_model_available", False),
@@ -712,22 +707,38 @@ async def metrics() -> dict:
         },
         "tfc": tfc.to_env(),
         "effectiveness": {
-            "bm25_r10": None,
-            "ndcg10": None,
-            "hybrid_r10_projected": None,
-            "latency_p50_ms": None,
+            # Artifact-backed values from the shared loader; None = not yet
+            # benchmarked (run python -m benchmarks.retrieval.run).
+            **_load_retrieval_benchmarks(),
             "feedback_total": feedback_row["c"] or 0,
             "feedback_satisfaction_pct": round((feedback_row["sat"] or 0) * 100, 1),
-            "note": "Run python -m benchmarks.retrieval.run to populate retrieval metrics",
         },
         "business": {
             "data_sovereignty_pct": 100,
             "api_cost_per_query_usd": 0.0,
             "gdpr_native_rtbf": True,
             "edge_deployable": True,
-            "ram_mb_estimate": round(90 + (chunk_count * 2.8 / 1024), 1),
+            "process_peak_rss_mb": _process_peak_rss_mb(),
         },
     }
+
+
+def _process_peak_rss_mb() -> float | None:
+    """Return this process's peak resident set size in MB (measured, not estimated).
+
+    Uses ``resource.getrusage``: ``ru_maxrss`` is reported in bytes on macOS
+    and kilobytes on Linux. Returns ``None`` on platforms without the
+    ``resource`` module (e.g. Windows).
+    """
+    try:
+        import resource
+        import sys as _sys
+
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        divisor = 1024 * 1024 if _sys.platform == "darwin" else 1024
+        return round(peak / divisor, 1)
+    except (ImportError, ValueError, OSError):
+        return None
 
 
 app.include_router(v1_router)

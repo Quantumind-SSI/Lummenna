@@ -115,6 +115,11 @@ def get_encryption(config):
 
     Backward compatibility: if mode is 'none' but an encryption_key is set,
     we fall back to Fernet field-level encryption (previous default behaviour).
+
+    Raises:
+        RuntimeError: If mode is 'fernet' but no encryption key is configured.
+            Silently storing plaintext while the operator believes encryption
+            is enabled would be a security lie.
     """
     from lumena.security.crypto import FernetEncryption
 
@@ -122,6 +127,11 @@ def get_encryption(config):
     has_key = getattr(config, "encryption_key", None)
     if mode == "sqlcipher":
         return FernetEncryption(None)
+    if mode == "fernet" and not has_key:
+        raise RuntimeError(
+            "database_encryption_mode='fernet' requires LUMENA_ENCRYPTION_KEY "
+            "to be set. Refusing to silently store plaintext."
+        )
     if has_key:
         return FernetEncryption(config.encryption_key)
     return FernetEncryption(None)

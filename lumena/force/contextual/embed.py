@@ -39,7 +39,9 @@ class LocalEmbedder:
         try:
             from transformers import AutoTokenizer
 
-            self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_path))
+            # Loads from a local directory (existence checked above), never
+            # the Hub — no download occurs, so revision pinning is moot.
+            self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_path))  # nosec B615
         except Exception as exc:
             raise ModelNotAvailableError(str(self.model_path)) from exc
 

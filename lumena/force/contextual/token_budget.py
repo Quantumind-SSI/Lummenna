@@ -33,7 +33,9 @@ class TransformersTokenizerCounter:
     def __init__(self, model_path: Path) -> None:
         from transformers import AutoTokenizer
 
-        self.tokenizer = AutoTokenizer.from_pretrained(str(model_path))
+        # Loads from a local model directory, never the Hub — no download
+        # occurs, so revision pinning is moot.
+        self.tokenizer = AutoTokenizer.from_pretrained(str(model_path))  # nosec B615
 
     def count(self, text: str) -> int:
         return len(self.tokenizer.encode(text, add_special_tokens=False))

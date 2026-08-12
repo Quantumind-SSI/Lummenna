@@ -12,9 +12,8 @@ overhead that are irrelevant to Lumena's data footprint.
 import contextlib
 import sqlite3
 
-from lumena.sovereign.wear import WearAwareBatcher
-
 from lumena.logging import get_console_logger
+from lumena.sovereign.wear import WearAwareBatcher
 
 logger = get_console_logger(__name__)
 

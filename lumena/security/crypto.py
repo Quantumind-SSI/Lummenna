@@ -14,7 +14,6 @@ import os
 import struct
 import time
 from pathlib import Path
-from typing import Literal
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, hmac

@@ -97,3 +97,72 @@ def test_multiple_seeds():
     assert result[30] == 1.0
     # Node 20 reached from both seeds at hop 1
     assert result[20] == pytest.approx(SPREAD_GAMMA)
+
+
+def test_spreading_stage_wired_into_search_pipeline(tmp_path, monkeypatch):
+    """Stage 2c of SearchPipeline must actually run spreading activation.
+
+    Regression test: search.py used GraphHit without importing it and read
+    an unbound seed_ids variable, so every spreading invocation raised
+    NameError which was silently swallowed at debug level. This test spies
+    on spread_activation to prove the stage executes, and records the
+    pipeline's failure log to prove it completes without an exception.
+    """
+    pytest.importorskip("networkx")
+    import lumena.search as search_mod
+    from lumena.config import LumenaConfig
+    from lumena.data.schema import get_connection, init_db
+    from lumena.force.contextual.embed import MockEmbedder
+    from lumena.force.mnemonic.retrieval_graph import GraphChannel
+    from lumena.force.mnemonic.store import store_memory
+    from lumena.search import GraphHit, SearchPipeline  # GraphHit import is the fix
+
+    assert GraphHit is not None
+
+    config = LumenaConfig(
+        store_path=tmp_path / "store",
+        vector_index="sqlite-vec",
+        device="generic",
+        allow_mock_embedder=True,
+    )
+    conn = get_connection(config)
+    init_db(conn)
+    embedder = MockEmbedder(dims=config.embedding_dims)
+    for i in range(5):
+        store_memory(
+            conn,
+            content=f"note {i} about spreading activation graphs",
+            room_name="graphs",
+            embedding=embedder.encode_single(f"note {i}"),
+            config=config,
+        )
+    conn.commit()
+
+    # Spy on spread_activation: the stage must call it with real seeds.
+    calls = {}
+    real_spread = spread_activation
+
+    def _spy(graph, seed_ids, a):
+        calls["seed_ids"] = list(seed_ids)
+        return real_spread(graph, seed_ids, a)
+
+    monkeypatch.setattr("lumena.force.mnemonic.spreading.spread_activation", _spy)
+
+    # Record any swallowed stage failure.
+    failures = []
+    real_warning = search_mod.logger.warning
+
+    def _capture(event, *args, **kwargs):
+        if event == "spreading_activation_failed":
+            failures.append(kwargs)
+        return real_warning(event, *args, **kwargs)
+
+    monkeypatch.setattr(search_mod.logger, "warning", _capture)
+
+    pipeline = SearchPipeline(conn, config, embedder=embedder, graph=GraphChannel(conn))
+    results = pipeline.execute("spreading activation", k=5, max_repair_attempts=0)
+
+    assert isinstance(results, list)
+    assert calls.get("seed_ids"), "spreading stage must run with dense-hit seeds"
+    assert not failures, f"spreading stage raised internally: {failures}"
+    conn.close()

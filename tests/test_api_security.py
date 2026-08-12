@@ -1,13 +1,10 @@
 """Tests for API security hardening: brute-force, CORS, Cache-Control, rate limits."""
 
-import time
 
 import pytest
 from fastapi.testclient import TestClient
 
-from lumena.api.server import app, _state, _config, _auth_failures
-from lumena._init import initialize_palace
-from lumena.config import LumenaConfig
+from lumena.api.server import _auth_failures, _config, _state, app
 
 
 @pytest.fixture
@@ -17,10 +14,19 @@ def client():
     _auth_failures.clear()
     # Enable API-key auth for brute-force tests
     original_key = _config.api_key
+    original_allow_mock = _config.allow_mock_embedder
     _config.api_key = "test-api-key"
-    with TestClient(app) as c:
-        yield c
-    _config.api_key = original_key
+    # No real ONNX model in the test environment; opt into the explicit
+    # mock escape hatch so lifespan startup succeeds.
+    _config.allow_mock_embedder = True
+    try:
+        with TestClient(app) as c:
+            yield c
+    finally:
+        _config.api_key = original_key
+        _config.allow_mock_embedder = original_allow_mock
+        _state.clear()
+        _auth_failures.clear()
 
 
 class TestBruteForceProtection:

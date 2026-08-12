@@ -28,7 +28,6 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from pathlib import Path
 
 try:
     from mcp.server.fastmcp import Context, FastMCP
@@ -102,7 +101,35 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[LumenaAppState]:
         raise
 
 
-mcp = FastMCP("lumena", lifespan=app_lifespan) if _MCP_AVAILABLE else None
+class _UnavailableMCP:
+    """Import-safe stand-in when the ``mcp`` package is not installed.
+
+    Provides no-op ``tool``/``resource`` decorators so this module can be
+    imported (and ``main()`` can print an actionable error) instead of
+    crashing with ``AttributeError: 'NoneType' object has no attribute
+    'tool'`` at import time.
+    """
+
+    def tool(self, *args, **kwargs):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+    def resource(self, *args, **kwargs):
+        def _decorator(fn):
+            return fn
+
+        return _decorator
+
+    def run(self, *args, **kwargs):
+        raise RuntimeError(
+            "The 'mcp' package is required for the MCP server. "
+            "Install with: pip install lumena[mcp]"
+        )
+
+
+mcp = FastMCP("lumena", lifespan=app_lifespan) if _MCP_AVAILABLE else _UnavailableMCP()
 
 
 # ---------------------------------------------------------------------------
@@ -298,8 +325,9 @@ async def lumena_status(ctx: Context = None) -> str:
 
 @mcp.tool()
 async def lumena_dashboard(ctx: Context = None) -> str:
-    """Display a real-time effectiveness dashboard with SOTA benchmarks, business metrics, and memory health.
+    """Display a real-time effectiveness dashboard: system health, locally measured benchmark results (when present), and memory lifecycle state.
     Call this when the user asks about Lumena's effectiveness, performance, or wants to see the dashboard.
+    Metrics come from committed benchmark artifacts; anything not yet measured is shown as N/A.
     """
     try:
         state = _state(ctx)
@@ -324,8 +352,8 @@ async def lumena_dashboard(ctx: Context = None) -> str:
             f"  Rooms / Loci:   {m['palace']['rooms']} / {m['palace']['loci']}\n"
             f"  Retention Rate: {m['palace']['retention_pct']}%\n"
             f"\n"
-            f"  Retrieval Benchmarks:\n"
-            f"  BM25 R@10 (BEIR):  {_fmt_metric(m['retrieval']['bm25_r10_beir'])}\n"
+            f"  Retrieval Benchmarks (corpus: {m['retrieval']['corpus'] or 'not run'}):\n"
+            f"  BM25 R@10:         {_fmt_metric(m['retrieval']['bm25_r10'])}\n"
             f"  Hybrid R@10:       {_fmt_metric(m['retrieval']['hybrid_r10_bge'])}\n"
             f"  Dense R@10:        {_fmt_metric(m['retrieval']['dense_r10_minilm'])}\n"
             f"  nDCG@10:           {_fmt_metric(m['retrieval']['ndcg10'])}\n"
@@ -398,66 +426,15 @@ def _fmt_metric(value) -> str:
 
 
 def _load_retrieval_benchmarks() -> dict:
-    """Load retrieval metrics from benchmark result files if available.
-    Falls back to None values indicating 'not yet benchmarked'.
+    """Load committed retrieval benchmark metrics (shared loader).
+
+    Delegates to :mod:`lumena.bench_results` so the MCP dashboard and the
+    HTTP API report identical artifact-backed numbers; unmeasured metrics
+    are ``None`` — no hardcoded fallback numbers, ever.
     """
-    benchmarks = {
-        "bm25_r10_beir": None,
-        "hybrid_r10_bge": None,
-        "dense_r10_minilm": None,
-        "ndcg10": None,
-        "latency_bm25_ms": None,
-        "latency_dense_ms": None,
-        "latency_hybrid_ms": None,
-    }
-    # Try to load actual benchmark results
-    candidates = [
-        Path(__file__).resolve().parent.parent.parent / "benchmarks" / "retrieval" / "results" / "retrieval_results.json",
-        Path("benchmarks/retrieval/results/retrieval_results.json"),
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            try:
-                data = json.loads(candidate.read_text(encoding="utf-8"))
-                embedders = data.get("embedders", [])
-                if embedders:
-                    bge_emb = next((e for e in embedders if "BGE" in e.get("embedder_full", "").upper()), embedders[0])
-                    minilm_emb = next((e for e in embedders if "MiniLM" in e.get("embedder_full", "")), None)
-                    res = bge_emb.get("results", {})
-                    hybrid = res.get("hybrid", {})
-                    dense = res.get("dense_only", {})
-                    bm25 = res.get("bm25_only", {})
+    from lumena.bench_results import load_retrieval_benchmarks
 
-                    r10 = hybrid.get("recall_10", {})
-                    if r10.get("mean"):
-                        benchmarks["hybrid_r10_bge"] = round(r10["mean"], 3)
-
-                    if minilm_emb:
-                        minilm_res = minilm_emb.get("results", {}).get("dense_only", {})
-                        minilm_r10 = minilm_res.get("recall_10", {})
-                        if minilm_r10.get("mean"):
-                            benchmarks["dense_r10_minilm"] = round(minilm_r10["mean"], 3)
-
-                    br10 = bm25.get("recall_10", {})
-                    if br10.get("mean"):
-                        benchmarks["bm25_r10_beir"] = round(br10["mean"], 3)
-
-                    nd = hybrid.get("ndcg_10", {})
-                    if nd.get("mean"):
-                        benchmarks["ndcg10"] = round(nd["mean"], 3)
-
-                    lat_hyb = hybrid.get("latency_ms", {})
-                    if isinstance(lat_hyb, dict):
-                        benchmarks["latency_hybrid_ms"] = round(lat_hyb.get("mean", lat_hyb.get("latency_ms", 54)), 1)
-                    if isinstance(lat_hyb, list):
-                        import numpy as np
-                        benchmarks["latency_hybrid_ms"] = round(float(np.mean(lat_hyb)), 1)
-                        benchmarks["latency_dense_ms"] = round(float(np.mean(dense.get("latency_ms", [43]))), 1)
-                        benchmarks["latency_bm25_ms"] = round(float(np.mean(bm25.get("latency_ms", [1.3]))), 1)
-                    break
-            except Exception:
-                pass
-    return benchmarks
+    return load_retrieval_benchmarks()
 
 
 def _dashboard_metrics(state: LumenaAppState) -> dict:
@@ -527,11 +504,11 @@ def _dashboard_metrics(state: LumenaAppState) -> dict:
             "half_life_days": env["tau"],
             "degradation_stage": degradation_stage,
         },
-        "sota_comparison": {
+        "design_properties": {
             "bm25": "Lumena uses SQLite FTS5; standard BM25",
             "dense": "Cosine similarity via sqlite-vec or brute-force",
-            "hybrid": "RRF fusion; no SOTA comparison available",
-            "edge": "Runs on RPi5 with ~90 MB RAM",
+            "hybrid": "RRF fusion; no external-system comparison has been run",
+            "edge": "Designed for edge devices; RAM footprint not yet benchmarked (perf suite has no results)",
             "memory_lifecycle": "3-layer decay/interference/eviction",
         },
     }
@@ -549,17 +526,18 @@ async def dashboard_effectiveness(ctx: Context = None) -> str:
         return _tool_error("dashboard_effectiveness", exc)
 
 
-@mcp.resource("dashboard://lumena/sota")
-async def dashboard_sota(ctx: Context = None) -> str:
-    """Lumena capability highlights and feature comparison.
-    Includes retrieval metrics (if benchmarks have been run), TFC state, and business impact.
+@mcp.resource("dashboard://lumena/capabilities")
+async def dashboard_capabilities(ctx: Context = None) -> str:
+    """Lumena capability highlights (qualitative design properties).
+    Includes locally measured retrieval metrics when benchmark artifacts exist;
+    contains no comparisons to external systems.
     """
     try:
         state = _state(ctx)
         metrics = _dashboard_metrics(state)
         return json.dumps(
             {
-                "sota_comparison": metrics["sota_comparison"],
+                "design_properties": metrics["design_properties"],
                 "retrieval": metrics["retrieval"],
                 "business": metrics["business"],
             },
@@ -567,7 +545,7 @@ async def dashboard_sota(ctx: Context = None) -> str:
             default=str,
         )
     except Exception as exc:
-        return _tool_error("dashboard_sota", exc)
+        return _tool_error("dashboard_capabilities", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -576,7 +554,7 @@ async def dashboard_sota(ctx: Context = None) -> str:
 
 
 def main() -> None:
-    if mcp is None:
+    if not _MCP_AVAILABLE:
         print(
             "ERROR: The 'mcp' package is required for the MCP server. "
             "Install with: pip install lumena[mcp]",

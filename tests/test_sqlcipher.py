@@ -1,7 +1,5 @@
 """Tests for SQLCipher encryption-at-rest integration."""
 
-import sqlite3
-from pathlib import Path
 
 import pytest
 

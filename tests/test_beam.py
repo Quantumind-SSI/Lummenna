@@ -219,3 +219,74 @@ def test_zeroconf_missing():
                 del sys.modules[key]
         for key, mod in real_modules.items():
             sys.modules[key] = mod
+        # The beam module imported above cached the broken zeroconf state;
+        # evict it so later tests re-import a healthy module.
+        if "lumena.p2p.beam" in sys.modules:
+            del sys.modules["lumena.p2p.beam"]
+
+
+def test_ttl_valid_packet_is_stored(memory_db, beam_config, monkeypatch):
+    """A packet sent just now with a 24h TTL must be accepted.
+
+    Regression test: the receiver used to compare now > _sent_at (without
+    adding ttl_hours), so every packet carrying a TTL was dropped on arrival.
+    """
+    from datetime import datetime, timezone
+
+    # Resolve the CURRENT module object (test_zeroconf_missing reloads
+    # lumena.p2p.beam, so the top-level BeamNode import may be stale).
+    import lumena.p2p.beam as beam_mod
+
+    monkeypatch.setattr(beam_mod, "get_connection", lambda cfg: _NoCloseConnection(memory_db))
+    node = beam_mod.BeamNode(beam_config)
+    packet = {
+        "room": "ttl_room",
+        "ttl": 24,
+        "_sent_at": datetime.now(timezone.utc).isoformat(),
+        "chunks": [{"content": "fresh ttl packet", "vm": 0.6, "hash": "h2"}],
+    }
+    framed = beam_mod.encode_frame(packet, crypto=node._crypto, signer=node._signer)
+
+    async def _run():
+        reader = asyncio.StreamReader()
+        reader.feed_data(framed)
+        reader.feed_eof()
+        await node._handle_peer(reader, MockStreamWriter())
+
+    asyncio.run(_run())
+
+    row = memory_db.execute(
+        "SELECT content FROM chunk WHERE content = ?", ("fresh ttl packet",)
+    ).fetchone()
+    assert row is not None, "packet within its TTL must be stored"
+
+
+def test_ttl_expired_packet_is_dropped(memory_db, beam_config, monkeypatch):
+    """A packet older than its TTL must be rejected."""
+    from datetime import datetime, timedelta, timezone
+
+    import lumena.p2p.beam as beam_mod
+
+    monkeypatch.setattr(beam_mod, "get_connection", lambda cfg: _NoCloseConnection(memory_db))
+    node = beam_mod.BeamNode(beam_config)
+    sent = datetime.now(timezone.utc) - timedelta(hours=25)
+    packet = {
+        "room": "ttl_room",
+        "ttl": 24,
+        "_sent_at": sent.isoformat(),
+        "chunks": [{"content": "stale ttl packet", "vm": 0.6, "hash": "h3"}],
+    }
+    framed = beam_mod.encode_frame(packet, crypto=node._crypto, signer=node._signer)
+
+    async def _run():
+        reader = asyncio.StreamReader()
+        reader.feed_data(framed)
+        reader.feed_eof()
+        await node._handle_peer(reader, MockStreamWriter())
+
+    asyncio.run(_run())
+
+    row = memory_db.execute(
+        "SELECT content FROM chunk WHERE content = ?", ("stale ttl packet",)
+    ).fetchone()
+    assert row is None, "packet past its TTL must be dropped"

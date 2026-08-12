@@ -1,6 +1,6 @@
 """A92: Spreading Activation Module.
 
-Input wire: Kùzu / NetworkX entity graph, TFC attentional temperature `a`
+Input wire: NetworkX entity graph, TFC attentional temperature `a`
 Output wire: C8 (prefetch buffer)
 Secret sauce: Controlled echo-location; gamma decay prevents explosion
 

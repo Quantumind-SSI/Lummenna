@@ -281,3 +281,41 @@ def test_no_circular_supersession(tmp_config):
     assert row["valid_to"] is None
     assert row["superseded_by"] is None
     conn.close()
+
+
+def test_consolidation_never_uses_mock_embedder(tmp_config):
+    """When no real embedder exists, consolidation must store WITHOUT vectors.
+
+    Regression test: the daemon used to instantiate FallbackEmbedder
+    (hash-random vectors) for consolidation-generated chunks, permanently
+    poisoning the dense index. Now it must fall back to embedding=None
+    (lexical-only) instead of fake vectors.
+    """
+    buf = EventMemoryBuffer(max_events=10, max_age_hours=0.0)
+    buf.append(Event(raw_text="an event that must not receive a fake embedding", session_id="s1"))
+
+    # Force a missing model dir so get_embedder must fail, and assert the
+    # drained event is stored WITHOUT a vector row.
+    tmp_config.model_path = tmp_config.store_path / "no_models_here"
+
+    with patch("lumena.force.mnemonic.consolidation.LocalLLM") as MockLLM:
+        MockLLM.is_available.return_value = False
+        run_consolidation_pass(tmp_config, event_buffer=buf, embedder=None)
+
+    conn = get_connection(tmp_config)
+    try:
+        vec_tables = [
+            r[0]
+            for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type IN ('table','virtual table') "
+                "AND name IN ('vec_fallback','vec_chunks')"
+            ).fetchall()
+        ]
+        for table in vec_tables:
+            count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]  # noqa: S608
+            assert count == 0, (
+                f"{table} must stay empty when no real embedder is available "
+                "(mock vectors would poison the dense index)"
+            )
+    finally:
+        conn.close()

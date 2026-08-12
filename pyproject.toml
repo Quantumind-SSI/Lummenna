@@ -76,7 +76,7 @@ langgraph = [
     "langgraph>=0.2",
 ]
 mcp = [
-    "mcp>=1.0",
+    "mcp>=1.0,<2.0",
 ]
 benchmarks = [
     "datasets>=2.0",

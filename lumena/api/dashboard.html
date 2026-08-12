@@ -282,11 +282,11 @@
             <td>Yes</td>
           </tr>
           <tr>
-            <td>Edge device (RPi5)</td>
-            <td class="highlight">~90 MB RAM</td>
-            <td>~500 MB</td>
-            <td>~200 MB+</td>
-            <td>~800 MB+</td>
+            <td>Single-file embedded storage (SQLite)</td>
+            <td class="highlight">Yes</td>
+            <td>No (client/server or dir)</td>
+            <td>Index files only</td>
+            <td>No (Postgres server)</td>
           </tr>
           <tr>
             <td>LangGraph checkpoint saver</td>
@@ -342,12 +342,14 @@
         </div>
       </div>
       <div class="card">
-        <h2>Cost &amp; Efficiency Model (per 10K queries)</h2>
-        <div class="chart-container">
-          <canvas id="costChart"></canvas>
-        </div>
+        <h2>On-Device Cost Model</h2>
+        <p style="font-size:.9rem; margin-top:.5rem;">
+          Embedding and retrieval run entirely on your hardware, so Lumena has
+          <strong>no per-query API cost</strong>. Storage is a single SQLite file.
+        </p>
         <p style="font-size:.75rem; color:var(--muted); margin-top:.5rem;">
-          Lumena runs entirely on-device. Compare to OpenAI embeddings API at ~$0.10/1M tokens + LLM context costs.
+          No cloud-cost comparison is shown here because we have not benchmarked
+          external services. Consult provider pricing pages for current rates.
         </p>
       </div>
     </div>
@@ -398,7 +400,7 @@
       });
     }
 
-    let latencyChart, roomChart, radarChart, costChart, gaugeE, gaugeA;
+    let latencyChart, roomChart, radarChart, gaugeE, gaugeA;
 
     function initCharts() {
       gaugeE = gauge(document.getElementById('gaugeE').getContext('2d'), 0.5, '#10b981', 'e');
@@ -470,29 +472,6 @@
         }
       });
 
-      costChart = new Chart(document.getElementById('costChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: ['Lumena (on-device)', 'Cloud Embeddings API (est.)', 'Cloud LLM RAG (est.)'],
-          datasets: [{
-            label: 'USD per 10K queries (approximate)',
-            data: [0.00, 1.50, 5.00],
-            backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          indexAxis: 'y',
-          scales: { x: { beginAtZero: true, grid: { color: '#1f2937' } } },
-          plugins: { legend: { display: false } }
-        }
-      });
-      // Add a note below the cost chart
-      const costNote = document.createElement('p');
-      costNote.style.cssText = 'font-size:.75rem; color:var(--muted); margin-top:.5rem;';
-      costNote.textContent = 'Cloud estimates are illustrative only (OpenAI pricing at time of writing). Lumena cost is $0 because it runs entirely on-device.';
-      document.getElementById('costChart').parentNode.appendChild(costNote);
     }
 
     // ------------------------------------------------------------------
@@ -535,11 +514,11 @@
         document.getElementById('ndcg10').textContent = (retrieval.ndcg10 ?? '—');
         document.getElementById('latency').textContent = (retrieval.latency_hybrid_ms ?? retrieval.latency_bm25_ms ?? '—');
 
-        // Labels
+        // Labels — always disclose which corpus produced the numbers
         if (!retrieval.hybrid_r10_bge && !retrieval.dense_r10_minilm) {
           document.getElementById('r10Label').textContent = 'Run benchmarks';
         } else {
-          document.getElementById('r10Label').textContent = '';
+          document.getElementById('r10Label').textContent = retrieval.corpus ? ('corpus: ' + retrieval.corpus) : '';
         }
         document.getElementById('latencyLabel').textContent = retrieval.latency_hybrid_ms ? 'Hybrid' : (retrieval.latency_bm25_ms ? 'BM25' : '');
 

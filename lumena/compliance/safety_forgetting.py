@@ -8,7 +8,6 @@ Secret sauce: Provenance-chain deletion (GateMem requirement)
 import json
 import re
 import sqlite3
-from pathlib import Path
 
 from lumena.logging import get_console_logger
 
@@ -23,32 +22,55 @@ PII_PATTERNS = {
     "ip_address": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
 }
 
-AUDIT_LOG_PATH = Path.home() / ".lumena" / "logs" / "compliance.jsonl"
+def _compile_custom_patterns(custom_patterns: str) -> dict[str, re.Pattern]:
+    """Compile comma-separated custom regex patterns.
+
+    A malformed pattern is skipped with a WARNING — silently disabling a
+    security control would leave the operator believing PII is filtered
+    when it is not.
+    """
+    compiled: dict[str, re.Pattern] = {}
+    if not custom_patterns:
+        return compiled
+    for idx, pat in enumerate(custom_patterns.split(",")):
+        pat = pat.strip()
+        if not pat:
+            continue
+        try:
+            compiled[f"custom_{idx}"] = re.compile(pat)
+        except re.error as exc:
+            logger.warning(
+                "pii_custom_pattern_invalid", index=idx, pattern=pat, error=str(exc)
+            )
+    return compiled
 
 
 def safety_scan_chunk(content: str, custom_patterns: str = "") -> list[str]:
     """Return list of triggered safety rule names."""
     hits = []
     patterns = dict(PII_PATTERNS)
-    try:
-        if custom_patterns:
-            for idx, pat in enumerate(custom_patterns.split(",")):
-                pat = pat.strip()
-                if pat:
-                    patterns[f"custom_{idx}"] = re.compile(pat)
-    except Exception:
-        pass
+    patterns.update(_compile_custom_patterns(custom_patterns))
     for rule_name, rx in patterns.items():
         if rx.search(content):
             hits.append(rule_name)
     return hits
 
 
-def _hash_pattern(text: str, pattern_name: str) -> str:
+def _resolve_pattern(pattern_name: str, custom_patterns: str) -> re.Pattern | None:
+    """Resolve a hit name to its compiled regex (built-in or custom)."""
+    rx = PII_PATTERNS.get(pattern_name)
+    if rx is not None:
+        return rx
+    if pattern_name.startswith("custom_"):
+        return _compile_custom_patterns(custom_patterns).get(pattern_name)
+    return None
+
+
+def _hash_pattern(text: str, pattern_name: str, custom_patterns: str = "") -> str:
     """Replace matches with a stable short hash."""
     import hashlib
 
-    rx = PII_PATTERNS.get(pattern_name)
+    rx = _resolve_pattern(pattern_name, custom_patterns)
     if rx is None:
         return text
 
@@ -59,13 +81,18 @@ def _hash_pattern(text: str, pattern_name: str) -> str:
     return rx.sub(_repl, text)
 
 
-def apply_pii_strategy(content: str, hits: list[str], mode: str) -> str | None:
+def apply_pii_strategy(
+    content: str, hits: list[str], mode: str, custom_patterns: str = ""
+) -> str | None:
     """Apply the configured PII strategy.
 
     Args:
         content: Original chunk content.
-        hits: List of triggered PII pattern names.
+        hits: List of triggered PII pattern names (built-in or ``custom_N``).
         mode: One of ``block``, ``redact``, ``hash``.
+        custom_patterns: Comma-separated custom regexes; required so that
+            ``custom_N`` hits are actually redacted/hashed rather than only
+            detected.
 
     Returns:
         Modified content string, or ``None`` if the store should be blocked.
@@ -74,11 +101,11 @@ def apply_pii_strategy(content: str, hits: list[str], mode: str) -> str | None:
         return None
     if mode == "hash":
         for hit in hits:
-            content = _hash_pattern(content, hit)
+            content = _hash_pattern(content, hit, custom_patterns)
         return content
     # Default: redact
     for hit in hits:
-        rx = PII_PATTERNS.get(hit)
+        rx = _resolve_pattern(hit, custom_patterns)
         if rx:
             content = rx.sub(lambda m: "[REDACTED]", content)
     return content
@@ -104,6 +131,17 @@ def safety_forget_chunk(conn: sqlite3.Connection, chunk_id: int, reason: str) ->
 
     # Remove from FTS5
     conn.execute("DELETE FROM chunk_fts WHERE rowid = ?", (chunk_id,))
+    # Remove the embedding vectors: leaving them behind would keep
+    # recoverable derived data on disk after a right-to-be-forgotten request.
+    for vec_table in ("vec_fallback", "vec_chunks"):
+        try:
+            conn.execute(
+                f"DELETE FROM {vec_table} WHERE chunk_id = ?",  # nosec B608 — fixed table names
+                (chunk_id,),
+            )
+        except sqlite3.OperationalError:
+            # Table may not exist depending on the configured vector backend.
+            logger.debug("safety_forget_vec_table_missing", table=vec_table)
     # Break FK from chunk -> provenance before clearing provenance
     conn.execute("UPDATE chunk SET provenance_root = NULL WHERE chunk_id = ?", (chunk_id,))
     # Clear provenance tree recursively

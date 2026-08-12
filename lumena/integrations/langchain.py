@@ -90,15 +90,14 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
         if self._memory is None:
             embedder = self._embedder
             if embedder is None:
-                try:
-                    from lumena.force.contextual.embed import get_embedder
+                from lumena.force.contextual.embed import get_embedder
 
-                    embedder = get_embedder(self.config, allow_mock=False)
-                except Exception:
-                    from lumena.force.contextual.embed import MockEmbedder
-
-                    logger.warning("langchain_memory_using_mock_embedder")
-                    embedder = MockEmbedder(dims=self.config.embedding_dims)
+                # Raises ModelNotAvailableError unless mock embeddings were
+                # explicitly opted into (config.allow_mock_embedder — testing
+                # only). Never silently degrade to meaningless vectors.
+                embedder = get_embedder(
+                    self.config, allow_mock=self.config.allow_mock_embedder
+                )
             self._memory = ConversationMemory(
                 config=self.config,
                 embedder=embedder,

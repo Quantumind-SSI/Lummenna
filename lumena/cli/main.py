@@ -49,7 +49,9 @@ app.add_typer(p2p_app)
 
 @app.command(name="serve")
 def serve(
-    host: str = typer.Option("0.0.0.0", "--host", "-h"),
+    # Loopback by default: the memory API must not be exposed to the LAN
+    # unless explicitly requested (sovereign, local-first posture).
+    host: str = typer.Option("127.0.0.1", "--host", "-h"),
     port: int = typer.Option(8848, "--port", "-p"),
     reload: bool = typer.Option(False, "--reload"),
     log_level: str = typer.Option("info", "--log-level"),
@@ -273,7 +275,10 @@ def tfc_set(
 
 @compliance_app.command(name="audit")
 def compliance_audit(n: int = typer.Option(10, "--n")):
-    """Show last N compliance events from JSONL."""
+    """Show last N compliance events from the SQLite audit log."""
+    import datetime
+    import json as _json
+
     events = get_recent_audit_events(n)
     if not events:
         console.print("[yellow]No compliance events found.[/yellow]")
@@ -281,13 +286,63 @@ def compliance_audit(n: int = typer.Option(10, "--n")):
     table = Table(title="Compliance Audit Log")
     table.add_column("Timestamp", style="cyan")
     table.add_column("Event", style="magenta")
-    table.add_column("Chunk ID", style="green")
-    table.add_column("Reason", style="yellow")
+    table.add_column("Action", style="blue")
+    table.add_column("Resource", style="green")
+    table.add_column("Detail", style="yellow")
     for ev in events:
+        ts = ev.get("created_at")
+        ts_str = (
+            datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).isoformat()
+            if isinstance(ts, (int, float))
+            else str(ts or "")
+        )
+        detail = ""
+        raw_meta = ev.get("metadata_json")
+        if raw_meta:
+            try:
+                meta = _json.loads(raw_meta)
+                detail = meta.get("reason") or _json.dumps(meta)[:60]
+            except (ValueError, TypeError):
+                detail = str(raw_meta)[:60]
+        resource = f"{ev.get('resource_type') or ''}:{ev.get('resource_id') or ''}"
         table.add_row(
-            ev.get("ts", ""), ev.get("event", ""), str(ev.get("chunk_id", "")), ev.get("reason", "")
+            ts_str, str(ev.get("event_type") or ""), str(ev.get("action") or ""), resource, detail
         )
     console.print(table)
+
+
+@compliance_app.command(name="forget")
+def compliance_forget(
+    chunk_id: int = typer.Argument(..., help="Chunk ID to permanently forget"),
+    reason: str = typer.Option(..., "--reason", help="Reason recorded in the audit log"),
+    yes: bool = typer.Option(False, "--yes", help="Skip the confirmation prompt"),
+):
+    """Permanently forget a chunk (right-to-be-forgotten).
+
+    Writes an audit event, removes the chunk from the FTS index, purges its
+    provenance chain, and overwrites its content with ``[REDACTED]``.
+    """
+    from lumena.compliance.safety_forgetting import safety_forget_chunk
+
+    config = LumenaConfig()
+    conn = get_connection(config)
+    try:
+        row = conn.execute(
+            "SELECT chunk_id, valid_to FROM chunk WHERE chunk_id = ?", (chunk_id,)
+        ).fetchone()
+        if row is None:
+            console.print(f"[red]Chunk {chunk_id} does not exist.[/red]")
+            raise typer.Exit(1)
+        if not yes and not typer.confirm(
+            f"Permanently forget chunk {chunk_id}? This cannot be undone."
+        ):
+            console.print("[yellow]Aborted.[/yellow]")
+            raise typer.Exit(0)
+        safety_forget_chunk(conn, chunk_id, reason)
+        conn.commit()
+        console.print(f"[bold green]Chunk {chunk_id} forgotten (reason: {reason}).[/bold green]")
+    finally:
+        conn.close()
 
 
 @daemon_app.command(name="start")

@@ -400,3 +400,60 @@ class TestUserStoryEventBuffer:
         expired = buf.drain_expired()
         assert len(expired) == 0  # not old enough
         assert len(buf.query_since(0)) == 2
+
+
+def test_safety_forget_removes_vectors(fresh_config):
+    """RTBF must delete the chunk's embedding, not just redact content.
+
+    Regression test: safety_forget_chunk used to leave the vector blob in
+    vec_fallback/vec_chunks — recoverable derived data after a
+    right-to-be-forgotten request.
+    """
+    import numpy as np
+
+    from lumena.compliance.safety_forgetting import safety_forget_chunk
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import store_memory
+
+    conn = get_connection(fresh_config)
+    emb = np.random.default_rng(1).standard_normal(fresh_config.embedding_dims).astype("float32")
+    chunk_id = store_memory(
+        conn,
+        content="sensitive personal fact to forget",
+        room_name="rtbf",
+        embedding=emb,
+        config=fresh_config,
+    )
+    conn.commit()
+    assert conn.execute(
+        "SELECT COUNT(*) FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
+    ).fetchone()[0] == 1
+
+    safety_forget_chunk(conn, chunk_id, reason="test rtbf")
+    conn.commit()
+
+    assert conn.execute(
+        "SELECT COUNT(*) FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
+    ).fetchone()[0] == 0, "embedding must be deleted on safety forget"
+    row = conn.execute("SELECT content, valid_to FROM chunk WHERE chunk_id = ?", (chunk_id,)).fetchone()
+    assert row["content"] == "[REDACTED]"
+    assert row["valid_to"] is not None
+    conn.close()
+
+
+def test_custom_pii_patterns_are_redacted():
+    """custom_N hits must actually be redacted/hashed, not merely detected."""
+    from lumena.compliance.safety_forgetting import apply_pii_strategy, safety_scan_chunk
+
+    content = "employee id EMP-12345 works here"
+    custom = r"EMP-\d{5}"
+    hits = safety_scan_chunk(content, custom_patterns=custom)
+    assert any(h.startswith("custom_") for h in hits)
+
+    redacted = apply_pii_strategy(content, hits, "redact", custom_patterns=custom)
+    assert "EMP-12345" not in redacted
+    assert "[REDACTED]" in redacted
+
+    hashed = apply_pii_strategy(content, hits, "hash", custom_patterns=custom)
+    assert "EMP-12345" not in hashed
+    assert "[HASH:" in hashed

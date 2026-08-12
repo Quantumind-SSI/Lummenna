@@ -14,7 +14,29 @@ def temp_config(tmp_path):
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / ".lumena"),
+        # No real ONNX model exists in tmp_path; tests opt into the explicit
+        # mock escape hatch. Production default (False) raises instead.
+        allow_mock_embedder=True,
     )
+
+
+def test_initialize_palace_raises_without_model_by_default(tmp_path):
+    """Without allow_mock_embedder, a missing ONNX model must abort startup.
+
+    Regression test: initialize_palace used to silently substitute
+    hash-based mock embeddings, making semantic search meaningless.
+    """
+    from lumena.brand.errors import ModelNotAvailableError
+
+    config = LumenaConfig(
+        device="generic",
+        vector_index="sqlite-vec",
+        store_path=str(tmp_path / ".lumena"),
+        model_path=str(tmp_path / "models"),
+        allow_mock_embedder=False,
+    )
+    with pytest.raises(ModelNotAvailableError):
+        initialize_palace(config)
 
 
 def test_initialize_palace_returns_correct_keys(temp_config):
