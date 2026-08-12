@@ -2,32 +2,27 @@
 
 [OpenAI Codex CLI](https://github.com/openai/codex) is an open-source coding agent from OpenAI. It supports **MCP servers** natively.
 
+> **Honesty note:** Codex CLI's configuration surface changes between releases; these snippets were written against the TOML-based config (`~/.codex/config.toml`) current at the time of writing and are not continuously re-verified. If a snippet fails, consult `codex --help` and the upstream docs — the Lumena side (the stdio MCP server) is stable.
+
 ## Configuration
 
-Add to your `~/.codex/config.json` (or project-local `.codex/config.json`):
+Add to your `~/.codex/config.toml`:
 
-```json
-{
-  "mcp_servers": {
-    "lumena": {
-      "command": "python",
-      "args": ["-m", "lumena.integrations.mcp_server"],
-      "env": {
-        "LUMENA_DEVICE": "generic",
-        "LUMENA_STORE_PATH": "${HOME}/.lumena/store",
-        "LUMENA_MODEL_PATH": "${HOME}/.lumena/models"
-      }
-    }
-  }
-}
+```toml
+[mcp_servers.lumena]
+command = "python"
+args = ["-m", "lumena.integrations.mcp_server"]
+
+[mcp_servers.lumena.env]
+LUMENA_DEVICE = "generic"
+LUMENA_STORE_PATH = "/home/YOU/.lumena/store"
+LUMENA_MODEL_PATH = "/home/YOU/.lumena/models"
 ```
 
-Or use the CLI to add it:
+Or use the CLI to add it (if your Codex version provides `codex mcp`):
 
 ```bash
-codex mcp add lumena \
-  --command "python -m lumena.integrations.mcp_server" \
-  --env LUMENA_DEVICE=generic
+codex mcp add lumena -- python -m lumena.integrations.mcp_server
 ```
 
 ## Usage
@@ -46,15 +41,9 @@ Codex will invoke:
 - `lumena_assemble` for context-rich tasks
 - `lumena_turn` after completing conversation turns
 
-## Full Agent Mode
+## Persistent memory instructions
 
-In **agent mode**, Codex will automatically persist its reasoning and decisions to Lumena:
-
-```bash
-codex --mode agent "Refactor the API to use dependency injection"
-```
-
-Make sure your `~/.codex/instructions.md` includes:
+To encourage Codex to persist its reasoning and decisions to Lumena, add to your `~/.codex/AGENTS.md` (or project `AGENTS.md`):
 
 ```markdown
 ## Memory Management

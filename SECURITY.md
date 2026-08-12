@@ -71,12 +71,25 @@ WQYWQOYpjP4A
 - File permissions enforced: `~/.lumena` should be `700`
 - Audit logs are stored in the SQLite `audit_log` table with structured entries
 
-## Known Limitations (Beta)
+## Encryption at Rest
 
-1. **No encryption at rest** — Lumena stores data in plaintext SQLite. Use OS-level disk encryption (FileVault, BitLocker, LUKS) as a stopgap. SQLCipher integration is planned for v0.3.0.
-2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMENA_API_KEY` is unset. Set it before exposing the server to any network.
-3. **P2P sharing is plaintext** — Beam protocol transmits over TCP without transport encryption. It is intended for trusted household LANs only. Do not expose Beam to untrusted networks.
+Encryption at rest is **implemented but opt-in** (`LUMENA_DATABASE_ENCRYPTION_MODE`, default `none`):
+
+- **`sqlcipher`** — full-database encryption via SQLCipher, with PBKDF2 passphrase derivation. Requires the `sqlcipher3` package and `LUMENA_ENCRYPTION_KEY`.
+- **`fernet`** — field-level encryption of chunk content via `cryptography.Fernet`. Requires `LUMENA_ENCRYPTION_KEY` (startup fails without it). **Caveat:** the FTS5 lexical index is built from plaintext so BM25 search keeps working — token-level plaintext therefore remains in the `chunk_fts` index on disk. If that is unacceptable for your threat model, use `sqlcipher` mode, which encrypts every page including the FTS index.
+- **`none`** (default) — plaintext SQLite. Use OS-level disk encryption (FileVault, BitLocker, LUKS) if you cannot enable one of the modes above.
+
+## P2P Transport Security
+
+Beam P2P sharing is **encrypted and authenticated by default**: every frame is AES-256-GCM encrypted and HMAC-SHA256 signed, with a timestamp window plus nonce cache for replay protection. A Beam listener refuses to start without `LUMENA_P2P_ENCRYPTION_KEY` unless `LUMENA_P2P_INSECURE=1` is explicitly set (not recommended). Caveats: the replay-nonce cache is in-memory only (resets on restart), and key distribution between peers is manual.
+
+## Known Limitations
+
+1. **Encryption at rest is off by default** — see above; plaintext SQLite unless a mode is configured.
+2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMENA_API_KEY` is unset. Set it before exposing the server to any network. Additionally, `/health`, `/dashboard`, `/metrics`, and `/v1/dashboard-data` are intentionally public (no API key required) and expose room names, chunk counts, and feedback statistics; do not expose the server to untrusted networks if that metadata is sensitive.
+3. **Rate limiting covers write/search endpoints only** — the five POST endpoints are rate-limited; GET endpoints are not.
 4. **Sovereign mode blocks P2P and downloads** — When `LUMENA_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lumena processes from making network calls.
+5. **P2P replay protection is process-local** — the seen-nonce set is not persisted across restarts; the 30-second timestamp window still applies.
 
 ## Dependency Security
 

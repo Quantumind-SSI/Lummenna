@@ -11,13 +11,13 @@
 
 Today we announce **Lumena v1.0.0**, the inaugural public release of our local-first memory and context framework for sovereign AI agents. Lumena gives LLM agents persistent, structured, searchable memory—without sending a single byte to the cloud. It runs entirely on your hardware, stores everything in a single SQLite file, and generates embeddings locally via ONNX Runtime.
 
-This release marks the transition from beta to **production-ready**, with an API-stability commitment, 273 passing tests, 74 % coverage, and a fully documented security posture.
+This release marks the transition from beta to **production-ready**, with an API-stability commitment, 287 passing tests, 74 % coverage, and a fully documented security posture.
 
 ---
 
 ## 2. What Is Lumena?
 
-Most AI agents today are stateless. Every session starts from scratch. The few that remember rely on remote向量 databases, managed cloud services, or opaque SaaS pipelines.
+Most AI agents today are stateless. Every session starts from scratch. The few that remember rely on remote vector databases, managed cloud services, or opaque SaaS pipelines.
 
 Lumena is different.
 
@@ -36,8 +36,8 @@ Your agents remember. Your data never leaves your machine.
 - **FastAPI REST API** — versioned (`/v1/`) endpoints with auth, rate limiting, CORS, and security headers.
 
 ### New Benchmarks
-- **End-to-End Memory Quality** — 28 conversational queries across 7 personas, measuring semantic recall and latency.
-- **Palace Navigation Efficiency (PNE)** — demonstrates 1.32–1.50× latency speedup with >99.8% recall retention from room/locus topology vs. flat global search (results available).
+- **End-to-End Memory Quality** — 28 conversational queries across 7 personas, measuring recall and latency via embedding-similarity self-grading (a persistence smoke test, not an external quality comparison).
+- **Palace Navigation Efficiency (PNE)** — room/locus topology prunes ~80% of the corpus per query with ≥99.9% recall retention and ~1.08× mean-latency speedup vs. flat global search (results available). *Correction: earlier announcements cited 1.32–1.50×, computed as a per-query mean of ratios, which is biased upward; the honest ratio-of-means is ~1.08×.*
 - **Optical Degradation** — retrieval quality validated at FP32, FP16, INT8, and BINARY quantization levels (results available).
 - **TFC Sensitivity** — grid search justifying default Twin-Force Controller parameters (81 configurations, results available).
 - **BEIR Subset Evaluation** — first real-world retrieval benchmarks on 500-document subsets of NFCorpus, SciFact, FiQA-2018, ArguAna, and SCIDOCS (results available).
@@ -81,7 +81,7 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 
 | Dimension | Status |
 |---|---|
-| Tests | 273 passing, 9 skipped |
+| Tests | 287 passing, 7 skipped |
 | Coverage | 74 % |
 | Storage | SQLite + WAL + FTS5 |
 | Retrieval | BM25 + dense + graph + RRF |
@@ -119,13 +119,13 @@ lumena serve
 >
 > Lumena fixes both.
 >
-> It gives LLM agents a structured, searchable, long-term memory palace that runs entirely on your own hardware. No cloud向量 DBs. No API keys for storage. No telemetry.
+> It gives LLM agents a structured, searchable, long-term memory palace that runs entirely on your own hardware. No cloud vector DBs. No API keys for storage. No telemetry.
 >
 > What’s inside:
 > • Hybrid retrieval (BM25 + dense + graph) with RRF fusion
 > • Three-layer forgetting using decay, interference, and eviction
 > • LangGraph, LangChain, MCP, and FastAPI integrations
-> • 273 tests, stress harness for 100k+ chunks
+> • 294 tests; stress harness for 100k+ chunks (no committed results yet)
 > • Single-file SQLite, ONNX embeddings, Apache 2.0
 >
 > This is our production-ready debut. Encryption-at-rest and full BEIR leaderboard runs remain in active development, but the API is stable, the architecture is solid, and the community is growing.
@@ -152,7 +152,7 @@ lumena serve
 > https://github.com/QuantumindSSI/lumena
 
 **Tweet 2 — The Problem**
-> Most AI agents are stateless. The few that “remember” rely on cloud向量 DBs, managed APIs, or opaque SaaS pipelines.
+> Most AI agents are stateless. The few that “remember” rely on cloud vector DBs, managed APIs, or opaque SaaS pipelines.
 >
 > That means: API keys, egress costs, and data you don’t control.
 
@@ -167,7 +167,7 @@ lumena serve
 **Tweet 4 — Proof**
 > We’re production-ready — and we’re not fragile.
 >
-> 273 tests. Stress harness for 100k+ chunks. 74 % coverage. API-stable.
+> 294 tests. Stress harness for 100k+ chunks (no committed results yet). 74 % coverage. API-stable.
 >
 > Honest gaps documented (encryption-at-rest is next). No hype, just code.
 
@@ -190,7 +190,7 @@ lumena serve
 ### Short-form Blurbs (Twitter / Mastodon / Bluesky)
 
 **Blurbs 1 — Technical**
-> Lumena v1.0.0 is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 273 tests. Apache 2.0. → github.com/QuantumindSSI/lumena
+> Lumena v1.0.0 is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 294 tests. Apache 2.0. → github.com/QuantumindSSI/lumena
 
 **Blurbs 2 — Values-driven**
 > We built Lumena because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Production-ready today. Check it out → github.com/QuantumindSSI/lumena

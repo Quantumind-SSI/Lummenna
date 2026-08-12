@@ -53,16 +53,14 @@ This document tracks ongoing and future work for Lumena following the v1.0.0 pub
 ## Phase 3 — Stress & Security Hardening — CLOSED
 
 ### 3.1 Load & Concurrency Stress Test
-- [x] 100k+ chunk ingestion test — 100k chunks in ~351s (~285 chunks/s)
-- [x] Multi-threaded query throughput test — 1,000 queries in ~65s (~15 qps)
-- [x] Memory-budget eviction under RSS pressure — peak 178MB
-- [x] Verify L3 budget eviction triggers correctly at 85% RSS — verified at artificial 1MB limit
+- [ ] 100k+ chunk ingestion test — harness exists (`benchmarks/stress/`); no committed result artifact. Earlier ad-hoc runs (~285 chunks/s, ~15 qps, peak 178 MB RSS) are unreproducible from the repo and must be re-run and committed before being cited.
+- [ ] Multi-threaded query throughput test — same status as above
+- [ ] Verify L3 budget eviction triggers correctly under RSS pressure — re-run with committed artifact
 
 ### 3.2 P2P / Beam Security Audit
-- [ ] Implement NaCl transport encryption (currently plaintext — documented as trusted-LAN only) — target v0.3.0
-- [ ] Harden Beam protocol for adversarial networks — target v0.3.0
+- [x] Transport encryption — AES-256-GCM + HMAC-SHA256 with replay protection shipped in `lumena/p2p/beam.py` / `lumena/security/crypto.py`; a Beam listener refuses to start without a key
+- [ ] Harden Beam protocol for adversarial networks (persistent replay-nonce store, key rotation) — target v0.3.0
 - [x] Document trust model and household-local limitation
-- [x] Remove misleading NaCl key generation from beam.py
 
 ### 3.3 Release Engineering
 - [x] PGP key for vulnerability reporting — generated and published in SECURITY.md

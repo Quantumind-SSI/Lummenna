@@ -17,7 +17,7 @@
   <a href="https://github.com/QuantumindSSI/lumena/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
   <img src="https://img.shields.io/badge/coverage-74%25-brightgreen?style=flat-square" alt="Coverage">
-  <img src="https://img.shields.io/badge/tests-273%20passed-brightgreen?style=flat-square" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-287%20passed-brightgreen?style=flat-square" alt="Tests">
 </p>
 
 <p><em>Production-ready. API-stable; actively developed. Contributions welcome.</em></p>
@@ -137,17 +137,17 @@ Lumena is **production-ready software**. It works end-to-end with API versioning
 
 | Dimension | Status | Detail |
 |---|---|---|
-| **Tests** | 273 passing, 9 skipped | 74% coverage. 41 test files. |
+| **Tests** | 287 passing, 7 skipped | 74% coverage. 41 test files. |
 | **Storage** | Working | SQLite with WAL, FTS5, bi-temporal tracking, provenance chains. |
 | **Retrieval** | Working | BM25 + dense + graph with RRF fusion. |
 | **Forgetting** | Working | L1 decay (Ebbinghaus), L2 interference, L3 budget eviction. |
 | **PII detection** | Working | Regex-based scanning at storage time. Configurable block/redact/hash. |
 | **Audit logging** | Working | SQLite audit_log table with request tracing. |
-| **API server** | Working | FastAPI with `/v1/` versioning, auth, rate limiting, CORS, security headers. |
+| **API server** | Working | FastAPI with `/v1/` versioning, opt-in API-key auth (off until `LUMENA_API_KEY` is set), rate limiting on POST endpoints, CORS, security headers. |
 | **MCP server** | Working | 7 tools (search, store, assemble, turn, feedback, status, dashboard). |
 | **LangChain** | Working | LumenaChatMemory adapter (requires `langchain` package). |
 | **LangGraph** | Working | LumenaCheckpointSaver (requires `langgraph` package). |
-| **Encryption-at-rest** | Not implemented | Use OS-level disk encryption (LUKS, FileVault, BitLocker). Planned for v0.3.0. |
+| **Encryption-at-rest** | Implemented, opt-in | SQLCipher (full-DB) or Fernet (field-level) via `LUMENA_DATABASE_ENCRYPTION_MODE`. Default is `none` — enable it or use OS-level disk encryption. |
 | **BEIR benchmarks** | Partially evaluated | 500-doc/20-query subset results available. Full-corpus evaluation deferred to HPC. |
 | **P2P sharing** | Working | Beam protocol with AES-256-GCM encryption, HMAC-SHA256 signing, replay protection. Requires p2p key. |
 
@@ -166,9 +166,13 @@ All run with a single command from the repo root:
 | Forgetting (90-day survival) | `python -m benchmarks.forgetting.run` | Run (results available) |
 | Performance (latency/footprint) | `python -m benchmarks.perf.run` | Harness ready; no results yet |
 | BEIR subset evaluation | `python -m benchmarks.beir.run` | Run (500-doc/20-query subset results available) |
-| All suites | `python -m benchmarks.run_all` | Wraps the above |
+| Optical degradation | `python -m benchmarks.optical.run` | Run (results available) |
+| TFC sensitivity | `python -m benchmarks.tfc.run` | Run (results available) |
+| Stress (bulk ingest) | `python -m benchmarks.stress.run` | Harness ready; no results yet |
+| Cross-system (vs Chroma/FAISS) | `python -m benchmarks.cross_system.run` | Harness ready; no results yet |
+| All suites | `python -m benchmarks.run_all` | Wraps all 11 suites |
 
-> **Note on results:** Retrieval benchmarks use a synthetic keyword-overlap corpus (1,000 passages, 50 queries) plus BEIR subset evaluation (500-passages, 20-query subsets across 5 standard datasets). The nDCG formula was fixed in a recent commit; re-run `python -m benchmarks.retrieval.run` to generate updated scores.
+> **Note on results:** Retrieval benchmarks use a synthetic keyword-overlap corpus (1,000 passages, 50 queries) plus BEIR subset evaluation (500-passage, 20-query subsets across 5 standard datasets). The synthetic corpus is deliberately easy (BM25 near-saturates nDCG), so treat those numbers as harness sanity checks, not retrieval-quality claims — the BEIR subsets are the meaningful signal. The committed retrieval artifact was regenerated with real embedders (all-MiniLM-L6-v2 and BAAI/bge-small-en-v1.5); benchmarks refuse to run with mock embeddings.
 
 ---
 
@@ -206,7 +210,7 @@ lumena/
 ├── sovereign/         FRQAD, optical quantization, local LLM
 ├── brand/             Error hierarchy
 └── compliance/        Safety forgetting, PII audit
-tests/                41 test files, 273 tests
+tests/                41 test files, 294 tests
 benchmarks/           11 benchmark suites
 ```
 
@@ -224,7 +228,7 @@ We welcome contributions. The best way to start:
 ### High-impact areas to contribute
 
 - **Run the full BEIR harness** — generate leaderboard-scale retrieval benchmark results.
-- **Add encryption-at-rest** — SQLCipher integration is the highest-priority security feature.
+- **Run the perf suite on real hardware** — RAM/latency footprint claims need measured artifacts (RPi5, Jetson, x86_64).
 - **Write tests** — several modules lack dedicated test files. Pick one and add coverage.
 
 ### Development setup

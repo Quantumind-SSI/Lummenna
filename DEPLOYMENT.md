@@ -399,13 +399,9 @@ find /backup/lumena -name "*.tar.gz" -mtime +14 -delete
 
 ## 7. Scaling & Performance
 
-### 7.1 Expected Footprints
+### 7.1 Footprints
 
-| Platform | Package Size | Runtime RAM | Storage per 10k Memories |
-|---|---|---|---|
-| RPi5 | ~180 MB | ~90 MB | ~35 MB |
-| Jetson Orin | ~250 MB | ~180 MB | ~35 MB |
-| x86_64 | ~300 MB | ~200 MB | ~35 MB |
+Runtime RAM and storage footprints have **not yet been measured** — the perf suite (`python -m benchmarks.perf.run`) is a ready harness with no committed results. Until measured artifacts exist, size your deployment empirically: run the perf suite on your target hardware and check `process_peak_rss_mb` on the `/metrics` endpoint and `db_size_mb` on `/v1/dashboard-data`, which report real measured values for a running instance.
 
 ### 7.2 Performance Tuning
 
