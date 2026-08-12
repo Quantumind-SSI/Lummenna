@@ -1,0 +1,102 @@
+# Lumena Helm chart values.
+#
+# HONEST CONSTRAINTS (read before tuning):
+# - replicaCount is 1 and must stay 1: SQLite is single-writer, single-file.
+#   Scaling out corrupts nothing (WAL + busy_timeout serialize) but replicas
+#   would each have their OWN independent memory palace on their own PVC —
+#   that is almost never what you want. The chart refuses replicaCount > 1.
+# - The embedding model is data, not code: it is provisioned into the models
+#   PVC by the init container from a versioned, checksum-pinned artifact URL.
+#   With no model provisioned, the pod stays NotReady (by design) instead of
+#   serving degraded lexical-only results.
+
+image:
+  repository: ghcr.io/quantumindssi/lumena
+  tag: ""            # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicaCount: 1      # do not raise — see header
+
+service:
+  type: ClusterIP
+  port: 8848
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+persistence:
+  store:
+    size: 10Gi
+    storageClassName: ""   # cluster default (managed-csi on AKS)
+  models:
+    size: 2Gi
+    storageClassName: ""
+
+# Model lifecycle: pinned artifact + checksum. Package your ONNX model dir as
+# a .tar.gz (model.onnx + tokenizer files at archive root), upload to
+# versioned storage (e.g. Azure Blob with immutability policy), and pin here.
+# Empty url => init container is skipped; provision the models PVC manually
+# (kubectl cp / lumena model download) and the pod becomes Ready when done.
+model:
+  name: bge-small-en-v1.5
+  url: ""              # e.g. https://<account>.blob.core.windows.net/models/bge-small-en-v1.5-r5c38ec7.tar.gz
+  sha256: ""           # required when url is set; init fails on mismatch
+  initImage: curlimages/curl:8.10.1
+
+config:
+  device: generic
+  logLevel: info
+  rateLimit: "60/minute"
+  allowedOrigins: "http://localhost:8848"
+  contextBudget: "2048"
+  memoryLimitMb: "512"
+  # Sovereign mode blocks all outbound calls from Lumena itself (model
+  # downloads, P2P, telemetry export). Keep "true" unless you enable
+  # Azure Monitor export below.
+  sovereign: "true"
+  extraEnv: []
+  # - name: LUMENA_PII_REDACTION_MODE
+  #   value: redact
+
+# API key auth. Provide an existing Secret with key `api-key`, or set
+# createSecret.value (discouraged for anything beyond dev).
+auth:
+  existingSecret: ""
+  createSecret:
+    enabled: false
+    value: ""
+
+# Azure Monitor / Application Insights export (OpenTelemetry).
+# Requires the image to include the `azure` extra AND config.sovereign=false;
+# Lumena refuses to export telemetry in sovereign mode (fail-loud).
+azureMonitor:
+  enabled: false
+  existingSecret: ""    # Secret with key `connection-string`
+
+networkPolicy:
+  enabled: true
+  # Namespaces/pods allowed to reach the API; empty = same namespace only.
+  allowedNamespaceSelector: {}
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  tlsSecretName: ""
+  annotations: {}
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: /metrics/prometheus
+  prometheus.io/port: "8848"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

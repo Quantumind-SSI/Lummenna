@@ -1,0 +1,15 @@
+apiVersion: v2
+name: lumena
+description: >-
+  Lumena Memory API — local-first memory and context framework for AI agents.
+  Deploys as a SINGLE-REPLICA StatefulSet by design: storage is single-file
+  SQLite with one writer; Lumena does not support horizontal scaling or HA.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/QuantumindSSI/lumena
+sources:
+  - https://github.com/QuantumindSSI/lumena
+maintainers:
+  - name: Lumena Maintainers
+    url: https://github.com/QuantumindSSI/lumena

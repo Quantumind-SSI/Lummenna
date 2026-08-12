@@ -101,6 +101,11 @@ def get_connection(config) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA temp_store = MEMORY")
     conn.execute("PRAGMA mmap_size = 268435456")
+    # WAL allows one writer at a time; the API event loop and the background
+    # scheduler thread hold separate connections. Without a busy timeout,
+    # writer contention raises 'database is locked' immediately — with it,
+    # SQLite retries internally for up to 5s before surfacing an error.
+    conn.execute("PRAGMA busy_timeout = 5000")
     ensure_schema(conn)
     _enforce_permissions(cfg.store_path.parent)
     return conn

@@ -78,6 +78,10 @@ langgraph = [
 mcp = [
     "mcp>=1.0,<2.0",
 ]
+azure = [
+    "azure-monitor-opentelemetry>=1.6",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+]
 benchmarks = [
     "datasets>=2.0",
     "sentence-transformers>=2.0",
