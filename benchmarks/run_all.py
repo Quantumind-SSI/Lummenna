@@ -1,8 +1,8 @@
 """
 Unified Benchmark Orchestrator for Lumena.
 
-Runs retrieval, forgetting, and perf suites sequentially and generates
-a unified Markdown report at benchmarks/results/report.md.
+Runs ALL benchmark suites sequentially and generates a unified Markdown
+report at benchmarks/results/report.md.
 """
 
 from __future__ import annotations
@@ -17,7 +17,33 @@ BENCHMARKS_DIR = Path(__file__).parent
 RESULTS_DIR = BENCHMARKS_DIR / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-SUITES = ["retrieval", "forgetting", "perf", "navigation", "e2e", "beir"]
+# Every suite in benchmarks/ — kept in sync with the README table.
+SUITES = [
+    "retrieval",
+    "forgetting",
+    "perf",
+    "navigation",
+    "e2e",
+    "beir",
+    "ablation",
+    "optical",
+    "tfc",
+    "stress",
+    "cross_system",
+]
+
+# Suites whose result artifact does not follow the "<name>_results.json" pattern.
+RESULT_FILENAMES = {
+    "optical": "optical_degradation.json",
+    "tfc": "tfc_sensitivity.json",
+}
+
+
+def _fmt(value: Any, spec: str) -> str:
+    """Format a numeric value, or return 'N/A' for missing/non-numeric data."""
+    if isinstance(value, (int, float)):
+        return format(value, spec)
+    return "N/A"
 
 
 def run_suite(name: str) -> dict[str, Any]:
@@ -36,7 +62,8 @@ def run_suite(name: str) -> dict[str, Any]:
         capture_output=False,
     )
 
-    json_path = BENCHMARKS_DIR / name / "results" / f"{name}_results.json"
+    result_filename = RESULT_FILENAMES.get(name, f"{name}_results.json")
+    json_path = BENCHMARKS_DIR / name / "results" / result_filename
     data: dict[str, Any] = {"suite": name, "status": "unknown", "results": None}
     if result.returncode == 0 and json_path.exists():
         try:
@@ -68,12 +95,16 @@ def generate_report(suite_results: list[dict[str, Any]]) -> Path:
         res = sr.get("results", {})
         if sr["suite"] == "retrieval" and isinstance(res, dict):
             metrics = []
+            embedders = res.get("embedders", [])
+            first = embedders[0].get("results", {}) if embedders else {}
             for cfg in ["bm25_only", "dense_only", "hybrid"]:
-                m = res.get("results", {}).get(cfg, {})
-                metrics.append(
-                    f"{cfg}: R@10={m.get('recall@10_mean', 'N/A')} nDCG@10={m.get('ndcg@10_mean', 'N/A')}"
-                )
+                m = first.get(cfg, {})
+                r10 = m.get("recall_10", {}).get("mean", "N/A")
+                nd10 = m.get("ndcg_10", {}).get("mean", "N/A")
+                metrics.append(f"{cfg}: R@10={r10} nDCG@10={nd10}")
             key = "; ".join(metrics)
+            if embedders:
+                key = f"[{embedders[0].get('embedder', '?')}] " + key
         elif sr["suite"] == "forgetting" and isinstance(res, dict):
             key = (
                 f"alive={res.get('final_state', {}).get('alive', 'N/A')}, "
@@ -85,7 +116,7 @@ def generate_report(suite_results: list[dict[str, Any]]) -> Path:
             for r in res.get("per_size", []):
                 lat = r.get("query_latency_ms", {})
                 metrics.append(
-                    f"{r.get('corpus_size', '?'):,}: p50={lat.get('p50_ms', 'N/A')}ms "
+                    f"{r.get('corpus_size', '?')}: p50={lat.get('p50_ms', 'N/A')}ms "
                     f"DB={r.get('db_size_mb', 'N/A')}MB"
                 )
             key = "; ".join(metrics)
@@ -95,10 +126,10 @@ def generate_report(suite_results: list[dict[str, Any]]) -> Path:
             oracle_vs = summary.get("oracle_vs_global", {})
             routed_vs = summary.get("routed_vs_global", {})
             key = (
-                f"routing={routing.get('routing_accuracy', 'N/A'):.1%}, "
-                f"prune={routing.get('mean_pruning_ratio', 'N/A'):.1%}, "
-                f"oracle_speedup={oracle_vs.get('latency_speedup', {}).get('mean', 'N/A'):.2f}x, "
-                f"routed_speedup={routed_vs.get('latency_speedup', {}).get('mean', 'N/A'):.2f}x"
+                f"routing={_fmt(routing.get('routing_accuracy'), '.1%')}, "
+                f"prune={_fmt(routing.get('mean_pruning_ratio'), '.1%')}, "
+                f"oracle_speedup={oracle_vs.get('latency_speedup', {}).get('ratio_of_means', 'N/A')}x, "
+                f"routed_speedup={routed_vs.get('latency_speedup', {}).get('ratio_of_means', 'N/A')}x"
             )
         elif sr["suite"] == "e2e" and isinstance(res, dict):
             agg = res.get("aggregate_metrics", {})
@@ -106,9 +137,9 @@ def generate_report(suite_results: list[dict[str, Any]]) -> Path:
             sim = agg.get("semantic_similarity", {})
             lat = agg.get("latency_ms", {})
             key = (
-                f"R@10={r10.get('mean', 'N/A'):.4f}, "
-                f"sim={sim.get('mean', 'N/A'):.4f}, "
-                f"lat={lat.get('mean', 'N/A'):.1f}ms"
+                f"R@10={_fmt(r10.get('mean'), '.4f')}, "
+                f"sim={_fmt(sim.get('mean'), '.4f')}, "
+                f"lat={_fmt(lat.get('mean'), '.1f')}ms"
             )
         elif sr["suite"] == "beir" and isinstance(res, dict):
             datasets = res.get("datasets", [])

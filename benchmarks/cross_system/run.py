@@ -270,7 +270,7 @@ def run():
             print(f"  Seed {seed}: {len(docs)} docs, {len(queries)} queries")
 
             for name, fn in [
-                ("lumena", _bench_lumenaa),
+                ("lumena", _bench_lumena),
                 ("chroma", _bench_chroma),
                 ("faiss", _bench_faiss),
             ]:

@@ -32,7 +32,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from lumena.config import LumenaConfig
 from lumena.data.schema import get_connection
-from lumena.force.contextual.embed import MockEmbedder
 from lumena.force.mnemonic.retrieval_dense import DenseHit, VectorChannel
 from lumena.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
 from lumena.force.mnemonic.store import store_memory
@@ -115,7 +114,7 @@ CROSS_QUERIES_PER_EDGE = 2
 # Embedder
 # ---------------------------------------------------------------------------
 _embedder = None
-_embedder_name = "mock"
+_embedder_name = ""
 
 
 def _get_embedder():
@@ -142,10 +141,12 @@ def _get_embedder():
         print(f"[INFO] Using embedder: {_embedder_name} ({_embedder.dims} dims)")
         return _embedder, _embedder_name
     except Exception as exc:
-        print(f"[WARN] No real embedder ({exc}) — using MockEmbedder")
-        _embedder = MockEmbedder(dims=EMBED_DIMS)
-        _embedder_name = "mock"
-        return _embedder, _embedder_name
+        raise RuntimeError(
+            "No real embedder available. Refusing to run the navigation "
+            "benchmark with mock embeddings (the results would be "
+            "meaningless). Install sentence-transformers. "
+            f"Error: {exc}"
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -390,7 +391,7 @@ def _run_single_seed(seed: int):
 
     tmpdir = tempfile.mkdtemp(prefix=f"lumena_bench_pne_{seed}_")
     config = LumenaConfig(
-        store_path=Path(tmpdir),
+        store_path=Path(tmpdir) / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",
     )
@@ -501,7 +502,7 @@ def _run_single_seed(seed: int):
 def run_benchmark():
     all_per_query = []
     total_chunks = 0
-    embedder_name = "mock"
+    embedder_name = ""
 
     for seed in SEEDS:
         print(f"\n{'='*60}")
@@ -558,16 +559,28 @@ def run_benchmark():
                 "ci95_hi": round(float(hi), 4),
             }
 
-        # Latency speedup
-        speedups = [
-            q["strategies"][baseline]["latency_ms"] / max(q["strategies"][constrained]["latency_ms"], 0.001)
-            for q in all_per_query
+        # Latency speedup.
+        #
+        # HEADLINE metric is the ratio of aggregate latencies (mean and p50):
+        # this answers "how much faster is total/typical query time". The
+        # per-query mean-of-ratios is also recorded for reference, but it is
+        # biased UPWARD by Jensen's inequality when latencies are noisy and
+        # must never be quoted as the headline speedup.
+        base_lats = [q["strategies"][baseline]["latency_ms"] for q in all_per_query]
+        cons_lats = [q["strategies"][constrained]["latency_ms"] for q in all_per_query]
+        ratio_of_means = float(np.mean(base_lats)) / max(float(np.mean(cons_lats)), 0.001)
+        ratio_of_p50s = float(np.median(base_lats)) / max(float(np.median(cons_lats)), 0.001)
+        per_query_ratios = [
+            b / max(c, 0.001) for b, c in zip(base_lats, cons_lats, strict=True)
         ]
-        mean, lo, hi = _agg(speedups)
+        pq_mean, pq_lo, pq_hi = _agg(per_query_ratios)
         summary[key]["latency_speedup"] = {
-            "mean": round(float(mean), 2),
-            "ci95_lo": round(float(lo), 2),
-            "ci95_hi": round(float(hi), 2),
+            "ratio_of_means": round(ratio_of_means, 3),
+            "ratio_of_p50s": round(ratio_of_p50s, 3),
+            "per_query_mean_biased": round(float(pq_mean), 2),
+            "per_query_ci95_lo": round(float(pq_lo), 2),
+            "per_query_ci95_hi": round(float(pq_hi), 2),
+            "note": "per_query_mean is mean-of-ratios (biased upward); quote ratio_of_means or ratio_of_p50s",
         }
 
     # Routing & pruning
@@ -669,7 +682,9 @@ def run_benchmark():
         rr = summary["oracle_vs_global"][f"recall_retention_{k}"]
         md_lines.append(f"| Recall Retention @ {k} | {rr['mean']:.4f} | [{rr['ci95_lo']:.4f}, {rr['ci95_hi']:.4f}] |")
     ls = summary["oracle_vs_global"]["latency_speedup"]
-    md_lines.append(f"| Latency Speedup | {ls['mean']:.2f}x | [{ls['ci95_lo']:.2f}x, {ls['ci95_hi']:.2f}x] |")
+    md_lines.append(f"| Latency Speedup (ratio of means) | {ls['ratio_of_means']:.3f}x | — |")
+    md_lines.append(f"| Latency Speedup (ratio of p50s) | {ls['ratio_of_p50s']:.3f}x | — |")
+    md_lines.append(f"| Per-query mean of ratios (biased upward) | {ls['per_query_mean_biased']:.2f}x | [{ls['per_query_ci95_lo']:.2f}x, {ls['per_query_ci95_hi']:.2f}x] |")
 
     md_lines.extend([
         "",
@@ -682,7 +697,9 @@ def run_benchmark():
         rr = summary["routed_vs_global"][f"recall_retention_{k}"]
         md_lines.append(f"| Recall Retention @ {k} | {rr['mean']:.4f} | [{rr['ci95_lo']:.4f}, {rr['ci95_hi']:.4f}] |")
     ls = summary["routed_vs_global"]["latency_speedup"]
-    md_lines.append(f"| Latency Speedup | {ls['mean']:.2f}x | [{ls['ci95_lo']:.2f}x, {ls['ci95_hi']:.2f}x] |")
+    md_lines.append(f"| Latency Speedup (ratio of means) | {ls['ratio_of_means']:.3f}x | — |")
+    md_lines.append(f"| Latency Speedup (ratio of p50s) | {ls['ratio_of_p50s']:.3f}x | — |")
+    md_lines.append(f"| Per-query mean of ratios (biased upward) | {ls['per_query_mean_biased']:.2f}x | [{ls['per_query_ci95_lo']:.2f}x, {ls['per_query_ci95_hi']:.2f}x] |")
 
     md_lines.extend([
         "",
@@ -703,8 +720,8 @@ def run_benchmark():
     print(f"Routing Accuracy:     {routing_accuracy:.1%}")
     print(f"Mean Pruning Ratio:   {summary['routing_and_pruning']['mean_pruning_ratio']:.1%}")
     print(f"Latency (global p50): {summary['global']['latency_ms']['p50']:.2f} ms")
-    print(f"Latency (oracle p50): {summary['oracle']['latency_ms']['p50']:.2f} ms  (speedup {summary['oracle_vs_global']['latency_speedup']['mean']:.2f}x)")
-    print(f"Latency (routed p50): {summary['routed']['latency_ms']['p50']:.2f} ms  (speedup {summary['routed_vs_global']['latency_speedup']['mean']:.2f}x)")
+    print(f"Latency (oracle p50): {summary['oracle']['latency_ms']['p50']:.2f} ms  (speedup, ratio of means: {summary['oracle_vs_global']['latency_speedup']['ratio_of_means']:.3f}x)")
+    print(f"Latency (routed p50): {summary['routed']['latency_ms']['p50']:.2f} ms  (speedup, ratio of means: {summary['routed_vs_global']['latency_speedup']['ratio_of_means']:.3f}x)")
     print(f"Recall@10 (global):   {summary['global']['recall_10']['mean']:.4f}")
     print(f"Recall@10 (oracle):   {summary['oracle']['recall_10']['mean']:.4f}  (retention {summary['oracle_vs_global']['recall_retention_10']['mean']:.4f})")
     print(f"Recall@10 (routed):   {summary['routed']['recall_10']['mean']:.4f}  (retention {summary['routed_vs_global']['recall_retention_10']['mean']:.4f})")

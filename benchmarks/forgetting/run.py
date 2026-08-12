@@ -59,11 +59,13 @@ def _get_real_embedder():
         _EMBEDDER = _RealEmbedder(model)
         print("[INFO] Forgetting benchmark using real embedder: all-MiniLM-L6-v2")
         return _EMBEDDER
-    except Exception:
-        from lumena.force.contextual.embed import FallbackEmbedder
-        print("[WARN] Forgetting benchmark using MockEmbedder — interference metrics will be zero")
-        _EMBEDDER = FallbackEmbedder(dims=EMBED_DIMS)
-        return _EMBEDDER
+    except Exception as exc:
+        raise RuntimeError(
+            "No real embedder available. Refusing to run the forgetting "
+            "benchmark with mock embeddings (interference-precision metrics "
+            "would be meaningless). Install sentence-transformers. "
+            f"Error: {exc}"
+        ) from exc
 
 SEED = 42
 NUM_CHUNKS = 10_000
@@ -82,7 +84,7 @@ def _compute_cosine(a: np.ndarray, b: np.ndarray) -> float:
 def run_benchmark() -> dict[str, Any]:
     tmpdir = tempfile.mkdtemp(prefix="lumena_benchmark_forgetting_")
     config = LumenaConfig(
-        store_path=Path(tmpdir),
+        store_path=Path(tmpdir) / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",
         memory_limit_mb=64,
@@ -292,6 +294,7 @@ def run_benchmark() -> dict[str, Any]:
 
     report = {
         "benchmark": "forgetting",
+        "embedder": "all-MiniLM-L6-v2",
         "num_chunks": NUM_CHUNKS,
         "simulated_days": SIMULATED_DAYS,
         "seed": SEED,

@@ -3,12 +3,20 @@ and L3 budget eviction under RSS pressure.
 
 Run with:
     python -m benchmarks.stress.run
+
+Embedder honesty: by default the real embedding model is required, because
+ingest throughput measured without real embedding cost misstates real-world
+performance. `--mock-embedder` is available for storage-only stress testing,
+but the resulting artifact is explicitly labeled
+"mock (embedding cost EXCLUDED)" and must never be cited as end-to-end
+ingest throughput.
 """
 
 from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import json
 import sqlite3
 import sys
 import tempfile
@@ -22,6 +30,52 @@ from lumena.force.contextual.embed import MockEmbedder
 from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
 from lumena.force.mnemonic.store import store_memory
 from lumena.search import SearchPipeline
+
+EMBEDDER_MODEL = "all-MiniLM-L6-v2"
+RESULTS_DIR = Path(__file__).resolve().parent / "results"
+
+
+def _get_real_embedder(dims: int):
+    """Return a real embedder or raise (no silent mock substitution)."""
+    errors = []
+    try:
+        import numpy as np
+        from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer(EMBEDDER_MODEL)
+
+        class _Real:
+            def encode(self, texts):
+                return np.asarray(
+                    model.encode(texts, normalize_embeddings=True, show_progress_bar=False),
+                    dtype=np.float32,
+                )
+
+            def encode_single(self, text):
+                return self.encode([text])[0]
+
+        print(f"[INFO] Stress benchmark using real embedder: {EMBEDDER_MODEL}")
+        return _Real()
+    except Exception as exc:
+        errors.append(f"sentence-transformers: {exc}")
+
+    try:
+        from lumena.force.contextual.embed import LocalEmbedder
+
+        model_dir = LumenaConfig().model_path / EMBEDDER_MODEL
+        if model_dir.exists():
+            print(f"[INFO] Stress benchmark using local ONNX embedder: {model_dir}")
+            return LocalEmbedder(model_dir, dims=dims)
+        errors.append(f"local ONNX: no model directory at {model_dir}")
+    except Exception as exc:
+        errors.append(f"local ONNX: {exc}")
+
+    raise RuntimeError(
+        "No real embedder available. Refusing to run the stress benchmark "
+        "with mock embeddings by default (throughput would exclude embedding "
+        "cost). Pass --mock-embedder for a storage-only run — the artifact "
+        f"will be labeled accordingly. Errors: {'; '.join(errors)}"
+    )
 
 
 def _make_config(store_path: Path) -> LumenaConfig:
@@ -107,6 +161,15 @@ def main() -> int:
     parser.add_argument("--chunks", type=int, default=100_000, help="Number of chunks to ingest")
     parser.add_argument("--queries", type=int, default=1_000, help="Number of query requests")
     parser.add_argument("--workers", type=int, default=4, help="Concurrent query workers")
+    parser.add_argument(
+        "--mock-embedder",
+        action="store_true",
+        help=(
+            "Storage-only stress run with fake embeddings. The artifact is "
+            "labeled 'mock (embedding cost EXCLUDED)' and must not be cited "
+            "as end-to-end ingest throughput."
+        ),
+    )
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -115,7 +178,13 @@ def main() -> int:
         config = _make_config(store)
         conn = get_connection(config)
         init_db(conn)
-        embedder = MockEmbedder(dims=config.embedding_dims)
+        if args.mock_embedder:
+            print("[WARN] --mock-embedder: embedding cost EXCLUDED from all timings")
+            embedder = MockEmbedder(dims=config.embedding_dims)
+            embedder_label = "mock (embedding cost EXCLUDED)"
+        else:
+            embedder = _get_real_embedder(config.embedding_dims)
+            embedder_label = EMBEDDER_MODEL
 
         print(f"--- Stress Test: {args.chunks} chunks, {args.queries} queries ---")
 
@@ -134,6 +203,8 @@ def main() -> int:
         evicted = _trigger_l3_eviction(conn, config)
 
         result = {
+            "benchmark": "stress",
+            "embedder": embedder_label,
             "chunks_ingested": args.chunks,
             "ingest_time_s": round(ingest_time, 2),
             "ingest_rate_hz": round(args.chunks / ingest_time, 1),
@@ -142,10 +213,16 @@ def main() -> int:
             "query_rate_hz": round(args.queries / query_time, 1),
             "latency_p50_ms": round(p50, 2),
             "latency_p99_ms": round(p99, 2),
-            "peak_memory_mb": round(peak / 1024 / 1024, 1),
+            "peak_traced_memory_mb": round(peak / 1024 / 1024, 1),
             "l3_evicted": evicted,
         }
         print(f"\nResults: {result}")
+
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        artifact = RESULTS_DIR / "stress_results.json"
+        with open(artifact, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2)
+        print(f"[INFO] Results written to {artifact}")
         conn.close()
 
     return 0

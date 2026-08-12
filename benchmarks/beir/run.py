@@ -12,7 +12,11 @@ Datasets:
   - SCIDOCS    (~25,000 docs)
 
 Each dataset is evaluated with BM25-only, Dense-only, and Hybrid (RRF fusion)
-pipelines across two embedders and three random seeds.
+pipelines with one embedder (BAAI/bge-small-en-v1.5) and three random seeds.
+
+There is deliberately NO mock-embedder fallback: a benchmark artifact
+produced with fake vectors would be meaningless, so a missing model aborts
+the run.
 """
 
 from __future__ import annotations
@@ -86,13 +90,13 @@ def _get_embedder(model_name: str):
         e = _Real(m)
         _embedders[model_name] = e
         return e
-    except Exception:
-        from lumena.force.contextual.embed import MockEmbedder
-
-        print(f"[WARN] No real embedder for {model_name} — using MockEmbedder")
-        e = MockEmbedder(dims=EMBED_DIMS)
-        _embedders[model_name] = e
-        return e
+    except Exception as exc:
+        raise RuntimeError(
+            f"No real embedder available for '{model_name}'. Refusing to run "
+            f"the BEIR benchmark with mock embeddings (the artifact would be "
+            f"meaningless and mislabeled). Install sentence-transformers. "
+            f"Error: {exc}"
+        ) from exc
 
 
 # ---------------------------------------------------------------------------

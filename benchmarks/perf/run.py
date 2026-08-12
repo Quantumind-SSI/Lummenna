@@ -4,6 +4,11 @@ Performance Benchmark for Lumena.
 Measures query latency (p50/p95/p99), RAM footprint, storage size,
 and write amplification with/without WearAwareBatcher for 1k/10k/50k corpora.
 Outputs JSON + Markdown table to benchmarks/perf/results/.
+
+There is deliberately NO mock-embedder fallback: RAM and latency figures
+measured without the real ONNX/transformer model in memory would misstate
+the very footprints this suite exists to measure, so a missing model
+aborts the run.
 """
 
 from __future__ import annotations
@@ -40,18 +45,66 @@ import contextlib
 
 from lumena.config import LumenaConfig
 from lumena.data.schema import get_connection
-from lumena.force.contextual.embed import FallbackEmbedder
 from lumena.force.mnemonic.store import store_memory
 from lumena.search import SearchPipeline
 from lumena.sovereign.wear import WearAwareBatcher
 
 SEED = 42
 EMBED_DIMS = 384
+EMBEDDER_MODEL = "all-MiniLM-L6-v2"
 CORPUS_SIZES = [1_000, 10_000, 50_000]
 RESULTS_DIR = Path(__file__).with_suffix("").parent / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 np.random.seed(SEED)
+
+_embedder = None
+
+
+def _get_embedder():
+    """Return a real embedder or raise (never mock — see module docstring)."""
+    global _embedder
+    if _embedder is not None:
+        return _embedder
+    errors = []
+    try:
+        from sentence_transformers import SentenceTransformer
+
+        model = SentenceTransformer(EMBEDDER_MODEL)
+
+        class _Real:
+            def encode(self, texts):
+                return np.asarray(
+                    model.encode(texts, normalize_embeddings=True, show_progress_bar=False),
+                    dtype=np.float32,
+                )
+
+            def encode_single(self, text):
+                return self.encode([text])[0]
+
+        _embedder = _Real()
+        print(f"[INFO] Perf benchmark using real embedder: {EMBEDDER_MODEL}")
+        return _embedder
+    except Exception as exc:
+        errors.append(f"sentence-transformers: {exc}")
+
+    try:
+        from lumena.force.contextual.embed import LocalEmbedder
+
+        model_dir = LumenaConfig().model_path / EMBEDDER_MODEL
+        if model_dir.exists():
+            _embedder = LocalEmbedder(model_dir, dims=EMBED_DIMS)
+            print(f"[INFO] Perf benchmark using local ONNX embedder: {model_dir}")
+            return _embedder
+        errors.append(f"local ONNX: no model directory at {model_dir}")
+    except Exception as exc:
+        errors.append(f"local ONNX: {exc}")
+
+    raise RuntimeError(
+        "No real embedder available. Refusing to run the perf benchmark with "
+        "mock embeddings (RAM/latency footprints would be misstated). "
+        f"Errors: {'; '.join(errors)}"
+    )
 
 
 def _current_ram_mb() -> float:
@@ -160,12 +213,12 @@ def run_benchmark() -> dict[str, Any]:
         print(f"[INFO] Benchmarking corpus size {size:,} ...")
         tmpdir = tempfile.mkdtemp(prefix=f"lumena_benchmark_perf_{size}_")
         config = LumenaConfig(
-            store_path=Path(tmpdir),
+            store_path=Path(tmpdir) / "store",
             embedding_dims=EMBED_DIMS,
             vector_index="sqlite-vec",
         )
         conn = get_connection(config)
-        embedder = FallbackEmbedder(dims=EMBED_DIMS)
+        embedder = _get_embedder()
 
         # Generate corpus
         rng = np.random.default_rng(SEED + size)
@@ -220,6 +273,7 @@ def run_benchmark() -> dict[str, Any]:
     report = {
         "benchmark": "perf",
         "seed": SEED,
+        "embedder": EMBEDDER_MODEL,
         "corpus_sizes": CORPUS_SIZES,
         "per_size": per_size_results,
     }
