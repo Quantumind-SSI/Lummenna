@@ -1,25 +1,30 @@
 """
 End-to-End Memory Quality Benchmark for Lumena.
 
-Simulates 10 multi-turn conversation sessions across 3 agent personas.
-Each session stores facts, asks questions that require recall, and
-measures whether the memory palace retrieves the correct information.
+Simulates 7 multi-turn conversation sessions, one per agent persona
+(7 personas, 4 queries each = 28 queries). Each session stores facts,
+asks questions that require recall, and measures whether the memory
+palace retrieves the correct information.
 
-This benchmark measures key memory-quality properties on a synthetic
-28-query test corpus across 3 agent personas.
-Note: This is a self-evaluation; comparisons to external frameworks (MemGPT,
-Mem0, Zep) are not included. For standardized retrieval evaluation, see
-the BEIR runner at benchmarks/beir/run.py.
+Honest scope statement:
+- This is embedding-similarity SELF-grading: expected facts and retrieved
+  chunks are encoded with the same embedder used for retrieval, and a
+  recall hit is a cosine similarity above 0.4. Because expected facts are
+  stored verbatim, matched chunks score ~1.0. There is no LLM judge.
+- No comparison to external frameworks (MemGPT, Mem0, Zep) is included.
+  For standardized retrieval evaluation, see benchmarks/beir/run.py.
+- There is deliberately NO mock-embedder fallback: results produced with
+  fake vectors are meaningless, so a missing model aborts the run.
 
 Usage:
     python -m benchmarks.e2e.run
 
-Metrics:
-    - recall@k: Precision of retrieving ground-truth chunks at each turn
+Metrics (exactly what is computed — nothing more):
+    - recall@k (k=1,5,10): Fraction of expected facts matched in the top-k
+      retrieved chunks. Queries are placed at later turns than the facts
+      they target, so recall inherently exercises cross-turn persistence.
     - semantic_similarity: Cosine similarity of retrieved context to expected answer
-    - memory_persistence: Can facts from turn N be recalled at turn N+K?
-    - hallucination_fraction: % of answers unsupported by retrieved context
-    - latency: Per-query retrieval latency at each turn
+    - latency_ms: Per-query retrieval latency at each turn
 
 Output: benchmarks/e2e/results/e2e_results.json + .md
 """
@@ -40,7 +45,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from lumena.config import LumenaConfig
 from lumena.data.schema import get_connection
-from lumena.force.contextual.embed import MockEmbedder
 from lumena.force.mnemonic.store import store_memory
 from lumena.search import SearchPipeline
 
@@ -61,9 +65,17 @@ _embedder_name = ""
 
 
 def _get_embedder():
+    """Return a real embedder or raise.
+
+    Raises:
+        RuntimeError: If no real embedding model is available. E2E results
+            produced with mock embeddings are meaningless, so the benchmark
+            refuses to run without one.
+    """
     global _embedder, _embedder_name
     if _embedder is not None:
         return _embedder, _embedder_name
+    errors = []
     try:
         from sentence_transformers import SentenceTransformer
 
@@ -86,11 +98,29 @@ def _get_embedder():
         _embedder_name = "all-MiniLM-L6-v2"
         print(f"[INFO] Using embedder: {_embedder_name}")
         return _embedder, _embedder_name
-    except Exception:
-        _embedder = MockEmbedder(dims=EMBED_DIMS)
-        _embedder_name = "mock"
-        print("[WARN] No real embedder — using MockEmbedder")
-        return _embedder, _embedder_name
+    except Exception as exc:
+        errors.append(f"sentence-transformers: {exc}")
+
+    try:
+        from lumena.force.contextual.embed import LocalEmbedder
+
+        config = LumenaConfig()
+        model_dir = config.model_path / "all-MiniLM-L6-v2"
+        if model_dir.exists():
+            _embedder = LocalEmbedder(model_dir, dims=EMBED_DIMS)
+            _embedder_name = "all-MiniLM-L6-v2 (ONNX)"
+            print(f"[INFO] Using local ONNX embedder: {model_dir}")
+            return _embedder, _embedder_name
+        errors.append(f"local ONNX: no model directory at {model_dir}")
+    except Exception as exc:
+        errors.append(f"local ONNX: {exc}")
+
+    raise RuntimeError(
+        "No real embedder available. Refusing to run the E2E benchmark with "
+        "mock embeddings (the results would be meaningless). Install "
+        "sentence-transformers or run 'lumena model download all-MiniLM-L6-v2'. "
+        f"Errors: {'; '.join(errors)}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -537,7 +567,7 @@ def run_e2e_benchmark():
 
         tmpdir = tempfile.mkdtemp(prefix=f"lumena_e2e_{session['room']}_")
         config = LumenaConfig(
-            store_path=Path(tmpdir),
+            store_path=Path(tmpdir) / "store",
             embedding_dims=EMBED_DIMS,
             vector_index="sqlite-vec",
         )
@@ -665,6 +695,14 @@ def run_e2e_benchmark():
         "",
         f"**Embedder:** {embedder_name} | **Sessions:** {len(SESSIONS)} | **Query turns:** {len(all_query_turns)}",
         f"**Bootstrap:** {N_BOOTSTRAP} samples (95% CI)",
+        "",
+        "> **Methodology disclosure:** grading is embedding-similarity",
+        "> self-evaluation — expected facts and retrieved chunks are encoded",
+        "> with the same embedder used for retrieval, and a recall hit is",
+        "> cosine similarity > 0.4. Expected facts are stored verbatim, so",
+        "> matched chunks score ~1.0 similarity by construction. This is a",
+        "> persistence smoke test, not an external quality comparison; there",
+        "> is no LLM judge and no comparison to other memory systems.",
         "",
         "## Aggregate Metrics",
         "",

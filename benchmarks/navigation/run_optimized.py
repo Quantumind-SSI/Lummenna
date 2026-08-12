@@ -302,7 +302,7 @@ def _run_single_seed(seed, embedder_model):
     embeddings = embedder.encode(texts)
 
     tmpdir = tempfile.mkdtemp(prefix=f"lumena_pne_real_{seed}_")
-    config = LumenaConfig(store_path=Path(tmpdir), embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    config = LumenaConfig(store_path=Path(tmpdir) / "store", embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     conn = get_connection(config)
 
     room_name_to_id = {}

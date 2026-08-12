@@ -2,6 +2,11 @@
 
 Grid search across Twin-Force Controller parameters to understand how
 each dimension affects retrieval quality and memory survival.
+
+Methodology disclosure: the substrate is SYNTHETIC random unit vectors with
+geometrically defined ground truth (see benchmarks/optical/run.py for the
+same approach). Valid for measuring controller-parameter sensitivity in
+isolation; absolute numbers do not describe performance on real text.
 """
 
 from __future__ import annotations

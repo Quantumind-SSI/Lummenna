@@ -44,7 +44,7 @@ from lumena.fusion import RetrievedChunk, fuse_and_rerank
 # ---------------------------------------------------------------------------
 # Corpus
 # ---------------------------------------------------------------------------
-CORPUS_PATH = Path(__file__).resolve().parents[2] / "datasets" / "domain_corpus.json"
+CORPUS_PATH = Path(__file__).resolve().parents[2] / "seed_datasets" / "domain_corpus.json"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -214,7 +214,7 @@ def run_ablations():
         corpus = json.load(f)
 
     tmpdir = tempfile.mkdtemp(prefix="lumena_ablation_")
-    config = LumenaConfig(store_path=Path(tmpdir), embedding_dims=384, vector_index="sqlite-vec")
+    config = LumenaConfig(store_path=Path(tmpdir) / "store", embedding_dims=384, vector_index="sqlite-vec")
     conn = get_connection(config)
 
     tfc = TwinForceController()
@@ -352,6 +352,13 @@ def run_ablations():
     md = [
         "# Component Ablation Results",
         f"**Embedder:** all-MiniLM-L6-v2 | **Queries:** {len(QUERIES)} | **Corpus:** domain_corpus (111 chunks)",
+        "",
+        "> **Interpretation caveat:** on this 111-chunk corpus every ablation",
+        "> configuration achieves identical (or near-identical) accuracy — the",
+        "> corpus is too small and too easy to discriminate the quality",
+        "> contribution of individual components. Only the LATENCY column is a",
+        "> meaningful comparison; the accuracy columns are a null result, not",
+        "> evidence that the ablated components add no value.",
         "",
         "## Results",
         "",

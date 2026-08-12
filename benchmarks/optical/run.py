@@ -4,6 +4,12 @@ Measures retrieval quality (recall@k, nDCG@k) as embeddings are quantized
 through the degradation chain: FP32 → FP16 → INT8 → BINARY.
 
 This validates the accuracy-vs-storage trade-off at each precision level.
+
+Methodology disclosure: the substrate is SYNTHETIC random unit vectors with
+ground-truth relevance defined geometrically (nearest neighbours of a
+noise-perturbed query vector). This isolates quantization error from
+semantics — valid for measuring precision-level degradation, but the
+absolute recall numbers do not describe performance on real text.
 """
 
 from __future__ import annotations

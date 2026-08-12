@@ -3,14 +3,16 @@ Lumena Retrieval Benchmark — Scientific Evaluation Suite.
 
 Evaluates Hybrid (SearchPipeline), BM25-only (lexical), Dense-only (vector),
 and a standard rank-bm25 baseline on either MS MARCO v1.1 or a synthetic
-corpus.  Embeds with a real sentence-transformer model (all-MiniLM-L6-v2)
-when available, falling back to MockEmbedder with a warning.
+corpus.  Embeds with a real sentence-transformer model.  There is
+deliberately NO mock-embedder fallback: a benchmark run with fake vectors
+would produce a meaningless artifact, so missing models abort the run.
 
 Metrics: Recall@k, nDCG@k, MAP, MRR computed via ``pytrec_eval`` for
 k ∈ {1, 3, 5, 10, 20, 50}.
 
-Statistical rigour: runs with multiple seeds and reports mean ± 95 % CI
-via bootstrap over queries.
+Statistical rigour: runs with multiple seeds (each seed shuffles corpus
+insertion order, perturbing index layout and tie-breaking) and reports
+mean ± 95 % CI via bootstrap over queries.
 """
 
 from __future__ import annotations
@@ -58,11 +60,27 @@ EMBEDDER_MODELS = [
 _embedders = {}
 _embedder_result_names = {}
 
+def _short_model_name(model_name: str) -> str:
+    """Strip the org prefix only (``BAAI/bge-small-en-v1.5`` -> ``bge-small-en-v1.5``)."""
+    return model_name.rsplit("/", 1)[-1]
+
+
 def _get_embedder(model_name):
-    global _embedders, _embedder_result_names
+    """Return a real embedder for *model_name* or raise.
+
+    Resolution order:
+    1. sentence-transformers (exact requested model).
+    2. Lumena's local ONNX export — only if the on-disk model directory
+       matches the requested model name (never a silent substitute).
+
+    Raises:
+        RuntimeError: If no real embedder for *model_name* is available.
+            Benchmarks must never fall back to mock embeddings.
+    """
     if model_name in _embedders:
         return _embedders[model_name], model_name
 
+    errors = []
     try:
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(model_name)
@@ -80,40 +98,46 @@ def _get_embedder(model_name):
 
         e = _RealEmbedder(model)
         _embedders[model_name] = e
-        short = model_name.replace("BAAI/", "").replace("all-", "")
-        _embedder_result_names[model_name] = short
+        _embedder_result_names[model_name] = _short_model_name(model_name)
         print(f"[INFO] Using embedder: {model_name} ({dims} dims)")
         return e, model_name
-    except Exception:
-        # Fallback chain
-        try:
-            from lumena.force.contextual.embed import LocalEmbedder
-            config = LumenaConfig()
-            model_dir = config.model_path / config.embedding_model
-            if model_dir.exists():
-                e = LocalEmbedder(model_dir, dims=config.embedding_dims)
-                _embedders[model_name] = e
-                _embedder_result_names[model_name] = config.embedding_model
-                return e, model_name
-        except Exception:
-            pass
+    except Exception as exc:
+        errors.append(f"sentence-transformers: {exc}")
 
-        from lumena.force.contextual.embed import MockEmbedder
-        print("[WARN] No real embedder — using MockEmbedder")
-        e = MockEmbedder(dims=EMBED_DIMS)
-        _embedders[model_name] = e
-        _embedder_result_names[model_name] = "mock"
-        return e, model_name
+    # Fallback: Lumena's own ONNX export, but ONLY for the exact model requested.
+    try:
+        from lumena.force.contextual.embed import LocalEmbedder
+        config = LumenaConfig()
+        model_dir = config.model_path / _short_model_name(model_name)
+        if model_dir.exists():
+            e = LocalEmbedder(model_dir, dims=EMBED_DIMS)
+            _embedders[model_name] = e
+            _embedder_result_names[model_name] = _short_model_name(model_name)
+            print(f"[INFO] Using local ONNX embedder: {model_dir}")
+            return e, model_name
+        errors.append(f"local ONNX: no model directory at {model_dir}")
+    except Exception as exc:
+        errors.append(f"local ONNX: {exc}")
+
+    raise RuntimeError(
+        f"No real embedder available for '{model_name}'. Refusing to run the "
+        f"benchmark with mock embeddings (the results would be meaningless). "
+        f"Install sentence-transformers or run 'lumena model download "
+        f"{_short_model_name(model_name)}'. Errors: {'; '.join(errors)}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Corpus loading
 # ---------------------------------------------------------------------------
 
-def _generate_synthetic_corpus(seed: int):
-    """Generate a deterministic synthetic corpus with keyword-overlap relevance."""
-    np.random.default_rng(seed)
+def _generate_synthetic_corpus():
+    """Generate a deterministic synthetic corpus with keyword-overlap relevance.
 
+    The corpus is fully deterministic by construction (topic/template cycling);
+    per-run variance comes from shuffled insertion order in
+    ``run_single_benchmark``, not from corpus generation.
+    """
     topics = [
         "machine learning", "deep learning", "neural networks",
         "natural language processing", "computer vision",
@@ -245,7 +269,7 @@ def _load_ms_marco():
         return passages, queries, query_relevant_pids, "ms_marco"
     except Exception as exc:
         print(f"[WARN] MS MARCO unavailable ({exc}). Falling back to synthetic.")
-        p, q, r = _generate_synthetic_corpus(42)
+        p, q, r = _generate_synthetic_corpus()
         return p, q, r, "synthetic"
 
 
@@ -371,12 +395,21 @@ def _bootstrap_ci(values, n_bootstrap=N_BOOTSTRAP):
 # ---------------------------------------------------------------------------
 
 def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
-    """Independent rank-bm25 baseline, not using Lumena's FTS5 table."""
+    """Independent rank-bm25 baseline, not using Lumena's FTS5 table.
+
+    Raises:
+        RuntimeError: If rank-bm25 is not installed. Emitting an artifact
+            with an empty/NaN baseline would be a corrupted result.
+    """
     import re
     try:
         from rank_bm25 import BM25Okapi
-    except ImportError:
-        return [], [set() for _ in queries]
+    except ImportError as exc:
+        raise RuntimeError(
+            "rank-bm25 is not installed; the baseline cannot be computed. "
+            "Install it with 'pip install rank-bm25' — refusing to emit an "
+            "artifact with a NaN baseline."
+        ) from exc
 
     tokenized = [re.findall(r'\w+', p.lower()) for p in passages]
     bm25 = BM25Okapi(tokenized)
@@ -399,11 +432,11 @@ def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
 # ---------------------------------------------------------------------------
 
 def run_single_benchmark(seed, passages, queries, query_relevant_pids, corpus_name, embedder_model):
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     tmpdir = tempfile.mkdtemp(prefix=f"lumena_bench_retrieval_{seed}_")
     config = LumenaConfig(
-        store_path=Path(tmpdir),
+        store_path=Path(tmpdir) / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",
     )
@@ -416,11 +449,17 @@ def run_single_benchmark(seed, passages, queries, query_relevant_pids, corpus_na
     else:
         passage_embeddings = np.stack([embedder.encode_single(t) for t in passages], axis=0)
 
+    # Seed-dependent insertion order: perturbs rowid assignment, FTS5 layout,
+    # and score tie-breaking so that multiple seeds measure real run-to-run
+    # variance instead of replaying an identical database.
+    insertion_order = rng.permutation(len(passages))
+
     pid_to_chunk_id = {}
-    for pid, (text, emb) in enumerate(zip(passages, passage_embeddings, strict=False)):
+    for pid in insertion_order:
+        pid = int(pid)
         chunk_id = store_memory(
-            conn, content=text, room_name=f"benchmark_{seed}",
-            embedding=emb, config=config,
+            conn, content=passages[pid], room_name=f"benchmark_{seed}",
+            embedding=passage_embeddings[pid], config=config,
         )
         pid_to_chunk_id[pid] = chunk_id
     conn.commit()
@@ -569,7 +608,7 @@ def run_benchmark():
                 r10 = er["results"][cfg].get("recall_10", {})
                 mrr = er["results"][cfg].get("recip_rank", {})
                 lat = er["results"][cfg].get("latency_ms", {})
-                print(f"    {cfg}: R@10={r10.get('mean',0):.4f} [{r10.get('ci95_lo',0):.4f}-{r10.get('ci95_hi',0):.4f}]  MRR={mrr.get('mean',0):.4f}  p50={lat.get('mean',0):.1f}ms")
+                print(f"    {cfg}: R@10={r10.get('mean',0):.4f} [{r10.get('ci95_lo',0):.4f}-{r10.get('ci95_hi',0):.4f}]  MRR={mrr.get('mean',0):.4f}  mean_latency={lat.get('mean',0):.1f}ms")
 
     return report
 
