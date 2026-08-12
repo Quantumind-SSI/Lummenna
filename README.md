@@ -254,6 +254,7 @@ ruff check lumena/ tests/             # Lint
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | Integration guides for each platform |
 | [`ROADMAP.md`](ROADMAP.md) | Development milestones and open work |
 | [`docs/Lumena_Whitepaper.md`](docs/Lumena_Whitepaper.md) | Introductory white paper |
+| [`docs/Lumena_State_of_the_Codebase.md`](docs/Lumena_State_of_the_Codebase.md) | AST-audited state, known defects, and honest airworthiness assessment |
 
 ---
 
