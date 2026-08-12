@@ -2,7 +2,7 @@
 Palace seed script — populates Lumena rooms from the domain corpus JSON.
 
 Usage:
-    python -m datasets.seed [--corpus datasets/domain_corpus.json] [--embedder all-MiniLM-L6-v2]
+    python -m seed_datasets.seed [--corpus seed_datasets/domain_corpus.json] [--embedder all-MiniLM-L6-v2]
 
 Creates a fully-populated memory palace with 8 rooms, 32 loci, and ~400
 domain-specific fact chunks.  Each chunk is embedded and indexed so the
