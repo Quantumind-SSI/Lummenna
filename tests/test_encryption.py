@@ -81,3 +81,19 @@ class TestFieldLevelEncryption:
             config=config,
         )
         assert id1 == id2
+
+
+def test_fernet_mode_without_key_raises(tmp_path):
+    """mode='fernet' with no key must fail loudly, never silently store plaintext."""
+    import pytest
+
+    from lumena.config import LumenaConfig
+    from lumena.data.schema import get_encryption
+
+    config = LumenaConfig(
+        store_path=tmp_path / "store",
+        database_encryption_mode="fernet",
+        encryption_key=None,
+    )
+    with pytest.raises(RuntimeError, match="LUMENA_ENCRYPTION_KEY"):
+        get_encryption(config)

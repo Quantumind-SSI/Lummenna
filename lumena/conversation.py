@@ -5,11 +5,9 @@ Orchestrates retrieve → assemble → (caller runs LLM) → store turn → log 
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from dataclasses import dataclass
 
-from lumena.brand.errors import ModelNotAvailableError
 from lumena.config import LumenaConfig
 from lumena.controller import TwinForceController
 from lumena.data.schema import get_connection
@@ -87,13 +85,12 @@ class ConversationMemory:
         if embedder is not None:
             self.embedder = embedder
         else:
-            try:
-                self.embedder = get_embedder(self.config, allow_mock=False)
-            except ModelNotAvailableError:
-                from lumena.force.contextual.embed import MockEmbedder
-
-                logger.warning("conversation_using_mock_embedder")
-                self.embedder = MockEmbedder(dims=self.config.embedding_dims)
+            # Raises ModelNotAvailableError unless the caller explicitly
+            # opted into mock embeddings (testing only). A silent mock here
+            # would make every semantic retrieval meaningless.
+            self.embedder = get_embedder(
+                self.config, allow_mock=self.config.allow_mock_embedder
+            )
 
         self.pipeline = SearchPipeline(
             self.conn,

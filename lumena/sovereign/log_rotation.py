@@ -3,7 +3,8 @@
 Input wire: Python stdlib, APScheduler
 Output wire: A11, all structlog sinks
 
-NOTE: This module is not yet imported by any code path (production or tests).
+Wired in: called by the sleep-consolidation pass (lumena/sleep.py) and
+covered by tests/test_log_rotation.py.
 """
 
 from __future__ import annotations

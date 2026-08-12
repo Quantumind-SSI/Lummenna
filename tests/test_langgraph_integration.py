@@ -13,6 +13,9 @@ def fresh_config(tmp_path):
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",
         device="generic",
+        # No real ONNX model in tmp_path; tests opt into the explicit mock
+        # escape hatch (production default is False and raises).
+        allow_mock_embedder=True,
     )
     cfg.store_path.mkdir(parents=True, exist_ok=True)
     cfg.model_path.mkdir(parents=True, exist_ok=True)
@@ -100,7 +103,9 @@ class TestLumenaCheckpointSaver:
 
         saver = LumenaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t3"}}
-        saver.put_writes([("channel1", "value1"), ("channel2", "value2")], config)
+        # Positional order must match BaseCheckpointSaver.put_writes(config,
+        # writes, task_id, task_path) — LangGraph invokes it positionally.
+        saver.put_writes(config, [("channel1", "value1"), ("channel2", "value2")], "task-1")
 
         conn = saver.conn
         rows = conn.execute(
@@ -163,3 +168,82 @@ class TestLumenaGraphStore:
         namespaces = store.list_namespaces(prefix=("ns",))
         assert ("ns", "a") in namespaces
         assert ("ns", "b") in namespaces
+
+
+class TestCheckpointSaverInterfaceCompat:
+    def test_put_writes_signature_matches_langgraph(self):
+        """put_writes must accept LangGraph's positional call order.
+
+        Regression test: the saver used to define put_writes(writes, config)
+        — swapped arguments with no task_id — which raised TypeError when
+        LangGraph invoked checkpointer.put_writes(config, writes, task_id).
+        """
+        import inspect
+
+        from lumena.integrations.langgraph import LumenaCheckpointSaver
+
+        params = list(inspect.signature(LumenaCheckpointSaver.put_writes).parameters)
+        assert params[1] == "config", "first positional arg must be config"
+        assert params[2] == "writes", "second positional arg must be writes"
+        assert "task_id" in params
+        assert "task_path" in params
+
+        aparams = list(inspect.signature(LumenaCheckpointSaver.aput_writes).parameters)
+        assert aparams[1] == "config"
+        assert aparams[2] == "writes"
+        assert "task_id" in aparams
+
+    def test_put_writes_positional_invocation(self, fresh_config):
+        """Invoke put_writes exactly as LangGraph does (positionally)."""
+        from lumena.integrations.langgraph import LumenaCheckpointSaver
+
+        saver = LumenaCheckpointSaver(config=fresh_config)
+        config = {"configurable": {"thread_id": "sig-test"}}
+        saver.put_writes(config, [("ch", "v")], "task-42", "path/0")
+        rows = saver.conn.execute(
+            "SELECT content FROM chunk WHERE content_hash = 'lg_write'"
+        ).fetchall()
+        assert any("task-42" in r[0] for r in rows)
+
+
+class TestPendingWritesRoundTrip:
+    def test_pending_writes_are_returned_by_get_tuple(self, fresh_config):
+        """put_writes data must round-trip through get_tuple.pending_writes.
+
+        Regression test: writes used to be stored but never read back —
+        CheckpointTuple.pending_writes was always [], breaking LangGraph's
+        resume-from-interrupt semantics.
+        """
+        from lumena.integrations.langgraph import LumenaCheckpointSaver
+
+        saver = LumenaCheckpointSaver(config=fresh_config)
+        cfg = {"configurable": {"thread_id": "rw"}}
+        cp = {"id": "cp-1", "ts": "2026-01-01T00:00:00", "channel_values": {}}
+        meta = {"source": "put", "step": 0, "writes": {}, "parents": {}}
+        next_cfg = saver.put(cfg, cp, meta, {})
+
+        saver.put_writes(next_cfg, [("messages", "hello")], "task-7")
+
+        tup = saver.get_tuple(next_cfg)
+        assert tup is not None
+        assert ("task-7", "messages", "hello") in [
+            tuple(w) for w in tup.pending_writes
+        ]
+
+    def test_list_before_cursor(self, fresh_config):
+        """list(before=...) must exclude the cursor checkpoint and newer ones."""
+        from lumena.integrations.langgraph import LumenaCheckpointSaver
+
+        saver = LumenaCheckpointSaver(config=fresh_config)
+        cfg = {"configurable": {"thread_id": "lb"}}
+        cursor_cfg = None
+        for i in range(3):
+            cp = {"id": f"cp-{i}", "ts": f"2026-01-0{i+1}T00:00:00", "channel_values": {}}
+            meta = {"source": "put", "step": i, "writes": {}, "parents": {}}
+            out_cfg = saver.put(cfg, cp, meta, {})
+            if i == 2:
+                cursor_cfg = out_cfg
+
+        ids = [t.checkpoint["id"] for t in saver.list(cfg, before=cursor_cfg)]
+        assert "cp-2" not in ids, "cursor checkpoint itself must be excluded"
+        assert set(ids) == {"cp-0", "cp-1"}

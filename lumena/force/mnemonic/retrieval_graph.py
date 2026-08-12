@@ -1,6 +1,6 @@
-"""A3b: GraphChannel using NetworkX or Kùzu fallback.
+"""A3b: GraphChannel using NetworkX with a pure-SQLite BFS fallback.
 
-Input wire: SQLite adjacency + optional Kùzu
+Input wire: SQLite adjacency (locus/room/provenance edges)
 Output wire: C2 (fusion engine)
 """
 
@@ -20,7 +20,7 @@ class GraphHit:
 
 
 class GraphChannel:
-    """Graph traversal backed by SQLite adjacency, with optional NetworkX/Kùzu."""
+    """Graph traversal backed by SQLite adjacency, with optional NetworkX acceleration."""
 
     @staticmethod
     def is_available(conn: sqlite3.Connection) -> bool:

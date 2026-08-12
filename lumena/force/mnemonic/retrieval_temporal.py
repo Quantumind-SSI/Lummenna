@@ -64,12 +64,14 @@ def temporal_point_query(
     else:
         time_clause = "chunk.valid_to IS NULL"
 
+    # clauses and time_clause are fixed strings containing only "?" bound
+    # parameters (built above); no user input reaches the SQL text.
     sql = f"""
         SELECT chunk_id, content, valid_from, valid_to, superseded_by, provenance_root
         FROM chunk
         WHERE ({" OR ".join(clauses)}) AND {time_clause}
         ORDER BY valid_from DESC
-    """
+    """  # nosec B608
 
     rows = conn.execute(sql, params).fetchall()
     hits: list[TemporalHit] = []

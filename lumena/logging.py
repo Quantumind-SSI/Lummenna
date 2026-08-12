@@ -19,8 +19,9 @@ def get_console_logger(name: str | None = None) -> Any:
         return _logger_cache[cache_key]
 
     try:
-        import structlog
         import sys
+
+        import structlog
 
         # Ensure structlog writes to stderr rather than stdout so that
         # stdio-based transports (e.g. MCP) are not corrupted by log output.

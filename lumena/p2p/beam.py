@@ -17,7 +17,7 @@ import logging
 import os
 import socket
 import struct
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import msgspec
@@ -139,7 +139,11 @@ class BeamNode:
         )
         await self._azc.async_register_service(info)
         self._browser = AsyncServiceBrowser(self._azc.zeroconf, self.service_type, self)
-        self._server = await asyncio.start_server(self._handle_peer, "0.0.0.0", self.beam_port)
+        # Bind to the configured Beam address (default all-interfaces: Beam
+        # exists to serve trusted LAN peers; frames are encrypted + signed).
+        self._server = await asyncio.start_server(
+            self._handle_peer, self.local_ip, self.beam_port
+        )
 
     async def stop(self) -> None:
         """Unregister mDNS services and shut down the peer listener."""
@@ -164,18 +168,21 @@ class BeamNode:
             if not isinstance(packet, dict):
                 return
 
-            # TTL enforcement
+            # TTL enforcement: a packet expires ttl_hours AFTER its send time.
             ttl_hours = packet.get("ttl")
-            if ttl_hours is not None:
-                expires_at = packet.get("_sent_at")
-                if expires_at:
-                    try:
-                        sent_dt = datetime.fromisoformat(expires_at)
-                        if datetime.now(timezone.utc) > sent_dt:
-                            logger.debug("beam_ttl_expired", room=packet.get("room"))
-                            return
-                    except ValueError:
-                        pass
+            sent_at = packet.get("_sent_at")
+            if ttl_hours is not None and sent_at:
+                try:
+                    sent_dt = datetime.fromisoformat(sent_at)
+                    expires_dt = sent_dt + timedelta(hours=float(ttl_hours))
+                    if datetime.now(timezone.utc) > expires_dt:
+                        logger.debug("beam_ttl_expired room=%s", packet.get("room"))
+                        return
+                except (ValueError, TypeError):
+                    logger.warning(
+                        "beam_ttl_unparseable sent_at=%r ttl=%r", sent_at, ttl_hours
+                    )
+                    return
 
             room = packet.get("room")
             chunks = packet.get("chunks", [])

@@ -13,9 +13,18 @@ except Exception:
 
 console = Console()
 
-KNOWN_MODELS = {
-    "bge-small-en-v1.5": "BAAI/bge-small-en-v1.5",
-    "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
+# alias -> (repo_id, pinned revision). Revisions are immutable commit SHAs so
+# a compromised upstream repo cannot silently swap model weights (supply-chain
+# hardening; bandit B615).
+KNOWN_MODELS: dict[str, tuple[str, str]] = {
+    "bge-small-en-v1.5": (
+        "BAAI/bge-small-en-v1.5",
+        "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    ),
+    "all-MiniLM-L6-v2": (
+        "sentence-transformers/all-MiniLM-L6-v2",
+        "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    ),
 }
 
 
@@ -26,12 +35,16 @@ class HuggingfaceUnavailableError(RuntimeError):
         super().__init__(message)
 
 
-def _export_via_optimum(repo_id: str, dest: Path, config=None) -> Path:
+def _export_via_optimum(repo_id: str, dest: Path, config=None, revision: str | None = None) -> Path:
     """Use ``optimum-cli`` or Python API to export a model to ONNX.
 
     Args:
         repo_id: HuggingFace model repository ID.
         dest: Output directory for the ONNX export.
+        config: Optional runtime config; enforces the sovereign boundary.
+        revision: Optional immutable commit SHA to pin the download to. When
+            set, the ``optimum-cli`` path is skipped (it cannot pin a
+            revision) and the Python API is used directly.
 
     Returns:
         Path to the exported ``model.onnx`` file.
@@ -43,37 +56,40 @@ def _export_via_optimum(repo_id: str, dest: Path, config=None) -> Path:
         config.assert_sovereign("model_download_hf")
     dest.mkdir(parents=True, exist_ok=True)
 
-    # Attempt 1: optimum-cli subprocess (fastest, handles caching)
-    try:
-        import subprocess
+    # Attempt 1: optimum-cli subprocess (fastest, handles caching). Only used
+    # for unpinned exports: the installed CLI has no --revision flag, so
+    # pinned downloads must go through the Python API below.
+    if revision is None:
+        try:
+            import subprocess
 
-        subprocess.run(
-            [
-                "optimum-cli",
-                "export",
-                "onnx",
-                "--model",
-                repo_id,
-                str(dest),
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=600,
-        )
-        onnx_file = dest / "model.onnx"
-        if onnx_file.exists():
-            return onnx_file
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
+            subprocess.run(
+                [
+                    "optimum-cli",
+                    "export",
+                    "onnx",
+                    "--model",
+                    repo_id,
+                    str(dest),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+            onnx_file = dest / "model.onnx"
+            if onnx_file.exists():
+                return onnx_file
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
 
-    # Attempt 2: Python API fallback
+    # Attempt 2: Python API (only path that supports revision pinning)
     try:
         from optimum.onnxruntime import ORTModelForFeatureExtraction
         from transformers import AutoTokenizer
 
-        tokenizer = AutoTokenizer.from_pretrained(repo_id)
-        model = ORTModelForFeatureExtraction.from_pretrained(repo_id)
+        tokenizer = AutoTokenizer.from_pretrained(repo_id, revision=revision)
+        model = ORTModelForFeatureExtraction.from_pretrained(repo_id, revision=revision)
         model.save_pretrained(str(dest))
         tokenizer.save_pretrained(str(dest))
 
@@ -106,8 +122,12 @@ def provision_embedding_model(model_name: str, dest: Path, config=None) -> Path:
 
     if config is not None:
         config.assert_sovereign("provision_embedding_model")
-    repo_id = KNOWN_MODELS.get(model_name, model_name)
-    return _export_via_optimum(repo_id, model_dir, config=config)
+    entry = KNOWN_MODELS.get(model_name)
+    if entry is not None:
+        repo_id, revision = entry
+    else:
+        repo_id, revision = model_name, None
+    return _export_via_optimum(repo_id, model_dir, config=config, revision=revision)
 
 
 model_app = typer.Typer(name="model", help="Model operations")
@@ -119,8 +139,9 @@ def model_list() -> None:
     table = Table(title="Known Embedding Models")
     table.add_column("Alias", style="cyan")
     table.add_column("Repo ID", style="magenta")
-    for alias, repo_id in KNOWN_MODELS.items():
-        table.add_row(alias, repo_id)
+    table.add_column("Pinned Revision", style="green")
+    for alias, (repo_id, revision) in KNOWN_MODELS.items():
+        table.add_row(alias, repo_id, revision[:12])
     console.print(table)
 
 

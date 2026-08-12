@@ -9,7 +9,7 @@ import time
 from lumena.config import LumenaConfig
 from lumena.controller import TwinForceController
 from lumena.force.mnemonic.retrieval_dense import VectorChannel
-from lumena.force.mnemonic.retrieval_graph import GraphChannel
+from lumena.force.mnemonic.retrieval_graph import GraphChannel, GraphHit
 from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
 from lumena.force.mnemonic.store import _tenant_id_supported
 from lumena.fusion import RetrievedChunk, fuse_and_rerank
@@ -57,6 +57,8 @@ class SearchPipeline:
         chunk_ids = [r.chunk_id for r in results if r.chunk_id]
         if not chunk_ids:
             return
+        # placeholders is a generated "?,?,..." string; all values are bound
+        # parameters, so the f-string cannot inject SQL (bandit B608).
         placeholders = "?," * (len(chunk_ids) - 1) + "?"
         now = int(time.time())
         self.conn.execute(
@@ -64,7 +66,7 @@ class SearchPipeline:
             " SET vm_score = MIN(vm_score * ?, 1.0),"
             "     last_access_at = ?,"
             "     access_count = access_count + 1"
-            f" WHERE chunk_id IN ({placeholders})",
+            f" WHERE chunk_id IN ({placeholders})",  # nosec B608
             [_REACCESS_BOOST, now] + chunk_ids,
         )
         self.conn.commit()
@@ -97,13 +99,19 @@ class SearchPipeline:
 
         # Stage 2b: Graph retrieval
         graph_hits = []
+        seed_ids: list[int] = []
         if self.graph is not None and dense_hits:
             seed_ids = [hit.chunk_id for hit in dense_hits[:3]]
             for seed in seed_ids:
                 graph_hits.extend(self.graph.traverse_from_seed(seed, hops=2))
 
         # Stage 2c: Spreading activation (NetworkX) — wider context prefetch
-        if self.graph is not None and hasattr(self.graph, "_graph") and self.graph._nx is not None:
+        if (
+            seed_ids
+            and self.graph is not None
+            and getattr(self.graph, "_nx", None) is not None
+            and hasattr(self.graph, "_graph")
+        ):
             from lumena.force.mnemonic.spreading import spread_activation
 
             try:
@@ -115,7 +123,7 @@ class SearchPipeline:
                     if node_id not in existing_ids:
                         graph_hits.append(GraphHit(node_id, depth=1, path=[node_id]))
             except Exception as exc:
-                logger.debug("spreading_activation_failed", error=str(exc))
+                logger.warning("spreading_activation_failed", error=str(exc))
 
         # Stage 3: Fusion & rerank
         results = fuse_and_rerank(
@@ -135,7 +143,7 @@ class SearchPipeline:
             chunk_ids = [r.chunk_id for r in results]
             placeholders = "?," * (len(chunk_ids) - 1) + "?"
             valid_rows = self.conn.execute(
-                f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",
+                f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",  # nosec B608
                 chunk_ids + [tenant_id],
             ).fetchall()
             valid_ids = {r[0] for r in valid_rows}
@@ -172,7 +180,7 @@ class SearchPipeline:
                         chunk_ids = [r.chunk_id for r in repaired]
                         placeholders = "?," * (len(chunk_ids) - 1) + "?"
                         valid_rows = self.conn.execute(
-                            f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",
+                            f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",  # nosec B608
                             chunk_ids + [tenant_id],
                         ).fetchall()
                         valid_ids = {r[0] for r in valid_rows}

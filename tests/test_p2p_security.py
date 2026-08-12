@@ -1,7 +1,6 @@
 """Tests for hardened Beam P2P protocol (signing, replay, TTL)."""
 
 import asyncio
-import struct
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -9,7 +8,7 @@ import pytest
 
 from lumena.config import LumenaConfig
 from lumena.p2p.beam import BeamNode, decode_frame, encode_frame
-from lumena.security.crypto import P2PCrypto, P2PSign
+from lumena.security.crypto import P2PSign
 
 
 @pytest.fixture

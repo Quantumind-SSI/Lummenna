@@ -1,14 +1,13 @@
 """Tests for chunk-count-based L3 budget eviction."""
 
-import sqlite3
 
 import pytest
 
 from lumena.config import LumenaConfig
 from lumena.data.schema import get_connection, init_db
 from lumena.force.contextual.embed import MockEmbedder
-from lumena.force.mnemonic.store import store_memory
 from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+from lumena.force.mnemonic.store import store_memory
 
 
 @pytest.fixture

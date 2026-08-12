@@ -33,6 +33,8 @@ class TestMCPServer:
         models.mkdir()
         monkeypatch.setenv("LUMENA_STORE_PATH", str(store))
         monkeypatch.setenv("LUMENA_MODEL_PATH", str(models))
+        # No real ONNX model in tmp_path; opt into the explicit mock escape hatch.
+        monkeypatch.setenv("LUMENA_ALLOW_MOCK_EMBEDDER", "1")
 
         async def _run():
             async with app_lifespan(mcp):
@@ -63,6 +65,8 @@ class TestMCPServer:
         models.mkdir()
         monkeypatch.setenv("LUMENA_STORE_PATH", str(store))
         monkeypatch.setenv("LUMENA_MODEL_PATH", str(models))
+        # No real ONNX model in tmp_path; opt into the explicit mock escape hatch.
+        monkeypatch.setenv("LUMENA_ALLOW_MOCK_EMBEDDER", "1")
 
         async def _run():
             async with app_lifespan(mcp):

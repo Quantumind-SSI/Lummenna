@@ -74,7 +74,12 @@ def store_memory(
         scan_hits = safety_scan_chunk(content, custom_patterns=config.pii_custom_patterns)
         if scan_hits:
             logger.warning("safety_scan_triggered", room=room_name, hits=scan_hits, mode=config.pii_redaction_mode)
-            content = apply_pii_strategy(content, scan_hits, config.pii_redaction_mode)
+            content = apply_pii_strategy(
+                content,
+                scan_hits,
+                config.pii_redaction_mode,
+                custom_patterns=config.pii_custom_patterns,
+            )
             if content is None:
                 logger.warning("store_blocked_by_pii_policy", room=room_name, hits=scan_hits)
                 raise RuntimeError(f"Store blocked by PII policy: {scan_hits}")

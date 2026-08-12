@@ -37,6 +37,11 @@ class LumenaConfig(BaseSettings):
     memory_limit_mb: int = 300
     embedding_model: str = "bge-small-en-v1.5"
     embedding_dims: int = 384
+    # Testing escape hatch ONLY (LUMENA_ALLOW_MOCK_EMBEDDER=1): when the real
+    # ONNX model is missing, substitute hash-based mock embeddings instead of
+    # failing. Mock vectors make semantic search meaningless, so production
+    # paths refuse to start without the real model unless this is set.
+    allow_mock_embedder: bool = False
     vector_index: Literal["sqlite-vec", "usearch"] = "sqlite-vec"
     enable_frqad: bool = True
     enable_local_llm: bool = False
@@ -45,14 +50,20 @@ class LumenaConfig(BaseSettings):
     scheduler_granularity: int = 300
     consolidation_battery_threshold: int = 50
     device_name: str = "lumena-device"
-    local_ip: str = "0.0.0.0"
+    # P2P Beam bind address. All-interfaces is intentional here: Beam exists
+    # solely to share memories across a trusted LAN, is opt-in (a Beam
+    # listener must be explicitly started), and every frame is
+    # AES-256-GCM-encrypted and HMAC-signed.
+    local_ip: str = "0.0.0.0"  # nosec B104
     beam_port: int = 8847
     store_path: Path = Path.home() / ".lumena" / "store"
     model_path: Path = Path.home() / ".lumena" / "models"
     memory_budget_mb: int = 64
     sovereign: bool = True
     log_level: str = "info"
-    api_host: str = "0.0.0.0"
+    # Loopback by default: the memory API must not listen on the LAN unless
+    # explicitly configured (LUMENA_API_HOST=0.0.0.0 — Docker does this).
+    api_host: str = "127.0.0.1"
     api_port: int = 8848
     api_key: str | None = None
     api_rate_limit: str = "60/minute"

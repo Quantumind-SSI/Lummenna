@@ -13,8 +13,9 @@ import sqlite3
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from lumena.brand.errors import ModelNotAvailableError
 from lumena.data.schema import get_connection
-from lumena.force.contextual.embed import FallbackEmbedder
+from lumena.force.contextual.embed import get_embedder
 from lumena.force.mnemonic.provenance import supersede_chunk
 from lumena.force.mnemonic.store import store_memory
 from lumena.sovereign.local_llm import LocalLLM
@@ -124,8 +125,11 @@ def run_consolidation_pass(
         config: LumenaConfig instance.
         event_buffer: Optional EventMemoryBuffer to drain. If None, event-tier
             draining is skipped.
-        embedder: Optional embedder with ``encode_single(text)``. If None, a
-            FallbackEmbedder is instantiated.
+        embedder: Optional embedder with ``encode_single(text)``. If None, the
+            real configured embedder is loaded. If it is unavailable, chunks
+            created by this pass are stored WITHOUT embeddings (lexically
+            retrievable only) — never with fake mock vectors, which would
+            permanently poison the dense index.
         batcher: Optional WearAwareBatcher for bulk dedup writes.
 
     Returns:
@@ -135,7 +139,15 @@ def run_consolidation_pass(
     should_close = batcher is None
     try:
         if embedder is None:
-            embedder = FallbackEmbedder(dims=config.embedding_dims)
+            try:
+                embedder = get_embedder(config, allow_mock=False)
+            except ModelNotAvailableError as exc:
+                logger.warning(
+                    "consolidation_no_embedder",
+                    reason=str(exc),
+                    effect="new chunks stored without embeddings (lexical-only)",
+                )
+                embedder = None
 
         operations = 0
 
@@ -144,7 +156,7 @@ def run_consolidation_pass(
             events = event_buffer.drain_expired()
             for event in events:
                 room_name = event.session_id or "events"
-                emb = embedder.encode_single(event.raw_text)
+                emb = embedder.encode_single(event.raw_text) if embedder else None
                 store_memory(
                     conn,
                     content=event.raw_text,
@@ -198,7 +210,7 @@ def run_consolidation_pass(
                             f"'{room_name}' as 2-3 concise sentences."
                         ),
                     )
-                    emb = embedder.encode_single(narrative)
+                    emb = embedder.encode_single(narrative) if embedder else None
                     store_memory(
                         conn,
                         content=narrative,

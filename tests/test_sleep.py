@@ -84,10 +84,15 @@ def test_opportunistic_check_skips_when_on_battery(scheduler):
 
 
 def test_run_now_calls_consolidation(scheduler):
-    """run_now should manually trigger a consolidation pass."""
+    """run_now should manually trigger a consolidation pass.
+
+    The battery sensor is patched to None (desktop) so the test does not
+    depend on the CI/dev machine's real charge state.
+    """
     with (
         patch("lumena.sleep.run_consolidation_pass") as mock_run,
         patch("lumena.data.schema._enforce_permissions"),
+        patch("lumena.sleep.psutil.sensors_battery", return_value=None),
     ):
         scheduler.run_now()
         mock_run.assert_called_once()
@@ -95,10 +100,14 @@ def test_run_now_calls_consolidation(scheduler):
 
 
 def test_exception_in_consolidation_caught_and_logged(scheduler):
-    """An exception in run_consolidation_pass should be caught and logged."""
+    """An exception in run_consolidation_pass should be caught and logged.
+
+    Battery sensor patched to None (desktop) for determinism.
+    """
     with (
         patch("lumena.sleep.run_consolidation_pass") as mock_run,
         patch("lumena.data.schema._enforce_permissions"),
+        patch("lumena.sleep.psutil.sensors_battery", return_value=None),
         patch("lumena.sleep.logger") as mock_logger,
     ):
         mock_run.side_effect = RuntimeError("boom")

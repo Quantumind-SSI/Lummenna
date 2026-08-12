@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
+from datetime import datetime, timezone
 from typing import Any
 
 from lumena.config import LumenaConfig
@@ -189,12 +190,15 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
             return None
 
         data = self._deserialize(row["content"])
+        checkpoint = data["checkpoint"]
         return CheckpointTuple(
             config=config,
-            checkpoint=data["checkpoint"],
+            checkpoint=checkpoint,
             metadata=data["metadata"],
             parent_config=data.get("parent_config"),
-            pending_writes=data.get("pending_writes", []),
+            pending_writes=self._load_pending_writes(
+                thread_id, checkpoint.get("id") if isinstance(checkpoint, dict) else None
+            ),
         )
 
     def put(
@@ -259,23 +263,37 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
 
     def put_writes(
         self,
-        writes: list[tuple[str, str, Any]],
         config: dict[str, Any],
+        writes: list[tuple[str, Any]],
+        task_id: str = "",
+        task_path: str = "",
     ) -> None:
-        """Store pending writes for a thread.
+        """Store pending writes for a thread/checkpoint.
+
+        Signature matches ``BaseCheckpointSaver.put_writes(config, writes,
+        task_id, task_path)`` so LangGraph's positional invocation works.
 
         Writes are stored as ephemeral chunks in a ``writes`` locus under the
-        same room.  They are garbage-collected automatically by L3 eviction.
+        same room, tagged with the checkpoint_id from *config* so that
+        ``get_tuple``/``list`` can return them as ``pending_writes``.
         """
         if not writes:
             return
         thread_id = self._thread_id(config)
+        checkpoint_id = self._checkpoint_id(config) or ""
         room_id = self._ensure_room()
         write_locus = self._resolve_locus(f"{thread_id}__writes")
 
         for channel, value in writes:
             payload = json.dumps(
-                {"thread_id": thread_id, "channel": channel, "value": value},
+                {
+                    "thread_id": thread_id,
+                    "checkpoint_id": checkpoint_id,
+                    "channel": channel,
+                    "value": value,
+                    "task_id": task_id,
+                    "task_path": task_path,
+                },
                 default=str,
             )
             self.conn.execute(
@@ -287,6 +305,45 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
             )
         self.conn.commit()
 
+    def _load_pending_writes(
+        self, thread_id: str, checkpoint_id: str | None
+    ) -> list[tuple[str, str, Any]]:
+        """Return pending writes for a checkpoint as (task_id, channel, value).
+
+        Writes tagged with a checkpoint_id are returned only for that
+        checkpoint; untagged writes (legacy rows, or writes stored before the
+        first checkpoint existed) are returned for any checkpoint of the
+        thread.
+        """
+        write_locus = self._resolve_locus(f"{thread_id}__writes")
+        rows = self.conn.execute(
+            """SELECT content FROM chunk
+               WHERE locus_id = ? AND valid_to IS NULL AND content_hash = 'lg_write'
+               ORDER BY created_at ASC, chunk_id ASC""",
+            (write_locus,),
+        ).fetchall()
+        out: list[tuple[str, str, Any]] = []
+        for row in rows:
+            try:
+                data = json.loads(row["content"])
+            except (ValueError, TypeError):
+                continue
+            row_cid = data.get("checkpoint_id", "")
+            if row_cid and checkpoint_id and row_cid != checkpoint_id:
+                continue
+            out.append((data.get("task_id", ""), data.get("channel", ""), data.get("value")))
+        return out
+
+    def _checkpoint_row_position(self, locus_id: int, checkpoint_id: str) -> tuple | None:
+        """Return (created_at, chunk_id) of a stored checkpoint, or None."""
+        row = self.conn.execute(
+            """SELECT created_at, chunk_id FROM chunk
+               WHERE locus_id = ? AND valid_to IS NULL AND content_hash = ?
+               ORDER BY created_at DESC, chunk_id DESC LIMIT 1""",
+            (locus_id, checkpoint_id),
+        ).fetchone()
+        return (row["created_at"], row["chunk_id"]) if row else None
+
     def list(
         self,
         config: dict[str, Any],
@@ -295,7 +352,12 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
         limit: int | None = None,
         filter: dict[str, Any] | None = None,
     ) -> Iterator[CheckpointTuple]:
-        """Yield checkpoint tuples for *thread_id*, newest first."""
+        """Yield checkpoint tuples for *thread_id*, newest first.
+
+        ``before`` (a config whose ``configurable.checkpoint_id`` names a
+        stored checkpoint) restricts results to checkpoints created strictly
+        before that checkpoint.
+        """
         thread_id = self._thread_id(config)
         locus_id = self._resolve_locus(thread_id)
 
@@ -304,27 +366,46 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
         params: list[Any] = [locus_id]
 
         if filter:
-            # Very basic filter support: exact match on metadata fields
+            # Very basic filter support: exact match on metadata fields.
+            # The JSON path is passed as a bound parameter — never
+            # interpolated into the SQL — so hostile filter keys cannot
+            # inject SQL.
             for key, val in filter.items():
-                where_extra += f" AND json_extract(content, '$.metadata.{key}') = ?"
+                where_extra += " AND json_extract(content, ?) = ?"
+                params.append(f"$.metadata.{key}")
                 params.append(val)
 
+        if before is not None:
+            before_id = self._checkpoint_id(before)
+            if before_id:
+                pos = self._checkpoint_row_position(locus_id, before_id)
+                if pos is None:
+                    return  # unknown cursor: nothing is strictly before it
+                where_extra += (
+                    " AND (created_at < ? OR (created_at = ? AND chunk_id < ?))"
+                )
+                params.extend([pos[0], pos[0], pos[1]])
+
+        # where_extra contains only fixed, parameterised clauses built above.
         sql = f"""SELECT content
                    FROM chunk
                    WHERE locus_id = ? AND valid_to IS NULL
                    {where_extra}
                    ORDER BY created_at DESC, chunk_id DESC
-                   LIMIT ?"""
+                   LIMIT ?"""  # nosec B608
         params.append(limit or 100)
 
         for row in self.conn.execute(sql, params):
             data = self._deserialize(row["content"])
+            checkpoint = data["checkpoint"]
             yield CheckpointTuple(
                 config=config,
-                checkpoint=data["checkpoint"],
+                checkpoint=checkpoint,
                 metadata=data["metadata"],
                 parent_config=data.get("parent_config"),
-                pending_writes=data.get("pending_writes", []),
+                pending_writes=self._load_pending_writes(
+                    thread_id, checkpoint.get("id") if isinstance(checkpoint, dict) else None
+                ),
             )
 
     # -----------------------------------------------------------------------
@@ -344,10 +425,12 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
 
     async def aput_writes(
         self,
-        writes: list[tuple[str, str, Any]],
         config: dict[str, Any],
+        writes: list[tuple[str, Any]],
+        task_id: str = "",
+        task_path: str = "",
     ) -> None:
-        self.put_writes(writes, config)
+        self.put_writes(config, writes, task_id, task_path)
 
     async def alist(
         self,
@@ -400,15 +483,14 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
     def _embedding(self, text: str) -> Any:
         if self._embedder is not None:
             return self._embedder.encode_single(text)
-        try:
-            from lumena.force.contextual.embed import get_embedder
+        from lumena.force.contextual.embed import get_embedder
 
-            e = get_embedder(self.config, allow_mock=False)
-            return e.encode_single(text)
-        except Exception:
-            from lumena.force.contextual.embed import MockEmbedder
-
-            return MockEmbedder(dims=self.config.embedding_dims).encode_single(text)
+        # Raises ModelNotAvailableError unless mock embeddings were
+        # explicitly opted into (config.allow_mock_embedder — testing only).
+        self._embedder = get_embedder(
+            self.config, allow_mock=self.config.allow_mock_embedder
+        )
+        return self._embedder.encode_single(text)
 
     def _namespace_to_room(self, namespace: tuple[str, ...] | str) -> str:
         if isinstance(namespace, tuple):
@@ -419,7 +501,18 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
         self,
         namespace: tuple[str, ...],
         key: str,
+        *,
+        refresh_ttl: bool | None = None,
     ) -> dict[str, Any] | None:
+        """Fetch the latest value for *key* in *namespace*.
+
+        ``refresh_ttl`` is accepted for BaseStore signature compatibility and
+        ignored — Lumena manages lifecycle via V(m) decay, not per-item TTLs.
+
+        Note: this convenience method returns a plain dict. Callers using the
+        LangGraph ``BaseStore`` contract (``batch``/``abatch``/``aget``)
+        receive proper ``Item`` objects via ``_batch_get``.
+        """
         room = self._namespace_to_room(namespace)
         row = self.conn.execute(
             """SELECT c.content, c.created_at, c.vm_score
@@ -446,8 +539,24 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
         namespace: tuple[str, ...],
         key: str,
         value: Any,
+        index: Any = None,
+        *,
+        ttl: Any = None,
     ) -> None:
+        """Store *value* under *key* in *namespace*.
+
+        ``index`` and ``ttl`` are accepted for BaseStore signature
+        compatibility. Custom index fields are not supported (the whole value
+        is embedded); per-item TTLs are not supported (Lumena uses V(m) decay
+        and L3 eviction). Both are logged if provided rather than silently
+        ignored.
+        """
         from lumena.force.mnemonic.store import store_memory
+
+        if index is not None:
+            logger.debug("lumena_graph_store_index_unsupported", index=str(index))
+        if ttl is not None:
+            logger.debug("lumena_graph_store_ttl_unsupported", ttl=str(ttl))
 
         room = self._namespace_to_room(namespace)
         content = json.dumps({"key": key, "value": value}, default=str)
@@ -480,13 +589,20 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
     def search(
         self,
         namespace: tuple[str, ...],
-        query: str,
+        query: str | None = None,
         *,
+        filter: dict[str, Any] | None = None,
         limit: int = 10,
+        offset: int = 0,
+        refresh_ttl: bool | None = None,
     ) -> list[dict[str, Any]]:
-        """Semantic search within a namespace using Lumena's pipeline."""
-        from lumena.search import SearchPipeline
+        """Search within a namespace.
 
+        With *query*, runs Lumena's semantic pipeline; without it, returns
+        the most recent items in the namespace. ``filter`` does exact-match
+        filtering on top-level keys of the stored value dict. ``refresh_ttl``
+        is accepted for BaseStore signature compatibility and ignored.
+        """
         room = self._namespace_to_room(namespace)
         # Ensure room exists so SearchPipeline can find chunks
         self.conn.execute(
@@ -495,31 +611,68 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
         )
         self.conn.commit()
 
-        embedder_obj = self._embedder
-        if embedder_obj is None:
-            try:
+        if query is None:
+            rows = self.conn.execute(
+                """SELECT l.name AS key, c.content, c.vm_score
+                   FROM chunk c
+                   JOIN locus l ON l.locus_id = c.locus_id
+                   JOIN room r ON r.room_id = c.room_id
+                   WHERE r.name = ? AND c.valid_to IS NULL
+                   ORDER BY c.created_at DESC, c.chunk_id DESC""",
+                (room,),
+            ).fetchall()
+            candidates = [
+                {
+                    "key": row["key"],
+                    "namespace": namespace,
+                    "value": row["content"],
+                    "score": row["vm_score"],
+                }
+                for row in rows
+            ]
+        else:
+            from lumena.search import SearchPipeline
+
+            embedder_obj = self._embedder
+            if embedder_obj is None:
                 from lumena.force.contextual.embed import get_embedder
 
-                embedder_obj = get_embedder(self.config, allow_mock=False)
-            except Exception:
-                from lumena.force.contextual.embed import MockEmbedder
+                # Raises ModelNotAvailableError unless mock embeddings were
+                # explicitly opted into (config.allow_mock_embedder — testing
+                # only).
+                embedder_obj = get_embedder(
+                    self.config, allow_mock=self.config.allow_mock_embedder
+                )
+                self._embedder = embedder_obj
 
-                embedder_obj = MockEmbedder(dims=self.config.embedding_dims)
+            pipeline = SearchPipeline(self.conn, self.config, embedder=embedder_obj)
+            results = pipeline.execute(query, k=limit + offset)
+            candidates = [
+                {
+                    "key": r.locus_name,
+                    "namespace": namespace,
+                    "value": r.content,
+                    "score": r.final_score,
+                }
+                for r in results
+                if r.room_name == room
+            ]
 
-        pipeline = SearchPipeline(self.conn, self.config, embedder=embedder_obj)
-        results = pipeline.execute(query, k=limit)
+        if filter:
+            filtered = []
+            for cand in candidates:
+                try:
+                    value = json.loads(cand["value"])
+                    stored = value.get("value") if isinstance(value, dict) else None
+                except (ValueError, TypeError):
+                    stored = None
+                if isinstance(stored, dict) and all(
+                    stored.get(k) == v for k, v in filter.items()
+                ):
+                    filtered.append(cand)
+            candidates = filtered
 
-        out = []
-        for r in results:
-            if r.room_name != room:
-                continue
-            out.append({
-                "key": r.locus_name,
-                "namespace": namespace,
-                "value": r.content,
-                "score": r.final_score,
-            })
-        return out
+        return candidates[offset : offset + limit]
 
     def list_namespaces(
         self,
@@ -527,6 +680,8 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
         prefix: tuple[str, ...] | None = None,
         suffix: tuple[str, ...] | None = None,
         max_depth: int | None = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> list[tuple[str, ...]]:
         """Return namespaces (rooms) that match prefix/suffix filters."""
         rows = self.conn.execute(
@@ -544,4 +699,140 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
             if max_depth is not None and len(ns) > max_depth:
                 continue
             namespaces.append(ns)
-        return namespaces
+        return namespaces[offset : offset + limit]
+
+    # -----------------------------------------------------------------------
+    # BaseStore batch API (abstract in langgraph >= 0.6)
+    # -----------------------------------------------------------------------
+    def batch(self, ops: Iterable[Any]) -> list[Any]:
+        """Execute a batch of store operations sequentially.
+
+        Dispatches each ``GetOp`` / ``PutOp`` / ``SearchOp`` /
+        ``ListNamespacesOp`` to the corresponding store method and returns
+        one result per operation, in order, as required by the LangGraph
+        ``BaseStore`` contract.
+        """
+        from langgraph.store.base import GetOp, ListNamespacesOp, PutOp, SearchOp
+
+        results: list[Any] = []
+        for op in ops:
+            if isinstance(op, GetOp):
+                results.append(self._batch_get(op))
+            elif isinstance(op, PutOp):
+                if op.value is None:
+                    self.delete(op.namespace, op.key)
+                else:
+                    self.put(op.namespace, op.key, op.value)
+                results.append(None)
+            elif isinstance(op, SearchOp):
+                results.append(self._batch_search(op))
+            elif isinstance(op, ListNamespacesOp):
+                results.append(self._batch_list_namespaces(op))
+            else:
+                raise TypeError(f"Unsupported store operation: {type(op).__name__}")
+        return results
+
+    async def abatch(self, ops: Iterable[Any]) -> list[Any]:
+        """Async variant of :meth:`batch` (SQLite work runs synchronously)."""
+        return self.batch(ops)
+
+    @staticmethod
+    def _parse_value(content: Any) -> dict[str, Any]:
+        """Convert stored chunk content into the dict LangGraph items require."""
+        try:
+            data = json.loads(content)
+        except (TypeError, ValueError):
+            return {"value": content}
+        if isinstance(data, dict) and set(data) == {"key", "value"}:
+            inner = data["value"]
+            return inner if isinstance(inner, dict) else {"value": inner}
+        return data if isinstance(data, dict) else {"value": data}
+
+    def _created_at(self, namespace: tuple[str, ...], key: str) -> datetime:
+        """Fetch a chunk's creation time (UTC); falls back to 'now' if absent."""
+        room = self._namespace_to_room(namespace)
+        row = self.conn.execute(
+            """SELECT c.created_at FROM chunk c
+               JOIN locus l ON l.locus_id = c.locus_id
+               JOIN room r ON r.room_id = c.room_id
+               WHERE r.name = ? AND l.name = ? AND c.valid_to IS NULL
+               ORDER BY c.created_at DESC LIMIT 1""",
+            (room, key),
+        ).fetchone()
+        if row and row["created_at"] is not None:
+            return datetime.fromtimestamp(row["created_at"], tz=timezone.utc)
+        return datetime.now(tz=timezone.utc)
+
+    def _batch_get(self, op: Any) -> Any:
+        from langgraph.store.base import Item
+
+        found = self.get(op.namespace, op.key)
+        if found is None:
+            return None
+        created = datetime.fromtimestamp(found["created_at"], tz=timezone.utc)
+        return Item(
+            value=self._parse_value(found["value"]),
+            key=op.key,
+            namespace=op.namespace,
+            created_at=created,
+            updated_at=created,
+        )
+
+    def _batch_search(self, op: Any) -> list[Any]:
+        from langgraph.store.base import SearchItem
+
+        namespace = op.namespace_prefix
+        if op.query:
+            hits = self.search(namespace, op.query, limit=op.limit + op.offset)
+            candidates = [
+                (h["key"], h["value"], h.get("score")) for h in hits
+            ]
+        else:
+            room = self._namespace_to_room(namespace)
+            rows = self.conn.execute(
+                """SELECT l.name AS key, c.content, c.created_at FROM chunk c
+                   JOIN locus l ON l.locus_id = c.locus_id
+                   JOIN room r ON r.room_id = c.room_id
+                   WHERE r.name = ? AND c.valid_to IS NULL
+                   ORDER BY c.created_at DESC""",
+                (room,),
+            ).fetchall()
+            candidates = [(row["key"], row["content"], None) for row in rows]
+
+        items: list[Any] = []
+        for key, content, score in candidates:
+            value = self._parse_value(content)
+            if op.filter and any(value.get(fk) != fv for fk, fv in op.filter.items()):
+                continue
+            # One timestamp lookup per result; bounded by op.limit (<= ~10s
+            # of rows on a local SQLite connection).
+            created = self._created_at(namespace, key)
+            items.append(
+                SearchItem(
+                    namespace=namespace,
+                    key=key,
+                    value=value,
+                    created_at=created,
+                    updated_at=created,
+                    score=score,
+                )
+            )
+        return items[op.offset : op.offset + op.limit]
+
+    def _batch_list_namespaces(self, op: Any) -> list[tuple[str, ...]]:
+        prefix: tuple[str, ...] | None = None
+        suffix: tuple[str, ...] | None = None
+        for cond in op.match_conditions or ():
+            # Wildcard segments ("*") are not supported by the room-name
+            # mapping; treat them as an unconstrained match on that side.
+            path = tuple(str(p) for p in cond.path)
+            if "*" in path:
+                continue
+            if cond.match_type == "prefix":
+                prefix = path
+            elif cond.match_type == "suffix":
+                suffix = path
+        namespaces = self.list_namespaces(
+            prefix=prefix, suffix=suffix, max_depth=op.max_depth
+        )
+        return namespaces[op.offset : op.offset + op.limit]

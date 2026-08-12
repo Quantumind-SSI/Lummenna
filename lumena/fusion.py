@@ -63,9 +63,11 @@ def fuse_and_rerank(
     if not chunk_ids:
         return []
 
+    # placeholders is a generated "?,?,..." string; all values are bound
+    # parameters, so the f-strings below cannot inject SQL (bandit B608).
     placeholders = "?," * (len(chunk_ids) - 1) + "?"
     rows = conn.execute(
-        f"SELECT c.chunk_id, r.name AS room_name, l.name AS locus_name,"
+        f"SELECT c.chunk_id, r.name AS room_name, l.name AS locus_name,"  # nosec B608
         f" c.content, c.vm_score, c.provenance_root,"
         f" (strftime('%s','now') - c.created_at) / 3600.0 AS age_hours,"
         f" c.resolution, c.encrypted"
@@ -84,7 +86,7 @@ def fuse_and_rerank(
     embedding_map: dict[int, np.ndarray] = {}
     if query_vec is not None:
         emb_rows = conn.execute(
-            f"SELECT chunk_id, embedding FROM vec_fallback WHERE chunk_id IN ({placeholders})",
+            f"SELECT chunk_id, embedding FROM vec_fallback WHERE chunk_id IN ({placeholders})",  # nosec B608
             chunk_ids,
         ).fetchall()
         for cid, emb_blob in emb_rows:
@@ -95,7 +97,7 @@ def fuse_and_rerank(
             try:
                 miss_placeholders = "?," * (len(missing) - 1) + "?"
                 emb_rows2 = conn.execute(
-                    f"SELECT chunk_id, embedding FROM vec_chunks WHERE chunk_id IN ({miss_placeholders})",
+                    f"SELECT chunk_id, embedding FROM vec_chunks WHERE chunk_id IN ({miss_placeholders})",  # nosec B608
                     missing,
                 ).fetchall()
                 for cid, emb_blob in emb_rows2:
@@ -116,7 +118,20 @@ def fuse_and_rerank(
 
                 _enc = get_encryption(config if config is not None else LumenaConfig())
             if _enc.enabled:
-                content = _enc.decrypt(content)
+                try:
+                    content = _enc.decrypt(content)
+                except Exception as exc:
+                    # Wrong or rotated key: never leak the raw Fernet token
+                    # and never crash the whole search for one bad chunk.
+                    logger.warning(
+                        "chunk_decrypt_failed", chunk_id=cid, error=str(exc)
+                    )
+                    content = "[DECRYPTION FAILED — check LUMENA_ENCRYPTION_KEY]"
+            else:
+                # Chunk was written with encryption but no key is configured
+                # now: do not leak the raw ciphertext token as if it were text.
+                logger.warning("chunk_encrypted_but_no_key", chunk_id=cid)
+                content = "[ENCRYPTED — set LUMENA_ENCRYPTION_KEY to read]"
         # Goal bonus
         goal_bonus = 1.0 + (
             0.2 if any(kw.lower() in (content or "").lower() for kw in goal_tree_keywords) else 0.0

@@ -5,6 +5,7 @@ Idle-time palace maintenance with zero latency impact.
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 import psutil
@@ -14,6 +15,10 @@ from lumena.force.mnemonic.consolidation import run_consolidation_pass
 from lumena.logging import get_console_logger
 
 logger = get_console_logger(__name__)
+
+# Sentinel distinguishing "argument not injected" from an explicit None
+# (None is a legitimate battery reading: desktops have no battery).
+_UNSET: Any = object()
 
 
 class SleepScheduler:
@@ -134,40 +139,42 @@ class SleepScheduler:
         except Exception as exc:
             logger.error("sleep_consolidation_error", stage="log_rotation", error=str(exc))
 
-        try:
+        with contextlib.suppress(Exception):
             conn.close()
-        except Exception:
-            pass
 
         logger.info("sleep_consolidation_end")
 
     def _opportunistic_check(
         self,
         cpu_percent: float | None = None,
-        battery: Any | None = None,
+        battery: Any = _UNSET,
     ) -> None:
         """Check system load and battery; trigger consolidation if idle.
 
         Args:
             cpu_percent: Optional injected CPU reading for testing.
-            battery: Optional injected battery object for testing.
+            battery: Optional injected battery object for testing. Pass
+                ``None`` explicitly to simulate a machine without a battery;
+                leave unset to read the real sensor.
         """
         if cpu_percent is None:
             cpu_percent = psutil.cpu_percent(interval=None)
-        if battery is None:
+        if battery is _UNSET:
             battery = psutil.sensors_battery()
         on_ac = battery is None or battery.power_plugged
         threshold = getattr(self.config, "consolidation_cpu_percent", 10.0)
         if cpu_percent < threshold and on_ac:
             self._maybe_consolidate()
 
-    def _should_run(self, battery: Any | None = None) -> bool:
+    def _should_run(self, battery: Any = _UNSET) -> bool:
         """Return True if battery state permits consolidation.
 
         Args:
-            battery: Optional injected battery object for testing.
+            battery: Optional injected battery object for testing. Pass
+                ``None`` explicitly to simulate a machine without a battery
+                (always permitted); leave unset to read the real sensor.
         """
-        if battery is None:
+        if battery is _UNSET:
             battery = psutil.sensors_battery()
         threshold = getattr(self.config, "consolidation_battery_threshold", 50)
         return battery is None or battery.power_plugged or battery.percent >= threshold
