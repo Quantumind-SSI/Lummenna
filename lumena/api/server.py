@@ -15,6 +15,7 @@ Endpoints:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import secrets as _secrets
 import sqlite3
@@ -23,7 +24,7 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -38,6 +39,8 @@ from lumena.controller import TwinForceController
 from lumena.conversation import ConversationMemory
 from lumena.fusion import RetrievedChunk
 from lumena.logging import get_console_logger
+from lumena.observability import normalize_route
+from lumena.observability import registry as _metrics
 from lumena.search import SearchPipeline
 
 logger = get_console_logger(__name__)
@@ -82,6 +85,7 @@ _state: dict = {}
 # Simple in-memory brute-force tracker for failed API-key attempts.
 # Maps remote_address -> (failure_count, first_failure_timestamp)
 _auth_failures: dict[str, tuple[int, float]] = {}
+_AUTH_FAILURES_MAX = 10_000  # bound memory against scanning floods
 
 
 def _check_brute_force(remote_addr: str) -> bool:
@@ -95,18 +99,39 @@ def _check_brute_force(remote_addr: str) -> bool:
     return count >= 5
 
 
+def _record_auth_failure(remote_addr: str) -> None:
+    """Record a failed auth attempt with bounded memory.
+
+    When the tracker is full, expired windows are evicted first; if every
+    window is still live, the oldest entry is dropped. An attacker rotating
+    source addresses can therefore not grow this dict without bound.
+    """
+    now = time.time()
+    if remote_addr not in _auth_failures and len(_auth_failures) >= _AUTH_FAILURES_MAX:
+        expired = [k for k, (_, ts) in _auth_failures.items() if now - ts > 60]
+        for k in expired:
+            _auth_failures.pop(k, None)
+        if len(_auth_failures) >= _AUTH_FAILURES_MAX:
+            oldest = min(_auth_failures.items(), key=lambda kv: kv[1][1])[0]
+            _auth_failures.pop(oldest, None)
+    count, first_ts = _auth_failures.get(remote_addr, (0, now))
+    _auth_failures[remote_addr] = (count + 1, first_ts)
+
+
 # ---------------------------------------------------------------------------
 # Auth middleware
 # ---------------------------------------------------------------------------
 async def _auth_middleware(request: Request, call_next):
     public_paths = (
         "/health",
+        "/ready",
         "/docs",
         "/redoc",
         "/openapi.json",
         "/dashboard",
         "/v1/dashboard-data",
         "/metrics",
+        "/metrics/prometheus",
     )
     # Allow CORS preflight without authentication
     if request.method == "OPTIONS":
@@ -120,8 +145,7 @@ async def _auth_middleware(request: Request, call_next):
             return JSONResponse(status_code=429, content={"detail": "Too many failed authentication attempts"})
         provided = request.headers.get("X-API-Key") or request.query_params.get("api_key")
         if not provided or not _secrets.compare_digest(provided, _config.api_key):
-            count, first_ts = _auth_failures.get(remote_addr, (0, time.time()))
-            _auth_failures[remote_addr] = (count + 1, first_ts)
+            _record_auth_failure(remote_addr)
             return JSONResponse(status_code=401, content={"detail": "Invalid or missing API key"})
         # Successful auth: reset failures
         _auth_failures.pop(remote_addr, None)
@@ -136,6 +160,33 @@ async def _auth_middleware(request: Request, call_next):
 
 
 app.middleware("http")(_auth_middleware)
+
+
+async def _metrics_middleware(request: Request, call_next):
+    """Record request count and latency per route template/method/status class.
+
+    Route templates are bounded by :func:`normalize_route`, so label
+    cardinality cannot explode. Failures inside handlers still record a 5xx.
+    """
+    route = normalize_route(request.url.path)
+    start = time.perf_counter()
+    status = "500"
+    try:
+        response = await call_next(request)
+        status = str(response.status_code)
+        return response
+    finally:
+        elapsed = time.perf_counter() - start
+        labels = {
+            "route": route,
+            "method": request.method,
+            "status": status[0] + "xx" if status else "5xx",
+        }
+        _metrics.inc("lumena_http_requests_total", labels)
+        _metrics.observe("lumena_http_request_duration_seconds", elapsed, labels)
+
+
+app.middleware("http")(_metrics_middleware)
 
 
 class _SecurityHeadersMiddleware:
@@ -303,6 +354,12 @@ async def lifespan(app: FastAPI):
         yield
         return
 
+    # Opt-in Azure Monitor / Application Insights export. Raises (fail-loud)
+    # if configured while sovereign, or configured without the azure extra.
+    from lumena.telemetry import configure_azure_monitor_if_enabled
+
+    configure_azure_monitor_if_enabled(_config, app)
+
     _state.update(initialize_palace(_config))
     # Start background forgetting scheduler so L1/L3 run without a separate daemon
     try:
@@ -359,6 +416,65 @@ async def health() -> dict:
         return {"status": "ok"}
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Database unreachable") from exc
+
+
+@app.get("/ready")
+async def ready() -> dict:
+    """Kubernetes readiness probe: serve traffic only when fully initialised.
+
+    Liveness (``/health``) answers "is the process alive"; readiness answers
+    "can this instance serve correct results": database reachable AND the
+    real embedding model loaded (or mock explicitly opted into for testing).
+    A pod whose model failed to provision stays out of the Service endpoints
+    instead of serving lexical-only degraded answers.
+    """
+    conn = _get_conn()
+    if conn is None:
+        raise HTTPException(status_code=503, detail="not ready: database not initialised")
+    try:
+        conn.execute("SELECT 1")
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="not ready: database unreachable") from exc
+    model_ok = _state.get("embedding_model_available", False)
+    if not model_ok and not _config.allow_mock_embedder:
+        raise HTTPException(status_code=503, detail="not ready: embedding model not loaded")
+    return {
+        "status": "ready",
+        "embedding_model_available": model_ok,
+        "scheduler_running": "scheduler" in _state,
+    }
+
+
+@app.get("/metrics/prometheus")
+async def metrics_prometheus() -> Response:
+    """Prometheus text exposition: request counters/latency + palace gauges.
+
+    Scrape target for Prometheus, Azure Monitor managed Prometheus, or the
+    Container Insights Prometheus agent. Unmeasured values are omitted,
+    never rendered as zero.
+    """
+    gauges: dict[str, float | int | None] = {
+        "lumena_process_peak_rss_mb": _process_peak_rss_mb(),
+    }
+    conn = _get_conn()
+    if conn is not None:
+        try:
+            gauges["lumena_active_chunks"] = conn.execute(
+                "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL"
+            ).fetchone()[0]
+            gauges["lumena_rooms"] = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
+            gauges["lumena_forgotten_chunks"] = conn.execute(
+                "SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL"
+            ).fetchone()[0]
+        except Exception as exc:
+            logger.warning("prometheus_gauges_failed", error=str(exc))
+    with contextlib.suppress(OSError):
+        gauges["lumena_db_size_bytes"] = _config.db_path.stat().st_size
+    gauges["lumena_embedding_model_available"] = int(
+        _state.get("embedding_model_available", False)
+    )
+    body = _metrics.render(gauges)
+    return Response(content=body, media_type="text/plain; version=0.0.4; charset=utf-8")
 
 
 @v1_router.get("/status")

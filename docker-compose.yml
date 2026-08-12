@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   lumena:
     build: .
@@ -9,24 +7,31 @@ services:
     ports:
       - "${LUMENA_API_PORT:-8848}:8848"
     volumes:
-      - lumena_data:/root/.lumena
+      - lumena_store:/data/store
+      - lumena_models:/data/models
     environment:
       - LUMENA_API_HOST=0.0.0.0
       - LUMENA_API_PORT=8848
+      - LUMENA_STORE_PATH=/data/store
+      - LUMENA_MODEL_PATH=/data/models
       - LUMENA_LOG_LEVEL=${LUMENA_LOG_LEVEL:-info}
       - LUMENA_API_KEY=${LUMENA_API_KEY:-}
       - LUMENA_API_RATE_LIMIT=${LUMENA_API_RATE_LIMIT:-60/minute}
-      - LUMENA_ALLOWED_ORIGINS=${LUMENA_ALLOWED_ORIGINS:-*}
+      - LUMENA_ALLOWED_ORIGINS=${LUMENA_ALLOWED_ORIGINS:-http://localhost:8848}
       - LUMENA_DEVICE=${LUMENA_DEVICE:-generic}
       - LUMENA_CONTEXT_BUDGET=${LUMENA_CONTEXT_BUDGET:-2048}
       - LUMENA_MEMORY_LIMIT_MB=${LUMENA_MEMORY_LIMIT_MB:-512}
     healthcheck:
+      # Liveness. Readiness (/ready) is model-aware and intentionally 503s
+      # until an embedding model is provisioned into the models volume.
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8848/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
 volumes:
-  lumena_data:
+  lumena_store:
+    driver: local
+  lumena_models:
     driver: local

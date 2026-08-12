@@ -199,6 +199,13 @@ curl http://localhost:8848/v1/status
 # Liveness probe
 curl http://localhost:8848/health
 # {"status": "ok"}
+
+# Readiness probe (model-aware): 503 until the embedding model is loaded
+curl http://localhost:8848/ready
+# {"status": "ready", "embedding_model_available": true, "scheduler_running": true}
+
+# Prometheus exposition (request counters, latency histograms, palace gauges)
+curl http://localhost:8848/metrics/prometheus
 ```
 
 ### 4.2 CLI Status
@@ -226,6 +233,67 @@ tail -f ~/.lumena/logs/audit.jsonl | jq .
 # {"timestamp":"2026-07-20T12:00:00Z","component":"LUMENA:FORCE:MNEMONIC",
 #  "level":"info","event":"CONSOLIDATE","room":"preferences","new_chunks":12}
 ```
+
+### 4.4 Azure Monitor / Application Insights (opt-in)
+
+Lumena can export OpenTelemetry traces and logs to Application Insights.
+This is **sovereignty-gated and fail-loud**:
+
+- Set `APPLICATIONINSIGHTS_CONNECTION_STRING` (standard Azure convention).
+- Set `LUMENA_SOVEREIGN=false` — export while sovereign mode is on raises
+  `SovereignViolationError` at startup instead of silently leaking traces.
+- Install the extra: `pip install "lumena[azure]"`. If the connection string
+  is set but the package is missing, startup fails with an actionable error —
+  Lumena never runs without telemetry the operator configured.
+
+Memory content is never attached to spans by Lumena's instrumentation.
+
+For metrics-only monitoring without leaving sovereign mode, scrape
+`/metrics/prometheus` with any Prometheus-compatible agent (including Azure
+Monitor managed Prometheus via pod annotations) — scraping is inbound and
+does not violate the sovereign boundary.
+
+---
+
+## 4b. Kubernetes / AKS Deployment
+
+A Helm chart ships at `charts/lumena/` and Azure IaC at `infra/azure/`
+(Bicep: AKS + ACR + Log Analytics + Application Insights). Full walkthrough:
+`infra/azure/README.md`. CI/CD: `.github/workflows/docker-publish.yml`
+(image build/push + smoke test) and `.github/workflows/deploy-aks.yml`
+(manual Helm deploy via OIDC — no stored cloud credentials).
+
+**Honest constraints — read first:**
+
+| Constraint | Why |
+|---|---|
+| `replicaCount` is 1 and the chart **refuses** more | SQLite is single-writer, single-file; extra replicas would each hold an independent, divergent palace |
+| Rolling updates briefly stop the writer | One writer per store PVC; expect seconds of unavailability per upgrade — this is not an HA system |
+| Pod is NotReady until a model is provisioned | `/ready` gates on the embedding model; no silent lexical-only degradation behind a Service |
+| Model artifacts are checksum-pinned | The init container refuses an artifact without a `sha256`; models are versioned data, not image layers |
+
+```bash
+# Quickstart (after infra/azure provisioning)
+kubectl create namespace lumena
+kubectl -n lumena create secret generic lumena-auth \
+  --from-literal=api-key="$(openssl rand -hex 32)"
+helm upgrade --install lumena charts/lumena -n lumena \
+  --set image.repository="$ACR/lumena" --set image.tag=1.0.0 \
+  --set auth.existingSecret=lumena-auth \
+  --set model.url="https://<blob>/models/bge-small-en-v1.5-r5c38ec7.tar.gz" \
+  --set model.sha256="<tarball sha256>"
+```
+
+**Model lifecycle management:** package the ONNX model directory
+(`model.onnx` + tokenizer files) as a tar.gz, upload to versioned/immutable
+storage, pin `model.url` + `model.sha256` in values. Rolling a new model =
+new artifact + new pin + `helm upgrade`; rollback = re-pin the old artifact.
+The revision-pinned `lumena model download` CLI (KNOWN_MODELS with commit
+SHAs) covers non-Kubernetes hosts.
+
+**Backups on AKS:** snapshot the `store` PVC (Azure Disk snapshots) on a
+schedule; the nightly in-pod `backup_database` pass also writes into the
+same volume.
 
 ---
 

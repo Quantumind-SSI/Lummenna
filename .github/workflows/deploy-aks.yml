@@ -1,0 +1,72 @@
+name: Deploy to AKS
+
+# Deploys the Helm chart to AKS using OIDC federation (no stored cloud
+# secrets). Manual trigger with an explicit image tag: deployments are a
+# decision, not a side effect.
+#
+# Required repository configuration (see infra/azure/README.md):
+#   secrets:   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#   variables: AKS_RESOURCE_GROUP, AKS_CLUSTER_NAME, ACR_LOGIN_SERVER
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (e.g. 1.0.0 or sha-<short>)"
+        required: true
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        default: lumena
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-aks-${{ inputs.namespace }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Helm Upgrade
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group "${{ vars.AKS_RESOURCE_GROUP }}" \
+            --name "${{ vars.AKS_CLUSTER_NAME }}" \
+            --overwrite-existing
+
+      - name: Helm lint
+        run: helm lint charts/lumena
+
+      - name: Helm upgrade --install
+        run: |
+          helm upgrade --install lumena charts/lumena \
+            --namespace "${{ inputs.namespace }}" --create-namespace \
+            --set image.repository="${{ vars.ACR_LOGIN_SERVER }}/lumena" \
+            --set image.tag="${{ inputs.image_tag }}" \
+            --set auth.existingSecret=lumena-auth \
+            --wait --timeout 5m
+
+      - name: Verify rollout and readiness
+        run: |
+          kubectl -n "${{ inputs.namespace }}" rollout status statefulset/lumena-lumena --timeout=300s
+          kubectl -n "${{ inputs.namespace }}" get pods -o wide
+          # Readiness gate is model-aware: a Ready pod means the embedding
+          # model is provisioned and the palace is serving real results.
+          kubectl -n "${{ inputs.namespace }}" wait --for=condition=Ready pod \
+            -l app.kubernetes.io/instance=lumena --timeout=300s
