@@ -38,11 +38,21 @@ jobs:
       # (pushed commits on push, PR range on pull_request, full-repo scan on
       # schedule). Hardcoding base=main + head=HEAD made them resolve to the
       # same commit on main, which the action treats as a fatal error.
+      #
+      # --exclude-detectors=lob: documented false-positive class, audited
+      # 2026-08-12. Lob test API keys have the shape `test_<30+ chars>`,
+      # which collides with every pytest function name of that length
+      # (e.g. `test_load_raises_when_model_file_missing` in test files,
+      # .pyc bytecode, and CONTRIBUTING.md), and Lob's verification
+      # endpoint erroneously reports these strings as *verified*. All 6
+      # historical + 31 working-tree "verified Lob" findings were confirmed
+      # to be pytest identifiers; this repo uses no Lob services. Every
+      # other detector remains active and gating.
       - name: Run TruffleHog OSS
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          extra_args: --results=verified
+          extra_args: --results=verified --exclude-detectors=lob
 
   dependency-scan:
     name: Dependency Vulnerability Scan
