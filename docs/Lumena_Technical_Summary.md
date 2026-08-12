@@ -10,7 +10,7 @@ Lumena provides a persistent, searchable memory store for LLM agents. It organiz
 
 ### Proven
 
-- **273 tests (74% coverage)** — all passing, 9 skipped (optional integration deps, SQLCipher)
+- **294 tests (74% coverage)** — 287 passing, 7 skipped (optional integration deps, SQLCipher)
 - **End-to-end flow:** store → search → assemble → feedback → forget
 - **API server:** FastAPI with auth, rate limiting, CORS
 - **MCP server:** 7 tools exposed via stdio

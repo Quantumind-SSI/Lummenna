@@ -13,7 +13,7 @@
 
 Lumena is an open-source, local-first memory framework that gives large language model (LLM) agents persistent, structured, and lifecycle-aware memory without cloud dependencies. Unlike conventional vector databases that treat memory as a flat collection of vectors, Lumena organizes information as a *memory palace* — a structured topology of rooms, loci, and corridors governed by a heuristic *Twin-Force Controller* that balances mnemonic conservation against contextual attention.
 
-The system operates entirely on-device via ONNX Runtime and SQLite, eliminating external API costs and preserving data sovereignty. Lumena provides native integrations for LangGraph, LangChain, MCP-compatible agents (OpenCode, Claude Desktop), and a production-hardened FastAPI REST server. At v1.0.0, Lumena achieves 1.32–1.50× latency improvement from topology-constrained search with >99.8% recall retention, and ships with eleven validated benchmark suites spanning retrieval quality, forgetting behavior, navigation efficiency, and stress testing.
+The system operates entirely on-device via ONNX Runtime and SQLite, eliminating external API costs and preserving data sovereignty. Lumena provides native integrations for LangGraph, LangChain, MCP-compatible agents (OpenCode, Claude Desktop), and a production-hardened FastAPI REST server. At v1.0.0, topology-constrained search prunes ~80% of the corpus per query with ≥99.7% recall retention (routed ≥100% at all measured k; oracle worst case 99.69% at k=5) and a modest ~1.08× mean-latency improvement over flat global search (navigation benchmark; earlier 1.32–1.50× figures came from a biased mean-of-ratios statistic and have been retracted). Lumena ships with eleven benchmark suites spanning retrieval quality, forgetting behavior, navigation efficiency, and stress testing — eight with committed result artifacts, three (perf, stress, cross-system) with harnesses awaiting runs.
 
 ---
 
@@ -44,7 +44,7 @@ Lumena is a **production-grade, open-source agentic memory framework** with the 
 | **Structured** | Memories live in a spatial topology (rooms → loci → chunks) rather than a flat vector list. |
 | **Lifecycle-aware** | Memories decay, interfere, degrade in precision, and are released — mirroring biological memory. |
 | **Integrable** | Native adapters for LangGraph, LangChain, MCP, and FastAPI REST plug into existing agent stacks without lock-in. |
-| **Lightweight** | ~90 MB RAM footprint, ~35 MB storage per 10,000 memories, single-file SQLite database. |
+| **Lightweight** | Single-file SQLite database; embedding model is a 33 MB INT8 ONNX export. RAM/storage footprints have not yet been benchmarked (perf suite pending). |
 
 At its core, Lumena is not merely a vector database with extra features. It is a **complete memory substrate** for agents: storage, retrieval, ranking, forgetting, consolidation, and cross-agent sharing — all in one system.
 
@@ -172,21 +172,21 @@ context = memory.retrieve_and_assemble("What UI settings does the user like?")
 
 ## 5. Benchmarks at a Glance
 
-Lumena ships with eleven validated benchmark suites. All results are committed to the repository as reproducible JSON artifacts.
+Lumena ships with eleven benchmark suites. Eight have results committed to the repository as reproducible JSON artifacts; the performance, stress, and cross-system suites are harnesses whose results are not yet committed.
 
 | Suite | What It Measures | Key Result |
 |---|---|---|
 | **Retrieval Quality** | R@k, nDCG, MAP, MRR across BM25 / dense / hybrid | Hybrid matches BM25 on synthetic corpus; BEIR subset evaluated on 5 real datasets |
-| **Palace Navigation Efficiency** | Speedup of room-constrained vs. flat global search | **1.32–1.50× latency reduction** with >99.8% recall retention |
+| **Palace Navigation Efficiency** | Speedup of room-constrained vs. flat global search | ~80% corpus pruning, ≥99.7% recall retention (oracle worst case 99.69% @ k=5), ~1.08× mean-latency speedup (ratio of means; earlier 1.32–1.50× mean-of-ratios figures retracted as statistically biased) |
 | **Forgetting Simulation** | 90-day survival curves, interference precision | All synthetic chunks decay below threshold at default settings; re-access reinforcement implemented |
-| **End-to-End Memory Quality** | Multi-turn conversational recall (7 personas, 28 queries) | 100% R@10, 78.6% R@5 (mock embedder; directional only) |
-| **Component Ablation** | Latency contribution of TFC, V(m), graph, fusion | Full pipeline adds 16.7 ms overhead vs. dense-only on 111-chunk corpus |
+| **End-to-End Memory Quality** | Multi-turn conversational recall (7 personas, 28 queries) | 100% R@10, 100% R@5 (real MiniLM embedder; embedding-similarity self-grading of verbatim-stored facts — a smoke test, not an external quality claim) |
+| **Component Ablation** | Latency contribution of TFC, V(m), graph, fusion | Dense-only 10.6 ms; ablated pipelines ~12 ms; FULL config 78.8 ms in the committed run (FULL is measured first and likely absorbs warm-up — treat latency deltas as indicative). Accuracy was identical across ALL ablation configs — the corpus is too easy to discriminate quality contributions |
 | **BEIR Subset** | Real-document retrieval (NFCorpus, SciFact, FiQA, ArguAna, SCIDOCS) | Harness validated on 500-doc/20-query subsets; full corpus pending |
-| **Optical Degradation** | Retrieval accuracy at FP32/FP16/INT8/BINARY | Dense recall degrades from 1.0 → 0.422 R@10 across precision levels |
-| **TFC Sensitivity** | Grid search across controller parameters | 99.6% R@10 stability across 81 TFC configurations |
-| **Stress Test** | 100K+ ingestion, multi-threaded throughput | 100K chunks in ~351s; 1,000 queries in ~65s |
+| **Optical Degradation** | Retrieval accuracy at FP32/FP16/INT8/BINARY | Dense recall degrades from 1.0 → 0.422 R@10 across precision levels (synthetic random-vector substrate; isolates quantization error) |
+| **TFC Sensitivity** | Grid search across controller parameters | 99.6% R@10 stability across 81 TFC configurations (synthetic random-vector substrate) |
+| **Stress Test** | 100K+ ingestion, multi-threaded throughput | Harness ready; no committed results yet |
 
-> **Honest caveat:** Sample sizes are modest (3 seeds for retrieval, 28 queries for E2E, 41 feedback ratings). Bootstrap confidence intervals reflect resampling noise. Full BEIR/MTEB leaderboard submission remains future work.
+> **Honest caveat:** Sample sizes are modest (3 seeds for retrieval, 28 queries for E2E). The synthetic retrieval corpus is deliberately easy and near-saturates nDCG; the component-ablation suite showed **no accuracy differences between configurations** on its 111-chunk corpus (only latency differences are reportable — the corpus is too small to discriminate quality contributions). Bootstrap confidence intervals reflect resampling noise. Full BEIR/MTEB leaderboard submission remains future work.
 
 ---
 
@@ -226,7 +226,7 @@ Lumena is **stable software** — API-stable, actively developed, and suitable f
 ### What Works Today
 
 - End-to-end memory lifecycle: store → search → assemble → feedback → forget
-- 273 tests across 41 test files with ~74% line coverage
+- 294 tests across 41 test files with ~74% line coverage
 - FastAPI server with auth, rate limiting, and CORS
 - MCP server with 7 tools
 - LangChain and LangGraph native adapters
@@ -250,7 +250,7 @@ Lumena advances agentic memory from research concept to production-ready usabili
 
 The honest claim is not that Lumena surpasses every vector database on every retrieval metric. The honest claim is that **no existing system combines structured topology, lifecycle management, learned value ranking, and sovereign deployment in a single integrable framework** — and that Lumena demonstrates this combination is feasible, usable, and directionally performant.
 
-The complete source code (~8.4K lines of Python across 64 modules), documentation, eleven benchmark suites, domain corpus, and integrations are available at:
+The complete source code (~9K lines of Python across 65 modules), documentation, eleven benchmark suites, domain corpus, and integrations are available at:
 
 > **https://github.com/QuantumindSSI/lumena**
 

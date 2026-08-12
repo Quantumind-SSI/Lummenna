@@ -1,47 +1,20 @@
 # Aider + Lumena Integration
 
-[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively, but you can integrate Lumena via **custom commands** and the **HTTP API**.
+[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively and has no custom slash-command configuration, so the integration paths below use aider's built-in `/run` command, shell wrappers, and the Lumena HTTP API. Start `lumena serve` first.
 
-## Option 1: Aider Custom Commands
+## Option 1: Aider's built-in `/run` command
 
-Add to your `~/.aider.conf.yml`:
+Aider's `/run` executes a shell command and can add its output to the chat. Use it to query Lumena mid-session:
 
-```yaml
-# Aider configuration with Lumena integration
+```
+/run curl -s -X POST http://localhost:8848/v1/search -H "Content-Type: application/json" -d '{"query":"database indexing decision","top_k":5}'
 
-# Custom slash commands
-commands:
-  # Search Lumena palace
-  - name: lumena-search
-    description: Search the Lumena memory palace
-    run: |
-      curl -s -X POST http://localhost:8848/v1/search \
-        -H "Content-Type: application/json" \
-        -d "{\"query\":\"$args\",\"top_k\":5}"
+/run curl -s -X POST http://localhost:8848/v1/store -H "Content-Type: application/json" -d '{"content":"Use composite indexes on (user_id, created_at)","room":"decisions"}'
 
-  # Store a decision in Lumena
-  - name: lumena-store
-    description: Store a memory in the Lumena palace
-    run: |
-      curl -s -X POST http://localhost:8848/v1/store \
-        -H "Content-Type: application/json" \
-        -d "{\"content\":\"$args\",\"room\":\"decisions\"}"
-
-  # Assemble context from Lumena
-  - name: lumena-context
-    description: Assemble relevant context from Lumena
-    run: |
-      curl -s -X POST http://localhost:8848/v1/assemble \
-        -H "Content-Type: application/json" \
-        -d "{\"query\":\"$args\",\"top_k\":5}"
+/run curl -s -X POST http://localhost:8848/v1/assemble -H "Content-Type: application/json" -d '{"query":"implement retry logic","top_k":5}'
 ```
 
-Usage in Aider:
-```
-/lumena-search database indexing decision
-/lumena-store We will use composite indexes on (user_id, created_at)
-/lumena-context implement retry logic
-```
+To avoid typing the full curl each time, wrap them in small scripts on your `PATH` (e.g. `lumena-search`, `lumena-store`) and call `/run lumena-search database indexing decision`.
 
 ## Option 2: Python Hook (Advanced)
 
@@ -50,6 +23,7 @@ Create `~/.aider/lumena_hook.py`:
 ```python
 """Aider pre-commit hook that stores file changes in Lumena."""
 
+import json
 import subprocess
 import sys
 
@@ -60,12 +34,16 @@ def main():
     if not content.strip():
         return
 
-    # Store the commit/context in Lumena
+    # Store the commit/context in Lumena. json.dumps produces valid JSON
+    # (Python repr() would emit single-quoted strings the API rejects).
+    body = json.dumps(
+        {"content": content[:2000], "room": "commits", "source_type": "import"}
+    )
     subprocess.run(
         [
             "curl", "-s", "-X", "POST", "http://localhost:8848/v1/store",
             "-H", "Content-Type: application/json",
-            "-d", f'{{"content":{repr(content[:2000])},"room":"commits","source_type":"import"}}',
+            "-d", body,
         ],
         capture_output=True,
     )
@@ -95,5 +73,5 @@ aider-lumena() {
 
 Usage:
 ```bash
-aider-lumenaa "Refactor the database layer to use connection pooling"
+aider-lumena "Refactor the database layer to use connection pooling"
 ```

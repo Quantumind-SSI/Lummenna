@@ -2,9 +2,10 @@
 
 All notable changes to Lumena will be documented in this file.
 
-# Changelog
-
-All notable changes to Lumena will be documented in this file.
+> Note: the `datasets/` directory referenced by older entries was renamed to
+> `seed_datasets/` (it shadowed the HuggingFace `datasets` package and broke
+> MS MARCO/BEIR loading). Use `python -m seed_datasets.seed` and
+> `seed_datasets/domain_corpus.json`.
 
 ## [Unreleased]
 
@@ -33,7 +34,7 @@ All notable changes to Lumena will be documented in this file.
 - Domain corpus dataset (`datasets/domain_corpus.json`) — a hand-crafted knowledge corpus with 111 fact chunks across 8 rooms (machine_learning, nlp, cybersecurity, distributed_systems, healthcare_ai, quantum_computing, open_source, climate_tech), each with 4 structured loci. Designed for both palace seeding (`python -m datasets.seed`) and benchmarking.
 - Palace seed script (`datasets/seed.py`) — populates a Lumena instance from the domain corpus JSON with real embeddings, creating a production-ready knowledge base in ~2 seconds.
 - Palace Navigation Efficiency (PNE) benchmark (`benchmarks/navigation/`) — proprietary evaluation suite measuring latency speedup, recall retention, intent-routing accuracy, and pruning efficiency of Lumena's room/locus topology vs. flat global search. Outputs JSON + Markdown.
-- End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 14 sessions. Measures R@k semantic recall, similarity scores, and per-query latency. Bridges Lumena to the SOTA evaluation standards used by MemGPT/Mem0/Zep.
+- End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 7 sessions. Measures R@k recall, similarity scores, and per-query latency using embedding-similarity self-grading (no LLM judge, no comparison against MemGPT/Mem0/Zep).
 - LangGraph integration (`lumena.integrations.langgraph`) — `LumenaCheckpointSaver` for graph state persistence and `LumenaGraphStore` for cross-thread long-term memory. Installable via `pip install lumena[langgraph]`. Includes 9 test cases.
 - Centralized logging helper (`lumena.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
 - API versioning (`/v1/` prefix) for all operational endpoints with backward-compatible public paths (`/health`, `/dashboard`, `/metrics`).

@@ -219,7 +219,7 @@ Three modes (`database_encryption_mode`):
 - FTS5 index with porter stemmer
 - vec_fallback blob storage (384 floats × 4 bytes = 1536 bytes per vector)
 - No external network dependency (fully sovereign)
-- Edge deployable on RPi5 with ~90 MB RAM (from whitepaper)
+- Designed for edge deployment (RPi5-class devices); RAM footprint not yet benchmarked
 
 ### 7.4 Optical Degradation Pipeline
 Progressive quantization chain for memory lifecycles:
@@ -415,13 +415,13 @@ Self-hosted HTML dashboard served at `/dashboard` with:
 
 4. **Self-Healing Retrieval**: Search repair loop that automatically adjusts TFC attention temperature when results are empty, budget is exceeded, or confidence is low.
 
-5. **Edge Deployability**: Device profiles for RPi5 (256 MB, 1024 tokens), Jetson Orin (512 MB, 2048 tokens), Orange Pi. ONNX-optimized embedder at ~90 MB RAM.
+5. **Edge Deployability**: Device profiles for RPi5 (256 MB, 1024 tokens), Jetson Orin (512 MB, 2048 tokens), Orange Pi. ONNX-optimized embedder (33 MB INT8 export); runtime RAM footprint not yet benchmarked.
 
 6. **10 IDE Integrations**: Ready configs for OpenCode, Copilot, Claude Desktop, Codex CLI, Goose, Cline, Continue, Zed, Devin, and Aider — plus LangChain/LangGraph SDKs.
 
-7. **Full Benchmark Suite**: 11 benchmark suites (retrieval, cross-system, BEIR, ablation, navigation, forgetting, optical, TFC sensitivity, performance, stress, E2E). Run via single `python -m benchmarks.run_all`.
+7. **Full Benchmark Suite**: 11 benchmark suites (retrieval, cross-system, BEIR, ablation, navigation, forgetting, optical, TFC sensitivity, performance, stress, E2E), all wrapped by `python -m benchmarks.run_all`. Eight suites have committed results; performance, stress, and cross-system are harnesses awaiting runs.
 
-8. **GDPR-Native Right to Be Forgotten**: `lumena compliance audit` + three-layer forgetting pipeline supports compliance-driven erasure.
+8. **GDPR-Native Right to Be Forgotten**: `lumena compliance forget <chunk_id> --reason "..."` performs audited, provenance-purging erasure; `lumena compliance audit` shows the trail.
 
 9. **Encryption-at-Rest Options**: Three tiers — SQLCipher (page-level AES-256), Fernet (field-level AES-128), and plaintext.
 
@@ -434,7 +434,7 @@ Self-hosted HTML dashboard served at `/dashboard` with:
 | Metric | Count |
 |--------|-------|
 | Python source files (lumena/) | 60 |
-| Test files (tests/) | 43 |
+| Test files (tests/) | 41 |
 | Benchmark suites (benchmarks/) | 11 |
 | Integrations (integrations/) | 10 platforms, 16 config files |
 | Documentation files (docs/) | 7 |

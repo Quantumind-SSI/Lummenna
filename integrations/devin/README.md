@@ -1,52 +1,10 @@
 # Devin + Lumena Integration
 
-## Option 1: Devin Custom Tool (Recommended)
+> **Honesty note:** Devin's tooling surface is proprietary and changes frequently; nothing in this document is an officially supported Devin feature, and we have not verified these recipes against a live Devin workspace. The only guaranteed interface is Lumena's HTTP API (Option 1), which works from any environment that can run `curl`.
 
-Register this tool definition in your Devin workspace settings:
+## Option 1: Direct HTTP (Bash tool) — Recommended
 
-```yaml
-name: lumena_memory
-description: >
-  Search, store, and manage long-term memory in the Lumena palace.
-  Use this when you need to recall prior decisions, persist new insights,
-  or assemble relevant context before writing code.
-parameters:
-  - name: action
-    type: string
-    enum: [search, store, assemble, turn, feedback, status]
-    required: true
-  - name: query
-    type: string
-    description: Search query or content to store
-  - name: room
-    type: string
-    description: Room name (e.g., decisions, architecture, snippets)
-    default: conversations
-  - name: content
-    type: string
-    description: Content to store (for store action)
-  - name: user_msg
-    type: string
-    description: User message (for turn action)
-  - name: assistant_msg
-    type: string
-    description: Assistant message (for turn action)
-  - name: chunk_id
-    type: integer
-    description: Chunk ID for feedback
-  - name: was_useful
-    type: boolean
-    description: For feedback action
-endpoint:
-  type: http
-  base_url: http://host.docker.internal:8848
-  headers:
-    Content-Type: application/json
-```
-
-## Option 2: Direct HTTP (Bash tool)
-
-If custom tools are unavailable, use these bash commands in Devin:
+Devin can execute shell commands. Use the Lumena REST API directly:
 
 ```bash
 # Start Lumena server in background (one-time)
@@ -76,24 +34,17 @@ curl -s -X POST http://localhost:8848/v1/turn \
 curl -s http://localhost:8848/v1/status | jq .
 ```
 
-## Option 3: Devin Docker Image (Advanced)
+## Option 2: Sidecar Container (Advanced)
 
-Embed Lumena directly into your Devin sandbox Dockerfile:
-
-```dockerfile
-FROM cognition/devin:latest
-
-RUN pip install "lumena @ git+https://github.com/QuantumindSSI/lumena"
-RUN lumena init --device generic
-
-COPY lumena-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
-```
+Devin's sandbox base images are not publicly distributed, so you cannot bake Lumena into them. Instead, run Lumena as a sidecar container on the same network and point Devin's shell commands at it:
 
 ```bash
-#!/bin/sh
-# lumena-entrypoint.sh
-lumena serve --host 0.0.0.0 --port 8848 &
-exec /usr/local/bin/devin-start
+docker run -d --name lumena \
+  -p 8848:8848 \
+  -v lumena-store:/root/.lumena \
+  -e LUMENA_API_HOST=0.0.0.0 \
+  python:3.11-slim \
+  sh -c "pip install 'lumena @ git+https://github.com/QuantumindSSI/lumena' && lumena init --device generic && lumena serve --host 0.0.0.0 --port 8848"
 ```
+
+Then use the Option 1 curl commands with `http://host.docker.internal:8848` (or the container's address on your Docker network).

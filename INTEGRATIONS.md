@@ -65,7 +65,7 @@ Create `.opencode/opencode.json` in your project root:
 }
 ```
 
-**What the agent can now do:**
+**What the agent can now do (7 tools):**
 
 - `lumena_search` — semantic + lexical hybrid search across the memory palace
 - `lumena_store` — persist a code insight, decision, or snippet
@@ -73,25 +73,24 @@ Create `.opencode/opencode.json` in your project root:
 - `lumena_turn` — log a full conversation turn with implicit feedback
 - `lumena_feedback` — log explicit feedback on a retrieved memory
 - `lumena_status` — show palace health (rooms, active chunks, TFC state)
+- `lumena_dashboard` — effectiveness dashboard (health, locally measured benchmarks, lifecycle state)
 
-### Option B: HTTP API via Remote MCP
+### Option B: HTTP API (remote / Docker deployments)
 
-If Lumena runs on a remote host or in Docker:
+The MCP server is **stdio-only** — Lumena does not currently expose an MCP endpoint over HTTP. For remote hosts or Docker, use the REST API directly:
 
-```json
-{
-  "mcp": {
-    "lumena-remote": {
-      "type": "remote",
-      "url": "http://localhost:8848/mcp",
-      "enabled": true,
-      "headers": {
-        "X-API-Key": "{env:LUMENA_API_KEY}"
-      }
-    }
-  }
-}
+```bash
+# On the remote host
+lumena serve --host 0.0.0.0 --port 8848
+
+# From the client
+curl -X POST http://REMOTE_HOST:8848/v1/search \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $LUMENA_API_KEY" \
+  -d '{"query": "cache layer decision", "top_k": 5}'
 ```
+
+Set `LUMENA_API_KEY` on the server before exposing it to any network (see `SECURITY.md`).
 
 ### Option C: OpenCode Skill for Lumena Workflows
 
@@ -173,7 +172,7 @@ platform.
 1. **Sovereign mode**: By default Lumena stores everything locally in SQLite (`~/.lumena/store/lumena.db`). No cloud leakage.
 2. **API Key**: Set `LUMENA_API_KEY` and provide it via headers / env vars for multi-user environments.
 3. **P2P sharing**: `lumena p2p share` is opt-in; memories do not leave the device unless explicitly shared.
-4. **Forgetting**: Lumena supports compliance-driven forgetting (`lumena compliance audit`). Platforms should respect GDPR/CCPA deletion requests by calling the forgetting API.
+4. **Forgetting**: Lumena supports compliance-driven deletion: `lumena compliance forget <chunk_id> --reason "..."` permanently forgets a chunk (audit event, FTS removal, provenance purge, content redaction), and `lumena compliance audit` shows the audit trail. Use these to honour GDPR/CCPA deletion requests.
 
 ---
 

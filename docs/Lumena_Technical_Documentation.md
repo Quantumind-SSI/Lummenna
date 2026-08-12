@@ -183,7 +183,7 @@ All configuration via environment variables (`LUMENA_` prefix), TOML file (`~/.l
 | `pii_redaction_mode` | `redact` | PII handling: block, redact, or hash |
 | `store_path` | `~/.lumena/store` | Database storage path |
 | `model_path` | `~/.lumena/models` | Embedding model cache |
-| `api_host` / `api_port` | `0.0.0.0` / `8848` | API server binding |
+| `api_host` / `api_port` | `127.0.0.1` / `8848` | API server binding (loopback by default; set `LUMENA_API_HOST=0.0.0.0` to expose on the LAN, e.g. in Docker) |
 | `api_key` | None (disabled) | Optional API authentication |
 | `api_rate_limit` | `60/minute` | Rate limiting |
 
@@ -272,20 +272,22 @@ from lumena.integrations.langgraph import LumenaCheckpointSaver
 
 ## 10. Benchmarks
 
-Eleven benchmark suites in `benchmarks/`. All run from the repo root.
+Eleven benchmark suites in `benchmarks/`. All run from the repo root and refuse to run with mock embeddings (stress allows an explicit, artifact-labeled `--mock-embedder` for storage-only runs).
 
 | Suite | Status | Command |
 |---|---|---|
-| Retrieval | Implemented | `python -m benchmarks.retrieval.run` |
-| E2E quality | Implemented | `python -m benchmarks.e2e.run` |
-| Navigation | Implemented | `python -m benchmarks.navigation.run` |
-| Ablation | Implemented | `python -m benchmarks.ablation.run` |
+| Retrieval | Run (synthetic corpus; 2 real embedders) | `python -m benchmarks.retrieval.run` |
+| E2E quality | Run (real MiniLM embedder; self-graded persistence smoke test) | `python -m benchmarks.e2e.run` |
+| Navigation | Run (~1.08× mean-latency speedup, ratio of means) | `python -m benchmarks.navigation.run` |
+| Ablation | Run (latency only — accuracy identical across configs; corpus too easy) | `python -m benchmarks.ablation.run` |
 | Forgetting | Run (results available) | `python -m benchmarks.forgetting.run` |
-| Performance | Harness ready | `python -m benchmarks.perf.run` |
+| Performance | Harness ready; no results yet | `python -m benchmarks.perf.run` |
 | BEIR subset | Run (500-doc/20-query subset results available) | `python -m benchmarks.beir.run` |
 | Optical degradation | Run (results available) | `python -m benchmarks.optical.run` |
 | TFC sensitivity | Run (results available) | `python -m benchmarks.tfc.run` |
-| All suites | Wrapper | `python -m benchmarks.run_all` |
+| Stress | Harness ready; no results yet | `python -m benchmarks.stress.run` |
+| Cross-system (vs Chroma/FAISS) | Harness ready; no results yet | `python -m benchmarks.cross_system.run` |
+| All suites | Wrapper (all 11) | `python -m benchmarks.run_all` |
 
 Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are explicitly loaded. Install benchmark dependencies with `pip install "lumena[benchmarks]"`.
 
@@ -298,8 +300,8 @@ Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are expli
 - **PII scanning:** Regex-based at storage time with block/redact/hash strategies
 - **Audit trail:** All operations logged to SQLite `audit_log` table
 - **File permissions:** `~/.lumena` enforced to 700 (dirs) / 600 (files) on startup
-- **API auth:** Optional `X-API-Key` header with constant-time comparison
-- **No encryption-at-rest:** Use OS-level disk encryption (LUKS, FileVault, BitLocker)
+- **API auth:** Optional `X-API-Key` header with constant-time comparison (off until `LUMENA_API_KEY` is set)
+- **Encryption-at-rest (opt-in):** SQLCipher full-DB or Fernet field-level via `LUMENA_DATABASE_ENCRYPTION_MODE`; default `none` — use OS-level disk encryption if not enabled
 
 Report vulnerabilities via [GitHub Security Advisories](https://github.com/QuantumindSSI/lumena/security/advisories/new).
 
@@ -307,12 +309,11 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 
 ## 12. Known Limitations
 
-1. **Encryption-at-rest partially implemented** — SQLCipher schema support exists; full validation deferred to v0.3.0. Use OS-level disk encryption as a stopgap.
-2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN
-3. **Benchmark results partially validated** — synthetic corpora are validated; BEIR subset results (500 docs, 20 queries) are available. Full-corpus BEIR leaderboard submission remains pending.
-4. **No CDN SRI** — dashboard loads Chart.js from CDN without integrity hash
-5. **Some modules unwired** — backup, user_profile, log_rotation exist but await integration
-6. **Dual scheduler risk** — running both `lumena serve` and `lumena daemon start` creates duplicate schedulers
+1. **Encryption-at-rest is opt-in** — SQLCipher and Fernet modes are implemented and tested but disabled by default (`LUMENA_DATABASE_ENCRYPTION_MODE=none`). In Fernet mode, the FTS5 lexical index still contains plaintext tokens (see SECURITY.md).
+2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN (replay-nonce cache is in-memory only)
+3. **Benchmark results are subset-scale** — synthetic retrieval corpus is deliberately easy; BEIR results cover 500-doc/20-query subsets; perf/stress/cross-system have no committed results. Full-corpus BEIR leaderboard submission remains pending.
+4. **Some modules unwired** — backup and user_profile weight learning exist but await full integration
+5. **Dual scheduler risk** — running both `lumena serve` and `lumena daemon start` creates duplicate schedulers
 
 ---
 
@@ -340,6 +341,6 @@ lumena/
 ├── integrations/          # LangChain, LangGraph, MCP server
 ├── p2p/                   # Beam P2P sharing protocol
 ├── sovereign/             # FRQAD, optical quantization, local LLM
-tests/                     # 41 test files, 273 tests
+tests/                     # 41 test files, 294 tests
 benchmarks/                # 11 benchmark suites (including BEIR, optical, TFC sensitivity, stress, cross-system)
 ```
