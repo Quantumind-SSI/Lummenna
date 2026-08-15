@@ -8,6 +8,7 @@ import json
 
 import numpy as np
 
+from lumena.contracts import INTENT_LABELS, IntentLabel, validate_intent_label
 from lumena.controller import TwinForceController
 
 _TRAINED_CACHE: dict[str, dict] = {}
@@ -52,6 +53,16 @@ class IntentRouter:
             epochs: Number of training epochs.
             save_path: Optional path to persist the trained weights.
         """
+        # Ground the whitepaper 3.3 claim that the router classifies into the
+        # four documented intent classes: refuse to train on out-of-contract
+        # labels, which would let classify_with_embedding return an
+        # undocumented class.
+        unknown = set(y) - INTENT_LABELS
+        if unknown:
+            raise ValueError(
+                f"intent labels must be a subset of {sorted(INTENT_LABELS)}, "
+                f"got unknown labels {sorted(unknown)}"
+            )
         classes = sorted(set(y))
         n_classes = len(classes)
         n_features = X.shape[1]
@@ -81,7 +92,12 @@ class IntentRouter:
             self._save_lr(save_path)
             self.lr_path = save_path
 
-    def classify(self, query: str, tfc: TwinForceController | None = None) -> str:
+    def classify(self, query: str, tfc: TwinForceController | None = None) -> IntentLabel:
+        """Classify a query into one of the four documented intent classes.
+
+        The return value is validated against the whitepaper 3.3 contract
+        {factual, exploratory, relational, temporal}.
+        """
         q = query.lower().strip()
 
         # 1. Keyword rules (higher precision, keep as override)
@@ -104,15 +120,17 @@ class IntentRouter:
 
     def classify_with_embedding(
         self, query_embedding: np.ndarray, tfc: TwinForceController | None = None
-    ) -> str:
+    ) -> IntentLabel:
         """Classify using trained LR weights and query embedding.
 
         Falls back to lexical classify() if no trained weights are available.
+        The returned label is validated against the four documented intent
+        classes, so a mistrained classifier cannot leak an undocumented label.
         """
         if self.lr_coef is not None and self.lr_classes is not None:
             logits = query_embedding.reshape(1, -1) @ self.lr_coef.T
             idx = int(np.argmax(logits))
-            return self.lr_classes[idx]
+            return validate_intent_label(self.lr_classes[idx])
         return self.classify("", tfc)
 
     def get_trained_labels(self) -> list[str] | None:

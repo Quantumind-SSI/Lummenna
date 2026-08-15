@@ -25,6 +25,24 @@ class TFCState(BaseModel):
         return {"e": self.e, "a": self.a, "tau": self.tau, "r": self.r}
 
 
+class InteractionSignal(BaseModel):
+    """A single TFC update stimulus.
+
+    The four continuous signals are bounded to their contractual ranges so the
+    thresholded, deterministic state transitions in ``TwinForceController.update``
+    behave as documented. Unknown keys are rejected to catch caller typos that
+    would otherwise be silently ignored by ``dict.get``.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    novelty: float = Field(default=0.0, ge=0.0, le=1.0)
+    repetition: float = Field(default=0.0, ge=0.0, le=1.0)
+    context_pressure: float = Field(default=0.0, ge=0.0, le=1.0)
+    satisfaction: float = Field(default=0.0, ge=-1.0, le=1.0)
+    goal_changed: bool = False
+
+
 class TwinForceController:
     """TFC state machine with deterministic update rules."""
 
@@ -58,17 +76,25 @@ class TwinForceController:
             "default_resolution": 3,
         }
 
-    def update(self, interaction_signal: dict) -> None:
+    def update(self, interaction_signal: dict | InteractionSignal) -> None:
         """
         Update TFC state based on interaction signal.
         Expected keys: novelty, repetition, context_pressure, satisfaction, goal_changed
+
+        The signal is validated (ranges + no unknown keys) before it drives the
+        deterministic threshold transitions.
         """
+        signal = (
+            interaction_signal
+            if isinstance(interaction_signal, InteractionSignal)
+            else InteractionSignal.model_validate(interaction_signal)
+        )
         cfg = self._cfg
-        novelty = interaction_signal.get("novelty", 0.0)
-        repetition = interaction_signal.get("repetition", 0.0)
-        context_pressure = interaction_signal.get("context_pressure", 0.0)
-        satisfaction = interaction_signal.get("satisfaction", 0.0)
-        goal_changed = interaction_signal.get("goal_changed", False)
+        novelty = signal.novelty
+        repetition = signal.repetition
+        context_pressure = signal.context_pressure
+        satisfaction = signal.satisfaction
+        goal_changed = signal.goal_changed
 
         if novelty > cfg["novelty_threshold"]:
             self.state.e = max(0.0, self.state.e - cfg["step_conservation"])

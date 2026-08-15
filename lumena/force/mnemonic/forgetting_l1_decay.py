@@ -8,23 +8,34 @@ Secret sauce: User-specific decay rate (D16 user_profile.ebbinghaus_half_life_da
 import math
 import sqlite3
 from datetime import datetime, timezone
+from typing import Annotated
+
+from pydantic import Field, validate_call
 
 from lumena.logging import get_console_logger
 from lumena.sovereign.wear import WearAwareBatcher
 
 logger = get_console_logger(__name__)
 
+# Whitepaper 3.5 (L1): chunks whose value decays below this floor are released.
+RELEASE_FLOOR = 0.05
 
+
+@validate_call(config={"arbitrary_types_allowed": True})
 def ebbinghaus_decay(
     conn: sqlite3.Connection,
-    user_half_life_days: float = 7.0,
+    user_half_life_days: Annotated[float, Field(gt=0.0)] = 7.0,
     now: datetime | None = None,
     batcher: WearAwareBatcher | None = None,
 ) -> int:
     """
     R(t) = e^(-t / (h * ln(2))) where h = user-specific half-life in days.
     Applied as a multiplicative penalty to vm_score.
-    Chunks with vm_score below 0.05 are queued for release.
+    Chunks with vm_score below ``RELEASE_FLOOR`` (0.05) are queued for release.
+
+    ``user_half_life_days`` is validated to be strictly positive: a non-positive
+    half-life would make the Ebbinghaus formula ill-defined (division by zero or
+    a growing "retention"), violating the claim that R(t) ∈ (0, 1] is decay.
     """
     now = now or datetime.now(timezone.utc)
     unix_now = int(now.timestamp())
@@ -41,15 +52,18 @@ def ebbinghaus_decay(
     released = 0
     for chunk_id, vm, last_access, created_at in rows:
         created = created_at if created_at is not None else unix_now
-        age_sec = unix_now - created
+        age_sec = max(0, unix_now - created)  # future-dated rows must not amplify Vm
         retention = math.exp(-age_sec / (hl_sec * math.log(2)))
         # Recency boost
         if last_access:
-            recency_hours = (unix_now - last_access) / 3600.0
+            recency_hours = max(0.0, (unix_now - last_access) / 3600.0)
             recency_boost = math.exp(-recency_hours / 24.0)
             retention = max(retention, recency_boost)
+        # Invariant: R(t) ∈ (0, 1]. exp of a non-positive exponent is already in
+        # this range; clamp defensively so decay can never increase Vm.
+        retention = min(1.0, max(0.0, retention))
         new_vm = vm * retention
-        if new_vm < 0.05:
+        if new_vm < RELEASE_FLOOR:
             new_vm = 0.0
             released += 1
         updates.append((new_vm, chunk_id))

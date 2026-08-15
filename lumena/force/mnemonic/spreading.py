@@ -7,24 +7,30 @@ Secret sauce: Controlled echo-location; gamma decay prevents explosion
 NOTE: This module is wired into the search pipeline via search.py Stage 2c.
 """
 
-from typing import Any
+from typing import Annotated, Any
+
+from pydantic import Field, validate_call
 
 from lumena.logging import get_console_logger
 
 logger = get_console_logger(__name__)
 
+# Gamma decay per hop; < 1 guarantees activation cannot explode across hops.
 SPREAD_GAMMA = 0.4
 
 
+@validate_call(config={"arbitrary_types_allowed": True})
 def spread_activation(
     graph: Any | None,
     seed_ids: list[int],
-    a: float,
+    a: Annotated[float, Field(ge=0.0, le=1.0)],
 ) -> dict[int, float]:
     """
     Spread activation across a graph from seed nodes.
 
-    `a` ∈ [0,1] maps directly to TFC attentional temperature.
+    `a` ∈ [0,1] maps directly to TFC attentional temperature and is validated as
+    such: the threshold ``max(0.1, 1 - a)`` only maps to the claimed
+    "wider spread as a→1" behaviour when ``a`` is a genuine temperature in [0, 1].
     Higher `a` → wider spread. Formula from brainstorm 9.2.6.
 
     Args:
