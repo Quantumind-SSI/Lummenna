@@ -7,6 +7,7 @@ import stat
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import cast
 
 from lumena.data.migrate import migrate
 from lumena.logging import get_console_logger
@@ -54,7 +55,7 @@ def _unixepoch_shim(*args: object) -> int:
 
     if isinstance(base, str) and base.strip().lower() == "now":
         dt = datetime.now(timezone.utc)
-    elif isinstance(base, (int, float)):
+    elif isinstance(base, int | float):
         # Bare numeric time value: SQLite treats it as a unix timestamp when the
         # 'unixepoch' modifier is implied. Here we only receive it as seconds.
         dt = datetime.fromtimestamp(float(base), tz=timezone.utc)
@@ -88,6 +89,7 @@ def register_compat_functions(conn: sqlite3.Connection) -> None:
     # -1 arity => variadic, so both unixepoch() and unixepoch('now', '-7 days')
     # resolve to our shim.
     conn.create_function("unixepoch", -1, _unixepoch_shim, deterministic=False)
+
 
 # Graceful SQLCipher import
 try:
@@ -156,7 +158,9 @@ def get_connection(config) -> sqlite3.Connection:
         conn = sqlcipher3.connect(str(db_path), check_same_thread=False)  # type: ignore[arg-type]
         passphrase = cfg.encryption_key or ""
         if not passphrase:
-            raise RuntimeError("database_encryption_mode='sqlcipher' requires LUMENA_ENCRYPTION_KEY to be set.")
+            raise RuntimeError(
+                "database_encryption_mode='sqlcipher' requires LUMENA_ENCRYPTION_KEY to be set."
+            )
         # Derive a high-entropy hex passphrase from the user's key
         from lumena.security.crypto import derive_sqlcipher_passphrase
 
@@ -193,7 +197,7 @@ def get_connection(config) -> sqlite3.Connection:
     register_compat_functions(conn)
     ensure_schema(conn)
     _enforce_permissions(cfg.store_path.parent)
-    return conn
+    return cast(sqlite3.Connection, conn)
 
 
 def get_encryption(config):

@@ -14,10 +14,14 @@ import os
 import struct
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+if TYPE_CHECKING:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
 def derive_sqlcipher_passphrase(key: str, store_path: Path, iterations: int = 256_000) -> str:
@@ -42,7 +46,7 @@ def derive_sqlcipher_passphrase(key: str, store_path: Path, iterations: int = 25
         iterations=iterations,
     )
     derived = kdf.derive(key.encode("utf-8"))
-    return derived.hex()
+    return str(derived.hex())
 
 
 class FernetEncryption:
@@ -54,6 +58,7 @@ class FernetEncryption:
         Args:
             key: Any string; it is hashed to a 32-byte Fernet key.
         """
+        self._fernet: Fernet | None
         if key:
             # Derive a URL-safe base64-encoded 32-byte key from arbitrary input
             digest = hashlib.sha256(key.encode("utf-8")).digest()
@@ -69,7 +74,7 @@ class FernetEncryption:
         """Encrypt *plaintext* and return URL-safe base64 bytes."""
         if self._fernet is None:
             raise RuntimeError("Encryption not initialised with a key")
-        return self._fernet.encrypt(plaintext.encode("utf-8"))
+        return bytes(self._fernet.encrypt(plaintext.encode("utf-8")))
 
     def decrypt(self, token: bytes | str) -> str:
         """Decrypt *token* and return the plaintext string."""
@@ -77,7 +82,7 @@ class FernetEncryption:
             raise RuntimeError("Encryption not initialised with a key")
         if isinstance(token, str):
             token = token.encode("utf-8")
-        return self._fernet.decrypt(token).decode("utf-8")
+        return str(self._fernet.decrypt(token).decode("utf-8"))
 
 
 class P2PCrypto:
@@ -90,6 +95,7 @@ class P2PCrypto:
     def __init__(self, key: str | None = None):
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+        self._aesgcm: AESGCM | None
         if key:
             digest = hashlib.sha256(key.encode("utf-8")).digest()
             self._aesgcm = AESGCM(digest)
@@ -105,14 +111,14 @@ class P2PCrypto:
         if self._aesgcm is None:
             raise RuntimeError("P2P encryption not initialised with a key")
         nonce = os.urandom(12)
-        return nonce + self._aesgcm.encrypt(nonce, plaintext, None)
+        return bytes(nonce + self._aesgcm.encrypt(nonce, plaintext, None))
 
     def decrypt(self, ciphertext: bytes) -> bytes:
         """Decrypt *ciphertext* (nonce+ciphertext+tag) and plaintext."""
         if self._aesgcm is None:
             raise RuntimeError("P2P encryption not initialised with a key")
         nonce, ct = ciphertext[:12], ciphertext[12:]
-        return self._aesgcm.decrypt(nonce, ct, None)
+        return bytes(self._aesgcm.decrypt(nonce, ct, None))
 
 
 class P2PSign:
@@ -138,7 +144,7 @@ class P2PSign:
         ts = struct.pack(">Q", int(time.time()))
         mac = hmac.HMAC(self._key, hashes.SHA256())
         mac.update(ts + payload)
-        return ts + mac.finalize() + payload
+        return bytes(ts + mac.finalize() + payload)
 
     def verify(self, framed: bytes) -> bytes:
         """Verify HMAC and timestamp; return original payload.

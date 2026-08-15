@@ -8,6 +8,29 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=allowed-identity.sh
 . "$HOOK_DIR/allowed-identity.sh"
 
+# ---------------------------------------------------------------------------
+# Protected-branch policy: never commit directly to a protected branch. All
+# work must go through a topic branch and be merged via pull request, so it can
+# be reviewed. Set ALLOW_DIRECT_COMMIT=1 to override in a genuine emergency.
+# ---------------------------------------------------------------------------
+PROTECTED_BRANCHES="main master"
+current_branch="$(git symbolic-ref --short -q HEAD || echo '')"
+if [ -z "${ALLOW_DIRECT_COMMIT:-}" ]; then
+  for protected in $PROTECTED_BRANCHES; do
+    if [ "$current_branch" = "$protected" ]; then
+      echo "✗ commit blocked: direct commits to '$protected' are not allowed." >&2
+      echo "" >&2
+      echo "Create a topic branch and open a pull request instead:" >&2
+      echo "  git switch -c fix/short-description" >&2
+      echo "  git commit ..." >&2
+      echo "  git push -u origin fix/short-description   # then open a PR" >&2
+      echo "" >&2
+      echo "Override only in a real emergency: ALLOW_DIRECT_COMMIT=1 git commit ..." >&2
+      exit 1
+    fi
+  done
+fi
+
 # Resolve the identity git will actually stamp on this commit. Author can be
 # overridden by env; committer comes from user.email. Both must be allowed.
 author_email="$(git var GIT_AUTHOR_IDENT | sed -n 's/.*<\(.*\)>.*/\1/p')"

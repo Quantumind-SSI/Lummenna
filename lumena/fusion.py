@@ -154,9 +154,7 @@ def fuse_and_rerank(
                 except Exception as exc:
                     # Wrong or rotated key: never leak the raw Fernet token
                     # and never crash the whole search for one bad chunk.
-                    logger.warning(
-                        "chunk_decrypt_failed", chunk_id=cid, error=str(exc)
-                    )
+                    logger.warning("chunk_decrypt_failed", chunk_id=cid, error=str(exc))
                     content = "[DECRYPTION FAILED — check LUMENA_ENCRYPTION_KEY]"
             else:
                 # Chunk was written with encryption but no key is configured
@@ -221,10 +219,10 @@ def fuse_and_rerank(
 
     results.sort(key=lambda x: x.final_score, reverse=True)
     logger.info(
-            "fusion_rerank",
-            candidates=len(results),
-            top_score=results[0].final_score if results else None,
-        )
+        "fusion_rerank",
+        candidates=len(results),
+        top_score=results[0].final_score if results else None,
+    )
     return results
 
 

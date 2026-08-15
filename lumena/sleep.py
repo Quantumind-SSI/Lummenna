@@ -60,7 +60,7 @@ class SleepScheduler:
     @property
     def is_running(self) -> bool:
         """Return whether the scheduler is currently running."""
-        return self.scheduler.running
+        return bool(self.scheduler.running)
 
     def run_now(self) -> None:
         """Trigger a manual consolidation pass immediately."""
@@ -75,6 +75,7 @@ class SleepScheduler:
         batcher = None
         try:
             from lumena.data.schema import get_connection
+
             conn = get_connection(self.config)
         except Exception as exc:
             logger.error("sleep_consolidation_error", stage="connect", error=str(exc))
@@ -82,6 +83,7 @@ class SleepScheduler:
 
         try:
             from lumena.sovereign.wear import WearAwareBatcher
+
             batcher = WearAwareBatcher(conn)
         except Exception as exc:
             logger.error("sleep_consolidation_error", stage="batcher_init", error=str(exc))
@@ -97,6 +99,7 @@ class SleepScheduler:
 
         try:
             from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+
             ebbinghaus_decay(conn, batcher=batcher)
         except Exception as exc:
             logger.error("sleep_consolidation_error", stage="l1_decay", error=str(exc))
@@ -105,6 +108,7 @@ class SleepScheduler:
 
         try:
             from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+
             budget_curated_eviction(conn, self.config, batcher=batcher)
         except Exception as exc:
             logger.error("sleep_consolidation_error", stage="l3_eviction", error=str(exc))
@@ -113,6 +117,7 @@ class SleepScheduler:
 
         try:
             from lumena.curiosity import curiosity_probe
+
             curiosity_probe(conn, limit=10)
         except Exception as exc:
             logger.error("sleep_consolidation_error", stage="curiosity", error=str(exc))
@@ -127,6 +132,7 @@ class SleepScheduler:
         # Backup and log rotation (wired orphaned modules)
         try:
             from lumena.data.backup import backup_database
+
             backup_database(self.config.db_path)
             logger.info("backup_completed")
         except Exception as exc:
@@ -134,6 +140,7 @@ class SleepScheduler:
 
         try:
             from lumena.sovereign.log_rotation import rotate_jsonl_logs
+
             rotate_jsonl_logs()
             logger.info("log_rotation_completed")
         except Exception as exc:

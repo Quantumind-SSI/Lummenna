@@ -67,14 +67,14 @@ class SearchPipeline:
             "     last_access_at = ?,"
             "     access_count = access_count + 1"
             f" WHERE chunk_id IN ({placeholders})",  # nosec B608
-            [_REACCESS_BOOST, now] + chunk_ids,
+            [_REACCESS_BOOST, now, *chunk_ids],
         )
         self.conn.commit()
         logger.info(
-                "reaccess_reinforcement",
-                chunks=len(chunk_ids),
-                boost=_REACCESS_BOOST,
-            )
+            "reaccess_reinforcement",
+            chunks=len(chunk_ids),
+            boost=_REACCESS_BOOST,
+        )
 
     def execute(
         self,
@@ -115,9 +115,7 @@ class SearchPipeline:
             from lumena.force.mnemonic.spreading import spread_activation
 
             try:
-                activations = spread_activation(
-                    self.graph._graph, seed_ids, self.tfc.state.a
-                )
+                activations = spread_activation(self.graph._graph, seed_ids, self.tfc.state.a)
                 existing_ids = {h.chunk_id for h in graph_hits}
                 for node_id, _score in activations.items():
                     if node_id not in existing_ids:
@@ -190,11 +188,11 @@ class SearchPipeline:
 
         elapsed_ms = (time.perf_counter() - start) * 1000
         logger.info(
-                "search_executed",
-                query=query,
-                intent=intent,
-                results=len(results),
-                latency_ms=round(elapsed_ms, 2),
-            )
+            "search_executed",
+            query=query,
+            intent=intent,
+            results=len(results),
+            latency_ms=round(elapsed_ms, 2),
+        )
 
         return results

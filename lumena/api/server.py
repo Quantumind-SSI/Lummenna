@@ -142,7 +142,9 @@ async def _auth_middleware(request: Request, call_next):
 
     if _config.api_key and request.url.path not in public_paths:
         if _check_brute_force(remote_addr):
-            return JSONResponse(status_code=429, content={"detail": "Too many failed authentication attempts"})
+            return JSONResponse(
+                status_code=429, content={"detail": "Too many failed authentication attempts"}
+            )
         provided = request.headers.get("X-API-Key") or request.query_params.get("api_key")
         if not provided or not _secrets.compare_digest(provided, _config.api_key):
             _record_auth_failure(remote_addr)
@@ -152,7 +154,9 @@ async def _auth_middleware(request: Request, call_next):
 
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
-    tenant_id = request.headers.get("X-Tenant-ID") or request.query_params.get("tenant_id") or "default"
+    tenant_id = (
+        request.headers.get("X-Tenant-ID") or request.query_params.get("tenant_id") or "default"
+    )
     request.state.tenant_id = tenant_id
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
@@ -205,10 +209,17 @@ class _SecurityHeadersMiddleware:
         async def _send_with_headers(message):
             if message["type"] == "http.response.start":
                 headers = list(message.get("headers", []))
-                headers.append((b"strict-transport-security", b"max-age=31536000; includeSubDomains"))
+                headers.append(
+                    (b"strict-transport-security", b"max-age=31536000; includeSubDomains")
+                )
                 headers.append((b"x-content-type-options", b"nosniff"))
                 headers.append((b"x-frame-options", b"DENY"))
-                headers.append((b"content-security-policy", b"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"))
+                headers.append(
+                    (
+                        b"content-security-policy",
+                        b"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+                    )
+                )
                 headers.append((b"referrer-policy", b"strict-origin-when-cross-origin"))
                 headers.append((b"permissions-policy", b"geolocation=(), microphone=(), camera=()"))
                 if path.startswith("/v1/"):
@@ -235,7 +246,6 @@ class _SizeLimitMiddleware:
                     content_length = int(value)
                     break
             if content_length > self.max_bytes:
-
                 await send(
                     {
                         "type": "http.response.start",
@@ -364,6 +374,7 @@ async def lifespan(app: FastAPI):
     # Start background forgetting scheduler so L1/L3 run without a separate daemon
     try:
         from lumena.sleep import SleepScheduler
+
         scheduler = SleepScheduler(_config)
         scheduler.start()
         _state["scheduler"] = scheduler
@@ -375,7 +386,11 @@ async def lifespan(app: FastAPI):
             effect="memory lifecycle DISABLED: L1 decay and L3 eviction will not run",
             remedy="install APScheduler or run 'lumena daemon start' separately",
         )
-    logger.info("server_started", device=_config.device, model_available=_state.get("embedding_model_available", False))
+    logger.info(
+        "server_started",
+        device=_config.device,
+        model_available=_state.get("embedding_model_available", False),
+    )
     yield
     if "scheduler" in _state:
         _state["scheduler"].stop()
@@ -470,9 +485,7 @@ async def metrics_prometheus() -> Response:
             logger.warning("prometheus_gauges_failed", error=str(exc))
     with contextlib.suppress(OSError):
         gauges["lumena_db_size_bytes"] = _config.db_path.stat().st_size
-    gauges["lumena_embedding_model_available"] = int(
-        _state.get("embedding_model_available", False)
-    )
+    gauges["lumena_embedding_model_available"] = int(_state.get("embedding_model_available", False))
     body = _metrics.render(gauges)
     return Response(content=body, media_type="text/plain; version=0.0.4; charset=utf-8")
 

@@ -89,7 +89,7 @@ def assemble_context(
     used = token_counter.count(preamble)
 
     # Stage 1: pack chunks into budget
-    packed = []
+    packed: list[str] = []
     truncated_any = False
     for rc in sorted(retrieved_chunks, key=lambda x: x.final_score, reverse=True):
         chunk_text = (
@@ -133,7 +133,7 @@ def assemble_context(
     if not packed and retrieved_chunks:
         raise BudgetExceededError("LCX-2001 BudgetExceeded: even top chunk exceeds context budget")
 
-    return ASSEMBLY_TEMPLATE.render(
+    rendered: str = ASSEMBLY_TEMPLATE.render(
         system=system_prompt,
         minimap=minimap,
         goals=goal_block,
@@ -141,6 +141,7 @@ def assemble_context(
         query=query,
         tfc=tfc_state,
     )
+    return rendered
 
 
 def _truncated_chunk_text(

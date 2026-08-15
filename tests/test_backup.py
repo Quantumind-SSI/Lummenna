@@ -16,9 +16,7 @@ def db_conn(tmp_path):
         store_path=str(tmp_path / ".lumena"),
     )
     conn = get_connection(config)
-    conn.execute(
-        "INSERT INTO room(name, room_type) VALUES ('backup_test', 'domain')"
-    )
+    conn.execute("INSERT INTO room(name, room_type) VALUES ('backup_test', 'domain')")
     conn.commit()
     yield conn
     conn.close()
@@ -35,9 +33,7 @@ def test_backup_database_file_has_data(db_conn, tmp_path):
     db_path = Path(db_conn.execute("PRAGMA database_list").fetchone()[2])
     result = backup_database(db_path)
     backup_conn = sqlite3.connect(str(result))
-    row = backup_conn.execute(
-        "SELECT name FROM room WHERE name = 'backup_test'"
-    ).fetchone()
+    row = backup_conn.execute("SELECT name FROM room WHERE name = 'backup_test'").fetchone()
     assert row is not None
     assert row[0] == "backup_test"
     backup_conn.close()

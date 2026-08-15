@@ -41,9 +41,7 @@ def create_provenance(
     in [0, 1].
     """
     if source_type not in SOURCE_TYPES:
-        raise ValueError(
-            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}"
-        )
+        raise ValueError(f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}")
     if not (0.0 <= confidence <= 1.0):
         raise ValueError(f"confidence must be in [0, 1], got {confidence}")
     cur = conn.execute(
@@ -52,14 +50,14 @@ def create_provenance(
            VALUES (?,?,?,?,?,?)""",
         (chunk_id, source_type, source_ref, confidence, extraction_method, parent_provenance),
     )
-    prov_id = cur.lastrowid
+    prov_id = int(cur.lastrowid or 0)
     logger.info(
-            "provenance_created",
-            chunk_id=chunk_id,
-            prov_id=prov_id,
-            source_type=source_type,
-            parent=parent_provenance,
-        )
+        "provenance_created",
+        chunk_id=chunk_id,
+        prov_id=prov_id,
+        source_type=source_type,
+        parent=parent_provenance,
+    )
     return prov_id
 
 

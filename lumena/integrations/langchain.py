@@ -35,7 +35,9 @@ try:
 except Exception:
     BaseChatMemory = None  # type: ignore[assignment,misc]
 
-_LumenaChatMemoryBase = BaseChatMemory if BaseChatMemory is not None else object
+# Typed as ``Any`` so mypy accepts it as a valid (dynamic) base class whether or
+# not LangChain is installed in the analysis environment.
+_LumenaChatMemoryBase: Any = BaseChatMemory if BaseChatMemory is not None else object
 
 
 class LumenaChatMemory(_LumenaChatMemoryBase):
@@ -95,9 +97,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
                 # Raises ModelNotAvailableError unless mock embeddings were
                 # explicitly opted into (config.allow_mock_embedder — testing
                 # only). Never silently degrade to meaningless vectors.
-                embedder = get_embedder(
-                    self.config, allow_mock=self.config.allow_mock_embedder
-                )
+                embedder = get_embedder(self.config, allow_mock=self.config.allow_mock_embedder)
             self._memory = ConversationMemory(
                 config=self.config,
                 embedder=embedder,

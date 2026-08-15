@@ -41,9 +41,7 @@ RESOLUTION_CHAIN: dict[str, str] = {
 }
 
 # Whitepaper 3.4 (reliability weighting) / schema.sql `provenance.source_type` CHECK.
-SourceType = Literal[
-    "user_input", "agent_reasoning", "consolidation", "import", "p2p_share"
-]
+SourceType = Literal["user_input", "agent_reasoning", "consolidation", "import", "p2p_share"]
 SOURCE_TYPES: frozenset[str] = frozenset(
     ("user_input", "agent_reasoning", "consolidation", "import", "p2p_share")
 )
@@ -51,9 +49,7 @@ SOURCE_TYPES: frozenset[str] = frozenset(
 # Whitepaper 3.3 stage 1: "classifies queries as factual, exploratory,
 # relational, or temporal".
 IntentLabel = Literal["factual", "exploratory", "relational", "temporal"]
-INTENT_LABELS: frozenset[str] = frozenset(
-    ("factual", "exploratory", "relational", "temporal")
-)
+INTENT_LABELS: frozenset[str] = frozenset(("factual", "exploratory", "relational", "temporal"))
 
 # schema.sql `feedback_log.feedback_type` CHECK.
 FeedbackType = Literal["implicit", "explicit", "repair"]
@@ -107,18 +103,14 @@ def validate_source_type(value: str) -> SourceType:
     source type must fail loudly rather than silently receive a default weight.
     """
     if value not in SOURCE_TYPES:
-        raise ValueError(
-            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {value!r}"
-        )
+        raise ValueError(f"source_type must be one of {sorted(SOURCE_TYPES)}, got {value!r}")
     return value  # type: ignore[return-value]
 
 
 def validate_intent_label(value: str) -> IntentLabel:
     """Return ``value`` if it is one of the four documented intent classes."""
     if value not in INTENT_LABELS:
-        raise ValueError(
-            f"intent label must be one of {sorted(INTENT_LABELS)}, got {value!r}"
-        )
+        raise ValueError(f"intent label must be one of {sorted(INTENT_LABELS)}, got {value!r}")
     return value  # type: ignore[return-value]
 
 

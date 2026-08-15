@@ -23,7 +23,16 @@ def log_audit_event(
             action, metadata_json, client_ip, request_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (event_type, actor, resource_type, resource_id, action, metadata_json, client_ip, request_id),
+        (
+            event_type,
+            actor,
+            resource_type,
+            resource_id,
+            action,
+            metadata_json,
+            client_ip,
+            request_id,
+        ),
     )
     conn.commit()
 

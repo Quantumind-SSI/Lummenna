@@ -42,4 +42,4 @@ def migrate(conn: sqlite3.Connection, target_version: int = CURRENT_SCHEMA_VERSI
 
 
 def get_current_version(conn: sqlite3.Connection) -> int:
-    return conn.execute("PRAGMA user_version").fetchone()[0]
+    return int(conn.execute("PRAGMA user_version").fetchone()[0])

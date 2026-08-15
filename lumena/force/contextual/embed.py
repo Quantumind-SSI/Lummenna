@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -30,8 +31,8 @@ class LocalEmbedder:
         self.model_path = Path(model_path)
         self.dims = dims
         self._cache: dict[str, np.ndarray] = {}
-        self.session = None
-        self.tokenizer = None
+        self.session: Any = None
+        self.tokenizer: Any = None
 
         if not self.model_path.exists():
             raise ModelNotAvailableError(str(self.model_path))
@@ -68,7 +69,8 @@ class LocalEmbedder:
 
     def encode_single(self, text: str) -> np.ndarray:
         """Encode a single text string."""
-        return self.encode([text])[0]
+        result: np.ndarray = self.encode([text])[0]
+        return result
 
     def _encode_onnx(self, texts: list[str]) -> np.ndarray:
         inputs = self.tokenizer(
@@ -91,7 +93,8 @@ class LocalEmbedder:
         embeddings = summed / np.maximum(counts, 1e-8)
 
         norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
-        return embeddings / np.maximum(norms, 1e-8)
+        normalised: np.ndarray = embeddings / np.maximum(norms, 1e-8)
+        return normalised
 
 
 class MockEmbedder:
@@ -108,7 +111,8 @@ class MockEmbedder:
         return self._encode_fallback(texts)
 
     def encode_single(self, text: str) -> np.ndarray:
-        return self.encode([text])[0]
+        result: np.ndarray = self.encode([text])[0]
+        return result
 
     def _encode_fallback(self, texts: list[str]) -> np.ndarray:
         vecs = []

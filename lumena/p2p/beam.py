@@ -18,7 +18,7 @@ import os
 import socket
 import struct
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import msgspec
 
@@ -32,10 +32,14 @@ logger = logging.getLogger(__name__)
 # Availability flags
 availability: dict[str, bool] = {}
 
-ZeroconfModule = None
-ServiceInfo = None
-AsyncServiceBrowser = None
-AsyncZeroconf = None
+if TYPE_CHECKING:
+    # Import solely for static typing; at runtime these may be unavailable.
+    from zeroconf import ServiceInfo
+    from zeroconf.asyncio import AsyncServiceBrowser, AsyncZeroconf
+else:
+    ServiceInfo = None
+    AsyncServiceBrowser = None
+    AsyncZeroconf = None
 
 try:
     from zeroconf import ServiceInfo
@@ -44,9 +48,6 @@ try:
     availability["zeroconf"] = True
 except Exception:
     availability["zeroconf"] = False
-    ServiceInfo = None
-    AsyncServiceBrowser = None
-    AsyncZeroconf = None
 
 
 def _get_default_ip() -> str:
@@ -56,7 +57,7 @@ def _get_default_ip() -> str:
         s.settimeout(0)
         try:
             s.connect(("10.254.254.254", 1))
-            ip = s.getsockname()[0]
+            ip = str(s.getsockname()[0])
         except Exception:
             ip = "127.0.0.1"
         finally:
@@ -66,9 +67,11 @@ def _get_default_ip() -> str:
         return "127.0.0.1"
 
 
-def encode_frame(packet: dict, crypto: P2PCrypto | None = None, signer: P2PSign | None = None) -> bytes:
+def encode_frame(
+    packet: dict, crypto: P2PCrypto | None = None, signer: P2PSign | None = None
+) -> bytes:
     """Serialize *packet* with optional encryption + HMAC signing and 4-byte length prefix."""
-    payload = msgspec.json.encode(packet)
+    payload: bytes = msgspec.json.encode(packet)
     if crypto is not None and crypto.enabled:
         payload = crypto.encrypt(payload)
     if signer is not None and signer.enabled:
@@ -89,7 +92,8 @@ async def decode_frame(
         payload = signer.verify(payload)
     if crypto is not None and crypto.enabled:
         payload = crypto.decrypt(payload)
-    return msgspec.json.decode(payload)
+    decoded: dict | None = msgspec.json.decode(payload)
+    return decoded
 
 
 class BeamNode:
@@ -138,12 +142,14 @@ class BeamNode:
             properties={},
         )
         await self._azc.async_register_service(info)
-        self._browser = AsyncServiceBrowser(self._azc.zeroconf, self.service_type, self)
+        # BeamNode structurally implements zeroconf's ServiceListener protocol
+        # (add_service/update_service/remove_service below) but doesn't inherit it
+        # explicitly — ServiceListener is only importable when the optional
+        # zeroconf dependency is present, so we avoid a hard subclass.
+        self._browser = AsyncServiceBrowser(self._azc.zeroconf, self.service_type, self)  # type: ignore[arg-type]
         # Bind to the configured Beam address (default all-interfaces: Beam
         # exists to serve trusted LAN peers; frames are encrypted + signed).
-        self._server = await asyncio.start_server(
-            self._handle_peer, self.local_ip, self.beam_port
-        )
+        self._server = await asyncio.start_server(self._handle_peer, self.local_ip, self.beam_port)
 
     async def stop(self) -> None:
         """Unregister mDNS services and shut down the peer listener."""
@@ -179,9 +185,7 @@ class BeamNode:
                         logger.debug("beam_ttl_expired room=%s", packet.get("room"))
                         return
                 except (ValueError, TypeError):
-                    logger.warning(
-                        "beam_ttl_unparseable sent_at=%r ttl=%r", sent_at, ttl_hours
-                    )
+                    logger.warning("beam_ttl_unparseable sent_at=%r ttl=%r", sent_at, ttl_hours)
                     return
 
             room = packet.get("room")

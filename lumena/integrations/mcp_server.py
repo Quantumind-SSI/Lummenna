@@ -28,12 +28,13 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Any
 
 try:
     from mcp.server.fastmcp import Context, FastMCP
 except Exception as _mcp_exc:  # pragma: no cover
     _MCP_AVAILABLE = False
-    _MCP_ERROR = _mcp_exc
+    _MCP_ERROR: Exception | None = _mcp_exc
 else:
     _MCP_AVAILABLE = True
     _MCP_ERROR = None
@@ -57,7 +58,7 @@ logger = get_console_logger(__name__)
 class LumenaAppState:
     config: LumenaConfig
     conn: sqlite3.Connection
-    embedder: object
+    embedder: Any
     pipeline: SearchPipeline
     conversation: ConversationMemory
     tfc: TwinForceController
@@ -140,7 +141,8 @@ mcp = FastMCP("lumena", lifespan=app_lifespan) if _MCP_AVAILABLE else _Unavailab
 def _state(ctx: Context | None = None) -> LumenaAppState:
     if ctx is not None:
         try:
-            return ctx.request_context.lifespan_context
+            state: LumenaAppState = ctx.request_context.lifespan_context
+            return state
         except Exception:
             pass
     if _module_state is not None:
@@ -265,9 +267,7 @@ async def lumena_turn(
             retrieved_chunks=turn.retrieved_chunks,
             room_name=room,
         )
-        return (
-            f"Turn stored: user_chunk_id={user_id}, assistant_chunk_id={assistant_id} in room '{room}'."
-        )
+        return f"Turn stored: user_chunk_id={user_id}, assistant_chunk_id={assistant_id} in room '{room}'."
     except Exception as exc:
         return _tool_error("lumena_turn", exc)
 
@@ -464,7 +464,7 @@ def _dashboard_metrics(state: LumenaAppState) -> dict:
     ).fetchall()
 
     stage_map = {5: "FP32", 4: "FP32", 3: "FP32", 2: "FP16", 1: "INT8", 0: "BINARY"}
-    degradation_stage = stage_map.get(env["r"], "FP32")
+    degradation_stage = stage_map.get(int(env["r"]), "FP32")
 
     return {
         "version": "1.0.0",
@@ -489,7 +489,7 @@ def _dashboard_metrics(state: LumenaAppState) -> dict:
             "degradation_stage": degradation_stage,
         },
         "retrieval": _load_retrieval_benchmarks(),
-"business": {
+        "business": {
             "cost_per_query_usd": 0.0,
             "data_sovereignty_pct": 100,
             "gdpr_native_rtbf": True,

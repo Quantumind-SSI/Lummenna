@@ -76,9 +76,7 @@ def test_store_memory_dedup_same_content(db_conn, config):
 
 def test_store_memory_creates_room(db_conn, config):
     store_memory(db_conn, "new room test", room_name="new_room_xyz", config=config)
-    row = db_conn.execute(
-        "SELECT room_id FROM room WHERE name = ?", ("new_room_xyz",)
-    ).fetchone()
+    row = db_conn.execute("SELECT room_id FROM room WHERE name = ?", ("new_room_xyz",)).fetchone()
     assert row is not None
 
 

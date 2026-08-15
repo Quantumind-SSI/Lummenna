@@ -6,6 +6,7 @@ Re-quantizes FP32 vectors and re-inserts them into the vector index.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -37,7 +38,8 @@ try:
         if mx - mn < 1e-8:
             return np.zeros_like(vec)
         scaled = (vec - mn) / (mx - mn) * 255.0 - 128.0
-        return scaled.astype(np.int8).astype(np.float32)  # storage as float32, info lost
+        out: np.ndarray = scaled.astype(np.int8).astype(np.float32)  # storage as float32
+        return out
 
     @njit(cache=True)
     def _quantize_binary(vec: np.ndarray) -> np.ndarray:
@@ -51,7 +53,8 @@ except Exception:
         if mx - mn < 1e-8:
             return np.zeros_like(vec)
         scaled = (vec - mn) / (mx - mn) * 255.0 - 128.0
-        return scaled.astype(np.int8).astype(np.float32)
+        out: np.ndarray = scaled.astype(np.int8).astype(np.float32)
+        return out
 
     def _quantize_binary(vec: np.ndarray) -> np.ndarray:  # type: ignore[misc]
         return np.where(vec >= 0, 1.0, -1.0).astype(np.float32)
@@ -62,7 +65,7 @@ quantize_fp16 = _quantize_fp16
 quantize_int8 = _quantize_int8
 quantize_binary = _quantize_binary
 
-QUANTIZERS = {
+QUANTIZERS: dict[str, Callable[[np.ndarray], np.ndarray]] = {
     "FP32": lambda v: v,
     "FP16": quantize_fp16,
     "INT8": quantize_int8,
@@ -84,7 +87,8 @@ def quantize_vector(vector: np.ndarray, target_res: str) -> np.ndarray:
         KeyError: If *target_res* is not a supported resolution.
     """
     quantizer = QUANTIZERS[target_res]
-    return quantizer(vector)
+    result: np.ndarray = quantizer(vector)
+    return result
 
 
 def degrade_chunk_vector(

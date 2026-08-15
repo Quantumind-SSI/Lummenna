@@ -67,13 +67,12 @@ def store_memory(
     # Ground the documented source_type contract at the write boundary
     # (whitepaper 3.4 / schema CHECK) before any work is done.
     if source_type not in SOURCE_TYPES:
-        raise ValueError(
-            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}"
-        )
+        raise ValueError(f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}")
 
     # Pre-store safety scan — apply configured PII strategy at the write path
     if config is None:
         from lumena.config import LumenaConfig
+
         config = LumenaConfig()
 
     # Ground the embedding-dimensionality claim (whitepaper 3.1: 384-dim vectors)
@@ -95,16 +94,22 @@ def store_memory(
 
         scan_hits = safety_scan_chunk(content, custom_patterns=config.pii_custom_patterns)
         if scan_hits:
-            logger.warning("safety_scan_triggered", room=room_name, hits=scan_hits, mode=config.pii_redaction_mode)
-            content = apply_pii_strategy(
+            logger.warning(
+                "safety_scan_triggered",
+                room=room_name,
+                hits=scan_hits,
+                mode=config.pii_redaction_mode,
+            )
+            redacted = apply_pii_strategy(
                 content,
                 scan_hits,
                 config.pii_redaction_mode,
                 custom_patterns=config.pii_custom_patterns,
             )
-            if content is None:
+            if redacted is None:
                 logger.warning("store_blocked_by_pii_policy", room=room_name, hits=scan_hits)
                 raise RuntimeError(f"Store blocked by PII policy: {scan_hits}")
+            content = redacted
 
     # Optional field-level encryption
     from lumena.data.schema import get_encryption
@@ -122,10 +127,13 @@ def store_memory(
     with conn:
         # 1. Resolve room
         if has_tenant:
-            row = conn.execute("SELECT room_id FROM room WHERE name = ? AND tenant_id = ?", (room_name, tenant_id)).fetchone()
+            row = conn.execute(
+                "SELECT room_id FROM room WHERE name = ? AND tenant_id = ?", (room_name, tenant_id)
+            ).fetchone()
             if not row:
                 cur = conn.execute(
-                    "INSERT INTO room(name, room_type, tenant_id) VALUES (?, 'domain', ?)", (room_name, tenant_id)
+                    "INSERT INTO room(name, room_type, tenant_id) VALUES (?, 'domain', ?)",
+                    (room_name, tenant_id),
                 )
                 room_id = cur.lastrowid
             else:
@@ -154,7 +162,7 @@ def store_memory(
             ).fetchone()
         if existing:
             logger.info("store_dedup", room=room_name, hash=content_hash[:16])
-            return existing[0]
+            return int(existing[0])
 
         # 3. Locus resolution
         locus_id = _resolve_locus(conn, room_id, locus_name, embedding, tenant_id, has_tenant)
@@ -168,16 +176,35 @@ def store_memory(
                 """INSERT INTO chunk
                    (locus_id, room_id, content, content_hash, vm_score, vm_factors, resolution, encrypted, tenant_id)
                    VALUES (?,?,?,?,?,?,?,?,?)""",
-                (locus_id, room_id, content, content_hash, vm_score, json.dumps(vm_factors), "FP32", _encrypted, tenant_id),
+                (
+                    locus_id,
+                    room_id,
+                    content,
+                    content_hash,
+                    vm_score,
+                    json.dumps(vm_factors),
+                    "FP32",
+                    _encrypted,
+                    tenant_id,
+                ),
             )
         else:
             cur = conn.execute(
                 """INSERT INTO chunk
                    (locus_id, room_id, content, content_hash, vm_score, vm_factors, resolution, encrypted)
                    VALUES (?,?,?,?,?,?,?,?)""",
-                (locus_id, room_id, content, content_hash, vm_score, json.dumps(vm_factors), "FP32", _encrypted),
+                (
+                    locus_id,
+                    room_id,
+                    content,
+                    content_hash,
+                    vm_score,
+                    json.dumps(vm_factors),
+                    "FP32",
+                    _encrypted,
+                ),
             )
-        chunk_id = cur.lastrowid
+        chunk_id = int(cur.lastrowid or 0)
 
         # 6. Provenance
         prov_id = create_provenance(conn, chunk_id, source_type, source_ref)
@@ -194,12 +221,14 @@ def store_memory(
         _trigger_interference_check(conn, room_id, locus_id, chunk_id, embedding)
 
         logger.info(
-                "memory_stored", chunk_id=chunk_id, room=room_name, locus=locus_name, vm=vm_score
-            )
+            "memory_stored", chunk_id=chunk_id, room=room_name, locus=locus_name, vm=vm_score
+        )
         return chunk_id
 
 
-def _resolve_locus(conn, room_id, locus_name, embedding, tenant_id: str = "default", has_tenant: bool = False):
+def _resolve_locus(
+    conn, room_id, locus_name, embedding, tenant_id: str = "default", has_tenant: bool = False
+):
     if locus_name:
         row = conn.execute(
             "SELECT locus_id FROM locus WHERE room_id=? AND name=?", (room_id, locus_name)
@@ -208,9 +237,14 @@ def _resolve_locus(conn, room_id, locus_name, embedding, tenant_id: str = "defau
             return row[0]
         try:
             if has_tenant:
-                cur = conn.execute("INSERT INTO locus(room_id, name, tenant_id) VALUES (?,?,?)", (room_id, locus_name, tenant_id))
+                cur = conn.execute(
+                    "INSERT INTO locus(room_id, name, tenant_id) VALUES (?,?,?)",
+                    (room_id, locus_name, tenant_id),
+                )
             else:
-                cur = conn.execute("INSERT INTO locus(room_id, name) VALUES (?,?)", (room_id, locus_name))
+                cur = conn.execute(
+                    "INSERT INTO locus(room_id, name) VALUES (?,?)", (room_id, locus_name)
+                )
             return cur.lastrowid
         except sqlite3.IntegrityError:
             row = conn.execute(
@@ -226,7 +260,8 @@ def _resolve_locus(conn, room_id, locus_name, embedding, tenant_id: str = "defau
         try:
             if has_tenant:
                 cur = conn.execute(
-                    "INSERT INTO locus(room_id, name, tenant_id) VALUES (?,?,?)", (room_id, auto_name, tenant_id)
+                    "INSERT INTO locus(room_id, name, tenant_id) VALUES (?,?,?)",
+                    (room_id, auto_name, tenant_id),
                 )
             else:
                 cur = conn.execute(
@@ -243,6 +278,3 @@ def _trigger_interference_check(conn, room_id, locus_id, new_chunk_id, embedding
 
     if embedding is not None:
         check_locus_interference(conn, room_id, locus_id, new_chunk_id, embedding)
-
-
-

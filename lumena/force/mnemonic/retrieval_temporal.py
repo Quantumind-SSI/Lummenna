@@ -91,12 +91,12 @@ def temporal_point_query(
                 hits.append(hit)
 
     logger.info(
-            "temporal_point_query",
-            keywords=content_keywords,
-            as_of=as_of_unix,
-            hits=len(hits),
-            include_superseded=include_superseded,
-        )
+        "temporal_point_query",
+        keywords=content_keywords,
+        as_of=as_of_unix,
+        hits=len(hits),
+        include_superseded=include_superseded,
+    )
 
     return hits
 

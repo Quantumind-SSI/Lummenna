@@ -18,7 +18,7 @@ class IntentRouter:
     """Intent classifier with embedding-aware training capability."""
 
     def __init__(self, model_path: str | None = None):
-        self.lr_coef: np.ndarray | None = None   # logistic regression weights
+        self.lr_coef: np.ndarray | None = None  # logistic regression weights
         self.lr_classes: list[str] | None = None
         self.lr_path: str | None = None
         if model_path and model_path.endswith(".json"):
@@ -32,6 +32,8 @@ class IntentRouter:
         self.lr_path = path
 
     def _save_lr(self, path: str) -> None:
+        if self.lr_coef is None:
+            raise RuntimeError("No trained logistic-regression weights to save")
         data = {"coef": self.lr_coef.tolist(), "classes": self.lr_classes}
         with open(path, "w") as f:
             json.dump(data, f)

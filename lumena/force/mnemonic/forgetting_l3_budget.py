@@ -11,7 +11,7 @@ overhead that are irrelevant to Lumena's data footprint.
 
 import contextlib
 import sqlite3
-from typing import Literal
+from typing import Literal, cast
 
 from lumena.logging import get_console_logger
 from lumena.sovereign.wear import WearAwareBatcher
@@ -126,12 +126,12 @@ def budget_curated_eviction(
     if not batcher:
         conn.commit()
     logger.info(
-            "budget_eviction",
-            evicted=evicted,
-            estimated_mb=round(estimated_mb, 1),
-            active_chunks=active_chunks,
-            target_mb=target_ram_mb,
-        )
+        "budget_eviction",
+        evicted=evicted,
+        estimated_mb=round(estimated_mb, 1),
+        active_chunks=active_chunks,
+        target_mb=target_ram_mb,
+    )
     return evicted
 
 
@@ -141,4 +141,5 @@ def _next_resolution(current: str) -> Resolution:
     Any unknown/absent resolution collapses to ``RELEASED``, so eviction always
     makes monotonic progress toward release (the L3 termination guarantee).
     """
-    return _RESOLUTION_CHAIN.get(current, "RELEASED")  # type: ignore[arg-type]
+    result: Resolution = _RESOLUTION_CHAIN.get(cast(Resolution, current), "RELEASED")
+    return result

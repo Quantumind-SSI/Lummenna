@@ -21,5 +21,8 @@ jobs:
         with:
           comment-summary-in-pr: on-failure
           fail-on-severity: moderate
+          # The action forbids specifying both allow- and deny-licenses. The
+          # allow-list is the stricter, self-sufficient policy: any license not
+          # in it (including GPL-2.0/GPL-3.0) is already rejected, so a separate
+          # deny-licenses is redundant and previously caused a hard config error.
           allow-licenses: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, ISC, PSF-2.0
-          deny-licenses: GPL-2.0, GPL-3.0

@@ -79,6 +79,7 @@ def test_learn_weights_from_feedback_insufficient_data():
     import sqlite3
 
     from lumena.data.schema import init_db
+
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
     init_db(conn)

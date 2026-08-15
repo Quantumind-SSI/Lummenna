@@ -134,12 +134,16 @@ class TestHardenedBeamProtocol:
         monkeypatch.setattr("lumena.p2p.beam.store_memory", lambda *a, **k: calls.append(k))
         monkeypatch.setattr(
             "lumena.p2p.beam.get_connection",
-            lambda cfg: type("C", (), {
-                "execute": lambda *a, **k: None,
-                "close": lambda: None,
-                "__enter__": lambda s: s,
-                "__exit__": lambda *a: None,
-            })(),
+            lambda cfg: type(
+                "C",
+                (),
+                {
+                    "execute": lambda *a, **k: None,
+                    "close": lambda: None,
+                    "__enter__": lambda s: s,
+                    "__exit__": lambda *a: None,
+                },
+            )(),
         )
 
         reader = _FakeReader(framed)

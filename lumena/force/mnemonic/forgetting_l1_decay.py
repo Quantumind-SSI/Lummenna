@@ -76,9 +76,9 @@ def ebbinghaus_decay(
     else:
         conn.executemany("UPDATE chunk SET vm_score = ? WHERE chunk_id = ?", updates)
     logger.info(
-            "decay_applied",
-            chunks=len(updates),
-            released=released,
-            half_life_days=user_half_life_days,
-        )
+        "decay_applied",
+        chunks=len(updates),
+        released=released,
+        half_life_days=user_half_life_days,
+    )
     return released

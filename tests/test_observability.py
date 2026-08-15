@@ -10,8 +10,12 @@ from lumena.observability import MetricsRegistry, normalize_route
 class TestMetricsRegistry:
     def test_counter_increment_and_render(self):
         reg = MetricsRegistry()
-        reg.inc("lumena_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"})
-        reg.inc("lumena_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"})
+        reg.inc(
+            "lumena_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"}
+        )
+        reg.inc(
+            "lumena_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"}
+        )
         out = reg.render()
         assert "# TYPE lumena_http_requests_total counter" in out
         assert 'lumena_http_requests_total{method="GET",route="/health",status="2xx"} 2' in out
@@ -159,9 +163,7 @@ class TestTelemetryGating:
         from lumena.config import LumenaConfig
         from lumena.telemetry import configure_azure_monitor_if_enabled
 
-        monkeypatch.setenv(
-            "APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000"
-        )
+        monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000")
         config = LumenaConfig(store_path=tmp_path / "s", sovereign=True)
         with pytest.raises(SovereignViolationError):
             configure_azure_monitor_if_enabled(config)
@@ -173,9 +175,7 @@ class TestTelemetryGating:
         from lumena.config import LumenaConfig
         from lumena.telemetry import configure_azure_monitor_if_enabled
 
-        monkeypatch.setenv(
-            "APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000"
-        )
+        monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000")
         config = LumenaConfig(store_path=tmp_path / "s", sovereign=False)
 
         real_import = builtins.__import__

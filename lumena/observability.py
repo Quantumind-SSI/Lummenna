@@ -24,7 +24,17 @@ from dataclasses import dataclass, field
 # Latency buckets in seconds — tuned for a local-first API where the hot
 # path is single-digit milliseconds and the slow path is model inference.
 DEFAULT_BUCKETS: tuple[float, ...] = (
-    0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.5,
+    5.0,
+    10.0,
 )
 
 _MAX_LABEL_SETS = 512  # hard cap against label-cardinality explosion
@@ -117,9 +127,7 @@ class MetricsRegistry:
             lines.append(f"{name}{self._fmt_labels(labels)} {value}")
 
         seen_hist_names = set()
-        for (name, labels), (buckets, counts, total_sum, total_count) in sorted(
-            histograms.items()
-        ):
+        for (name, labels), (buckets, counts, total_sum, total_count) in sorted(histograms.items()):
             if name not in seen_hist_names:
                 lines.append(f"# TYPE {name} histogram")
                 seen_hist_names.add(name)
@@ -157,8 +165,17 @@ def normalize_route(path: str) -> str:
     pass through, anything else becomes ``other``.
     """
     known = {
-        "/health", "/ready", "/dashboard", "/metrics", "/metrics/prometheus",
-        "/v1/status", "/v1/search", "/v1/store", "/v1/feedback",
-        "/v1/assemble", "/v1/turn", "/v1/dashboard-data",
+        "/health",
+        "/ready",
+        "/dashboard",
+        "/metrics",
+        "/metrics/prometheus",
+        "/v1/status",
+        "/v1/search",
+        "/v1/store",
+        "/v1/feedback",
+        "/v1/assemble",
+        "/v1/turn",
+        "/v1/dashboard-data",
     }
     return path if path in known else "other"
