@@ -102,6 +102,8 @@ class GoalTree:
 
     def _save_node(self, node: GoalNode) -> None:
         """Insert or update a single goal row."""
+        if self.conn is None:
+            return
         parent_name = node.parent.name if node.parent and node.parent != self.root else None
         # Find parent_id
         parent_id = None
@@ -125,6 +127,8 @@ class GoalTree:
 
     def _load(self) -> None:
         """Rebuild tree from SQLite."""
+        if self.conn is None:
+            return
         rows = self.conn.execute(
             "SELECT goal_id, parent_id, name, is_active FROM goals WHERE user_id = ?",
             (self.user_id,),

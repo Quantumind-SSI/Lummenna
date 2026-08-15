@@ -1,6 +1,5 @@
 """Tests for SQLCipher encryption-at-rest integration."""
 
-
 import pytest
 
 from lumena.config import LumenaConfig

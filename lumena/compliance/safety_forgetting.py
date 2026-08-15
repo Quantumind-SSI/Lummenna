@@ -22,6 +22,7 @@ PII_PATTERNS = {
     "ip_address": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
 }
 
+
 def _compile_custom_patterns(custom_patterns: str) -> dict[str, re.Pattern]:
     """Compile comma-separated custom regex patterns.
 
@@ -39,9 +40,7 @@ def _compile_custom_patterns(custom_patterns: str) -> dict[str, re.Pattern]:
         try:
             compiled[f"custom_{idx}"] = re.compile(pat)
         except re.error as exc:
-            logger.warning(
-                "pii_custom_pattern_invalid", index=idx, pattern=pat, error=str(exc)
-            )
+            logger.warning("pii_custom_pattern_invalid", index=idx, pattern=pat, error=str(exc))
     return compiled
 
 
@@ -78,7 +77,8 @@ def _hash_pattern(text: str, pattern_name: str, custom_patterns: str = "") -> st
         digest = hashlib.sha256(m.group(0).encode()).hexdigest()[:8]
         return f"[HASH:{digest}]"
 
-    return rx.sub(_repl, text)
+    result: str = rx.sub(_repl, text)
+    return result
 
 
 def apply_pii_strategy(
@@ -117,6 +117,7 @@ def safety_forget_chunk(conn: sqlite3.Connection, chunk_id: int, reason: str) ->
     Write-ahead audit BEFORE mutation.
     """
     from lumena.audit import log_audit_event
+
     log_audit_event(
         conn=conn,
         event_type="compliance",
@@ -182,6 +183,7 @@ def get_recent_audit_events(n: int = 10) -> list[dict]:
     """Read last N compliance audit events from SQLite audit_log."""
     from lumena.config import LumenaConfig
     from lumena.data.schema import get_connection
+
     try:
         conn = get_connection(LumenaConfig())
         rows = conn.execute(

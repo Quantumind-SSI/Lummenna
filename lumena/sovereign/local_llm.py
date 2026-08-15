@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import gc
 from pathlib import Path
+from typing import Any
 
 import psutil
 
@@ -36,7 +37,8 @@ def _get_llama_class() -> type:
         raise RuntimeError(
             "llama-cpp-python is not installed. Install it with: pip install llama-cpp-python"
         ) from exc
-    return Llama
+    llama_cls: type = Llama
+    return llama_cls
 
 
 class LocalLLM:
@@ -48,7 +50,7 @@ class LocalLLM:
 
     def __init__(self, config: LumenaConfig) -> None:
         self.config = config
-        self._model: object | None = None
+        self._model: Any = None
         self._path: Path = config.model_path / config.local_llm_model
         self._n_threads = _get_n_threads()
 

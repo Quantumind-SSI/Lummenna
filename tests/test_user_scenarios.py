@@ -425,17 +425,25 @@ def test_safety_forget_removes_vectors(fresh_config):
         config=fresh_config,
     )
     conn.commit()
-    assert conn.execute(
-        "SELECT COUNT(*) FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
-    ).fetchone()[0] == 1
+    assert (
+        conn.execute(
+            "SELECT COUNT(*) FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
+        ).fetchone()[0]
+        == 1
+    )
 
     safety_forget_chunk(conn, chunk_id, reason="test rtbf")
     conn.commit()
 
-    assert conn.execute(
-        "SELECT COUNT(*) FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
-    ).fetchone()[0] == 0, "embedding must be deleted on safety forget"
-    row = conn.execute("SELECT content, valid_to FROM chunk WHERE chunk_id = ?", (chunk_id,)).fetchone()
+    assert (
+        conn.execute(
+            "SELECT COUNT(*) FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
+        ).fetchone()[0]
+        == 0
+    ), "embedding must be deleted on safety forget"
+    row = conn.execute(
+        "SELECT content, valid_to FROM chunk WHERE chunk_id = ?", (chunk_id,)
+    ).fetchone()
     assert row["content"] == "[REDACTED]"
     assert row["valid_to"] is not None
     conn.close()

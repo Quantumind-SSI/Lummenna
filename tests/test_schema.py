@@ -41,12 +41,19 @@ def test_ensure_schema_creates_tables(temp_config):
     ensure_schema(conn)
     tables = {
         row[0]
-        for row in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        ).fetchall()
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
     }
-    expected = {"room", "locus", "chunk", "provenance", "feedback_log",
-                "user_profile", "event_buffer_meta", "goals", "epistemic_state"}
+    expected = {
+        "room",
+        "locus",
+        "chunk",
+        "provenance",
+        "feedback_log",
+        "user_profile",
+        "event_buffer_meta",
+        "goals",
+        "epistemic_state",
+    }
     assert expected <= tables
     conn.close()
 

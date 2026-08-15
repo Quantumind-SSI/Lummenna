@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from lumena.brand.errors import ModelNotAvailableError
 from lumena.data.schema import get_connection
@@ -116,7 +116,7 @@ def _get_recent_fact_bullets(conn: sqlite3.Connection, room_id: int, days: int =
 def run_consolidation_pass(
     config: LumenaConfig,
     event_buffer: EventMemoryBuffer | None = None,
-    embedder: object | None = None,
+    embedder: Any | None = None,
     batcher: WearAwareBatcher | None = None,
 ) -> int:
     """Run one full consolidation pass: drain events, dedup, generate narratives.

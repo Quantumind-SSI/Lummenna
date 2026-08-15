@@ -88,9 +88,7 @@ class ConversationMemory:
             # Raises ModelNotAvailableError unless the caller explicitly
             # opted into mock embeddings (testing only). A silent mock here
             # would make every semantic retrieval meaningless.
-            self.embedder = get_embedder(
-                self.config, allow_mock=self.config.allow_mock_embedder
-            )
+            self.embedder = get_embedder(self.config, allow_mock=self.config.allow_mock_embedder)
 
         self.pipeline = SearchPipeline(
             self.conn,
@@ -207,12 +205,12 @@ class ConversationMemory:
             self.epistemic.mark_known([rc.chunk_id for rc in retrieved_chunks])
 
         logger.info(
-                "turn_stored",
-                user_chunk_id=user_chunk_id,
-                assistant_chunk_id=assistant_chunk_id,
-                room=room_name,
-                feedback_chunks=len(retrieved_chunks or []),
-            )
+            "turn_stored",
+            user_chunk_id=user_chunk_id,
+            assistant_chunk_id=assistant_chunk_id,
+            room=room_name,
+            feedback_chunks=len(retrieved_chunks or []),
+        )
 
         return user_chunk_id, assistant_chunk_id
 

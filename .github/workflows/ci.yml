@@ -60,10 +60,27 @@ jobs:
       - name: MyPy type check
         run: mypy lumena/ --ignore-missing-imports
 
+      # Ignored advisories — kept in lockstep with security.yml (the canonical
+      # vuln-scan policy). Revisit when optimum-onnx supports transformers 5.x.
+      #
+      # transformers 4.57.x — PYSEC-2025-217, PYSEC-2026-2288/2289/2290: all
+      #   require loading untrusted checkpoints/configs from the Hub. Lumena
+      #   only loads models pinned to immutable commit SHAs (lumena/cli/models.py
+      #   KNOWN_MODELS) or local dirs it exported itself, behind a sovereign-mode
+      #   network block by default. Upgrading to fixed 5.x is blocked:
+      #   optimum-onnx (0.1.0) requires transformers<4.58.
+      # diskcache 5.6.3 — PYSEC-2026-2447: pickle deserialization; no fixed
+      #   release exists. Transitive via langchain; Lumena never imports it.
       - name: Dependency audit
         run: |
+          python -m pip install --upgrade pip
           python -m pip install pip-audit
-          pip-audit --desc
+          pip-audit --desc \
+            --ignore-vuln PYSEC-2025-217 \
+            --ignore-vuln PYSEC-2026-2288 \
+            --ignore-vuln PYSEC-2026-2289 \
+            --ignore-vuln PYSEC-2026-2290 \
+            --ignore-vuln PYSEC-2026-2447
 
   test:
     name: Test

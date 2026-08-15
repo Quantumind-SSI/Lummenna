@@ -78,10 +78,10 @@ def spread_activation(
             break
 
     logger.debug(
-            "spread_activation_complete",
-            seeds=len(seed_ids),
-            a=a,
-            activated=len(activations),
-        )
+        "spread_activation_complete",
+        seeds=len(seed_ids),
+        a=a,
+        activated=len(activations),
+    )
 
     return activations

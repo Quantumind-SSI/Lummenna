@@ -18,6 +18,7 @@ Usage::
 
 from __future__ import annotations
 
+import builtins
 import hashlib
 import json
 from collections.abc import Iterable, Iterator
@@ -33,25 +34,45 @@ logger = get_console_logger(__name__)
 # ---------------------------------------------------------------------------
 # Conditional LangGraph imports
 # ---------------------------------------------------------------------------
-try:
-    from langgraph.checkpoint.base import (
-        BaseCheckpointSaver,
-        Checkpoint,
-        CheckpointMetadata,
-        CheckpointTuple,
-    )
-except Exception:
+# The following names are used purely in type annotations. They are aliased to
+# ``Any`` for static analysis so the module type-checks whether or not LangGraph
+# is installed in the mypy environment.
+Checkpoint = Any
+CheckpointMetadata = Any
+CheckpointTuple = Any
+
+
+def _make_fallback_checkpoint_tuple() -> Any:
+    """Build a stand-in ``CheckpointTuple`` type when LangGraph is absent."""
     from collections import namedtuple
 
-    BaseCheckpointSaver = None  # type: ignore[assignment,misc]
-    Checkpoint = Any  # type: ignore[misc]
-    CheckpointMetadata = Any  # type: ignore[misc]
-    CheckpointTuple = namedtuple(  # type: ignore[misc]
+    return namedtuple(
         "CheckpointTuple",
         ["config", "checkpoint", "metadata", "parent_config", "pending_writes"],
     )
 
-_LumenaSaverBase = BaseCheckpointSaver if BaseCheckpointSaver is not None else object
+
+try:
+    from langgraph.checkpoint.base import (
+        BaseCheckpointSaver,
+    )
+    from langgraph.checkpoint.base import (
+        CheckpointTuple as _RuntimeCheckpointTuple,
+    )
+
+    _checkpoint_tuple_factory: Any = _RuntimeCheckpointTuple
+except Exception:
+    BaseCheckpointSaver = None  # type: ignore[assignment,misc]
+    _checkpoint_tuple_factory = _make_fallback_checkpoint_tuple()
+
+# Runtime handle used to *construct* checkpoint tuples (distinct from the
+# annotation alias ``CheckpointTuple`` above, which is ``Any`` for typing).
+CheckpointTupleFactory: Any = _checkpoint_tuple_factory
+
+# Base class for the checkpoint saver: the real ``BaseCheckpointSaver`` when
+# LangGraph is installed, otherwise ``object``. Typed as ``Any`` so mypy treats
+# it as a valid (dynamic) base class in both branches.
+_LumenaSaverBase: Any = BaseCheckpointSaver if BaseCheckpointSaver is not None else object
 
 
 # ---------------------------------------------------------------------------
@@ -97,9 +118,7 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
         if self._room_id is not None:
             return self._room_id
         conn = self.conn
-        row = conn.execute(
-            "SELECT room_id FROM room WHERE name = ?", (self.room,)
-        ).fetchone()
+        row = conn.execute("SELECT room_id FROM room WHERE name = ?", (self.room,)).fetchone()
         if row:
             self._room_id = row[0]
         else:
@@ -118,21 +137,20 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
             (room_id, thread_id),
         ).fetchone()
         if row:
-            return row[0]
+            return int(row[0])
         cur = self._conn.execute(
             "INSERT INTO locus(room_id, name) VALUES (?, ?)",
             (room_id, thread_id),
         )
         self._conn.commit()
-        return cur.lastrowid
+        return int(cur.lastrowid or 0)
 
     def _thread_id(self, config: dict[str, Any]) -> str:
-        return str(
-            config.get("configurable", {}).get("thread_id", "default")
-        )
+        return str(config.get("configurable", {}).get("thread_id", "default"))
 
     def _checkpoint_id(self, config: dict[str, Any]) -> str | None:
-        return config.get("configurable", {}).get("checkpoint_id")
+        checkpoint_id: str | None = config.get("configurable", {}).get("checkpoint_id")
+        return checkpoint_id
 
     # -----------------------------------------------------------------------
     # Serialization
@@ -154,7 +172,8 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
 
     @staticmethod
     def _deserialize(content: str) -> dict[str, Any]:
-        return json.loads(content)
+        result: dict[str, Any] = json.loads(content)
+        return result
 
     # -----------------------------------------------------------------------
     # Core protocol (sync)
@@ -191,7 +210,7 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
 
         data = self._deserialize(row["content"])
         checkpoint = data["checkpoint"]
-        return CheckpointTuple(
+        return CheckpointTupleFactory(
             config=config,
             checkpoint=checkpoint,
             metadata=data["metadata"],
@@ -224,9 +243,7 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
             }
 
         payload = self._serialize(checkpoint, metadata, parent_config, [])
-        content_hash = hashlib.sha256(
-            (checkpoint_id + thread_id).encode()
-        ).hexdigest()[:32]
+        content_hash = hashlib.sha256((checkpoint_id + thread_id).encode()).hexdigest()[:32]
 
         self.conn.execute(
             """INSERT INTO chunk
@@ -246,11 +263,11 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
         self.conn.commit()
 
         logger.info(
-                "langgraph_checkpoint_saved",
-                thread_id=thread_id,
-                checkpoint_id=checkpoint_id,
-                step=metadata.get("step") if isinstance(metadata, dict) else None,
-            )
+            "langgraph_checkpoint_saved",
+            thread_id=thread_id,
+            checkpoint_id=checkpoint_id,
+            step=metadata.get("step") if isinstance(metadata, dict) else None,
+        )
 
         return {
             **config,
@@ -381,9 +398,7 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
                 pos = self._checkpoint_row_position(locus_id, before_id)
                 if pos is None:
                     return  # unknown cursor: nothing is strictly before it
-                where_extra += (
-                    " AND (created_at < ? OR (created_at = ? AND chunk_id < ?))"
-                )
+                where_extra += " AND (created_at < ? OR (created_at = ? AND chunk_id < ?))"
                 params.extend([pos[0], pos[0], pos[1]])
 
         # where_extra contains only fixed, parameterised clauses built above.
@@ -398,7 +413,7 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
         for row in self.conn.execute(sql, params):
             data = self._deserialize(row["content"])
             checkpoint = data["checkpoint"]
-            yield CheckpointTuple(
+            yield CheckpointTupleFactory(
                 config=config,
                 checkpoint=checkpoint,
                 metadata=data["metadata"],
@@ -426,7 +441,7 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
     async def aput_writes(
         self,
         config: dict[str, Any],
-        writes: list[tuple[str, Any]],
+        writes: builtins.list[tuple[str, Any]],
         task_id: str = "",
         task_path: str = "",
     ) -> None:
@@ -452,7 +467,7 @@ try:
 except Exception:
     LangGraphBaseStore = None  # type: ignore[assignment,misc]
 
-_LumenaGraphStoreBase = LangGraphBaseStore if LangGraphBaseStore is not None else object
+_LumenaGraphStoreBase: Any = LangGraphBaseStore if LangGraphBaseStore is not None else object
 
 
 class LumenaGraphStore(_LumenaGraphStoreBase):
@@ -487,9 +502,7 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
 
         # Raises ModelNotAvailableError unless mock embeddings were
         # explicitly opted into (config.allow_mock_embedder — testing only).
-        self._embedder = get_embedder(
-            self.config, allow_mock=self.config.allow_mock_embedder
-        )
+        self._embedder = get_embedder(self.config, allow_mock=self.config.allow_mock_embedder)
         return self._embedder.encode_single(text)
 
     def _namespace_to_room(self, namespace: tuple[str, ...] | str) -> str:
@@ -640,9 +653,7 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
                 # Raises ModelNotAvailableError unless mock embeddings were
                 # explicitly opted into (config.allow_mock_embedder — testing
                 # only).
-                embedder_obj = get_embedder(
-                    self.config, allow_mock=self.config.allow_mock_embedder
-                )
+                embedder_obj = get_embedder(self.config, allow_mock=self.config.allow_mock_embedder)
                 self._embedder = embedder_obj
 
             pipeline = SearchPipeline(self.conn, self.config, embedder=embedder_obj)
@@ -666,9 +677,7 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
                     stored = value.get("value") if isinstance(value, dict) else None
                 except (ValueError, TypeError):
                     stored = None
-                if isinstance(stored, dict) and all(
-                    stored.get(k) == v for k, v in filter.items()
-                ):
+                if isinstance(stored, dict) and all(stored.get(k) == v for k, v in filter.items()):
                     filtered.append(cand)
             candidates = filtered
 
@@ -784,9 +793,7 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
         namespace = op.namespace_prefix
         if op.query:
             hits = self.search(namespace, op.query, limit=op.limit + op.offset)
-            candidates = [
-                (h["key"], h["value"], h.get("score")) for h in hits
-            ]
+            candidates = [(h["key"], h["value"], h.get("score")) for h in hits]
         else:
             room = self._namespace_to_room(namespace)
             rows = self.conn.execute(
@@ -832,7 +839,5 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
                 prefix = path
             elif cond.match_type == "suffix":
                 suffix = path
-        namespaces = self.list_namespaces(
-            prefix=prefix, suffix=suffix, max_depth=op.max_depth
-        )
+        namespaces = self.list_namespaces(prefix=prefix, suffix=suffix, max_depth=op.max_depth)
         return namespaces[op.offset : op.offset + op.limit]

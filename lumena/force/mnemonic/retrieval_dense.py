@@ -74,8 +74,7 @@ class SqliteVecBackend:
         try:
             probe = np.zeros(self.dims, dtype=np.float32).tobytes()
             self.conn.execute(
-                "SELECT chunk_id FROM vec_chunks "
-                "WHERE embedding MATCH ? ORDER BY distance LIMIT ?",
+                "SELECT chunk_id FROM vec_chunks WHERE embedding MATCH ? ORDER BY distance LIMIT ?",
                 (probe, 1),
             ).fetchall()
             return False  # LIMIT form accepted
@@ -210,8 +209,11 @@ class USearchBackend:
         self.index.add(chunk_id, vector.astype(np.float32))
 
     def search(self, query_vector: np.ndarray, k: int) -> list[DenseHit]:
+        # A single (1-D) query vector always yields an iterable `Matches`; usearch's
+        # stub types the return as `Matches | BatchMatches`, so mypy can't see the
+        # single-vector iterability. Safe to iterate here.
         matches = self.index.search(query_vector.astype(np.float32), k)
-        return [DenseHit(int(m.key), float(m.distance), np.array([])) for m in matches]
+        return [DenseHit(int(m.key), float(m.distance), np.array([])) for m in matches]  # type: ignore[union-attr]
 
     def remove(self, chunk_id: int) -> None:
         try:
@@ -250,7 +252,9 @@ class VectorChannel:
             self.backend: VectorBackend = SqliteVecBackend(conn, cfg.embedding_dims)
         elif cfg.vector_index == "usearch":
             try:
-                self.backend = USearchBackend(cfg.store_path / "vectors.usearch", cfg.embedding_dims)
+                self.backend = USearchBackend(
+                    cfg.store_path / "vectors.usearch", cfg.embedding_dims
+                )
             except Exception as exc:
                 logger.error(
                     "usearch_unavailable_falling_back_to_brute_force",

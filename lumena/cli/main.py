@@ -8,6 +8,7 @@ import os
 import signal
 import sys
 import time
+from typing import cast, get_args
 
 import typer
 from rich.console import Console
@@ -16,7 +17,7 @@ from rich.table import Table
 from lumena.brand.errors import ModelNotAvailableError
 from lumena.cli.models import model_app
 from lumena.compliance.safety_forgetting import get_recent_audit_events
-from lumena.config import LumenaConfig
+from lumena.config import DeviceProfile, LumenaConfig
 from lumena.controller import TwinForceController
 from lumena.data.schema import ensure_schema, get_connection
 from lumena.force.contextual.embed import get_embedder
@@ -40,6 +41,21 @@ app.add_typer(compliance_app)
 app.add_typer(model_app)
 app.add_typer(daemon_app)
 app.add_typer(p2p_app)
+
+
+def _validate_device(device: str) -> DeviceProfile:
+    """Validate a free-text ``--device`` value against the supported profiles.
+
+    Returns the value narrowed to the ``DeviceProfile`` literal, or exits with a
+    clear error listing the valid choices. This keeps the CLI boundary
+    type-correct (LumenaConfig.device is a Literal) and rejects typos loudly
+    rather than silently falling back to the generic profile.
+    """
+    valid = get_args(DeviceProfile)
+    if device not in valid:
+        console.print(f"[red]Invalid --device '{device}'. Choose one of: {', '.join(valid)}.[/red]")
+        raise typer.Exit(2)
+    return cast(DeviceProfile, device)
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +100,8 @@ def init(
     ),
 ):
     """Initialize Lumena palace for the given device profile."""
-    config = LumenaConfig(device=device)
+    device_literal = _validate_device(device)
+    config = LumenaConfig(device=device_literal)
     config.store_path.mkdir(parents=True, exist_ok=True)
     config.model_path.mkdir(parents=True, exist_ok=True)
     conn = get_connection(config)
@@ -293,7 +310,7 @@ def compliance_audit(n: int = typer.Option(10, "--n")):
         ts = ev.get("created_at")
         ts_str = (
             datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).isoformat()
-            if isinstance(ts, (int, float))
+            if isinstance(ts, int | float)
             else str(ts or "")
         )
         detail = ""
@@ -396,6 +413,7 @@ def daemon_status():
         try:
             pid = int(pid_file.read_text().strip())
             import os
+
             try:
                 os.kill(pid, 0)
                 console.print(f"[bold green]Daemon is running (PID {pid}).[/bold green]")

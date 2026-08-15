@@ -103,7 +103,5 @@ def load_retrieval_benchmarks() -> dict:
             benchmarks["latency_bm25_ms"] = _mean_latency(bm25)
             break
         except (ValueError, OSError) as exc:
-            logger.warning(
-                "benchmark_artifact_unreadable", path=str(candidate), error=str(exc)
-            )
+            logger.warning("benchmark_artifact_unreadable", path=str(candidate), error=str(exc))
     return benchmarks

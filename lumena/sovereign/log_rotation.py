@@ -67,11 +67,11 @@ def rotate_jsonl_logs(
                 shutil.copyfileobj(f_in, f_out)
             log_file.write_text("")  # truncate
             logger.info(
-                    "log_rotated",
-                    source=str(log_file.name),
-                    archive=str(archive.name),
-                    original_mb=round(size_mb, 2),
-                )
+                "log_rotated",
+                source=str(log_file.name),
+                archive=str(archive.name),
+                original_mb=round(size_mb, 2),
+            )
         except OSError:
             logger.exception("log_rotation_failed", source=str(log_file.name))
             continue

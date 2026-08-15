@@ -185,9 +185,7 @@ def extract_factors(
     # documented source types. Reject anything else so the claim can't be
     # silently violated by a default weight.
     if source_type not in RELIABILITY_BY_SOURCE:
-        raise ValueError(
-            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}"
-        )
+        raise ValueError(f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}")
     rel = RELIABILITY_BY_SOURCE[source_type]
 
     # 7. Usage history

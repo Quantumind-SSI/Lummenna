@@ -28,9 +28,7 @@ def _make_vec():
 def test_add_works(backend, db_conn):
     vec = _make_vec()
     backend.add(1, vec)
-    row = db_conn.execute(
-        "SELECT embedding FROM vec_fallback WHERE chunk_id = ?", (1,)
-    ).fetchone()
+    row = db_conn.execute("SELECT embedding FROM vec_fallback WHERE chunk_id = ?", (1,)).fetchone()
     assert row is not None
 
 
@@ -60,21 +58,20 @@ def test_search_returns_highest_score_first(backend):
 def test_remove_works(backend, db_conn):
     vec = _make_vec()
     backend.add(300, vec)
-    assert db_conn.execute(
-        "SELECT 1 FROM vec_fallback WHERE chunk_id = ?", (300,)
-    ).fetchone() is not None
+    assert (
+        db_conn.execute("SELECT 1 FROM vec_fallback WHERE chunk_id = ?", (300,)).fetchone()
+        is not None
+    )
     backend.remove(300)
-    assert db_conn.execute(
-        "SELECT 1 FROM vec_fallback WHERE chunk_id = ?", (300,)
-    ).fetchone() is None
+    assert (
+        db_conn.execute("SELECT 1 FROM vec_fallback WHERE chunk_id = ?", (300,)).fetchone() is None
+    )
 
 
 def test_degrade_works(backend, db_conn):
     vec = _make_vec()
     backend.add(400, vec)
-    db_conn.execute(
-        "SELECT embedding FROM vec_fallback WHERE chunk_id = ?", (400,)
-    ).fetchone()[0]
+    db_conn.execute("SELECT embedding FROM vec_fallback WHERE chunk_id = ?", (400,)).fetchone()[0]
     backend.degrade(400, "FP16")
     after_row = db_conn.execute(
         "SELECT embedding FROM vec_fallback WHERE chunk_id = ?", (400,)

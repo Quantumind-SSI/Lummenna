@@ -59,12 +59,12 @@ def check_locus_interference(
             conn.execute("UPDATE chunk SET vm_score = ? WHERE chunk_id = ?", (new_vm, old_chunk_id))
             weakened += 1
             logger.info(
-                    "interference_weakened",
-                    old_chunk=old_chunk_id,
-                    new_chunk=new_chunk_id,
-                    similarity=sim,
-                    new_vm=new_vm,
-                )
+                "interference_weakened",
+                old_chunk=old_chunk_id,
+                new_chunk=new_chunk_id,
+                similarity=sim,
+                new_vm=new_vm,
+            )
     return weakened
 
 

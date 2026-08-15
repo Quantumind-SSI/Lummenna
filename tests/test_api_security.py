@@ -1,6 +1,5 @@
 """Tests for API security hardening: brute-force, CORS, Cache-Control, rate limits."""
 
-
 import pytest
 from fastapi.testclient import TestClient
 

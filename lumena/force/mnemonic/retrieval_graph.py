@@ -116,7 +116,7 @@ class GraphChannel:
             if locus_row is None:
                 continue
             lid, rid = locus_row
-            neighbors = set()
+            neighbors: set[int] = set()
             if lid is not None:
                 rows = self.conn.execute(
                     "SELECT chunk_id FROM chunk WHERE locus_id = ? AND valid_to IS NULL", (lid,)

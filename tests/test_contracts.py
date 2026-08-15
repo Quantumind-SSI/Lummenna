@@ -13,6 +13,7 @@ from lumena import contracts as c
 
 # --- §3.1 / §3.4 enumerable claims -----------------------------------------
 
+
 def test_source_types_match_documented_set():
     assert {
         "user_input",
@@ -49,6 +50,7 @@ def test_embedding_dims_is_384():
 
 # --- validators reject out-of-contract values -------------------------------
 
+
 def test_validate_source_type_rejects_unknown():
     assert c.validate_source_type("user_input") == "user_input"
     with pytest.raises(ValueError):
@@ -69,15 +71,12 @@ def test_validate_embedding_dims_rejects_mismatch():
 
 # --- §3.4 V(m) reliability ordering + source_type grounding -----------------
 
+
 def test_reliability_ordering_matches_whitepaper():
     from lumena.force.mnemonic.value_model import RELIABILITY_BY_SOURCE as r
 
     assert (
-        r["user_input"]
-        > r["consolidation"]
-        > r["agent_reasoning"]
-        > r["import"]
-        > r["p2p_share"]
+        r["user_input"] > r["consolidation"] > r["agent_reasoning"] > r["import"] > r["p2p_share"]
     )
 
 
@@ -97,6 +96,7 @@ def test_compute_vm_is_bounded_unit_interval():
 
 # --- §3.3 intent router grounding -------------------------------------------
 
+
 def test_intent_router_returns_documented_label():
     from lumena.intent import IntentRouter
 
@@ -114,6 +114,7 @@ def test_intent_router_train_rejects_bad_labels():
 
 # --- §3.3 FRQAD distance bound ----------------------------------------------
 
+
 def test_frqad_distance_within_zero_and_half_pi():
     from lumena.sovereign.frqad import compute_frqad
 
@@ -128,6 +129,7 @@ def test_frqad_distance_within_zero_and_half_pi():
 
 
 # --- §3.2 TFC state + signal grounding --------------------------------------
+
 
 def test_tfc_state_bounds_enforced():
     from pydantic import ValidationError
@@ -151,6 +153,7 @@ def test_tfc_update_rejects_unknown_signal_key():
 
 
 # --- provenance confidence bound --------------------------------------------
+
 
 def test_provenance_confidence_bounds(memory_db):
     from lumena.force.mnemonic.provenance import create_provenance

@@ -96,10 +96,10 @@ def curiosity_probe(conn: sqlite3.Connection, limit: int = 5) -> list[int]:
             break
 
     logger.debug(
-            "curiosity_probe_done",
-            returned=len(result),
-            signals={"old": signal_old, "variance": signal_variance, "unseen": signal_unseen},
-        )
+        "curiosity_probe_done",
+        returned=len(result),
+        signals={"old": signal_old, "variance": signal_variance, "unseen": signal_unseen},
+    )
     return result
 
 

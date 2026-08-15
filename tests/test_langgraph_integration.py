@@ -58,7 +58,7 @@ class TestLumenaCheckpointSaver:
             cp = {
                 "v": 1,
                 "id": f"cp-{i}",
-                "ts": f"2024-01-0{i+1}T00:00:00Z",
+                "ts": f"2024-01-0{i + 1}T00:00:00Z",
                 "channel_values": {},
                 "channel_versions": {},
                 "versions_seen": {},
@@ -226,9 +226,7 @@ class TestPendingWritesRoundTrip:
 
         tup = saver.get_tuple(next_cfg)
         assert tup is not None
-        assert ("task-7", "messages", "hello") in [
-            tuple(w) for w in tup.pending_writes
-        ]
+        assert ("task-7", "messages", "hello") in [tuple(w) for w in tup.pending_writes]
 
     def test_list_before_cursor(self, fresh_config):
         """list(before=...) must exclude the cursor checkpoint and newer ones."""
@@ -238,7 +236,7 @@ class TestPendingWritesRoundTrip:
         cfg = {"configurable": {"thread_id": "lb"}}
         cursor_cfg = None
         for i in range(3):
-            cp = {"id": f"cp-{i}", "ts": f"2026-01-0{i+1}T00:00:00", "channel_values": {}}
+            cp = {"id": f"cp-{i}", "ts": f"2026-01-0{i + 1}T00:00:00", "channel_values": {}}
             meta = {"source": "put", "step": i, "writes": {}, "parents": {}}
             out_cfg = saver.put(cfg, cp, meta, {})
             if i == 2:

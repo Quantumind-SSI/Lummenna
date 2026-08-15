@@ -44,4 +44,4 @@ def compute_cosine_distance(query: np.ndarray, candidate: np.ndarray) -> float:
         return 1.0
     dot = np.dot(query, candidate)
     sim = dot / (qn * cn)
-    return 1.0 - sim  # convert similarity to distance [0, 2]
+    return float(1.0 - sim)  # convert similarity to distance [0, 2]

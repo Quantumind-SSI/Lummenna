@@ -1,6 +1,5 @@
 """Tests for chunk-count-based L3 budget eviction."""
 
-
 import pytest
 
 from lumena.config import LumenaConfig

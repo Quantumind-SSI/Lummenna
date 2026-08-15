@@ -8,7 +8,7 @@ Secret sauce: Device-specific defaults (RPi5 vs Jetson vs generic)
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,6 +16,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 def _default_config_path() -> Path:
     return Path.home() / ".lumena" / "config.toml"
+
+
+# Supported device profiles — the single source of truth for the closed set,
+# reused by LumenaConfig.device and validated at the CLI boundary.
+DeviceProfile = Literal["rpi5", "jetson-orin", "orange-pi", "generic"]
 
 
 DEVICE_PROFILES: dict[str, dict[str, object]] = {
@@ -32,7 +37,7 @@ class LumenaConfig(BaseSettings):
         toml_file=_default_config_path(),
     )
 
-    device: Literal["rpi5", "jetson-orin", "orange-pi", "generic"] = "generic"
+    device: DeviceProfile = "generic"
     context_budget: int = 2048
     memory_limit_mb: int = 300
     embedding_model: str = "bge-small-en-v1.5"
@@ -115,11 +120,15 @@ class LumenaConfig(BaseSettings):
             return
         profile = DEVICE_PROFILES.get(self.device, DEVICE_PROFILES["generic"])
         if self.context_budget == 2048:
-            self.context_budget = int(profile.get("context_budget", self.context_budget))
+            self.context_budget = int(cast(int, profile.get("context_budget", self.context_budget)))
         if self.memory_limit_mb == 300:
-            self.memory_limit_mb = int(profile.get("memory_limit_mb", self.memory_limit_mb))
+            self.memory_limit_mb = int(
+                cast(int, profile.get("memory_limit_mb", self.memory_limit_mb))
+            )
         if self.vector_index == "sqlite-vec":
-            self.vector_index = str(profile.get("vector_index", self.vector_index))
+            vector_index = str(profile.get("vector_index", self.vector_index))
+            if vector_index in ("sqlite-vec", "usearch"):
+                self.vector_index = cast(Literal["sqlite-vec", "usearch"], vector_index)
         self._resolved = True
 
 

@@ -31,7 +31,8 @@ def test_create_provenance_returns_int(db_conn):
     chunk_id = 1
     db_conn.execute(
         "INSERT INTO chunk(chunk_id, room_id, locus_id, content, content_hash) "
-        "VALUES (?, 1, 1, 'test', 'hash1')", (chunk_id,)
+        "VALUES (?, 1, 1, 'test', 'hash1')",
+        (chunk_id,),
     )
     db_conn.commit()
     prov_id = create_provenance(db_conn, chunk_id, "user_input", source_ref="test/1")
@@ -43,17 +44,19 @@ def test_create_provenance_stores_record(db_conn):
     chunk_id = 2
     db_conn.execute(
         "INSERT INTO chunk(chunk_id, room_id, locus_id, content, content_hash) "
-        "VALUES (?, 1, 1, 'test2', 'hash2')", (chunk_id,)
+        "VALUES (?, 1, 1, 'test2', 'hash2')",
+        (chunk_id,),
     )
     db_conn.commit()
     prov_id = create_provenance(
-        db_conn, chunk_id, "agent_reasoning",
-        source_ref="ag/1", confidence=0.8,
-        extraction_method="rule"
+        db_conn,
+        chunk_id,
+        "agent_reasoning",
+        source_ref="ag/1",
+        confidence=0.8,
+        extraction_method="rule",
     )
-    row = db_conn.execute(
-        "SELECT * FROM provenance WHERE provenance_id = ?", (prov_id,)
-    ).fetchone()
+    row = db_conn.execute("SELECT * FROM provenance WHERE provenance_id = ?", (prov_id,)).fetchone()
     assert row["chunk_id"] == chunk_id
     assert row["source_type"] == "agent_reasoning"
     assert row["confidence"] == 0.8

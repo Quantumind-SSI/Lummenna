@@ -64,11 +64,11 @@ class LexicalChannel:
 
         hits = [LexicalHit(cid, rank, b"") for cid, rank in rows]
         logger.info(
-                "lexical_retrieve",
-                query=safe_query,
-                hits=len(hits),
-                top_score=hits[0].rank if hits else None,
-            )
+            "lexical_retrieve",
+            query=safe_query,
+            hits=len(hits),
+            top_score=hits[0].rank if hits else None,
+        )
         return hits
 
     def index_chunk(self, chunk_id: int, content: str) -> None:
