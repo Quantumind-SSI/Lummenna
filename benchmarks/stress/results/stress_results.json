@@ -1,0 +1,14 @@
+{
+  "benchmark": "stress",
+  "embedder": "all-MiniLM-L6-v2",
+  "chunks_ingested": 20000,
+  "ingest_time_s": 251.88,
+  "ingest_rate_hz": 79.4,
+  "query_count": 500,
+  "query_time_s": 4.4,
+  "query_rate_hz": 113.7,
+  "latency_p50_ms": 29.42,
+  "latency_p99_ms": 66.38,
+  "peak_traced_memory_mb": 1.5,
+  "l3_evicted": 11261
+}

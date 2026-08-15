@@ -26,9 +26,9 @@
       "ci95_hi": 1.0
     },
     "latency_ms": {
-      "mean": 11.3939,
-      "ci95_lo": 9.8835,
-      "ci95_hi": 13.105
+      "mean": 8.5939,
+      "ci95_lo": 7.3671,
+      "ci95_hi": 9.9013
     }
   },
   "session_results": [
@@ -37,49 +37,49 @@
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 14.53
+      "avg_latency_ms": 7.77
     },
     {
       "persona": "ML Engineer",
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 12.63
+      "avg_latency_ms": 10.54
     },
     {
       "persona": "Medical Researcher",
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 13.96
+      "avg_latency_ms": 10.62
     },
     {
       "persona": "QA Assistant",
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 10.06
+      "avg_latency_ms": 7.59
     },
     {
       "persona": "Architecture Reviewer",
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 10.52
+      "avg_latency_ms": 9.7
     },
     {
       "persona": "Climate Analyst",
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 7.64
+      "avg_latency_ms": 6.2
     },
     {
       "persona": "Database Admin",
       "num_queries": 4,
       "avg_recall_10": 1.0,
       "avg_semantic_similarity": 1.0,
-      "avg_latency_ms": 10.41
+      "avg_latency_ms": 7.75
     }
   ],
   "all_turns": [
@@ -111,7 +111,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 16.53
+        "latency_ms": 7.86
       },
       "top_5_chunks": [
         {
@@ -155,7 +155,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 16.11
+        "latency_ms": 5.89
       },
       "top_5_chunks": [
         {
@@ -198,8 +198,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 13.08
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 6.25
       },
       "top_5_chunks": [
         {
@@ -242,8 +242,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 12.41
+        "semantic_similarity": 1.0,
+        "latency_ms": 11.06
       },
       "top_5_chunks": [
         {
@@ -301,7 +301,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 23.37
+        "latency_ms": 17.66
       },
       "top_5_chunks": [
         {
@@ -344,8 +344,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 12.23
+        "semantic_similarity": 1.0,
+        "latency_ms": 12.59
       },
       "top_5_chunks": [
         {
@@ -388,8 +388,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 6.64
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 5.77
       },
       "top_5_chunks": [
         {
@@ -432,8 +432,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 8.28
+        "semantic_similarity": 1.0,
+        "latency_ms": 6.14
       },
       "top_5_chunks": [
         {
@@ -490,8 +490,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 8.01
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 6.21
       },
       "top_5_chunks": [
         {
@@ -535,7 +535,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 14.42
+        "latency_ms": 11.53
       },
       "top_5_chunks": [
         {
@@ -578,8 +578,8 @@
         "recall_1": 0.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 20.37
+        "semantic_similarity": 0.9999999403953552,
+        "latency_ms": 18.45
       },
       "top_5_chunks": [
         {
@@ -622,8 +622,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 13.05
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 6.29
       },
       "top_5_chunks": [
         {
@@ -680,8 +680,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 8.17
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 9.0
       },
       "top_5_chunks": [
         {
@@ -725,7 +725,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 12.08
+        "latency_ms": 6.2
       },
       "top_5_chunks": [
         {
@@ -768,8 +768,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 13.96
+        "semantic_similarity": 1.0,
+        "latency_ms": 5.82
       },
       "top_5_chunks": [
         {
@@ -812,8 +812,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 6.05
+        "semantic_similarity": 1.0,
+        "latency_ms": 9.33
       },
       "top_5_chunks": [
         {
@@ -837,9 +837,9 @@
           "preview": "Python 3.13 was released on October 7, 2024. Key features: experimental JIT compiler (copy-and-patch), new interactive i..."
         },
         {
-          "id": 3,
-          "score": 0.002,
-          "preview": "Rust 1.80 (July 2024) added LazyLock and LazyCell types for lazy initialization. Rust 1.82 (October 2024) stabilized raw..."
+          "id": 2,
+          "score": 0.0024,
+          "preview": "Django 5.1 (August 2024) introduced QuerySet explain() with generic plans, asynchronous authentication backends, templat..."
         }
       ]
     },
@@ -871,7 +871,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 8.28
+        "latency_ms": 10.46
       },
       "top_5_chunks": [
         {
@@ -915,7 +915,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 9.91
+        "latency_ms": 5.64
       },
       "top_5_chunks": [
         {
@@ -959,7 +959,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 6.46
+        "latency_ms": 11.35
       },
       "top_5_chunks": [
         {
@@ -1003,7 +1003,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 17.44
+        "latency_ms": 11.33
       },
       "top_5_chunks": [
         {
@@ -1060,8 +1060,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 7.97
+        "semantic_similarity": 1.0,
+        "latency_ms": 7.06
       },
       "top_5_chunks": [
         {
@@ -1105,7 +1105,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 7.26
+        "latency_ms": 5.8
       },
       "top_5_chunks": [
         {
@@ -1149,7 +1149,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 6.9
+        "latency_ms": 6.01
       },
       "top_5_chunks": [
         {
@@ -1192,8 +1192,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 8.42
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 5.93
       },
       "top_5_chunks": [
         {
@@ -1250,8 +1250,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 13.28
+        "semantic_similarity": 1.0,
+        "latency_ms": 6.48
       },
       "top_5_chunks": [
         {
@@ -1294,8 +1294,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0,
-        "latency_ms": 8.71
+        "semantic_similarity": 1.0000001192092896,
+        "latency_ms": 5.69
       },
       "top_5_chunks": [
         {
@@ -1338,8 +1338,8 @@
         "recall_1": 1.0,
         "recall_5": 1.0,
         "recall_10": 1.0,
-        "semantic_similarity": 1.0000001192092896,
-        "latency_ms": 6.99
+        "semantic_similarity": 1.0,
+        "latency_ms": 6.98
       },
       "top_5_chunks": [
         {
@@ -1383,7 +1383,7 @@
         "recall_5": 1.0,
         "recall_10": 1.0,
         "semantic_similarity": 1.0,
-        "latency_ms": 12.65
+        "latency_ms": 11.85
       },
       "top_5_chunks": [
         {

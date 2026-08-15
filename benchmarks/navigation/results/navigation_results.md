@@ -13,9 +13,9 @@
 
 | Strategy | Mean | p50 | p95 | p99 |
 |---|---|---|---|---|
-| global | 11.04 | 10.39 | 11.63 | 26.4 |
-| oracle | 10.18 | 10.19 | 11.44 | 12.32 |
-| routed | 10.25 | 10.29 | 11.48 | 12.22 |
+| global | 8.29 | 7.51 | 12.23 | 13.74 |
+| oracle | 8.95 | 8.55 | 13.04 | 15.56 |
+| routed | 9.13 | 8.66 | 13.19 | 14.43 |
 
 ## Recall@k
 
@@ -36,9 +36,9 @@
 | Recall Retention @ 5 | 0.9969 | [0.9907, 1.0000] |
 | Recall Retention @ 10 | 0.9994 | [0.9954, 1.0027] |
 | Recall Retention @ 20 | 0.9984 | [0.9957, 1.0008] |
-| Latency Speedup (ratio of means) | 1.084x | — |
-| Latency Speedup (ratio of p50s) | 1.020x | — |
-| Per-query mean of ratios (biased upward) | 1.08x | [1.05x, 1.13x] |
+| Latency Speedup (ratio of means) | 0.926x | — |
+| Latency Speedup (ratio of p50s) | 0.879x | — |
+| Per-query mean of ratios (biased upward) | 0.97x | [0.94x, 1.00x] |
 
 ## Routed Room-Constrained vs Global
 
@@ -49,9 +49,9 @@
 | Recall Retention @ 5 | 1.0000 | [1.0000, 1.0000] |
 | Recall Retention @ 10 | 1.0036 | [1.0004, 1.0079] |
 | Recall Retention @ 20 | 1.0030 | [0.9992, 1.0083] |
-| Latency Speedup (ratio of means) | 1.077x | — |
-| Latency Speedup (ratio of p50s) | 1.009x | — |
-| Per-query mean of ratios (biased upward) | 1.08x | [1.04x, 1.12x] |
+| Latency Speedup (ratio of means) | 0.908x | — |
+| Latency Speedup (ratio of p50s) | 0.868x | — |
+| Per-query mean of ratios (biased upward) | 0.93x | [0.91x, 0.95x] |
 
 ## Intent Distribution
 

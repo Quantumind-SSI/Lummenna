@@ -11,13 +11,13 @@
   "summary": {
     "global": {
       "latency_ms": {
-        "mean": 11.04,
-        "p50": 10.39,
-        "p95": 11.63,
-        "p99": 26.4,
+        "mean": 8.29,
+        "p50": 7.51,
+        "p95": 12.23,
+        "p99": 13.74,
         "ci95": {
-          "lo": 10.5886,
-          "hi": 11.5673
+          "lo": 8.1054,
+          "hi": 8.4791
         }
       },
       "recall_1": {
@@ -48,13 +48,13 @@
     },
     "oracle": {
       "latency_ms": {
-        "mean": 10.18,
-        "p50": 10.19,
-        "p95": 11.44,
-        "p99": 12.32,
+        "mean": 8.95,
+        "p50": 8.55,
+        "p95": 13.04,
+        "p99": 15.56,
         "ci95": {
-          "lo": 10.0913,
-          "hi": 10.2621
+          "lo": 8.7506,
+          "hi": 9.1676
         }
       },
       "recall_1": {
@@ -85,13 +85,13 @@
     },
     "routed": {
       "latency_ms": {
-        "mean": 10.25,
-        "p50": 10.29,
-        "p95": 11.48,
-        "p99": 12.22,
+        "mean": 9.13,
+        "p50": 8.66,
+        "p95": 13.19,
+        "p99": 14.43,
         "ci95": {
-          "lo": 10.1646,
-          "hi": 10.3309
+          "lo": 8.9512,
+          "hi": 9.3187
         }
       },
       "recall_1": {
@@ -147,11 +147,11 @@
         "ci95_hi": 1.0008
       },
       "latency_speedup": {
-        "ratio_of_means": 1.084,
-        "ratio_of_p50s": 1.02,
-        "per_query_mean_biased": 1.08,
-        "per_query_ci95_lo": 1.05,
-        "per_query_ci95_hi": 1.13,
+        "ratio_of_means": 0.926,
+        "ratio_of_p50s": 0.879,
+        "per_query_mean_biased": 0.97,
+        "per_query_ci95_lo": 0.94,
+        "per_query_ci95_hi": 1.0,
         "note": "per_query_mean is mean-of-ratios (biased upward); quote ratio_of_means or ratio_of_p50s"
       }
     },
@@ -182,11 +182,11 @@
         "ci95_hi": 1.0083
       },
       "latency_speedup": {
-        "ratio_of_means": 1.077,
-        "ratio_of_p50s": 1.009,
-        "per_query_mean_biased": 1.08,
-        "per_query_ci95_lo": 1.04,
-        "per_query_ci95_hi": 1.12,
+        "ratio_of_means": 0.908,
+        "ratio_of_p50s": 0.868,
+        "per_query_mean_biased": 0.93,
+        "per_query_ci95_lo": 0.91,
+        "per_query_ci95_hi": 0.95,
         "note": "per_query_mean is mean-of-ratios (biased upward); quote ratio_of_means or ratio_of_p50s"
       }
     },
@@ -216,9 +216,9 @@
       "global_recall_10": 0.19230769230769232,
       "oracle_recall_10": 0.19230769230769232,
       "routed_recall_10": 0.19230769230769232,
-      "global_latency_ms": 52.79,
-      "oracle_latency_ms": 10.11,
-      "routed_latency_ms": 11.16
+      "global_latency_ms": 7.98,
+      "oracle_latency_ms": 6.98,
+      "routed_latency_ms": 7.82
     },
     {
       "query": "diagnosis assistance future trends",
@@ -235,9 +235,9 @@
       "global_recall_10": 0.125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 10.6,
-      "oracle_latency_ms": 9.73,
-      "routed_latency_ms": 9.58
+      "global_latency_ms": 7.05,
+      "oracle_latency_ms": 10.81,
+      "routed_latency_ms": 6.53
     },
     {
       "query": "zero trust architecture recent advances",
@@ -255,9 +255,9 @@
       "global_recall_10": 0.035211267605633804,
       "oracle_recall_10": 0.035211267605633804,
       "routed_recall_10": 0.035211267605633804,
-      "global_latency_ms": 23.52,
-      "oracle_latency_ms": 10.84,
-      "routed_latency_ms": 11.6
+      "global_latency_ms": 10.53,
+      "oracle_latency_ms": 7.72,
+      "routed_latency_ms": 10.27
     },
     {
       "query": "consensus mechanisms scalability engineering",
@@ -276,9 +276,9 @@
       "global_recall_10": 0.06944444444444445,
       "oracle_recall_10": 0.06944444444444445,
       "routed_recall_10": 0.06944444444444445,
-      "global_latency_ms": 10.94,
-      "oracle_latency_ms": 10.24,
-      "routed_latency_ms": 11.02
+      "global_latency_ms": 7.06,
+      "oracle_latency_ms": 8.19,
+      "routed_latency_ms": 10.55
     },
     {
       "query": "tokenization methods future trends",
@@ -295,9 +295,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 10.68,
-      "oracle_latency_ms": 10.27,
-      "routed_latency_ms": 9.39
+      "global_latency_ms": 7.19,
+      "oracle_latency_ms": 7.51,
+      "routed_latency_ms": 6.94
     },
     {
       "query": "scalability engineering future trends",
@@ -314,9 +314,9 @@
       "global_recall_10": 0.12658227848101267,
       "oracle_recall_10": 0.12658227848101267,
       "routed_recall_10": 0.12658227848101267,
-      "global_latency_ms": 10.24,
-      "oracle_latency_ms": 10.06,
-      "routed_latency_ms": 9.88
+      "global_latency_ms": 8.83,
+      "oracle_latency_ms": 6.87,
+      "routed_latency_ms": 8.8
     },
     {
       "query": "medical imaging serverless architecture",
@@ -335,9 +335,9 @@
       "global_recall_10": 0.06993006993006994,
       "oracle_recall_10": 0.06993006993006994,
       "routed_recall_10": 0.06993006993006994,
-      "global_latency_ms": 10.6,
-      "oracle_latency_ms": 10.7,
-      "routed_latency_ms": 10.92
+      "global_latency_ms": 7.25,
+      "oracle_latency_ms": 11.43,
+      "routed_latency_ms": 8.45
     },
     {
       "query": "cryptocurrency markets recent advances",
@@ -354,9 +354,9 @@
       "global_recall_10": 0.0425531914893617,
       "oracle_recall_10": 0.0425531914893617,
       "routed_recall_10": 0.0425531914893617,
-      "global_latency_ms": 18.51,
-      "oracle_latency_ms": 10.66,
-      "routed_latency_ms": 10.47
+      "global_latency_ms": 11.97,
+      "oracle_latency_ms": 7.74,
+      "routed_latency_ms": 8.04
     },
     {
       "query": "convolutional neural network best practices",
@@ -374,9 +374,9 @@
       "global_recall_10": 0.07575757575757576,
       "oracle_recall_10": 0.07575757575757576,
       "routed_recall_10": 0.07575757575757576,
-      "global_latency_ms": 18.19,
-      "oracle_latency_ms": 10.94,
-      "routed_latency_ms": 11.01
+      "global_latency_ms": 7.65,
+      "oracle_latency_ms": 8.05,
+      "routed_latency_ms": 8.53
     },
     {
       "query": "medical imaging future trends",
@@ -393,9 +393,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 9.9,
-      "oracle_latency_ms": 9.44,
-      "routed_latency_ms": 9.93
+      "global_latency_ms": 6.95,
+      "oracle_latency_ms": 6.71,
+      "routed_latency_ms": 9.84
     },
     {
       "query": "scalability engineering future trends",
@@ -412,9 +412,9 @@
       "global_recall_10": 0.12658227848101267,
       "oracle_recall_10": 0.12658227848101267,
       "routed_recall_10": 0.12658227848101267,
-      "global_latency_ms": 10.08,
-      "oracle_latency_ms": 9.68,
-      "routed_latency_ms": 9.6
+      "global_latency_ms": 6.82,
+      "oracle_latency_ms": 6.82,
+      "routed_latency_ms": 7.7
     },
     {
       "query": "tokenization methods recent advances",
@@ -431,9 +431,9 @@
       "global_recall_10": 0.0392156862745098,
       "oracle_recall_10": 0.0392156862745098,
       "routed_recall_10": 0.0392156862745098,
-      "global_latency_ms": 10.84,
-      "oracle_latency_ms": 10.2,
-      "routed_latency_ms": 10.46
+      "global_latency_ms": 7.55,
+      "oracle_latency_ms": 8.82,
+      "routed_latency_ms": 7.41
     },
     {
       "query": "medical imaging kubernetes orchestration",
@@ -452,9 +452,9 @@
       "global_recall_10": 0.06666666666666667,
       "oracle_recall_10": 0.06666666666666667,
       "routed_recall_10": 0.06666666666666667,
-      "global_latency_ms": 10.3,
-      "oracle_latency_ms": 10.84,
-      "routed_latency_ms": 10.96
+      "global_latency_ms": 7.98,
+      "oracle_latency_ms": 8.42,
+      "routed_latency_ms": 8.64
     },
     {
       "query": "diagnosis assistance best practices",
@@ -472,9 +472,9 @@
       "global_recall_10": 0.125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 10.96,
-      "oracle_latency_ms": 9.57,
-      "routed_latency_ms": 10.79
+      "global_latency_ms": 6.83,
+      "oracle_latency_ms": 8.74,
+      "routed_latency_ms": 8.1
     },
     {
       "query": "manipulator design challenges",
@@ -491,9 +491,9 @@
       "global_recall_10": 0.14285714285714285,
       "oracle_recall_10": 0.14285714285714285,
       "routed_recall_10": 0.14285714285714285,
-      "global_latency_ms": 67.47,
-      "oracle_latency_ms": 11.28,
-      "routed_latency_ms": 10.92
+      "global_latency_ms": 12.17,
+      "oracle_latency_ms": 7.54,
+      "routed_latency_ms": 10.54
     },
     {
       "query": "computer vision best practices",
@@ -511,9 +511,9 @@
       "global_recall_10": 0.11627906976744186,
       "oracle_recall_10": 0.11627906976744186,
       "routed_recall_10": 0.11627906976744186,
-      "global_latency_ms": 12.26,
-      "oracle_latency_ms": 10.02,
-      "routed_latency_ms": 10.49
+      "global_latency_ms": 7.26,
+      "oracle_latency_ms": 9.06,
+      "routed_latency_ms": 8.53
     },
     {
       "query": "kinematics penetration testing",
@@ -532,9 +532,9 @@
       "global_recall_10": 0.140625,
       "oracle_recall_10": 0.15625,
       "routed_recall_10": 0.15625,
-      "global_latency_ms": 10.85,
-      "oracle_latency_ms": 10.95,
-      "routed_latency_ms": 10.36
+      "global_latency_ms": 7.16,
+      "oracle_latency_ms": 8.39,
+      "routed_latency_ms": 9.55
     },
     {
       "query": "transformer architecture neural network",
@@ -553,9 +553,9 @@
       "global_recall_10": 0.05,
       "oracle_recall_10": 0.05,
       "routed_recall_10": 0.05,
-      "global_latency_ms": 23.04,
-      "oracle_latency_ms": 12.95,
-      "routed_latency_ms": 12.4
+      "global_latency_ms": 7.59,
+      "oracle_latency_ms": 9.6,
+      "routed_latency_ms": 8.63
     },
     {
       "query": "devops practices challenges",
@@ -572,9 +572,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 11.54,
-      "oracle_latency_ms": 12.52,
-      "routed_latency_ms": 10.49
+      "global_latency_ms": 7.43,
+      "oracle_latency_ms": 7.35,
+      "routed_latency_ms": 7.28
     },
     {
       "query": "natural language processing clinical trials",
@@ -593,9 +593,9 @@
       "global_recall_10": 0.07575757575757576,
       "oracle_recall_10": 0.07575757575757576,
       "routed_recall_10": 0.07575757575757576,
-      "global_latency_ms": 10.97,
-      "oracle_latency_ms": 10.78,
-      "routed_latency_ms": 11.06
+      "global_latency_ms": 7.12,
+      "oracle_latency_ms": 9.08,
+      "routed_latency_ms": 14.43
     },
     {
       "query": "computer vision challenges",
@@ -612,9 +612,9 @@
       "global_recall_10": 0.10465116279069768,
       "oracle_recall_10": 0.10465116279069768,
       "routed_recall_10": 0.10465116279069768,
-      "global_latency_ms": 19.86,
-      "oracle_latency_ms": 9.84,
-      "routed_latency_ms": 9.52
+      "global_latency_ms": 7.56,
+      "oracle_latency_ms": 7.34,
+      "routed_latency_ms": 10.52
     },
     {
       "query": "machine learning best practices",
@@ -632,9 +632,9 @@
       "global_recall_10": 0.14492753623188406,
       "oracle_recall_10": 0.14492753623188406,
       "routed_recall_10": 0.14492753623188406,
-      "global_latency_ms": 10.01,
-      "oracle_latency_ms": 9.1,
-      "routed_latency_ms": 10.6
+      "global_latency_ms": 7.08,
+      "oracle_latency_ms": 11.8,
+      "routed_latency_ms": 8.41
     },
     {
       "query": "automation systems future trends",
@@ -651,9 +651,9 @@
       "global_recall_10": 0.14084507042253522,
       "oracle_recall_10": 0.14084507042253522,
       "routed_recall_10": 0.14084507042253522,
-      "global_latency_ms": 10.34,
-      "oracle_latency_ms": 9.55,
-      "routed_latency_ms": 8.97
+      "global_latency_ms": 7.0,
+      "oracle_latency_ms": 6.9,
+      "routed_latency_ms": 6.8
     },
     {
       "query": "patient data privacy best practices",
@@ -671,9 +671,9 @@
       "global_recall_10": 0.15625,
       "oracle_recall_10": 0.15625,
       "routed_recall_10": 0.15625,
-      "global_latency_ms": 10.06,
-      "oracle_latency_ms": 9.72,
-      "routed_latency_ms": 10.99
+      "global_latency_ms": 6.95,
+      "oracle_latency_ms": 9.7,
+      "routed_latency_ms": 8.21
     },
     {
       "query": "cybersecurity robotics",
@@ -692,9 +692,9 @@
       "global_recall_10": 1.0,
       "oracle_recall_10": 1.0,
       "routed_recall_10": 1.0,
-      "global_latency_ms": 10.66,
-      "oracle_latency_ms": 10.65,
-      "routed_latency_ms": 11.3
+      "global_latency_ms": 9.03,
+      "oracle_latency_ms": 8.65,
+      "routed_latency_ms": 8.63
     },
     {
       "query": "deep learning diagnosis assistance",
@@ -713,9 +713,9 @@
       "global_recall_10": 0.07462686567164178,
       "oracle_recall_10": 0.07462686567164178,
       "routed_recall_10": 0.07462686567164178,
-      "global_latency_ms": 10.92,
-      "oracle_latency_ms": 10.16,
-      "routed_latency_ms": 10.21
+      "global_latency_ms": 7.11,
+      "oracle_latency_ms": 8.6,
+      "routed_latency_ms": 8.28
     },
     {
       "query": "encryption standards recent advances",
@@ -732,9 +732,9 @@
       "global_recall_10": 0.0390625,
       "oracle_recall_10": 0.0390625,
       "routed_recall_10": 0.0390625,
-      "global_latency_ms": 10.57,
-      "oracle_latency_ms": 9.92,
-      "routed_latency_ms": 9.85
+      "global_latency_ms": 7.44,
+      "oracle_latency_ms": 7.36,
+      "routed_latency_ms": 8.51
     },
     {
       "query": "neural network bert model",
@@ -753,9 +753,9 @@
       "global_recall_10": 0.0546448087431694,
       "oracle_recall_10": 0.0546448087431694,
       "routed_recall_10": 0.0546448087431694,
-      "global_latency_ms": 10.33,
-      "oracle_latency_ms": 10.48,
-      "routed_latency_ms": 9.86
+      "global_latency_ms": 6.96,
+      "oracle_latency_ms": 9.65,
+      "routed_latency_ms": 12.43
     },
     {
       "query": "neural network challenges",
@@ -773,9 +773,9 @@
       "global_recall_10": 0.06060606060606061,
       "oracle_recall_10": 0.06060606060606061,
       "routed_recall_10": 0.06060606060606061,
-      "global_latency_ms": 9.7,
-      "oracle_latency_ms": 9.09,
-      "routed_latency_ms": 10.07
+      "global_latency_ms": 7.44,
+      "oracle_latency_ms": 7.24,
+      "routed_latency_ms": 10.42
     },
     {
       "query": "decentralization recent advances",
@@ -792,9 +792,9 @@
       "global_recall_10": 0.04411764705882353,
       "oracle_recall_10": 0.04411764705882353,
       "routed_recall_10": 0.04411764705882353,
-      "global_latency_ms": 10.69,
-      "oracle_latency_ms": 10.11,
-      "routed_latency_ms": 9.74
+      "global_latency_ms": 7.59,
+      "oracle_latency_ms": 7.65,
+      "routed_latency_ms": 7.38
     },
     {
       "query": "devops practices best practices",
@@ -811,9 +811,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.3,
-      "oracle_latency_ms": 9.63,
-      "routed_latency_ms": 10.41
+      "global_latency_ms": 8.28,
+      "oracle_latency_ms": 6.85,
+      "routed_latency_ms": 6.81
     },
     {
       "query": "threat detection recent advances",
@@ -831,9 +831,9 @@
       "global_recall_10": 0.035211267605633804,
       "oracle_recall_10": 0.035211267605633804,
       "routed_recall_10": 0.035211267605633804,
-      "global_latency_ms": 10.91,
-      "oracle_latency_ms": 9.56,
-      "routed_latency_ms": 10.29
+      "global_latency_ms": 8.6,
+      "oracle_latency_ms": 7.35,
+      "routed_latency_ms": 9.48
     },
     {
       "query": "consensus mechanisms cloud computing",
@@ -852,9 +852,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.67,
-      "oracle_latency_ms": 11.07,
-      "routed_latency_ms": 10.49
+      "global_latency_ms": 7.45,
+      "oracle_latency_ms": 8.78,
+      "routed_latency_ms": 8.59
     },
     {
       "query": "semantic segmentation recent advances",
@@ -871,9 +871,9 @@
       "global_recall_10": 0.0390625,
       "oracle_recall_10": 0.0390625,
       "routed_recall_10": 0.0390625,
-      "global_latency_ms": 10.86,
-      "oracle_latency_ms": 10.96,
-      "routed_latency_ms": 10.72
+      "global_latency_ms": 7.88,
+      "oracle_latency_ms": 8.57,
+      "routed_latency_ms": 7.6
     },
     {
       "query": "kubernetes orchestration smart contracts",
@@ -892,9 +892,9 @@
       "global_recall_10": 0.06622516556291391,
       "oracle_recall_10": 0.06622516556291391,
       "routed_recall_10": 0.06622516556291391,
-      "global_latency_ms": 10.3,
-      "oracle_latency_ms": 10.56,
-      "routed_latency_ms": 10.69
+      "global_latency_ms": 7.19,
+      "oracle_latency_ms": 12.92,
+      "routed_latency_ms": 8.48
     },
     {
       "query": "threat detection robotics",
@@ -913,9 +913,9 @@
       "global_recall_10": 0.11235955056179775,
       "oracle_recall_10": 0.11235955056179775,
       "routed_recall_10": 0.10112359550561797,
-      "global_latency_ms": 10.28,
-      "oracle_latency_ms": 9.99,
-      "routed_latency_ms": 10.08
+      "global_latency_ms": 7.12,
+      "oracle_latency_ms": 8.33,
+      "routed_latency_ms": 8.45
     },
     {
       "query": "clinical trials gradient descent",
@@ -934,9 +934,9 @@
       "global_recall_10": 0.06578947368421052,
       "oracle_recall_10": 0.06578947368421052,
       "routed_recall_10": 0.06578947368421052,
-      "global_latency_ms": 10.21,
-      "oracle_latency_ms": 10.62,
-      "routed_latency_ms": 9.83
+      "global_latency_ms": 6.96,
+      "oracle_latency_ms": 8.33,
+      "routed_latency_ms": 8.21
     },
     {
       "query": "decentralization best practices",
@@ -954,9 +954,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 10.31,
-      "oracle_latency_ms": 9.51,
-      "routed_latency_ms": 11.02
+      "global_latency_ms": 7.78,
+      "oracle_latency_ms": 7.02,
+      "routed_latency_ms": 14.0
     },
     {
       "query": "training pipelines challenges",
@@ -973,9 +973,9 @@
       "global_recall_10": 0.14084507042253522,
       "oracle_recall_10": 0.14084507042253522,
       "routed_recall_10": 0.14084507042253522,
-      "global_latency_ms": 10.5,
-      "oracle_latency_ms": 9.95,
-      "routed_latency_ms": 9.57
+      "global_latency_ms": 7.34,
+      "oracle_latency_ms": 8.35,
+      "routed_latency_ms": 7.15
     },
     {
       "query": "large language models deep learning",
@@ -994,9 +994,9 @@
       "global_recall_10": 0.08196721311475409,
       "oracle_recall_10": 0.08196721311475409,
       "routed_recall_10": 0.08196721311475409,
-      "global_latency_ms": 10.73,
-      "oracle_latency_ms": 11.05,
-      "routed_latency_ms": 10.61
+      "global_latency_ms": 8.58,
+      "oracle_latency_ms": 8.67,
+      "routed_latency_ms": 8.69
     },
     {
       "query": "consensus mechanisms challenges",
@@ -1013,9 +1013,9 @@
       "global_recall_10": 0.14492753623188406,
       "oracle_recall_10": 0.14492753623188406,
       "routed_recall_10": 0.14492753623188406,
-      "global_latency_ms": 9.51,
-      "oracle_latency_ms": 9.05,
-      "routed_latency_ms": 9.08
+      "global_latency_ms": 7.14,
+      "oracle_latency_ms": 8.72,
+      "routed_latency_ms": 7.06
     },
     {
       "query": "kubernetes orchestration zero trust architecture",
@@ -1034,9 +1034,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.88,
-      "oracle_latency_ms": 12.34,
-      "routed_latency_ms": 11.32
+      "global_latency_ms": 12.24,
+      "oracle_latency_ms": 8.9,
+      "routed_latency_ms": 10.18
     },
     {
       "query": "neural network tokenization methods",
@@ -1055,9 +1055,9 @@
       "global_recall_10": 0.04878048780487805,
       "oracle_recall_10": 0.04878048780487805,
       "routed_recall_10": 0.04878048780487805,
-      "global_latency_ms": 10.44,
-      "oracle_latency_ms": 10.38,
-      "routed_latency_ms": 10.44
+      "global_latency_ms": 7.06,
+      "oracle_latency_ms": 8.64,
+      "routed_latency_ms": 8.3
     },
     {
       "query": "diagnosis assistance transformer architecture",
@@ -1076,9 +1076,9 @@
       "global_recall_10": 0.06535947712418301,
       "oracle_recall_10": 0.06535947712418301,
       "routed_recall_10": 0.06535947712418301,
-      "global_latency_ms": 10.43,
-      "oracle_latency_ms": 10.95,
-      "routed_latency_ms": 10.7
+      "global_latency_ms": 7.48,
+      "oracle_latency_ms": 9.05,
+      "routed_latency_ms": 9.15
     },
     {
       "query": "semantic segmentation deep learning",
@@ -1097,9 +1097,9 @@
       "global_recall_10": 0.08,
       "oracle_recall_10": 0.08,
       "routed_recall_10": 0.08,
-      "global_latency_ms": 10.73,
-      "oracle_latency_ms": 10.6,
-      "routed_latency_ms": 11.19
+      "global_latency_ms": 7.36,
+      "oracle_latency_ms": 12.9,
+      "routed_latency_ms": 8.67
     },
     {
       "query": "medical imaging large language models",
@@ -1118,9 +1118,9 @@
       "global_recall_10": 0.07092198581560284,
       "oracle_recall_10": 0.07092198581560284,
       "routed_recall_10": 0.07092198581560284,
-      "global_latency_ms": 10.37,
-      "oracle_latency_ms": 10.66,
-      "routed_latency_ms": 10.84
+      "global_latency_ms": 7.58,
+      "oracle_latency_ms": 8.8,
+      "routed_latency_ms": 8.75
     },
     {
       "query": "neural network challenges",
@@ -1138,9 +1138,9 @@
       "global_recall_10": 0.06060606060606061,
       "oracle_recall_10": 0.06060606060606061,
       "routed_recall_10": 0.06060606060606061,
-      "global_latency_ms": 10.08,
-      "oracle_latency_ms": 9.06,
-      "routed_latency_ms": 10.31
+      "global_latency_ms": 10.72,
+      "oracle_latency_ms": 7.25,
+      "routed_latency_ms": 12.32
     },
     {
       "query": "training pipelines healthcare innovation",
@@ -1159,9 +1159,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.38,
-      "oracle_latency_ms": 11.03,
-      "routed_latency_ms": 10.8
+      "global_latency_ms": 7.33,
+      "oracle_latency_ms": 13.08,
+      "routed_latency_ms": 8.61
     },
     {
       "query": "cryptocurrency markets recent advances",
@@ -1178,9 +1178,9 @@
       "global_recall_10": 0.0425531914893617,
       "oracle_recall_10": 0.0425531914893617,
       "routed_recall_10": 0.0425531914893617,
-      "global_latency_ms": 10.76,
-      "oracle_latency_ms": 10.17,
-      "routed_latency_ms": 10.01
+      "global_latency_ms": 7.96,
+      "oracle_latency_ms": 7.75,
+      "routed_latency_ms": 7.68
     },
     {
       "query": "cloud computing future trends",
@@ -1197,9 +1197,9 @@
       "global_recall_10": 0.136986301369863,
       "oracle_recall_10": 0.136986301369863,
       "routed_recall_10": 0.136986301369863,
-      "global_latency_ms": 10.22,
-      "oracle_latency_ms": 9.66,
-      "routed_latency_ms": 9.83
+      "global_latency_ms": 7.15,
+      "oracle_latency_ms": 8.05,
+      "routed_latency_ms": 7.11
     },
     {
       "query": "computer vision diagnosis assistance",
@@ -1218,9 +1218,9 @@
       "global_recall_10": 0.04242424242424243,
       "oracle_recall_10": 0.04242424242424243,
       "routed_recall_10": 0.04242424242424243,
-      "global_latency_ms": 10.35,
-      "oracle_latency_ms": 10.35,
-      "routed_latency_ms": 10.27
+      "global_latency_ms": 9.46,
+      "oracle_latency_ms": 8.52,
+      "routed_latency_ms": 13.13
     },
     {
       "query": "sensor fusion best practices",
@@ -1238,9 +1238,9 @@
       "global_recall_10": 0.16129032258064516,
       "oracle_recall_10": 0.16129032258064516,
       "routed_recall_10": 0.16129032258064516,
-      "global_latency_ms": 10.08,
-      "oracle_latency_ms": 9.82,
-      "routed_latency_ms": 10.02
+      "global_latency_ms": 6.86,
+      "oracle_latency_ms": 8.46,
+      "routed_latency_ms": 8.11
     },
     {
       "query": "sensor fusion object detection",
@@ -1259,9 +1259,9 @@
       "global_recall_10": 0.07352941176470588,
       "oracle_recall_10": 0.07352941176470588,
       "routed_recall_10": 0.07352941176470588,
-      "global_latency_ms": 9.93,
-      "oracle_latency_ms": 10.1,
-      "routed_latency_ms": 10.53
+      "global_latency_ms": 7.8,
+      "oracle_latency_ms": 8.23,
+      "routed_latency_ms": 8.74
     },
     {
       "query": "smart contracts best practices",
@@ -1279,9 +1279,9 @@
       "global_recall_10": 0.1282051282051282,
       "oracle_recall_10": 0.1282051282051282,
       "routed_recall_10": 0.1282051282051282,
-      "global_latency_ms": 9.84,
-      "oracle_latency_ms": 10.32,
-      "routed_latency_ms": 10.72
+      "global_latency_ms": 7.09,
+      "oracle_latency_ms": 9.18,
+      "routed_latency_ms": 8.22
     },
     {
       "query": "zero trust architecture kubernetes orchestration",
@@ -1300,9 +1300,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.97,
-      "oracle_latency_ms": 11.25,
-      "routed_latency_ms": 11.35
+      "global_latency_ms": 15.12,
+      "oracle_latency_ms": 9.03,
+      "routed_latency_ms": 10.13
     },
     {
       "query": "penetration testing smart contracts",
@@ -1321,9 +1321,9 @@
       "global_recall_10": 0.07042253521126761,
       "oracle_recall_10": 0.07042253521126761,
       "routed_recall_10": 0.07042253521126761,
-      "global_latency_ms": 9.77,
-      "oracle_latency_ms": 10.32,
-      "routed_latency_ms": 9.69
+      "global_latency_ms": 12.88,
+      "oracle_latency_ms": 8.31,
+      "routed_latency_ms": 8.21
     },
     {
       "query": "kinematics recent advances",
@@ -1340,9 +1340,9 @@
       "global_recall_10": 0.038834951456310676,
       "oracle_recall_10": 0.038834951456310676,
       "routed_recall_10": 0.038834951456310676,
-      "global_latency_ms": 10.45,
-      "oracle_latency_ms": 11.14,
-      "routed_latency_ms": 11.22
+      "global_latency_ms": 10.98,
+      "oracle_latency_ms": 7.66,
+      "routed_latency_ms": 7.48
     },
     {
       "query": "encryption standards best practices",
@@ -1360,9 +1360,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 10.23,
-      "oracle_latency_ms": 10.25,
-      "routed_latency_ms": 9.91
+      "global_latency_ms": 8.79,
+      "oracle_latency_ms": 6.88,
+      "routed_latency_ms": 10.26
     },
     {
       "query": "scalability engineering future trends",
@@ -1379,9 +1379,9 @@
       "global_recall_10": 0.12658227848101267,
       "oracle_recall_10": 0.12658227848101267,
       "routed_recall_10": 0.12658227848101267,
-      "global_latency_ms": 10.91,
-      "oracle_latency_ms": 9.59,
-      "routed_latency_ms": 10.13
+      "global_latency_ms": 7.05,
+      "oracle_latency_ms": 7.99,
+      "routed_latency_ms": 12.87
     },
     {
       "query": "clinical trials object detection",
@@ -1400,9 +1400,9 @@
       "global_recall_10": 0.06802721088435375,
       "oracle_recall_10": 0.06802721088435375,
       "routed_recall_10": 0.06802721088435375,
-      "global_latency_ms": 10.22,
-      "oracle_latency_ms": 10.71,
-      "routed_latency_ms": 10.11
+      "global_latency_ms": 7.03,
+      "oracle_latency_ms": 8.29,
+      "routed_latency_ms": 8.17
     },
     {
       "query": "zero trust architecture devops practices",
@@ -1421,9 +1421,9 @@
       "global_recall_10": 0.07462686567164178,
       "oracle_recall_10": 0.07462686567164178,
       "routed_recall_10": 0.07462686567164178,
-      "global_latency_ms": 10.68,
-      "oracle_latency_ms": 11.19,
-      "routed_latency_ms": 11.53
+      "global_latency_ms": 7.27,
+      "oracle_latency_ms": 9.2,
+      "routed_latency_ms": 8.33
     },
     {
       "query": "healthcare innovation recent advances",
@@ -1440,9 +1440,9 @@
       "global_recall_10": 0.03215434083601286,
       "oracle_recall_10": 0.03215434083601286,
       "routed_recall_10": 0.03215434083601286,
-      "global_latency_ms": 10.62,
-      "oracle_latency_ms": 10.4,
-      "routed_latency_ms": 9.81
+      "global_latency_ms": 7.77,
+      "oracle_latency_ms": 7.69,
+      "routed_latency_ms": 7.65
     },
     {
       "query": "decentralization challenges",
@@ -1459,9 +1459,9 @@
       "global_recall_10": 0.4,
       "oracle_recall_10": 0.4,
       "routed_recall_10": 0.4,
-      "global_latency_ms": 10.58,
-      "oracle_latency_ms": 9.49,
-      "routed_latency_ms": 9.44
+      "global_latency_ms": 7.09,
+      "oracle_latency_ms": 7.73,
+      "routed_latency_ms": 7.08
     },
     {
       "query": "diagnosis assistance training pipelines",
@@ -1480,9 +1480,9 @@
       "global_recall_10": 0.06666666666666667,
       "oracle_recall_10": 0.06666666666666667,
       "routed_recall_10": 0.06666666666666667,
-      "global_latency_ms": 10.52,
-      "oracle_latency_ms": 10.9,
-      "routed_latency_ms": 10.92
+      "global_latency_ms": 9.41,
+      "oracle_latency_ms": 8.43,
+      "routed_latency_ms": 12.88
     },
     {
       "query": "training pipelines challenges",
@@ -1499,9 +1499,9 @@
       "global_recall_10": 0.14084507042253522,
       "oracle_recall_10": 0.14084507042253522,
       "routed_recall_10": 0.14084507042253522,
-      "global_latency_ms": 10.25,
-      "oracle_latency_ms": 9.54,
-      "routed_latency_ms": 9.35
+      "global_latency_ms": 7.3,
+      "oracle_latency_ms": 9.01,
+      "routed_latency_ms": 7.18
     },
     {
       "query": "kinematics recent advances",
@@ -1518,9 +1518,9 @@
       "global_recall_10": 0.038834951456310676,
       "oracle_recall_10": 0.038834951456310676,
       "routed_recall_10": 0.038834951456310676,
-      "global_latency_ms": 10.56,
-      "oracle_latency_ms": 10.62,
-      "routed_latency_ms": 10.15
+      "global_latency_ms": 8.95,
+      "oracle_latency_ms": 7.58,
+      "routed_latency_ms": 11.23
     },
     {
       "query": "training pipelines future trends",
@@ -1537,9 +1537,9 @@
       "global_recall_10": 0.14084507042253522,
       "oracle_recall_10": 0.14084507042253522,
       "routed_recall_10": 0.14084507042253522,
-      "global_latency_ms": 10.22,
-      "oracle_latency_ms": 9.83,
-      "routed_latency_ms": 9.75
+      "global_latency_ms": 11.85,
+      "oracle_latency_ms": 7.07,
+      "routed_latency_ms": 6.83
     },
     {
       "query": "encryption standards future trends",
@@ -1556,9 +1556,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 10.0,
-      "oracle_latency_ms": 9.37,
-      "routed_latency_ms": 9.35
+      "global_latency_ms": 9.24,
+      "oracle_latency_ms": 6.84,
+      "routed_latency_ms": 8.23
     },
     {
       "query": "diagnosis assistance best practices",
@@ -1576,9 +1576,9 @@
       "global_recall_10": 0.125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 9.85,
-      "oracle_latency_ms": 9.67,
-      "routed_latency_ms": 10.03
+      "global_latency_ms": 6.96,
+      "oracle_latency_ms": 9.29,
+      "routed_latency_ms": 8.66
     },
     {
       "query": "scalability engineering cybersecurity",
@@ -1597,9 +1597,9 @@
       "global_recall_10": 0.12658227848101267,
       "oracle_recall_10": 0.12658227848101267,
       "routed_recall_10": 0.12658227848101267,
-      "global_latency_ms": 17.31,
-      "oracle_latency_ms": 11.19,
-      "routed_latency_ms": 10.98
+      "global_latency_ms": 7.81,
+      "oracle_latency_ms": 9.48,
+      "routed_latency_ms": 9.29
     },
     {
       "query": "zero trust architecture future trends",
@@ -1617,9 +1617,9 @@
       "global_recall_10": 0.15384615384615385,
       "oracle_recall_10": 0.15384615384615385,
       "routed_recall_10": 0.15384615384615385,
-      "global_latency_ms": 10.25,
-      "oracle_latency_ms": 9.7,
-      "routed_latency_ms": 10.57
+      "global_latency_ms": 7.12,
+      "oracle_latency_ms": 11.62,
+      "routed_latency_ms": 9.21
     },
     {
       "query": "large language models patient data privacy",
@@ -1638,9 +1638,9 @@
       "global_recall_10": 0.07692307692307693,
       "oracle_recall_10": 0.07692307692307693,
       "routed_recall_10": 0.07692307692307693,
-      "global_latency_ms": 10.91,
-      "oracle_latency_ms": 11.08,
-      "routed_latency_ms": 10.6
+      "global_latency_ms": 8.33,
+      "oracle_latency_ms": 8.75,
+      "routed_latency_ms": 8.32
     },
     {
       "query": "cybersecurity future trends",
@@ -1657,9 +1657,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 10.71,
-      "oracle_latency_ms": 9.89,
-      "routed_latency_ms": 9.78
+      "global_latency_ms": 10.41,
+      "oracle_latency_ms": 6.97,
+      "routed_latency_ms": 11.5
     },
     {
       "query": "healthcare innovation challenges",
@@ -1676,9 +1676,9 @@
       "global_recall_10": 0.07692307692307693,
       "oracle_recall_10": 0.07692307692307693,
       "routed_recall_10": 0.07692307692307693,
-      "global_latency_ms": 9.49,
-      "oracle_latency_ms": 10.04,
-      "routed_latency_ms": 9.25
+      "global_latency_ms": 7.38,
+      "oracle_latency_ms": 10.73,
+      "routed_latency_ms": 7.31
     },
     {
       "query": "tokenization methods future trends",
@@ -1695,8 +1695,8 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 9.98,
-      "oracle_latency_ms": 9.27,
+      "global_latency_ms": 7.97,
+      "oracle_latency_ms": 6.93,
       "routed_latency_ms": 9.29
     },
     {
@@ -1714,9 +1714,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 9.77,
-      "oracle_latency_ms": 9.76,
-      "routed_latency_ms": 10.32
+      "global_latency_ms": 7.4,
+      "oracle_latency_ms": 8.7,
+      "routed_latency_ms": 7.29
     },
     {
       "query": "computer vision challenges",
@@ -1733,9 +1733,9 @@
       "global_recall_10": 0.10465116279069768,
       "oracle_recall_10": 0.10465116279069768,
       "routed_recall_10": 0.10465116279069768,
-      "global_latency_ms": 9.55,
-      "oracle_latency_ms": 9.51,
-      "routed_latency_ms": 8.93
+      "global_latency_ms": 9.15,
+      "oracle_latency_ms": 7.35,
+      "routed_latency_ms": 7.55
     },
     {
       "query": "automation systems challenges",
@@ -1752,9 +1752,9 @@
       "global_recall_10": 0.10869565217391304,
       "oracle_recall_10": 0.10869565217391304,
       "routed_recall_10": 0.10869565217391304,
-      "global_latency_ms": 9.66,
-      "oracle_latency_ms": 9.0,
-      "routed_latency_ms": 9.27
+      "global_latency_ms": 7.33,
+      "oracle_latency_ms": 7.6,
+      "routed_latency_ms": 7.28
     },
     {
       "query": "decentralization threat detection",
@@ -1773,9 +1773,9 @@
       "global_recall_10": 0.07228915662650602,
       "oracle_recall_10": 0.07228915662650602,
       "routed_recall_10": 0.10843373493975904,
-      "global_latency_ms": 10.0,
-      "oracle_latency_ms": 10.11,
-      "routed_latency_ms": 10.28
+      "global_latency_ms": 7.35,
+      "oracle_latency_ms": 10.21,
+      "routed_latency_ms": 9.44
     },
     {
       "query": "penetration testing future trends",
@@ -1792,9 +1792,9 @@
       "global_recall_10": 0.15625,
       "oracle_recall_10": 0.15625,
       "routed_recall_10": 0.15625,
-      "global_latency_ms": 9.46,
-      "oracle_latency_ms": 9.03,
-      "routed_latency_ms": 9.12
+      "global_latency_ms": 6.96,
+      "oracle_latency_ms": 7.73,
+      "routed_latency_ms": 7.58
     },
     {
       "query": "tokenization methods recent advances",
@@ -1811,9 +1811,9 @@
       "global_recall_10": 0.0392156862745098,
       "oracle_recall_10": 0.0392156862745098,
       "routed_recall_10": 0.0392156862745098,
-      "global_latency_ms": 10.95,
-      "oracle_latency_ms": 9.9,
-      "routed_latency_ms": 9.89
+      "global_latency_ms": 7.61,
+      "oracle_latency_ms": 12.28,
+      "routed_latency_ms": 7.67
     },
     {
       "query": "zero trust architecture blockchain technology",
@@ -1832,9 +1832,9 @@
       "global_recall_10": 0.07633587786259542,
       "oracle_recall_10": 0.07633587786259542,
       "routed_recall_10": 0.07633587786259542,
-      "global_latency_ms": 10.78,
-      "oracle_latency_ms": 11.52,
-      "routed_latency_ms": 11.09
+      "global_latency_ms": 8.73,
+      "oracle_latency_ms": 8.87,
+      "routed_latency_ms": 9.37
     },
     {
       "query": "kubernetes orchestration challenges",
@@ -1851,9 +1851,9 @@
       "global_recall_10": 0.13513513513513514,
       "oracle_recall_10": 0.13513513513513514,
       "routed_recall_10": 0.13513513513513514,
-      "global_latency_ms": 10.53,
-      "oracle_latency_ms": 10.84,
-      "routed_latency_ms": 10.29
+      "global_latency_ms": 7.93,
+      "oracle_latency_ms": 7.6,
+      "routed_latency_ms": 8.29
     },
     {
       "query": "semantic segmentation challenges",
@@ -1870,9 +1870,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.1,
-      "oracle_latency_ms": 10.31,
-      "routed_latency_ms": 9.27
+      "global_latency_ms": 7.45,
+      "oracle_latency_ms": 7.15,
+      "routed_latency_ms": 11.64
     },
     {
       "query": "manipulator design recent advances",
@@ -1889,9 +1889,9 @@
       "global_recall_10": 0.040160642570281124,
       "oracle_recall_10": 0.040160642570281124,
       "routed_recall_10": 0.040160642570281124,
-      "global_latency_ms": 11.91,
-      "oracle_latency_ms": 10.71,
-      "routed_latency_ms": 10.48
+      "global_latency_ms": 7.57,
+      "oracle_latency_ms": 10.44,
+      "routed_latency_ms": 9.09
     },
     {
       "query": "natural language processing challenges",
@@ -1908,9 +1908,9 @@
       "global_recall_10": 0.12195121951219512,
       "oracle_recall_10": 0.12195121951219512,
       "routed_recall_10": 0.12195121951219512,
-      "global_latency_ms": 10.45,
-      "oracle_latency_ms": 9.74,
-      "routed_latency_ms": 9.44
+      "global_latency_ms": 7.5,
+      "oracle_latency_ms": 8.12,
+      "routed_latency_ms": 7.94
     },
     {
       "query": "manipulator design best practices",
@@ -1928,9 +1928,9 @@
       "global_recall_10": 0.14285714285714285,
       "oracle_recall_10": 0.14285714285714285,
       "routed_recall_10": 0.14285714285714285,
-      "global_latency_ms": 10.21,
-      "oracle_latency_ms": 10.38,
-      "routed_latency_ms": 10.88
+      "global_latency_ms": 7.96,
+      "oracle_latency_ms": 8.37,
+      "routed_latency_ms": 8.2
     },
     {
       "query": "image recognition manipulator design",
@@ -1949,9 +1949,9 @@
       "global_recall_10": 0.08196721311475409,
       "oracle_recall_10": 0.08196721311475409,
       "routed_recall_10": 0.08196721311475409,
-      "global_latency_ms": 10.38,
-      "oracle_latency_ms": 10.46,
-      "routed_latency_ms": 10.94
+      "global_latency_ms": 11.66,
+      "oracle_latency_ms": 8.79,
+      "routed_latency_ms": 8.71
     },
     {
       "query": "image recognition medical imaging",
@@ -1970,9 +1970,9 @@
       "global_recall_10": 0.07874015748031496,
       "oracle_recall_10": 0.07874015748031496,
       "routed_recall_10": 0.07874015748031496,
-      "global_latency_ms": 10.16,
-      "oracle_latency_ms": 10.49,
-      "routed_latency_ms": 9.97
+      "global_latency_ms": 7.26,
+      "oracle_latency_ms": 8.53,
+      "routed_latency_ms": 8.4
     },
     {
       "query": "semantic segmentation machine learning",
@@ -1991,9 +1991,9 @@
       "global_recall_10": 0.07142857142857142,
       "oracle_recall_10": 0.07142857142857142,
       "routed_recall_10": 0.07142857142857142,
-      "global_latency_ms": 10.81,
-      "oracle_latency_ms": 11.91,
-      "routed_latency_ms": 10.42
+      "global_latency_ms": 7.52,
+      "oracle_latency_ms": 8.92,
+      "routed_latency_ms": 8.97
     },
     {
       "query": "semantic segmentation automation systems",
@@ -2012,9 +2012,9 @@
       "global_recall_10": 0.07092198581560284,
       "oracle_recall_10": 0.07092198581560284,
       "routed_recall_10": 0.07092198581560284,
-      "global_latency_ms": 10.96,
-      "oracle_latency_ms": 10.5,
-      "routed_latency_ms": 10.35
+      "global_latency_ms": 7.11,
+      "oracle_latency_ms": 13.07,
+      "routed_latency_ms": 9.17
     },
     {
       "query": "machine learning image recognition",
@@ -2033,9 +2033,9 @@
       "global_recall_10": 0.049586776859504134,
       "oracle_recall_10": 0.05785123966942149,
       "routed_recall_10": 0.05785123966942149,
-      "global_latency_ms": 10.04,
-      "oracle_latency_ms": 10.94,
-      "routed_latency_ms": 10.13
+      "global_latency_ms": 7.41,
+      "oracle_latency_ms": 14.74,
+      "routed_latency_ms": 9.34
     },
     {
       "query": "large language models future trends",
@@ -2052,9 +2052,9 @@
       "global_recall_10": 0.15151515151515152,
       "oracle_recall_10": 0.15151515151515152,
       "routed_recall_10": 0.15151515151515152,
-      "global_latency_ms": 10.68,
-      "oracle_latency_ms": 10.1,
-      "routed_latency_ms": 10.05
+      "global_latency_ms": 10.35,
+      "oracle_latency_ms": 12.56,
+      "routed_latency_ms": 6.97
     },
     {
       "query": "object detection future trends",
@@ -2072,9 +2072,9 @@
       "global_recall_10": 0.1282051282051282,
       "oracle_recall_10": 0.1282051282051282,
       "routed_recall_10": 0.1282051282051282,
-      "global_latency_ms": 9.97,
-      "oracle_latency_ms": 9.2,
-      "routed_latency_ms": 9.76
+      "global_latency_ms": 10.96,
+      "oracle_latency_ms": 7.25,
+      "routed_latency_ms": 11.63
     },
     {
       "query": "clinical trials recent advances",
@@ -2091,9 +2091,9 @@
       "global_recall_10": 0.0390625,
       "oracle_recall_10": 0.0390625,
       "routed_recall_10": 0.0390625,
-      "global_latency_ms": 10.24,
-      "oracle_latency_ms": 10.34,
-      "routed_latency_ms": 9.55
+      "global_latency_ms": 7.5,
+      "oracle_latency_ms": 9.15,
+      "routed_latency_ms": 7.35
     },
     {
       "query": "devops practices medical imaging",
@@ -2112,9 +2112,9 @@
       "global_recall_10": 0.06802721088435375,
       "oracle_recall_10": 0.06802721088435375,
       "routed_recall_10": 0.06802721088435375,
-      "global_latency_ms": 9.82,
-      "oracle_latency_ms": 10.73,
-      "routed_latency_ms": 10.42
+      "global_latency_ms": 7.54,
+      "oracle_latency_ms": 8.56,
+      "routed_latency_ms": 10.09
     },
     {
       "query": "image recognition challenges",
@@ -2131,9 +2131,9 @@
       "global_recall_10": 0.15384615384615385,
       "oracle_recall_10": 0.15384615384615385,
       "routed_recall_10": 0.15384615384615385,
-      "global_latency_ms": 9.97,
-      "oracle_latency_ms": 9.12,
-      "routed_latency_ms": 8.9
+      "global_latency_ms": 7.31,
+      "oracle_latency_ms": 11.88,
+      "routed_latency_ms": 14.66
     },
     {
       "query": "cloud computing challenges",
@@ -2150,9 +2150,9 @@
       "global_recall_10": 0.07692307692307693,
       "oracle_recall_10": 0.07692307692307693,
       "routed_recall_10": 0.07692307692307693,
-      "global_latency_ms": 9.65,
-      "oracle_latency_ms": 9.44,
-      "routed_latency_ms": 9.63
+      "global_latency_ms": 11.66,
+      "oracle_latency_ms": 7.58,
+      "routed_latency_ms": 8.58
     },
     {
       "query": "kinematics image recognition",
@@ -2171,9 +2171,9 @@
       "global_recall_10": 0.038461538461538464,
       "oracle_recall_10": 0.038461538461538464,
       "routed_recall_10": 0.038461538461538464,
-      "global_latency_ms": 10.57,
-      "oracle_latency_ms": 10.56,
-      "routed_latency_ms": 10.29
+      "global_latency_ms": 7.21,
+      "oracle_latency_ms": 14.21,
+      "routed_latency_ms": 14.77
     },
     {
       "query": "deep learning recent advances",
@@ -2190,9 +2190,9 @@
       "global_recall_10": 0.0392156862745098,
       "oracle_recall_10": 0.0392156862745098,
       "routed_recall_10": 0.0392156862745098,
-      "global_latency_ms": 10.17,
-      "oracle_latency_ms": 10.41,
-      "routed_latency_ms": 9.79
+      "global_latency_ms": 10.9,
+      "oracle_latency_ms": 7.67,
+      "routed_latency_ms": 9.53
     },
     {
       "query": "clinical trials object detection",
@@ -2211,9 +2211,9 @@
       "global_recall_10": 0.06802721088435375,
       "oracle_recall_10": 0.06802721088435375,
       "routed_recall_10": 0.06802721088435375,
-      "global_latency_ms": 9.81,
-      "oracle_latency_ms": 10.13,
-      "routed_latency_ms": 10.36
+      "global_latency_ms": 6.96,
+      "oracle_latency_ms": 8.58,
+      "routed_latency_ms": 8.19
     },
     {
       "query": "consensus mechanisms best practices",
@@ -2231,9 +2231,9 @@
       "global_recall_10": 0.14492753623188406,
       "oracle_recall_10": 0.14492753623188406,
       "routed_recall_10": 0.14492753623188406,
-      "global_latency_ms": 10.12,
-      "oracle_latency_ms": 9.49,
-      "routed_latency_ms": 9.96
+      "global_latency_ms": 7.02,
+      "oracle_latency_ms": 6.95,
+      "routed_latency_ms": 9.5
     },
     {
       "query": "cryptocurrency markets cybersecurity",
@@ -2252,9 +2252,9 @@
       "global_recall_10": 0.20408163265306123,
       "oracle_recall_10": 0.20408163265306123,
       "routed_recall_10": 0.20408163265306123,
-      "global_latency_ms": 17.64,
-      "oracle_latency_ms": 11.71,
-      "routed_latency_ms": 12.15
+      "global_latency_ms": 7.66,
+      "oracle_latency_ms": 9.82,
+      "routed_latency_ms": 8.56
     },
     {
       "query": "training pipelines convolutional neural network",
@@ -2273,9 +2273,9 @@
       "global_recall_10": 0.04926108374384237,
       "oracle_recall_10": 0.04926108374384237,
       "routed_recall_10": 0.04926108374384237,
-      "global_latency_ms": 11.23,
-      "oracle_latency_ms": 12.22,
-      "routed_latency_ms": 11.55
+      "global_latency_ms": 15.21,
+      "oracle_latency_ms": 8.71,
+      "routed_latency_ms": 12.7
     },
     {
       "query": "cloud computing consensus mechanisms",
@@ -2294,9 +2294,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.59,
-      "oracle_latency_ms": 11.11,
-      "routed_latency_ms": 10.05
+      "global_latency_ms": 7.41,
+      "oracle_latency_ms": 11.93,
+      "routed_latency_ms": 8.58
     },
     {
       "query": "serverless architecture clinical trials",
@@ -2315,9 +2315,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.52,
-      "oracle_latency_ms": 11.31,
-      "routed_latency_ms": 10.83
+      "global_latency_ms": 11.03,
+      "oracle_latency_ms": 8.66,
+      "routed_latency_ms": 8.74
     },
     {
       "query": "machine learning challenges",
@@ -2334,9 +2334,9 @@
       "global_recall_10": 0.08791208791208792,
       "oracle_recall_10": 0.08791208791208792,
       "routed_recall_10": 0.08791208791208792,
-      "global_latency_ms": 9.76,
-      "oracle_latency_ms": 9.23,
-      "routed_latency_ms": 9.88
+      "global_latency_ms": 7.36,
+      "oracle_latency_ms": 7.52,
+      "routed_latency_ms": 7.17
     },
     {
       "query": "automation systems cybersecurity",
@@ -2355,9 +2355,9 @@
       "global_recall_10": 0.11494252873563218,
       "oracle_recall_10": 0.11494252873563218,
       "routed_recall_10": 0.11494252873563218,
-      "global_latency_ms": 10.7,
-      "oracle_latency_ms": 10.82,
-      "routed_latency_ms": 10.77
+      "global_latency_ms": 7.73,
+      "oracle_latency_ms": 8.47,
+      "routed_latency_ms": 9.99
     },
     {
       "query": "semantic segmentation challenges",
@@ -2374,9 +2374,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 27.25,
-      "oracle_latency_ms": 9.99,
-      "routed_latency_ms": 10.78
+      "global_latency_ms": 14.01,
+      "oracle_latency_ms": 9.09,
+      "routed_latency_ms": 9.66
     },
     {
       "query": "encryption standards future trends",
@@ -2393,9 +2393,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.02,
-      "oracle_latency_ms": 9.62,
-      "routed_latency_ms": 7.04
+      "global_latency_ms": 7.35,
+      "oracle_latency_ms": 6.66,
+      "routed_latency_ms": 9.58
     },
     {
       "query": "clinical trials best practices",
@@ -2413,9 +2413,9 @@
       "global_recall_10": 0.10989010989010989,
       "oracle_recall_10": 0.10989010989010989,
       "routed_recall_10": 0.10989010989010989,
-      "global_latency_ms": 8.06,
-      "oracle_latency_ms": 7.25,
-      "routed_latency_ms": 10.49
+      "global_latency_ms": 6.78,
+      "oracle_latency_ms": 6.87,
+      "routed_latency_ms": 13.3
     },
     {
       "query": "sensor fusion cybersecurity",
@@ -2434,9 +2434,9 @@
       "global_recall_10": 0.13333333333333333,
       "oracle_recall_10": 0.13333333333333333,
       "routed_recall_10": 0.13333333333333333,
-      "global_latency_ms": 10.44,
-      "oracle_latency_ms": 11.36,
-      "routed_latency_ms": 8.8
+      "global_latency_ms": 7.32,
+      "oracle_latency_ms": 9.03,
+      "routed_latency_ms": 8.55
     },
     {
       "query": "manipulator design challenges",
@@ -2453,9 +2453,9 @@
       "global_recall_10": 0.15151515151515152,
       "oracle_recall_10": 0.15151515151515152,
       "routed_recall_10": 0.15151515151515152,
-      "global_latency_ms": 8.66,
-      "oracle_latency_ms": 7.67,
-      "routed_latency_ms": 7.71
+      "global_latency_ms": 7.46,
+      "oracle_latency_ms": 7.36,
+      "routed_latency_ms": 7.37
     },
     {
       "query": "robotics best practices",
@@ -2473,9 +2473,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 7.96,
-      "oracle_latency_ms": 7.63,
-      "routed_latency_ms": 9.97
+      "global_latency_ms": 7.02,
+      "oracle_latency_ms": 8.73,
+      "routed_latency_ms": 8.26
     },
     {
       "query": "serverless architecture penetration testing",
@@ -2494,9 +2494,9 @@
       "global_recall_10": 0.07633587786259542,
       "oracle_recall_10": 0.07633587786259542,
       "routed_recall_10": 0.07633587786259542,
-      "global_latency_ms": 9.96,
-      "oracle_latency_ms": 10.46,
-      "routed_latency_ms": 10.87
+      "global_latency_ms": 12.05,
+      "oracle_latency_ms": 8.54,
+      "routed_latency_ms": 10.01
     },
     {
       "query": "penetration testing consensus mechanisms",
@@ -2515,9 +2515,9 @@
       "global_recall_10": 0.078125,
       "oracle_recall_10": 0.078125,
       "routed_recall_10": 0.078125,
-      "global_latency_ms": 10.28,
-      "oracle_latency_ms": 10.21,
-      "routed_latency_ms": 9.97
+      "global_latency_ms": 6.88,
+      "oracle_latency_ms": 8.48,
+      "routed_latency_ms": 8.12
     },
     {
       "query": "large language models neural network",
@@ -2536,9 +2536,9 @@
       "global_recall_10": 0.044444444444444446,
       "oracle_recall_10": 0.044444444444444446,
       "routed_recall_10": 0.044444444444444446,
-      "global_latency_ms": 10.58,
-      "oracle_latency_ms": 10.73,
-      "routed_latency_ms": 10.84
+      "global_latency_ms": 7.39,
+      "oracle_latency_ms": 8.58,
+      "routed_latency_ms": 9.79
     },
     {
       "query": "consensus mechanisms recent advances",
@@ -2555,9 +2555,9 @@
       "global_recall_10": 0.0398406374501992,
       "oracle_recall_10": 0.0398406374501992,
       "routed_recall_10": 0.0398406374501992,
-      "global_latency_ms": 10.98,
-      "oracle_latency_ms": 10.72,
-      "routed_latency_ms": 9.91
+      "global_latency_ms": 7.3,
+      "oracle_latency_ms": 12.22,
+      "routed_latency_ms": 7.33
     },
     {
       "query": "devops practices consensus mechanisms",
@@ -2576,9 +2576,9 @@
       "global_recall_10": 0.07352941176470588,
       "oracle_recall_10": 0.07352941176470588,
       "routed_recall_10": 0.07352941176470588,
-      "global_latency_ms": 11.1,
-      "oracle_latency_ms": 10.98,
-      "routed_latency_ms": 10.53
+      "global_latency_ms": 7.64,
+      "oracle_latency_ms": 8.38,
+      "routed_latency_ms": 9.24
     },
     {
       "query": "computer vision diagnosis assistance",
@@ -2597,9 +2597,9 @@
       "global_recall_10": 0.044444444444444446,
       "oracle_recall_10": 0.044444444444444446,
       "routed_recall_10": 0.044444444444444446,
-      "global_latency_ms": 9.95,
-      "oracle_latency_ms": 10.65,
-      "routed_latency_ms": 10.61
+      "global_latency_ms": 7.27,
+      "oracle_latency_ms": 8.68,
+      "routed_latency_ms": 8.56
     },
     {
       "query": "threat detection sensor fusion",
@@ -2618,9 +2618,9 @@
       "global_recall_10": 0.06289308176100629,
       "oracle_recall_10": 0.06289308176100629,
       "routed_recall_10": 0.06289308176100629,
-      "global_latency_ms": 9.8,
-      "oracle_latency_ms": 9.9,
-      "routed_latency_ms": 10.2
+      "global_latency_ms": 7.43,
+      "oracle_latency_ms": 8.31,
+      "routed_latency_ms": 12.98
     },
     {
       "query": "encryption standards challenges",
@@ -2637,9 +2637,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.94,
-      "oracle_latency_ms": 9.57,
-      "routed_latency_ms": 9.52
+      "global_latency_ms": 7.24,
+      "oracle_latency_ms": 8.25,
+      "routed_latency_ms": 7.03
     },
     {
       "query": "devops practices future trends",
@@ -2656,9 +2656,9 @@
       "global_recall_10": 0.14925373134328357,
       "oracle_recall_10": 0.14925373134328357,
       "routed_recall_10": 0.14925373134328357,
-      "global_latency_ms": 10.18,
-      "oracle_latency_ms": 9.66,
-      "routed_latency_ms": 9.34
+      "global_latency_ms": 8.59,
+      "oracle_latency_ms": 7.02,
+      "routed_latency_ms": 8.75
     },
     {
       "query": "consensus mechanisms cybersecurity",
@@ -2677,9 +2677,9 @@
       "global_recall_10": 0.12857142857142856,
       "oracle_recall_10": 0.12857142857142856,
       "routed_recall_10": 0.12857142857142856,
-      "global_latency_ms": 10.6,
-      "oracle_latency_ms": 11.26,
-      "routed_latency_ms": 11.24
+      "global_latency_ms": 7.03,
+      "oracle_latency_ms": 15.94,
+      "routed_latency_ms": 8.54
     },
     {
       "query": "healthcare innovation future trends",
@@ -2696,9 +2696,9 @@
       "global_recall_10": 0.14492753623188406,
       "oracle_recall_10": 0.14492753623188406,
       "routed_recall_10": 0.14492753623188406,
-      "global_latency_ms": 9.77,
-      "oracle_latency_ms": 9.25,
-      "routed_latency_ms": 8.82
+      "global_latency_ms": 7.24,
+      "oracle_latency_ms": 7.66,
+      "routed_latency_ms": 8.06
     },
     {
       "query": "smart contracts penetration testing",
@@ -2717,9 +2717,9 @@
       "global_recall_10": 0.08547008547008547,
       "oracle_recall_10": 0.08547008547008547,
       "routed_recall_10": 0.08547008547008547,
-      "global_latency_ms": 10.5,
-      "oracle_latency_ms": 10.21,
-      "routed_latency_ms": 10.25
+      "global_latency_ms": 6.94,
+      "oracle_latency_ms": 10.08,
+      "routed_latency_ms": 8.32
     },
     {
       "query": "kinematics computer vision",
@@ -2738,9 +2738,9 @@
       "global_recall_10": 0.029411764705882353,
       "oracle_recall_10": 0.029411764705882353,
       "routed_recall_10": 0.029411764705882353,
-      "global_latency_ms": 10.43,
-      "oracle_latency_ms": 10.8,
-      "routed_latency_ms": 10.77
+      "global_latency_ms": 7.36,
+      "oracle_latency_ms": 8.59,
+      "routed_latency_ms": 9.6
     },
     {
       "query": "gradient descent recent advances",
@@ -2757,9 +2757,9 @@
       "global_recall_10": 0.0390625,
       "oracle_recall_10": 0.0390625,
       "routed_recall_10": 0.0390625,
-      "global_latency_ms": 10.39,
-      "oracle_latency_ms": 9.73,
-      "routed_latency_ms": 9.7
+      "global_latency_ms": 7.38,
+      "oracle_latency_ms": 12.2,
+      "routed_latency_ms": 7.4
     },
     {
       "query": "encryption standards challenges",
@@ -2776,9 +2776,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.99,
-      "oracle_latency_ms": 9.64,
-      "routed_latency_ms": 8.64
+      "global_latency_ms": 7.68,
+      "oracle_latency_ms": 7.14,
+      "routed_latency_ms": 9.05
     },
     {
       "query": "diagnosis assistance challenges",
@@ -2795,9 +2795,9 @@
       "global_recall_10": 0.14925373134328357,
       "oracle_recall_10": 0.14925373134328357,
       "routed_recall_10": 0.14925373134328357,
-      "global_latency_ms": 9.66,
-      "oracle_latency_ms": 9.29,
-      "routed_latency_ms": 9.41
+      "global_latency_ms": 7.26,
+      "oracle_latency_ms": 11.35,
+      "routed_latency_ms": 10.71
     },
     {
       "query": "neural network diagnosis assistance",
@@ -2816,9 +2816,9 @@
       "global_recall_10": 0.046511627906976744,
       "oracle_recall_10": 0.046511627906976744,
       "routed_recall_10": 0.046511627906976744,
-      "global_latency_ms": 9.92,
-      "oracle_latency_ms": 10.83,
-      "routed_latency_ms": 10.59
+      "global_latency_ms": 7.17,
+      "oracle_latency_ms": 8.42,
+      "routed_latency_ms": 10.68
     },
     {
       "query": "machine learning best practices",
@@ -2836,9 +2836,9 @@
       "global_recall_10": 0.0958904109589041,
       "oracle_recall_10": 0.0958904109589041,
       "routed_recall_10": 0.0958904109589041,
-      "global_latency_ms": 10.03,
-      "oracle_latency_ms": 9.32,
-      "routed_latency_ms": 10.19
+      "global_latency_ms": 7.22,
+      "oracle_latency_ms": 7.27,
+      "routed_latency_ms": 8.54
     },
     {
       "query": "cybersecurity serverless architecture",
@@ -2857,9 +2857,9 @@
       "global_recall_10": 0.07407407407407407,
       "oracle_recall_10": 0.07407407407407407,
       "routed_recall_10": 0.07407407407407407,
-      "global_latency_ms": 10.66,
-      "oracle_latency_ms": 11.1,
-      "routed_latency_ms": 11.5
+      "global_latency_ms": 7.5,
+      "oracle_latency_ms": 8.71,
+      "routed_latency_ms": 8.66
     },
     {
       "query": "patient data privacy convolutional neural network",
@@ -2878,9 +2878,9 @@
       "global_recall_10": 0.045662100456621,
       "oracle_recall_10": 0.045662100456621,
       "routed_recall_10": 0.045662100456621,
-      "global_latency_ms": 11.69,
-      "oracle_latency_ms": 11.62,
-      "routed_latency_ms": 11.96
+      "global_latency_ms": 11.02,
+      "oracle_latency_ms": 8.74,
+      "routed_latency_ms": 8.45
     },
     {
       "query": "clinical trials future trends",
@@ -2897,9 +2897,9 @@
       "global_recall_10": 0.10989010989010989,
       "oracle_recall_10": 0.10989010989010989,
       "routed_recall_10": 0.10989010989010989,
-      "global_latency_ms": 9.64,
-      "oracle_latency_ms": 9.1,
-      "routed_latency_ms": 9.25
+      "global_latency_ms": 7.64,
+      "oracle_latency_ms": 6.74,
+      "routed_latency_ms": 9.17
     },
     {
       "query": "natural language processing best practices",
@@ -2917,9 +2917,9 @@
       "global_recall_10": 0.16666666666666666,
       "oracle_recall_10": 0.16666666666666666,
       "routed_recall_10": 0.16666666666666666,
-      "global_latency_ms": 10.37,
-      "oracle_latency_ms": 9.49,
-      "routed_latency_ms": 10.54
+      "global_latency_ms": 7.22,
+      "oracle_latency_ms": 9.12,
+      "routed_latency_ms": 8.41
     },
     {
       "query": "threat detection cryptocurrency markets",
@@ -2938,9 +2938,9 @@
       "global_recall_10": 0.0684931506849315,
       "oracle_recall_10": 0.0684931506849315,
       "routed_recall_10": 0.0684931506849315,
-      "global_latency_ms": 10.46,
-      "oracle_latency_ms": 10.71,
-      "routed_latency_ms": 10.78
+      "global_latency_ms": 7.35,
+      "oracle_latency_ms": 14.95,
+      "routed_latency_ms": 8.47
     },
     {
       "query": "image recognition challenges",
@@ -2957,9 +2957,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 9.8,
-      "oracle_latency_ms": 9.55,
-      "routed_latency_ms": 8.98
+      "global_latency_ms": 7.15,
+      "oracle_latency_ms": 8.15,
+      "routed_latency_ms": 7.14
     },
     {
       "query": "healthcare innovation natural language processing",
@@ -2978,9 +2978,9 @@
       "global_recall_10": 0.07575757575757576,
       "oracle_recall_10": 0.07575757575757576,
       "routed_recall_10": 0.07575757575757576,
-      "global_latency_ms": 10.53,
-      "oracle_latency_ms": 10.42,
-      "routed_latency_ms": 10.99
+      "global_latency_ms": 8.37,
+      "oracle_latency_ms": 8.87,
+      "routed_latency_ms": 8.8
     },
     {
       "query": "tokenization methods diagnosis assistance",
@@ -2999,9 +2999,9 @@
       "global_recall_10": 0.08,
       "oracle_recall_10": 0.08,
       "routed_recall_10": 0.08,
-      "global_latency_ms": 10.41,
-      "oracle_latency_ms": 10.44,
-      "routed_latency_ms": 10.48
+      "global_latency_ms": 7.01,
+      "oracle_latency_ms": 8.44,
+      "routed_latency_ms": 8.34
     },
     {
       "query": "computer vision best practices",
@@ -3019,9 +3019,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.43,
-      "oracle_latency_ms": 9.69,
-      "routed_latency_ms": 10.27
+      "global_latency_ms": 7.72,
+      "oracle_latency_ms": 7.08,
+      "routed_latency_ms": 13.31
     },
     {
       "query": "kinematics recent advances",
@@ -3038,9 +3038,9 @@
       "global_recall_10": 0.03365384615384615,
       "oracle_recall_10": 0.03365384615384615,
       "routed_recall_10": 0.03365384615384615,
-      "global_latency_ms": 10.57,
-      "oracle_latency_ms": 10.6,
-      "routed_latency_ms": 10.0
+      "global_latency_ms": 7.8,
+      "oracle_latency_ms": 8.94,
+      "routed_latency_ms": 7.53
     },
     {
       "query": "neural network future trends",
@@ -3058,8 +3058,8 @@
       "global_recall_10": 0.06040268456375839,
       "oracle_recall_10": 0.040268456375838924,
       "routed_recall_10": 0.06040268456375839,
-      "global_latency_ms": 10.02,
-      "oracle_latency_ms": 8.93,
+      "global_latency_ms": 7.5,
+      "oracle_latency_ms": 6.85,
       "routed_latency_ms": 10.21
     },
     {
@@ -3079,9 +3079,9 @@
       "global_recall_10": 0.06993006993006994,
       "oracle_recall_10": 0.06993006993006994,
       "routed_recall_10": 0.06993006993006994,
-      "global_latency_ms": 10.29,
-      "oracle_latency_ms": 11.22,
-      "routed_latency_ms": 10.56
+      "global_latency_ms": 7.43,
+      "oracle_latency_ms": 10.02,
+      "routed_latency_ms": 8.65
     },
     {
       "query": "robotics future trends",
@@ -3098,9 +3098,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 9.67,
-      "oracle_latency_ms": 8.72,
-      "routed_latency_ms": 8.59
+      "global_latency_ms": 10.73,
+      "oracle_latency_ms": 6.91,
+      "routed_latency_ms": 9.31
     },
     {
       "query": "devops practices recent advances",
@@ -3117,9 +3117,9 @@
       "global_recall_10": 0.03937007874015748,
       "oracle_recall_10": 0.03937007874015748,
       "routed_recall_10": 0.03937007874015748,
-      "global_latency_ms": 10.9,
-      "oracle_latency_ms": 11.0,
-      "routed_latency_ms": 10.51
+      "global_latency_ms": 7.73,
+      "oracle_latency_ms": 9.08,
+      "routed_latency_ms": 7.57
     },
     {
       "query": "consensus mechanisms future trends",
@@ -3136,9 +3136,9 @@
       "global_recall_10": 0.14285714285714285,
       "oracle_recall_10": 0.14285714285714285,
       "routed_recall_10": 0.14285714285714285,
-      "global_latency_ms": 10.19,
-      "oracle_latency_ms": 9.19,
-      "routed_latency_ms": 8.93
+      "global_latency_ms": 6.93,
+      "oracle_latency_ms": 6.83,
+      "routed_latency_ms": 10.22
     },
     {
       "query": "encryption standards best practices",
@@ -3156,9 +3156,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.84,
-      "oracle_latency_ms": 9.34,
-      "routed_latency_ms": 9.95
+      "global_latency_ms": 6.77,
+      "oracle_latency_ms": 6.87,
+      "routed_latency_ms": 9.41
     },
     {
       "query": "serverless architecture zero trust architecture",
@@ -3177,9 +3177,9 @@
       "global_recall_10": 0.0684931506849315,
       "oracle_recall_10": 0.0684931506849315,
       "routed_recall_10": 0.0684931506849315,
-      "global_latency_ms": 10.42,
-      "oracle_latency_ms": 10.8,
-      "routed_latency_ms": 10.75
+      "global_latency_ms": 7.15,
+      "oracle_latency_ms": 8.67,
+      "routed_latency_ms": 8.38
     },
     {
       "query": "convolutional neural network manipulator design",
@@ -3198,9 +3198,9 @@
       "global_recall_10": 0.04672897196261682,
       "oracle_recall_10": 0.04672897196261682,
       "routed_recall_10": 0.04672897196261682,
-      "global_latency_ms": 18.77,
-      "oracle_latency_ms": 13.15,
-      "routed_latency_ms": 13.13
+      "global_latency_ms": 7.68,
+      "oracle_latency_ms": 8.58,
+      "routed_latency_ms": 8.5
     },
     {
       "query": "consensus mechanisms future trends",
@@ -3217,9 +3217,9 @@
       "global_recall_10": 0.14285714285714285,
       "oracle_recall_10": 0.14285714285714285,
       "routed_recall_10": 0.14285714285714285,
-      "global_latency_ms": 10.43,
-      "oracle_latency_ms": 9.1,
-      "routed_latency_ms": 9.0
+      "global_latency_ms": 10.47,
+      "oracle_latency_ms": 6.89,
+      "routed_latency_ms": 6.6
     },
     {
       "query": "healthcare innovation best practices",
@@ -3237,9 +3237,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.35,
-      "oracle_latency_ms": 9.77,
-      "routed_latency_ms": 10.37
+      "global_latency_ms": 11.31,
+      "oracle_latency_ms": 7.04,
+      "routed_latency_ms": 10.62
     },
     {
       "query": "scalability engineering recent advances",
@@ -3256,9 +3256,9 @@
       "global_recall_10": 0.038461538461538464,
       "oracle_recall_10": 0.038461538461538464,
       "routed_recall_10": 0.038461538461538464,
-      "global_latency_ms": 10.61,
-      "oracle_latency_ms": 10.12,
-      "routed_latency_ms": 10.33
+      "global_latency_ms": 7.8,
+      "oracle_latency_ms": 7.76,
+      "routed_latency_ms": 7.56
     },
     {
       "query": "diagnosis assistance challenges",
@@ -3275,9 +3275,9 @@
       "global_recall_10": 0.14925373134328357,
       "oracle_recall_10": 0.14925373134328357,
       "routed_recall_10": 0.14925373134328357,
-      "global_latency_ms": 9.77,
-      "oracle_latency_ms": 9.8,
-      "routed_latency_ms": 9.43
+      "global_latency_ms": 7.41,
+      "oracle_latency_ms": 7.31,
+      "routed_latency_ms": 9.59
     },
     {
       "query": "semantic segmentation machine learning",
@@ -3296,9 +3296,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.2,
-      "oracle_latency_ms": 10.57,
-      "routed_latency_ms": 11.03
+      "global_latency_ms": 7.33,
+      "oracle_latency_ms": 13.59,
+      "routed_latency_ms": 8.66
     },
     {
       "query": "cybersecurity scalability engineering",
@@ -3317,9 +3317,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 11.13,
-      "oracle_latency_ms": 10.83,
-      "routed_latency_ms": 11.25
+      "global_latency_ms": 7.51,
+      "oracle_latency_ms": 8.74,
+      "routed_latency_ms": 8.83
     },
     {
       "query": "transformer architecture neural network",
@@ -3338,9 +3338,9 @@
       "global_recall_10": 0.05,
       "oracle_recall_10": 0.05,
       "routed_recall_10": 0.05,
-      "global_latency_ms": 10.99,
-      "oracle_latency_ms": 10.66,
-      "routed_latency_ms": 10.76
+      "global_latency_ms": 7.48,
+      "oracle_latency_ms": 8.95,
+      "routed_latency_ms": 8.76
     },
     {
       "query": "neural network challenges",
@@ -3358,9 +3358,9 @@
       "global_recall_10": 0.06711409395973154,
       "oracle_recall_10": 0.06711409395973154,
       "routed_recall_10": 0.06711409395973154,
-      "global_latency_ms": 9.39,
-      "oracle_latency_ms": 9.04,
-      "routed_latency_ms": 10.07
+      "global_latency_ms": 7.35,
+      "oracle_latency_ms": 7.27,
+      "routed_latency_ms": 13.51
     },
     {
       "query": "neural network image recognition",
@@ -3379,9 +3379,9 @@
       "global_recall_10": 0.046511627906976744,
       "oracle_recall_10": 0.046511627906976744,
       "routed_recall_10": 0.046511627906976744,
-      "global_latency_ms": 10.07,
-      "oracle_latency_ms": 10.1,
-      "routed_latency_ms": 10.77
+      "global_latency_ms": 7.09,
+      "oracle_latency_ms": 9.23,
+      "routed_latency_ms": 8.33
     },
     {
       "query": "cryptocurrency markets recent advances",
@@ -3398,9 +3398,9 @@
       "global_recall_10": 0.040160642570281124,
       "oracle_recall_10": 0.040160642570281124,
       "routed_recall_10": 0.040160642570281124,
-      "global_latency_ms": 10.8,
-      "oracle_latency_ms": 10.19,
-      "routed_latency_ms": 10.07
+      "global_latency_ms": 7.86,
+      "oracle_latency_ms": 7.59,
+      "routed_latency_ms": 7.66
     },
     {
       "query": "automation systems challenges",
@@ -3417,9 +3417,9 @@
       "global_recall_10": 0.11627906976744186,
       "oracle_recall_10": 0.11627906976744186,
       "routed_recall_10": 0.11627906976744186,
-      "global_latency_ms": 10.29,
-      "oracle_latency_ms": 9.11,
-      "routed_latency_ms": 9.16
+      "global_latency_ms": 7.23,
+      "oracle_latency_ms": 8.85,
+      "routed_latency_ms": 7.05
     },
     {
       "query": "consensus mechanisms cloud computing",
@@ -3438,9 +3438,9 @@
       "global_recall_10": 0.07194244604316546,
       "oracle_recall_10": 0.07194244604316546,
       "routed_recall_10": 0.07194244604316546,
-      "global_latency_ms": 10.24,
-      "oracle_latency_ms": 10.93,
-      "routed_latency_ms": 10.67
+      "global_latency_ms": 10.06,
+      "oracle_latency_ms": 8.79,
+      "routed_latency_ms": 12.4
     },
     {
       "query": "object detection recent advances",
@@ -3458,9 +3458,9 @@
       "global_recall_10": 0.036231884057971016,
       "oracle_recall_10": 0.036231884057971016,
       "routed_recall_10": 0.036231884057971016,
-      "global_latency_ms": 10.59,
-      "oracle_latency_ms": 9.71,
-      "routed_latency_ms": 11.02
+      "global_latency_ms": 13.53,
+      "oracle_latency_ms": 7.5,
+      "routed_latency_ms": 14.19
     },
     {
       "query": "consensus mechanisms future trends",
@@ -3477,9 +3477,9 @@
       "global_recall_10": 0.14285714285714285,
       "oracle_recall_10": 0.14285714285714285,
       "routed_recall_10": 0.14285714285714285,
-      "global_latency_ms": 9.44,
-      "oracle_latency_ms": 8.75,
-      "routed_latency_ms": 9.19
+      "global_latency_ms": 11.68,
+      "oracle_latency_ms": 6.87,
+      "routed_latency_ms": 15.03
     },
     {
       "query": "kubernetes orchestration recent advances",
@@ -3496,9 +3496,9 @@
       "global_recall_10": 0.038461538461538464,
       "oracle_recall_10": 0.038461538461538464,
       "routed_recall_10": 0.038461538461538464,
-      "global_latency_ms": 10.66,
-      "oracle_latency_ms": 10.38,
-      "routed_latency_ms": 10.81
+      "global_latency_ms": 7.74,
+      "oracle_latency_ms": 9.0,
+      "routed_latency_ms": 7.63
     },
     {
       "query": "convolutional neural network clinical trials",
@@ -3517,9 +3517,9 @@
       "global_recall_10": 0.04219409282700422,
       "oracle_recall_10": 0.04219409282700422,
       "routed_recall_10": 0.04219409282700422,
-      "global_latency_ms": 10.67,
-      "oracle_latency_ms": 11.23,
-      "routed_latency_ms": 11.23
+      "global_latency_ms": 7.75,
+      "oracle_latency_ms": 8.91,
+      "routed_latency_ms": 8.94
     },
     {
       "query": "gradient descent transformer architecture",
@@ -3538,9 +3538,9 @@
       "global_recall_10": 0.08547008547008547,
       "oracle_recall_10": 0.08547008547008547,
       "routed_recall_10": 0.08547008547008547,
-      "global_latency_ms": 10.42,
-      "oracle_latency_ms": 10.58,
-      "routed_latency_ms": 10.7
+      "global_latency_ms": 8.3,
+      "oracle_latency_ms": 8.98,
+      "routed_latency_ms": 8.52
     },
     {
       "query": "natural language processing best practices",
@@ -3558,9 +3558,9 @@
       "global_recall_10": 0.16666666666666666,
       "oracle_recall_10": 0.16666666666666666,
       "routed_recall_10": 0.16666666666666666,
-      "global_latency_ms": 10.75,
-      "oracle_latency_ms": 10.26,
-      "routed_latency_ms": 10.57
+      "global_latency_ms": 13.74,
+      "oracle_latency_ms": 10.81,
+      "routed_latency_ms": 9.14
     },
     {
       "query": "deep learning recent advances",
@@ -3577,9 +3577,9 @@
       "global_recall_10": 0.038314176245210725,
       "oracle_recall_10": 0.038314176245210725,
       "routed_recall_10": 0.038314176245210725,
-      "global_latency_ms": 10.73,
-      "oracle_latency_ms": 10.34,
-      "routed_latency_ms": 9.31
+      "global_latency_ms": 7.53,
+      "oracle_latency_ms": 12.65,
+      "routed_latency_ms": 7.55
     },
     {
       "query": "smart contracts future trends",
@@ -3596,9 +3596,9 @@
       "global_recall_10": 0.1694915254237288,
       "oracle_recall_10": 0.1694915254237288,
       "routed_recall_10": 0.1694915254237288,
-      "global_latency_ms": 9.4,
-      "oracle_latency_ms": 8.81,
-      "routed_latency_ms": 8.74
+      "global_latency_ms": 6.99,
+      "oracle_latency_ms": 6.95,
+      "routed_latency_ms": 8.19
     },
     {
       "query": "diagnosis assistance object detection",
@@ -3617,9 +3617,9 @@
       "global_recall_10": 0.07352941176470588,
       "oracle_recall_10": 0.07352941176470588,
       "routed_recall_10": 0.07352941176470588,
-      "global_latency_ms": 10.39,
-      "oracle_latency_ms": 10.69,
-      "routed_latency_ms": 9.93
+      "global_latency_ms": 8.25,
+      "oracle_latency_ms": 8.83,
+      "routed_latency_ms": 8.35
     },
     {
       "query": "patient data privacy future trends",
@@ -3636,9 +3636,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.88,
-      "oracle_latency_ms": 9.08,
-      "routed_latency_ms": 9.31
+      "global_latency_ms": 7.38,
+      "oracle_latency_ms": 7.13,
+      "routed_latency_ms": 7.49
     },
     {
       "query": "diagnosis assistance challenges",
@@ -3655,9 +3655,9 @@
       "global_recall_10": 0.14925373134328357,
       "oracle_recall_10": 0.14925373134328357,
       "routed_recall_10": 0.14925373134328357,
-      "global_latency_ms": 9.4,
-      "oracle_latency_ms": 9.17,
-      "routed_latency_ms": 9.62
+      "global_latency_ms": 7.14,
+      "oracle_latency_ms": 8.85,
+      "routed_latency_ms": 7.09
     },
     {
       "query": "cybersecurity challenges",
@@ -3674,9 +3674,9 @@
       "global_recall_10": 0.1282051282051282,
       "oracle_recall_10": 0.1282051282051282,
       "routed_recall_10": 0.1282051282051282,
-      "global_latency_ms": 10.71,
-      "oracle_latency_ms": 9.88,
-      "routed_latency_ms": 9.99
+      "global_latency_ms": 9.3,
+      "oracle_latency_ms": 7.58,
+      "routed_latency_ms": 9.8
     },
     {
       "query": "penetration testing automation systems",
@@ -3695,9 +3695,9 @@
       "global_recall_10": 0.08064516129032258,
       "oracle_recall_10": 0.08064516129032258,
       "routed_recall_10": 0.08064516129032258,
-      "global_latency_ms": 10.32,
-      "oracle_latency_ms": 10.01,
-      "routed_latency_ms": 9.93
+      "global_latency_ms": 6.99,
+      "oracle_latency_ms": 11.44,
+      "routed_latency_ms": 12.14
     },
     {
       "query": "deep learning challenges",
@@ -3714,9 +3714,9 @@
       "global_recall_10": 0.09523809523809523,
       "oracle_recall_10": 0.10714285714285714,
       "routed_recall_10": 0.10714285714285714,
-      "global_latency_ms": 9.59,
-      "oracle_latency_ms": 9.22,
-      "routed_latency_ms": 9.18
+      "global_latency_ms": 7.47,
+      "oracle_latency_ms": 9.29,
+      "routed_latency_ms": 7.18
     },
     {
       "query": "bert model recent advances",
@@ -3733,9 +3733,9 @@
       "global_recall_10": 0.03773584905660377,
       "oracle_recall_10": 0.03773584905660377,
       "routed_recall_10": 0.03773584905660377,
-      "global_latency_ms": 9.98,
-      "oracle_latency_ms": 9.39,
-      "routed_latency_ms": 10.07
+      "global_latency_ms": 9.76,
+      "oracle_latency_ms": 7.5,
+      "routed_latency_ms": 12.25
     },
     {
       "query": "scalability engineering recent advances",
@@ -3752,9 +3752,9 @@
       "global_recall_10": 0.038461538461538464,
       "oracle_recall_10": 0.038461538461538464,
       "routed_recall_10": 0.038461538461538464,
-      "global_latency_ms": 10.58,
-      "oracle_latency_ms": 9.92,
-      "routed_latency_ms": 9.89
+      "global_latency_ms": 7.8,
+      "oracle_latency_ms": 10.24,
+      "routed_latency_ms": 7.61
     },
     {
       "query": "bert model challenges",
@@ -3771,9 +3771,9 @@
       "global_recall_10": 0.1282051282051282,
       "oracle_recall_10": 0.1282051282051282,
       "routed_recall_10": 0.1282051282051282,
-      "global_latency_ms": 10.24,
-      "oracle_latency_ms": 9.68,
-      "routed_latency_ms": 9.05
+      "global_latency_ms": 7.65,
+      "oracle_latency_ms": 7.16,
+      "routed_latency_ms": 8.75
     },
     {
       "query": "patient data privacy serverless architecture",
@@ -3792,9 +3792,9 @@
       "global_recall_10": 0.06993006993006994,
       "oracle_recall_10": 0.06993006993006994,
       "routed_recall_10": 0.06993006993006994,
-      "global_latency_ms": 10.52,
-      "oracle_latency_ms": 10.8,
-      "routed_latency_ms": 11.1
+      "global_latency_ms": 7.06,
+      "oracle_latency_ms": 11.11,
+      "routed_latency_ms": 8.25
     },
     {
       "query": "convolutional neural network recent advances",
@@ -3812,9 +3812,9 @@
       "global_recall_10": 0.030395136778115502,
       "oracle_recall_10": 0.030395136778115502,
       "routed_recall_10": 0.030395136778115502,
-      "global_latency_ms": 11.21,
-      "oracle_latency_ms": 10.99,
-      "routed_latency_ms": 12.09
+      "global_latency_ms": 12.62,
+      "oracle_latency_ms": 13.81,
+      "routed_latency_ms": 9.89
     },
     {
       "query": "computer vision manipulator design",
@@ -3833,9 +3833,9 @@
       "global_recall_10": 0.07633587786259542,
       "oracle_recall_10": 0.07633587786259542,
       "routed_recall_10": 0.07633587786259542,
-      "global_latency_ms": 11.16,
-      "oracle_latency_ms": 11.16,
-      "routed_latency_ms": 10.79
+      "global_latency_ms": 7.84,
+      "oracle_latency_ms": 8.78,
+      "routed_latency_ms": 8.77
     },
     {
       "query": "encryption standards recent advances",
@@ -3852,9 +3852,9 @@
       "global_recall_10": 0.03875968992248062,
       "oracle_recall_10": 0.03875968992248062,
       "routed_recall_10": 0.03875968992248062,
-      "global_latency_ms": 10.57,
-      "oracle_latency_ms": 9.76,
-      "routed_latency_ms": 9.72
+      "global_latency_ms": 12.34,
+      "oracle_latency_ms": 7.54,
+      "routed_latency_ms": 7.49
     },
     {
       "query": "neural network recent advances",
@@ -3872,9 +3872,9 @@
       "global_recall_10": 0.030395136778115502,
       "oracle_recall_10": 0.030395136778115502,
       "routed_recall_10": 0.030395136778115502,
-      "global_latency_ms": 10.63,
-      "oracle_latency_ms": 10.09,
-      "routed_latency_ms": 10.41
+      "global_latency_ms": 8.03,
+      "oracle_latency_ms": 7.66,
+      "routed_latency_ms": 9.89
     },
     {
       "query": "tokenization methods diagnosis assistance",
@@ -3893,9 +3893,9 @@
       "global_recall_10": 0.08,
       "oracle_recall_10": 0.08,
       "routed_recall_10": 0.08,
-      "global_latency_ms": 10.22,
-      "oracle_latency_ms": 10.7,
-      "routed_latency_ms": 10.12
+      "global_latency_ms": 8.36,
+      "oracle_latency_ms": 8.46,
+      "routed_latency_ms": 11.99
     },
     {
       "query": "transformer architecture challenges",
@@ -3913,9 +3913,9 @@
       "global_recall_10": 0.11235955056179775,
       "oracle_recall_10": 0.11235955056179775,
       "routed_recall_10": 0.11235955056179775,
-      "global_latency_ms": 10.1,
-      "oracle_latency_ms": 10.2,
-      "routed_latency_ms": 10.7
+      "global_latency_ms": 7.63,
+      "oracle_latency_ms": 10.82,
+      "routed_latency_ms": 8.86
     },
     {
       "query": "large language models challenges",
@@ -3932,9 +3932,9 @@
       "global_recall_10": 0.11235955056179775,
       "oracle_recall_10": 0.11235955056179775,
       "routed_recall_10": 0.11235955056179775,
-      "global_latency_ms": 10.94,
-      "oracle_latency_ms": 10.59,
-      "routed_latency_ms": 9.45
+      "global_latency_ms": 12.28,
+      "oracle_latency_ms": 7.75,
+      "routed_latency_ms": 10.35
     },
     {
       "query": "kubernetes orchestration healthcare innovation",
@@ -3953,9 +3953,9 @@
       "global_recall_10": 0.07042253521126761,
       "oracle_recall_10": 0.07042253521126761,
       "routed_recall_10": 0.07042253521126761,
-      "global_latency_ms": 11.09,
-      "oracle_latency_ms": 10.87,
-      "routed_latency_ms": 11.38
+      "global_latency_ms": 11.36,
+      "oracle_latency_ms": 8.86,
+      "routed_latency_ms": 10.65
     },
     {
       "query": "convolutional neural network best practices",
@@ -3973,9 +3973,9 @@
       "global_recall_10": 0.06711409395973154,
       "oracle_recall_10": 0.06711409395973154,
       "routed_recall_10": 0.06711409395973154,
-      "global_latency_ms": 10.6,
-      "oracle_latency_ms": 10.36,
-      "routed_latency_ms": 11.28
+      "global_latency_ms": 7.5,
+      "oracle_latency_ms": 8.86,
+      "routed_latency_ms": 8.65
     },
     {
       "query": "deep learning recent advances",
@@ -3992,9 +3992,9 @@
       "global_recall_10": 0.038314176245210725,
       "oracle_recall_10": 0.038314176245210725,
       "routed_recall_10": 0.038314176245210725,
-      "global_latency_ms": 10.5,
-      "oracle_latency_ms": 9.91,
-      "routed_latency_ms": 9.64
+      "global_latency_ms": 12.1,
+      "oracle_latency_ms": 7.71,
+      "routed_latency_ms": 8.73
     },
     {
       "query": "decentralization future trends",
@@ -4011,9 +4011,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 10.8,
-      "oracle_latency_ms": 9.57,
-      "routed_latency_ms": 9.5
+      "global_latency_ms": 7.23,
+      "oracle_latency_ms": 7.99,
+      "routed_latency_ms": 6.77
     },
     {
       "query": "automation systems recent advances",
@@ -4030,9 +4030,9 @@
       "global_recall_10": 0.03773584905660377,
       "oracle_recall_10": 0.03773584905660377,
       "routed_recall_10": 0.03773584905660377,
-      "global_latency_ms": 10.01,
-      "oracle_latency_ms": 9.64,
-      "routed_latency_ms": 9.99
+      "global_latency_ms": 9.02,
+      "oracle_latency_ms": 7.51,
+      "routed_latency_ms": 9.98
     },
     {
       "query": "threat detection best practices",
@@ -4050,9 +4050,9 @@
       "global_recall_10": 0.11363636363636363,
       "oracle_recall_10": 0.11363636363636363,
       "routed_recall_10": 0.11363636363636363,
-      "global_latency_ms": 9.96,
-      "oracle_latency_ms": 9.31,
-      "routed_latency_ms": 9.53
+      "global_latency_ms": 6.9,
+      "oracle_latency_ms": 11.86,
+      "routed_latency_ms": 8.99
     },
     {
       "query": "serverless architecture best practices",
@@ -4070,9 +4070,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 9.94,
-      "oracle_latency_ms": 9.69,
-      "routed_latency_ms": 10.67
+      "global_latency_ms": 8.99,
+      "oracle_latency_ms": 7.47,
+      "routed_latency_ms": 10.23
     },
     {
       "query": "robotics encryption standards",
@@ -4091,9 +4091,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.98,
-      "oracle_latency_ms": 9.64,
-      "routed_latency_ms": 9.78
+      "global_latency_ms": 6.93,
+      "oracle_latency_ms": 8.44,
+      "routed_latency_ms": 8.38
     },
     {
       "query": "neural network natural language processing",
@@ -4112,9 +4112,9 @@
       "global_recall_10": 0.04830917874396135,
       "oracle_recall_10": 0.04830917874396135,
       "routed_recall_10": 0.04830917874396135,
-      "global_latency_ms": 10.34,
-      "oracle_latency_ms": 11.03,
-      "routed_latency_ms": 10.75
+      "global_latency_ms": 8.12,
+      "oracle_latency_ms": 8.52,
+      "routed_latency_ms": 13.2
     },
     {
       "query": "robotics best practices",
@@ -4132,9 +4132,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 9.47,
-      "oracle_latency_ms": 8.61,
-      "routed_latency_ms": 10.38
+      "global_latency_ms": 7.16,
+      "oracle_latency_ms": 7.62,
+      "routed_latency_ms": 8.56
     },
     {
       "query": "semantic segmentation neural network",
@@ -4153,9 +4153,9 @@
       "global_recall_10": 0.046511627906976744,
       "oracle_recall_10": 0.046511627906976744,
       "routed_recall_10": 0.046511627906976744,
-      "global_latency_ms": 10.59,
-      "oracle_latency_ms": 11.02,
-      "routed_latency_ms": 10.39
+      "global_latency_ms": 7.38,
+      "oracle_latency_ms": 8.58,
+      "routed_latency_ms": 8.56
     },
     {
       "query": "neural network object detection",
@@ -4174,9 +4174,9 @@
       "global_recall_10": 0.04608294930875576,
       "oracle_recall_10": 0.04608294930875576,
       "routed_recall_10": 0.04608294930875576,
-      "global_latency_ms": 10.01,
-      "oracle_latency_ms": 10.46,
-      "routed_latency_ms": 10.38
+      "global_latency_ms": 7.04,
+      "oracle_latency_ms": 15.92,
+      "routed_latency_ms": 8.62
     },
     {
       "query": "penetration testing future trends",
@@ -4193,9 +4193,9 @@
       "global_recall_10": 0.16666666666666666,
       "oracle_recall_10": 0.16666666666666666,
       "routed_recall_10": 0.16666666666666666,
-      "global_latency_ms": 9.63,
-      "oracle_latency_ms": 9.57,
-      "routed_latency_ms": 8.72
+      "global_latency_ms": 7.02,
+      "oracle_latency_ms": 8.0,
+      "routed_latency_ms": 7.23
     },
     {
       "query": "cloud computing diagnosis assistance",
@@ -4214,9 +4214,9 @@
       "global_recall_10": 0.07246376811594203,
       "oracle_recall_10": 0.07246376811594203,
       "routed_recall_10": 0.07246376811594203,
-      "global_latency_ms": 10.14,
-      "oracle_latency_ms": 10.86,
-      "routed_latency_ms": 10.69
+      "global_latency_ms": 7.51,
+      "oracle_latency_ms": 10.51,
+      "routed_latency_ms": 8.95
     },
     {
       "query": "devops practices challenges",
@@ -4233,9 +4233,9 @@
       "global_recall_10": 0.14925373134328357,
       "oracle_recall_10": 0.14925373134328357,
       "routed_recall_10": 0.14925373134328357,
-      "global_latency_ms": 9.9,
-      "oracle_latency_ms": 9.66,
-      "routed_latency_ms": 9.08
+      "global_latency_ms": 7.47,
+      "oracle_latency_ms": 7.48,
+      "routed_latency_ms": 8.26
     },
     {
       "query": "tokenization methods best practices",
@@ -4253,9 +4253,9 @@
       "global_recall_10": 0.1724137931034483,
       "oracle_recall_10": 0.1724137931034483,
       "routed_recall_10": 0.1724137931034483,
-      "global_latency_ms": 9.94,
-      "oracle_latency_ms": 9.25,
-      "routed_latency_ms": 10.66
+      "global_latency_ms": 6.89,
+      "oracle_latency_ms": 11.8,
+      "routed_latency_ms": 8.4
     },
     {
       "query": "cryptocurrency markets cloud computing",
@@ -4274,9 +4274,9 @@
       "global_recall_10": 0.07751937984496124,
       "oracle_recall_10": 0.07751937984496124,
       "routed_recall_10": 0.07751937984496124,
-      "global_latency_ms": 10.6,
-      "oracle_latency_ms": 11.33,
-      "routed_latency_ms": 10.81
+      "global_latency_ms": 9.31,
+      "oracle_latency_ms": 9.16,
+      "routed_latency_ms": 9.1
     },
     {
       "query": "kinematics challenges",
@@ -4293,9 +4293,9 @@
       "global_recall_10": 0.45,
       "oracle_recall_10": 0.45,
       "routed_recall_10": 0.45,
-      "global_latency_ms": 9.84,
-      "oracle_latency_ms": 9.58,
-      "routed_latency_ms": 9.2
+      "global_latency_ms": 13.74,
+      "oracle_latency_ms": 7.5,
+      "routed_latency_ms": 9.04
     },
     {
       "query": "object detection recent advances",
@@ -4313,9 +4313,9 @@
       "global_recall_10": 0.036231884057971016,
       "oracle_recall_10": 0.036231884057971016,
       "routed_recall_10": 0.036231884057971016,
-      "global_latency_ms": 10.64,
-      "oracle_latency_ms": 9.64,
-      "routed_latency_ms": 10.6
+      "global_latency_ms": 7.53,
+      "oracle_latency_ms": 14.04,
+      "routed_latency_ms": 9.02
     },
     {
       "query": "neural network patient data privacy",
@@ -4334,9 +4334,9 @@
       "global_recall_10": 0.045662100456621,
       "oracle_recall_10": 0.045662100456621,
       "routed_recall_10": 0.045662100456621,
-      "global_latency_ms": 9.96,
-      "oracle_latency_ms": 10.36,
-      "routed_latency_ms": 10.27
+      "global_latency_ms": 7.27,
+      "oracle_latency_ms": 8.62,
+      "routed_latency_ms": 8.5
     },
     {
       "query": "kubernetes orchestration recent advances",
@@ -4353,9 +4353,9 @@
       "global_recall_10": 0.038461538461538464,
       "oracle_recall_10": 0.038461538461538464,
       "routed_recall_10": 0.038461538461538464,
-      "global_latency_ms": 11.52,
-      "oracle_latency_ms": 10.08,
-      "routed_latency_ms": 10.31
+      "global_latency_ms": 7.71,
+      "oracle_latency_ms": 8.07,
+      "routed_latency_ms": 7.64
     },
     {
       "query": "diagnosis assistance scalability engineering",
@@ -4374,9 +4374,9 @@
       "global_recall_10": 0.07092198581560284,
       "oracle_recall_10": 0.07092198581560284,
       "routed_recall_10": 0.07092198581560284,
-      "global_latency_ms": 10.91,
-      "oracle_latency_ms": 10.41,
-      "routed_latency_ms": 10.39
+      "global_latency_ms": 8.0,
+      "oracle_latency_ms": 8.32,
+      "routed_latency_ms": 13.27
     },
     {
       "query": "diagnosis assistance neural network",
@@ -4395,9 +4395,9 @@
       "global_recall_10": 0.046511627906976744,
       "oracle_recall_10": 0.046511627906976744,
       "routed_recall_10": 0.046511627906976744,
-      "global_latency_ms": 9.87,
-      "oracle_latency_ms": 10.66,
-      "routed_latency_ms": 10.44
+      "global_latency_ms": 6.97,
+      "oracle_latency_ms": 9.56,
+      "routed_latency_ms": 8.53
     },
     {
       "query": "scalability engineering decentralization",
@@ -4416,9 +4416,9 @@
       "global_recall_10": 0.13157894736842105,
       "oracle_recall_10": 0.13157894736842105,
       "routed_recall_10": 0.13157894736842105,
-      "global_latency_ms": 10.72,
-      "oracle_latency_ms": 10.55,
-      "routed_latency_ms": 10.53
+      "global_latency_ms": 7.11,
+      "oracle_latency_ms": 8.32,
+      "routed_latency_ms": 8.28
     },
     {
       "query": "diagnosis assistance neural network",
@@ -4437,9 +4437,9 @@
       "global_recall_10": 0.046511627906976744,
       "oracle_recall_10": 0.046511627906976744,
       "routed_recall_10": 0.046511627906976744,
-      "global_latency_ms": 9.99,
-      "oracle_latency_ms": 9.98,
-      "routed_latency_ms": 10.54
+      "global_latency_ms": 11.47,
+      "oracle_latency_ms": 8.41,
+      "routed_latency_ms": 8.41
     },
     {
       "query": "transformer architecture recent advances",
@@ -4457,9 +4457,9 @@
       "global_recall_10": 0.03717472118959108,
       "oracle_recall_10": 0.03717472118959108,
       "routed_recall_10": 0.03717472118959108,
-      "global_latency_ms": 11.09,
-      "oracle_latency_ms": 10.31,
-      "routed_latency_ms": 11.26
+      "global_latency_ms": 8.89,
+      "oracle_latency_ms": 7.98,
+      "routed_latency_ms": 9.39
     },
     {
       "query": "sensor fusion object detection",
@@ -4478,9 +4478,9 @@
       "global_recall_10": 0.06993006993006994,
       "oracle_recall_10": 0.06993006993006994,
       "routed_recall_10": 0.06993006993006994,
-      "global_latency_ms": 10.32,
-      "oracle_latency_ms": 10.52,
-      "routed_latency_ms": 10.34
+      "global_latency_ms": 7.86,
+      "oracle_latency_ms": 8.62,
+      "routed_latency_ms": 12.0
     },
     {
       "query": "smart contracts best practices",
@@ -4498,9 +4498,9 @@
       "global_recall_10": 0.1694915254237288,
       "oracle_recall_10": 0.1694915254237288,
       "routed_recall_10": 0.1694915254237288,
-      "global_latency_ms": 9.86,
-      "oracle_latency_ms": 9.03,
-      "routed_latency_ms": 10.22
+      "global_latency_ms": 6.95,
+      "oracle_latency_ms": 10.83,
+      "routed_latency_ms": 8.16
     },
     {
       "query": "computer vision future trends",
@@ -4517,9 +4517,9 @@
       "global_recall_10": 0.1323529411764706,
       "oracle_recall_10": 0.1323529411764706,
       "routed_recall_10": 0.1323529411764706,
-      "global_latency_ms": 10.24,
-      "oracle_latency_ms": 9.25,
-      "routed_latency_ms": 10.08
+      "global_latency_ms": 12.06,
+      "oracle_latency_ms": 7.16,
+      "routed_latency_ms": 10.48
     },
     {
       "query": "penetration testing blockchain technology",
@@ -4538,9 +4538,9 @@
       "global_recall_10": 0.07874015748031496,
       "oracle_recall_10": 0.07874015748031496,
       "routed_recall_10": 0.07874015748031496,
-      "global_latency_ms": 29.07,
-      "oracle_latency_ms": 11.64,
-      "routed_latency_ms": 12.34
+      "global_latency_ms": 7.77,
+      "oracle_latency_ms": 8.53,
+      "routed_latency_ms": 9.35
     },
     {
       "query": "scalability engineering best practices",
@@ -4557,9 +4557,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.41,
-      "oracle_latency_ms": 10.21,
-      "routed_latency_ms": 10.05
+      "global_latency_ms": 9.27,
+      "oracle_latency_ms": 7.8,
+      "routed_latency_ms": 7.03
     },
     {
       "query": "clinical trials convolutional neural network",
@@ -4578,9 +4578,9 @@
       "global_recall_10": 0.04878048780487805,
       "oracle_recall_10": 0.04878048780487805,
       "routed_recall_10": 0.04878048780487805,
-      "global_latency_ms": 11.33,
-      "oracle_latency_ms": 12.25,
-      "routed_latency_ms": 11.68
+      "global_latency_ms": 8.6,
+      "oracle_latency_ms": 8.85,
+      "routed_latency_ms": 8.92
     },
     {
       "query": "machine learning recent advances",
@@ -4597,9 +4597,9 @@
       "global_recall_10": 0.03717472118959108,
       "oracle_recall_10": 0.03717472118959108,
       "routed_recall_10": 0.03717472118959108,
-      "global_latency_ms": 9.59,
-      "oracle_latency_ms": 9.25,
-      "routed_latency_ms": 10.27
+      "global_latency_ms": 9.93,
+      "oracle_latency_ms": 7.62,
+      "routed_latency_ms": 8.55
     },
     {
       "query": "healthcare innovation recent advances",
@@ -4616,9 +4616,9 @@
       "global_recall_10": 0.032679738562091505,
       "oracle_recall_10": 0.032679738562091505,
       "routed_recall_10": 0.032679738562091505,
-      "global_latency_ms": 10.91,
-      "oracle_latency_ms": 10.35,
-      "routed_latency_ms": 10.2
+      "global_latency_ms": 7.67,
+      "oracle_latency_ms": 8.55,
+      "routed_latency_ms": 7.6
     },
     {
       "query": "decentralization future trends",
@@ -4635,9 +4635,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 10.37,
-      "oracle_latency_ms": 10.17,
-      "routed_latency_ms": 9.86
+      "global_latency_ms": 7.11,
+      "oracle_latency_ms": 6.89,
+      "routed_latency_ms": 10.32
     },
     {
       "query": "zero trust architecture sensor fusion",
@@ -4656,9 +4656,9 @@
       "global_recall_10": 0.078125,
       "oracle_recall_10": 0.078125,
       "routed_recall_10": 0.078125,
-      "global_latency_ms": 10.64,
-      "oracle_latency_ms": 11.12,
-      "routed_latency_ms": 11.59
+      "global_latency_ms": 7.11,
+      "oracle_latency_ms": 8.64,
+      "routed_latency_ms": 8.63
     },
     {
       "query": "scalability engineering cybersecurity",
@@ -4678,8 +4678,8 @@
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
       "global_latency_ms": 10.97,
-      "oracle_latency_ms": 11.38,
-      "routed_latency_ms": 11.1
+      "oracle_latency_ms": 9.66,
+      "routed_latency_ms": 10.07
     },
     {
       "query": "training pipelines challenges",
@@ -4696,9 +4696,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 11.26,
-      "oracle_latency_ms": 9.56,
-      "routed_latency_ms": 9.58
+      "global_latency_ms": 7.37,
+      "oracle_latency_ms": 7.49,
+      "routed_latency_ms": 7.24
     },
     {
       "query": "cybersecurity best practices",
@@ -4716,9 +4716,9 @@
       "global_recall_10": 0.6666666666666666,
       "oracle_recall_10": 0.3333333333333333,
       "routed_recall_10": 0.6666666666666666,
-      "global_latency_ms": 11.27,
-      "oracle_latency_ms": 10.61,
-      "routed_latency_ms": 11.04
+      "global_latency_ms": 8.96,
+      "oracle_latency_ms": 7.19,
+      "routed_latency_ms": 8.61
     },
     {
       "query": "consensus mechanisms recent advances",
@@ -4735,9 +4735,9 @@
       "global_recall_10": 0.04,
       "oracle_recall_10": 0.04,
       "routed_recall_10": 0.04,
-      "global_latency_ms": 10.97,
-      "oracle_latency_ms": 9.68,
-      "routed_latency_ms": 9.85
+      "global_latency_ms": 9.82,
+      "oracle_latency_ms": 11.74,
+      "routed_latency_ms": 7.46
     },
     {
       "query": "natural language processing medical imaging",
@@ -4756,9 +4756,9 @@
       "global_recall_10": 0.06493506493506493,
       "oracle_recall_10": 0.06493506493506493,
       "routed_recall_10": 0.06493506493506493,
-      "global_latency_ms": 10.35,
-      "oracle_latency_ms": 10.58,
-      "routed_latency_ms": 11.08
+      "global_latency_ms": 10.83,
+      "oracle_latency_ms": 8.62,
+      "routed_latency_ms": 8.66
     },
     {
       "query": "threat detection future trends",
@@ -4776,9 +4776,9 @@
       "global_recall_10": 0.12345679012345678,
       "oracle_recall_10": 0.12345679012345678,
       "routed_recall_10": 0.12345679012345678,
-      "global_latency_ms": 9.64,
-      "oracle_latency_ms": 9.2,
-      "routed_latency_ms": 10.13
+      "global_latency_ms": 13.09,
+      "oracle_latency_ms": 6.83,
+      "routed_latency_ms": 13.41
     },
     {
       "query": "cybersecurity future trends",
@@ -4795,9 +4795,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 11.41,
-      "oracle_latency_ms": 10.1,
-      "routed_latency_ms": 10.0
+      "global_latency_ms": 7.27,
+      "oracle_latency_ms": 9.7,
+      "routed_latency_ms": 7.08
     },
     {
       "query": "kinematics future trends",
@@ -4814,9 +4814,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 9.78,
-      "oracle_latency_ms": 9.89,
-      "routed_latency_ms": 9.31
+      "global_latency_ms": 8.32,
+      "oracle_latency_ms": 6.8,
+      "routed_latency_ms": 9.05
     },
     {
       "query": "threat detection kubernetes orchestration",
@@ -4835,9 +4835,9 @@
       "global_recall_10": 0.072992700729927,
       "oracle_recall_10": 0.072992700729927,
       "routed_recall_10": 0.072992700729927,
-      "global_latency_ms": 10.22,
-      "oracle_latency_ms": 10.71,
-      "routed_latency_ms": 10.58
+      "global_latency_ms": 7.21,
+      "oracle_latency_ms": 11.33,
+      "routed_latency_ms": 11.43
     },
     {
       "query": "object detection challenges",
@@ -4855,9 +4855,9 @@
       "global_recall_10": 0.10309278350515463,
       "oracle_recall_10": 0.10309278350515463,
       "routed_recall_10": 0.10309278350515463,
-      "global_latency_ms": 10.09,
-      "oracle_latency_ms": 9.49,
-      "routed_latency_ms": 9.94
+      "global_latency_ms": 9.02,
+      "oracle_latency_ms": 7.17,
+      "routed_latency_ms": 10.33
     },
     {
       "query": "devops practices best practices",
@@ -4874,9 +4874,9 @@
       "global_recall_10": 0.11627906976744186,
       "oracle_recall_10": 0.11627906976744186,
       "routed_recall_10": 0.11627906976744186,
-      "global_latency_ms": 9.99,
-      "oracle_latency_ms": 9.74,
-      "routed_latency_ms": 9.8
+      "global_latency_ms": 7.29,
+      "oracle_latency_ms": 7.32,
+      "routed_latency_ms": 6.86
     },
     {
       "query": "threat detection challenges",
@@ -4894,9 +4894,9 @@
       "global_recall_10": 0.09803921568627451,
       "oracle_recall_10": 0.09803921568627451,
       "routed_recall_10": 0.09803921568627451,
-      "global_latency_ms": 10.34,
-      "oracle_latency_ms": 8.77,
-      "routed_latency_ms": 10.45
+      "global_latency_ms": 8.27,
+      "oracle_latency_ms": 7.28,
+      "routed_latency_ms": 11.49
     },
     {
       "query": "convolutional neural network recent advances",
@@ -4914,9 +4914,9 @@
       "global_recall_10": 0.03164556962025317,
       "oracle_recall_10": 0.03164556962025317,
       "routed_recall_10": 0.03164556962025317,
-      "global_latency_ms": 11.32,
-      "oracle_latency_ms": 11.2,
-      "routed_latency_ms": 11.72
+      "global_latency_ms": 8.03,
+      "oracle_latency_ms": 13.39,
+      "routed_latency_ms": 9.38
     },
     {
       "query": "zero trust architecture recent advances",
@@ -4934,9 +4934,9 @@
       "global_recall_10": 0.03745318352059925,
       "oracle_recall_10": 0.03745318352059925,
       "routed_recall_10": 0.03745318352059925,
-      "global_latency_ms": 11.54,
-      "oracle_latency_ms": 10.54,
-      "routed_latency_ms": 11.14
+      "global_latency_ms": 8.0,
+      "oracle_latency_ms": 12.08,
+      "routed_latency_ms": 9.3
     },
     {
       "query": "semantic segmentation future trends",
@@ -4953,9 +4953,9 @@
       "global_recall_10": 0.17543859649122806,
       "oracle_recall_10": 0.17543859649122806,
       "routed_recall_10": 0.17543859649122806,
-      "global_latency_ms": 10.64,
-      "oracle_latency_ms": 9.83,
-      "routed_latency_ms": 10.04
+      "global_latency_ms": 7.37,
+      "oracle_latency_ms": 6.91,
+      "routed_latency_ms": 10.35
     },
     {
       "query": "smart contracts devops practices",
@@ -4974,9 +4974,9 @@
       "global_recall_10": 0.07246376811594203,
       "oracle_recall_10": 0.07246376811594203,
       "routed_recall_10": 0.07246376811594203,
-      "global_latency_ms": 10.01,
-      "oracle_latency_ms": 11.21,
-      "routed_latency_ms": 10.36
+      "global_latency_ms": 7.04,
+      "oracle_latency_ms": 15.62,
+      "routed_latency_ms": 8.55
     },
     {
       "query": "image recognition clinical trials",
@@ -4995,9 +4995,9 @@
       "global_recall_10": 0.06716417910447761,
       "oracle_recall_10": 0.06716417910447761,
       "routed_recall_10": 0.06716417910447761,
-      "global_latency_ms": 9.74,
-      "oracle_latency_ms": 10.02,
-      "routed_latency_ms": 10.69
+      "global_latency_ms": 7.23,
+      "oracle_latency_ms": 8.55,
+      "routed_latency_ms": 8.4
     },
     {
       "query": "bert model neural network",
@@ -5016,9 +5016,9 @@
       "global_recall_10": 0.05235602094240838,
       "oracle_recall_10": 0.05235602094240838,
       "routed_recall_10": 0.05235602094240838,
-      "global_latency_ms": 10.77,
-      "oracle_latency_ms": 10.04,
-      "routed_latency_ms": 10.34
+      "global_latency_ms": 7.2,
+      "oracle_latency_ms": 8.6,
+      "routed_latency_ms": 8.46
     },
     {
       "query": "encryption standards cryptocurrency markets",
@@ -5037,9 +5037,9 @@
       "global_recall_10": 0.06896551724137931,
       "oracle_recall_10": 0.06896551724137931,
       "routed_recall_10": 0.06896551724137931,
-      "global_latency_ms": 10.83,
-      "oracle_latency_ms": 10.93,
-      "routed_latency_ms": 11.13
+      "global_latency_ms": 7.37,
+      "oracle_latency_ms": 8.43,
+      "routed_latency_ms": 12.98
     },
     {
       "query": "scalability engineering future trends",
@@ -5056,9 +5056,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.1,
-      "oracle_latency_ms": 10.03,
-      "routed_latency_ms": 9.64
+      "global_latency_ms": 7.1,
+      "oracle_latency_ms": 7.47,
+      "routed_latency_ms": 6.88
     },
     {
       "query": "tokenization methods deep learning",
@@ -5077,9 +5077,9 @@
       "global_recall_10": 0.06622516556291391,
       "oracle_recall_10": 0.06622516556291391,
       "routed_recall_10": 0.06622516556291391,
-      "global_latency_ms": 10.35,
-      "oracle_latency_ms": 10.87,
-      "routed_latency_ms": 11.28
+      "global_latency_ms": 8.87,
+      "oracle_latency_ms": 8.73,
+      "routed_latency_ms": 8.68
     },
     {
       "query": "decentralization threat detection",
@@ -5098,9 +5098,9 @@
       "global_recall_10": 0.08641975308641975,
       "oracle_recall_10": 0.08641975308641975,
       "routed_recall_10": 0.09876543209876543,
-      "global_latency_ms": 10.34,
-      "oracle_latency_ms": 10.62,
-      "routed_latency_ms": 10.99
+      "global_latency_ms": 7.16,
+      "oracle_latency_ms": 9.53,
+      "routed_latency_ms": 8.39
     },
     {
       "query": "computer vision recent advances",
@@ -5117,9 +5117,9 @@
       "global_recall_10": 0.038461538461538464,
       "oracle_recall_10": 0.038461538461538464,
       "routed_recall_10": 0.038461538461538464,
-      "global_latency_ms": 10.91,
-      "oracle_latency_ms": 9.5,
-      "routed_latency_ms": 10.27
+      "global_latency_ms": 11.42,
+      "oracle_latency_ms": 7.85,
+      "routed_latency_ms": 9.7
     },
     {
       "query": "sensor fusion best practices",
@@ -5137,9 +5137,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.0,
-      "oracle_latency_ms": 9.26,
-      "routed_latency_ms": 9.89
+      "global_latency_ms": 7.07,
+      "oracle_latency_ms": 7.16,
+      "routed_latency_ms": 8.32
     },
     {
       "query": "clinical trials challenges",
@@ -5156,9 +5156,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.5,
-      "oracle_latency_ms": 9.01,
-      "routed_latency_ms": 9.14
+      "global_latency_ms": 7.33,
+      "oracle_latency_ms": 7.2,
+      "routed_latency_ms": 9.74
     },
     {
       "query": "training pipelines challenges",
@@ -5175,9 +5175,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.49,
-      "oracle_latency_ms": 9.51,
-      "routed_latency_ms": 10.51
+      "global_latency_ms": 7.38,
+      "oracle_latency_ms": 10.07,
+      "routed_latency_ms": 7.36
     },
     {
       "query": "consensus mechanisms best practices",
@@ -5195,9 +5195,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 9.43,
-      "oracle_latency_ms": 9.68,
-      "routed_latency_ms": 9.86
+      "global_latency_ms": 7.41,
+      "oracle_latency_ms": 7.09,
+      "routed_latency_ms": 10.66
     },
     {
       "query": "convolutional neural network training pipelines",
@@ -5216,9 +5216,9 @@
       "global_recall_10": 0.04878048780487805,
       "oracle_recall_10": 0.04878048780487805,
       "routed_recall_10": 0.04878048780487805,
-      "global_latency_ms": 11.65,
-      "oracle_latency_ms": 11.9,
-      "routed_latency_ms": 12.24
+      "global_latency_ms": 7.56,
+      "oracle_latency_ms": 8.91,
+      "routed_latency_ms": 10.17
     },
     {
       "query": "patient data privacy challenges",
@@ -5235,9 +5235,9 @@
       "global_recall_10": 0.14285714285714285,
       "oracle_recall_10": 0.14285714285714285,
       "routed_recall_10": 0.14285714285714285,
-      "global_latency_ms": 10.75,
-      "oracle_latency_ms": 9.48,
-      "routed_latency_ms": 9.75
+      "global_latency_ms": 7.53,
+      "oracle_latency_ms": 7.33,
+      "routed_latency_ms": 11.68
     },
     {
       "query": "threat detection kubernetes orchestration",
@@ -5256,9 +5256,9 @@
       "global_recall_10": 0.072992700729927,
       "oracle_recall_10": 0.072992700729927,
       "routed_recall_10": 0.072992700729927,
-      "global_latency_ms": 10.17,
-      "oracle_latency_ms": 10.97,
-      "routed_latency_ms": 10.8
+      "global_latency_ms": 7.35,
+      "oracle_latency_ms": 9.62,
+      "routed_latency_ms": 8.5
     },
     {
       "query": "healthcare innovation recent advances",
@@ -5275,9 +5275,9 @@
       "global_recall_10": 0.032679738562091505,
       "oracle_recall_10": 0.032679738562091505,
       "routed_recall_10": 0.032679738562091505,
-      "global_latency_ms": 10.76,
-      "oracle_latency_ms": 10.19,
-      "routed_latency_ms": 9.89
+      "global_latency_ms": 7.86,
+      "oracle_latency_ms": 7.69,
+      "routed_latency_ms": 7.85
     },
     {
       "query": "consensus mechanisms scalability engineering",
@@ -5296,9 +5296,9 @@
       "global_recall_10": 0.07407407407407407,
       "oracle_recall_10": 0.07407407407407407,
       "routed_recall_10": 0.07407407407407407,
-      "global_latency_ms": 10.42,
-      "oracle_latency_ms": 10.76,
-      "routed_latency_ms": 11.27
+      "global_latency_ms": 7.34,
+      "oracle_latency_ms": 9.93,
+      "routed_latency_ms": 8.5
     },
     {
       "query": "gradient descent challenges",
@@ -5315,9 +5315,9 @@
       "global_recall_10": 0.15625,
       "oracle_recall_10": 0.15625,
       "routed_recall_10": 0.15625,
-      "global_latency_ms": 9.61,
-      "oracle_latency_ms": 9.09,
-      "routed_latency_ms": 9.03
+      "global_latency_ms": 11.53,
+      "oracle_latency_ms": 7.42,
+      "routed_latency_ms": 8.84
     },
     {
       "query": "sensor fusion challenges",
@@ -5334,9 +5334,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.06,
-      "oracle_latency_ms": 9.32,
-      "routed_latency_ms": 9.34
+      "global_latency_ms": 7.44,
+      "oracle_latency_ms": 8.55,
+      "routed_latency_ms": 7.46
     },
     {
       "query": "sensor fusion best practices",
@@ -5354,9 +5354,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 9.95,
-      "oracle_latency_ms": 9.0,
-      "routed_latency_ms": 9.89
+      "global_latency_ms": 7.41,
+      "oracle_latency_ms": 16.17,
+      "routed_latency_ms": 8.24
     },
     {
       "query": "gradient descent semantic segmentation",
@@ -5375,9 +5375,9 @@
       "global_recall_10": 0.08264462809917356,
       "oracle_recall_10": 0.08264462809917356,
       "routed_recall_10": 0.08264462809917356,
-      "global_latency_ms": 10.07,
-      "oracle_latency_ms": 10.99,
-      "routed_latency_ms": 10.22
+      "global_latency_ms": 12.47,
+      "oracle_latency_ms": 8.39,
+      "routed_latency_ms": 10.53
     },
     {
       "query": "neural network future trends",
@@ -5395,9 +5395,9 @@
       "global_recall_10": 0.07407407407407407,
       "oracle_recall_10": 0.07407407407407407,
       "routed_recall_10": 0.07407407407407407,
-      "global_latency_ms": 9.68,
-      "oracle_latency_ms": 8.91,
-      "routed_latency_ms": 10.11
+      "global_latency_ms": 6.97,
+      "oracle_latency_ms": 7.49,
+      "routed_latency_ms": 8.33
     },
     {
       "query": "patient data privacy machine learning",
@@ -5416,9 +5416,9 @@
       "global_recall_10": 0.07633587786259542,
       "oracle_recall_10": 0.07633587786259542,
       "routed_recall_10": 0.07633587786259542,
-      "global_latency_ms": 10.46,
-      "oracle_latency_ms": 10.66,
-      "routed_latency_ms": 10.66
+      "global_latency_ms": 7.57,
+      "oracle_latency_ms": 8.76,
+      "routed_latency_ms": 9.76
     },
     {
       "query": "tokenization methods challenges",
@@ -5435,9 +5435,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.82,
-      "oracle_latency_ms": 9.3,
-      "routed_latency_ms": 9.69
+      "global_latency_ms": 7.33,
+      "oracle_latency_ms": 12.27,
+      "routed_latency_ms": 7.35
     },
     {
       "query": "cloud computing future trends",
@@ -5454,9 +5454,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.16,
-      "oracle_latency_ms": 9.58,
-      "routed_latency_ms": 9.86
+      "global_latency_ms": 8.17,
+      "oracle_latency_ms": 7.46,
+      "routed_latency_ms": 8.71
     },
     {
       "query": "convolutional neural network gradient descent",
@@ -5475,9 +5475,9 @@
       "global_recall_10": 0.050505050505050504,
       "oracle_recall_10": 0.050505050505050504,
       "routed_recall_10": 0.050505050505050504,
-      "global_latency_ms": 11.11,
-      "oracle_latency_ms": 11.45,
-      "routed_latency_ms": 11.13
+      "global_latency_ms": 7.57,
+      "oracle_latency_ms": 10.33,
+      "routed_latency_ms": 14.42
     },
     {
       "query": "computer vision automation systems",
@@ -5496,9 +5496,9 @@
       "global_recall_10": 0.07142857142857142,
       "oracle_recall_10": 0.07142857142857142,
       "routed_recall_10": 0.07142857142857142,
-      "global_latency_ms": 10.66,
-      "oracle_latency_ms": 10.76,
-      "routed_latency_ms": 10.07
+      "global_latency_ms": 7.46,
+      "oracle_latency_ms": 15.37,
+      "routed_latency_ms": 8.85
     },
     {
       "query": "manipulator design best practices",
@@ -5516,9 +5516,9 @@
       "global_recall_10": 0.125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 11.35,
-      "oracle_latency_ms": 10.27,
-      "routed_latency_ms": 11.02
+      "global_latency_ms": 8.61,
+      "oracle_latency_ms": 12.41,
+      "routed_latency_ms": 8.6
     },
     {
       "query": "encryption standards automation systems",
@@ -5537,9 +5537,9 @@
       "global_recall_10": 0.07575757575757576,
       "oracle_recall_10": 0.07575757575757576,
       "routed_recall_10": 0.07575757575757576,
-      "global_latency_ms": 10.14,
-      "oracle_latency_ms": 10.59,
-      "routed_latency_ms": 10.64
+      "global_latency_ms": 7.36,
+      "oracle_latency_ms": 8.51,
+      "routed_latency_ms": 9.74
     },
     {
       "query": "zero trust architecture best practices",
@@ -5557,9 +5557,9 @@
       "global_recall_10": 0.15873015873015872,
       "oracle_recall_10": 0.15873015873015872,
       "routed_recall_10": 0.15873015873015872,
-      "global_latency_ms": 10.86,
-      "oracle_latency_ms": 10.45,
-      "routed_latency_ms": 10.7
+      "global_latency_ms": 7.26,
+      "oracle_latency_ms": 12.45,
+      "routed_latency_ms": 8.71
     },
     {
       "query": "semantic segmentation challenges",
@@ -5576,9 +5576,9 @@
       "global_recall_10": 0.17543859649122806,
       "oracle_recall_10": 0.17543859649122806,
       "routed_recall_10": 0.17543859649122806,
-      "global_latency_ms": 10.56,
-      "oracle_latency_ms": 9.38,
-      "routed_latency_ms": 9.6
+      "global_latency_ms": 7.54,
+      "oracle_latency_ms": 7.52,
+      "routed_latency_ms": 11.97
     },
     {
       "query": "tokenization methods future trends",
@@ -5595,9 +5595,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.44,
-      "oracle_latency_ms": 9.43,
-      "routed_latency_ms": 9.17
+      "global_latency_ms": 10.6,
+      "oracle_latency_ms": 6.94,
+      "routed_latency_ms": 8.14
     },
     {
       "query": "clinical trials challenges",
@@ -5614,9 +5614,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.73,
-      "oracle_latency_ms": 8.98,
-      "routed_latency_ms": 9.52
+      "global_latency_ms": 10.34,
+      "oracle_latency_ms": 12.62,
+      "routed_latency_ms": 7.17
     },
     {
       "query": "deep learning future trends",
@@ -5633,9 +5633,9 @@
       "global_recall_10": 0.1125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 9.84,
-      "oracle_latency_ms": 9.29,
-      "routed_latency_ms": 8.98
+      "global_latency_ms": 8.89,
+      "oracle_latency_ms": 7.17,
+      "routed_latency_ms": 9.13
     },
     {
       "query": "machine learning recent advances",
@@ -5652,9 +5652,9 @@
       "global_recall_10": 0.03717472118959108,
       "oracle_recall_10": 0.03717472118959108,
       "routed_recall_10": 0.03717472118959108,
-      "global_latency_ms": 10.54,
-      "oracle_latency_ms": 9.76,
-      "routed_latency_ms": 9.62
+      "global_latency_ms": 13.73,
+      "oracle_latency_ms": 7.74,
+      "routed_latency_ms": 11.64
     },
     {
       "query": "clinical trials best practices",
@@ -5672,9 +5672,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.88,
-      "oracle_latency_ms": 9.11,
-      "routed_latency_ms": 9.84
+      "global_latency_ms": 6.86,
+      "oracle_latency_ms": 12.29,
+      "routed_latency_ms": 8.3
     },
     {
       "query": "robotics challenges",
@@ -5691,9 +5691,9 @@
       "global_recall_10": 0.11688311688311688,
       "oracle_recall_10": 0.11688311688311688,
       "routed_recall_10": 0.11688311688311688,
-      "global_latency_ms": 22.0,
-      "oracle_latency_ms": 8.87,
-      "routed_latency_ms": 8.68
+      "global_latency_ms": 8.97,
+      "oracle_latency_ms": 6.59,
+      "routed_latency_ms": 9.11
     },
     {
       "query": "clinical trials semantic segmentation",
@@ -5712,9 +5712,9 @@
       "global_recall_10": 0.078125,
       "oracle_recall_10": 0.078125,
       "routed_recall_10": 0.078125,
-      "global_latency_ms": 10.17,
-      "oracle_latency_ms": 10.64,
-      "routed_latency_ms": 10.9
+      "global_latency_ms": 6.95,
+      "oracle_latency_ms": 12.24,
+      "routed_latency_ms": 13.67
     },
     {
       "query": "image recognition future trends",
@@ -5731,9 +5731,9 @@
       "global_recall_10": 0.15625,
       "oracle_recall_10": 0.15625,
       "routed_recall_10": 0.15625,
-      "global_latency_ms": 10.44,
-      "oracle_latency_ms": 9.69,
-      "routed_latency_ms": 9.12
+      "global_latency_ms": 7.05,
+      "oracle_latency_ms": 12.13,
+      "routed_latency_ms": 6.9
     },
     {
       "query": "medical imaging cloud computing",
@@ -5752,9 +5752,9 @@
       "global_recall_10": 0.0625,
       "oracle_recall_10": 0.0625,
       "routed_recall_10": 0.0625,
-      "global_latency_ms": 10.7,
-      "oracle_latency_ms": 11.47,
-      "routed_latency_ms": 11.66
+      "global_latency_ms": 10.94,
+      "oracle_latency_ms": 9.2,
+      "routed_latency_ms": 8.88
     },
     {
       "query": "zero trust architecture challenges",
@@ -5772,9 +5772,9 @@
       "global_recall_10": 0.10989010989010989,
       "oracle_recall_10": 0.10989010989010989,
       "routed_recall_10": 0.10989010989010989,
-      "global_latency_ms": 11.1,
-      "oracle_latency_ms": 10.37,
-      "routed_latency_ms": 11.52
+      "global_latency_ms": 11.63,
+      "oracle_latency_ms": 7.63,
+      "routed_latency_ms": 13.29
     },
     {
       "query": "consensus mechanisms future trends",
@@ -5791,9 +5791,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 9.41,
-      "oracle_latency_ms": 9.42,
-      "routed_latency_ms": 9.25
+      "global_latency_ms": 6.96,
+      "oracle_latency_ms": 12.21,
+      "routed_latency_ms": 6.79
     },
     {
       "query": "manipulator design zero trust architecture",
@@ -5812,9 +5812,9 @@
       "global_recall_10": 0.07092198581560284,
       "oracle_recall_10": 0.07092198581560284,
       "routed_recall_10": 0.07092198581560284,
-      "global_latency_ms": 10.97,
-      "oracle_latency_ms": 11.0,
-      "routed_latency_ms": 10.81
+      "global_latency_ms": 9.96,
+      "oracle_latency_ms": 8.85,
+      "routed_latency_ms": 8.8
     },
     {
       "query": "penetration testing challenges",
@@ -5831,9 +5831,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.41,
-      "oracle_latency_ms": 9.14,
-      "routed_latency_ms": 9.2
+      "global_latency_ms": 7.2,
+      "oracle_latency_ms": 7.3,
+      "routed_latency_ms": 7.12
     },
     {
       "query": "deep learning future trends",
@@ -5850,9 +5850,9 @@
       "global_recall_10": 0.1125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 9.99,
-      "oracle_latency_ms": 9.32,
-      "routed_latency_ms": 9.07
+      "global_latency_ms": 9.16,
+      "oracle_latency_ms": 7.04,
+      "routed_latency_ms": 7.16
     },
     {
       "query": "cryptocurrency markets best practices",
@@ -5870,9 +5870,9 @@
       "global_recall_10": 0.13513513513513514,
       "oracle_recall_10": 0.13513513513513514,
       "routed_recall_10": 0.13513513513513514,
-      "global_latency_ms": 11.22,
-      "oracle_latency_ms": 9.94,
-      "routed_latency_ms": 10.39
+      "global_latency_ms": 7.79,
+      "oracle_latency_ms": 7.16,
+      "routed_latency_ms": 9.94
     },
     {
       "query": "computer vision future trends",
@@ -5889,9 +5889,9 @@
       "global_recall_10": 0.12195121951219512,
       "oracle_recall_10": 0.12195121951219512,
       "routed_recall_10": 0.12195121951219512,
-      "global_latency_ms": 9.9,
-      "oracle_latency_ms": 9.99,
-      "routed_latency_ms": 9.58
+      "global_latency_ms": 7.15,
+      "oracle_latency_ms": 7.59,
+      "routed_latency_ms": 6.96
     },
     {
       "query": "healthcare innovation gradient descent",
@@ -5910,9 +5910,9 @@
       "global_recall_10": 0.07352941176470588,
       "oracle_recall_10": 0.07352941176470588,
       "routed_recall_10": 0.07352941176470588,
-      "global_latency_ms": 9.86,
-      "oracle_latency_ms": 10.28,
-      "routed_latency_ms": 10.05
+      "global_latency_ms": 8.2,
+      "oracle_latency_ms": 8.67,
+      "routed_latency_ms": 10.12
     },
     {
       "query": "devops practices best practices",
@@ -5929,9 +5929,9 @@
       "global_recall_10": 0.11627906976744186,
       "oracle_recall_10": 0.11627906976744186,
       "routed_recall_10": 0.11627906976744186,
-      "global_latency_ms": 10.75,
-      "oracle_latency_ms": 10.07,
-      "routed_latency_ms": 9.36
+      "global_latency_ms": 7.02,
+      "oracle_latency_ms": 12.19,
+      "routed_latency_ms": 6.98
     },
     {
       "query": "medical imaging challenges",
@@ -5948,9 +5948,9 @@
       "global_recall_10": 0.1111111111111111,
       "oracle_recall_10": 0.1111111111111111,
       "routed_recall_10": 0.1111111111111111,
-      "global_latency_ms": 10.4,
-      "oracle_latency_ms": 9.32,
-      "routed_latency_ms": 9.73
+      "global_latency_ms": 9.89,
+      "oracle_latency_ms": 7.41,
+      "routed_latency_ms": 9.04
     },
     {
       "query": "transformer architecture recent advances",
@@ -5968,9 +5968,9 @@
       "global_recall_10": 0.03745318352059925,
       "oracle_recall_10": 0.03745318352059925,
       "routed_recall_10": 0.03745318352059925,
-      "global_latency_ms": 10.85,
-      "oracle_latency_ms": 10.89,
-      "routed_latency_ms": 11.21
+      "global_latency_ms": 7.94,
+      "oracle_latency_ms": 8.24,
+      "routed_latency_ms": 9.41
     },
     {
       "query": "consensus mechanisms recent advances",
@@ -5987,9 +5987,9 @@
       "global_recall_10": 0.04,
       "oracle_recall_10": 0.04,
       "routed_recall_10": 0.04,
-      "global_latency_ms": 10.34,
-      "oracle_latency_ms": 10.48,
-      "routed_latency_ms": 9.92
+      "global_latency_ms": 7.79,
+      "oracle_latency_ms": 7.5,
+      "routed_latency_ms": 12.59
     },
     {
       "query": "transformer architecture best practices",
@@ -6007,9 +6007,9 @@
       "global_recall_10": 0.1724137931034483,
       "oracle_recall_10": 0.1724137931034483,
       "routed_recall_10": 0.1724137931034483,
-      "global_latency_ms": 10.98,
-      "oracle_latency_ms": 10.61,
-      "routed_latency_ms": 10.72
+      "global_latency_ms": 7.63,
+      "oracle_latency_ms": 8.12,
+      "routed_latency_ms": 8.89
     },
     {
       "query": "robotics future trends",
@@ -6026,9 +6026,9 @@
       "global_recall_10": 0.0,
       "oracle_recall_10": 0.0,
       "routed_recall_10": 0.0,
-      "global_latency_ms": 9.5,
-      "oracle_latency_ms": 9.17,
-      "routed_latency_ms": 8.61
+      "global_latency_ms": 7.06,
+      "oracle_latency_ms": 6.93,
+      "routed_latency_ms": 8.1
     },
     {
       "query": "computer vision healthcare innovation",
@@ -6047,9 +6047,9 @@
       "global_recall_10": 0.06535947712418301,
       "oracle_recall_10": 0.06535947712418301,
       "routed_recall_10": 0.06535947712418301,
-      "global_latency_ms": 10.05,
-      "oracle_latency_ms": 10.48,
-      "routed_latency_ms": 11.08
+      "global_latency_ms": 7.57,
+      "oracle_latency_ms": 11.32,
+      "routed_latency_ms": 8.75
     },
     {
       "query": "computer vision best practices",
@@ -6067,9 +6067,9 @@
       "global_recall_10": 0.12195121951219512,
       "oracle_recall_10": 0.12195121951219512,
       "routed_recall_10": 0.12195121951219512,
-      "global_latency_ms": 9.8,
-      "oracle_latency_ms": 9.6,
-      "routed_latency_ms": 10.02
+      "global_latency_ms": 10.3,
+      "oracle_latency_ms": 7.26,
+      "routed_latency_ms": 10.13
     },
     {
       "query": "kubernetes orchestration zero trust architecture",
@@ -6088,9 +6088,9 @@
       "global_recall_10": 0.0847457627118644,
       "oracle_recall_10": 0.0847457627118644,
       "routed_recall_10": 0.0847457627118644,
-      "global_latency_ms": 11.5,
-      "oracle_latency_ms": 11.91,
-      "routed_latency_ms": 11.38
+      "global_latency_ms": 7.75,
+      "oracle_latency_ms": 9.06,
+      "routed_latency_ms": 12.7
     },
     {
       "query": "scalability engineering future trends",
@@ -6107,9 +6107,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 10.41,
-      "oracle_latency_ms": 10.04,
-      "routed_latency_ms": 9.37
+      "global_latency_ms": 7.03,
+      "oracle_latency_ms": 10.71,
+      "routed_latency_ms": 6.84
     },
     {
       "query": "kubernetes orchestration blockchain technology",
@@ -6128,9 +6128,9 @@
       "global_recall_10": 0.08695652173913043,
       "oracle_recall_10": 0.08695652173913043,
       "routed_recall_10": 0.08695652173913043,
-      "global_latency_ms": 11.47,
-      "oracle_latency_ms": 11.61,
-      "routed_latency_ms": 11.7
+      "global_latency_ms": 12.4,
+      "oracle_latency_ms": 8.81,
+      "routed_latency_ms": 10.19
     },
     {
       "query": "cloud computing consensus mechanisms",
@@ -6149,9 +6149,9 @@
       "global_recall_10": 0.06521739130434782,
       "oracle_recall_10": 0.06521739130434782,
       "routed_recall_10": 0.06521739130434782,
-      "global_latency_ms": 10.67,
-      "oracle_latency_ms": 11.0,
-      "routed_latency_ms": 10.42
+      "global_latency_ms": 7.54,
+      "oracle_latency_ms": 9.0,
+      "routed_latency_ms": 8.72
     },
     {
       "query": "tokenization methods best practices",
@@ -6169,9 +6169,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.58,
-      "oracle_latency_ms": 9.5,
-      "routed_latency_ms": 10.43
+      "global_latency_ms": 7.2,
+      "oracle_latency_ms": 11.05,
+      "routed_latency_ms": 8.45
     },
     {
       "query": "cloud computing clinical trials",
@@ -6190,9 +6190,9 @@
       "global_recall_10": 0.06993006993006994,
       "oracle_recall_10": 0.06993006993006994,
       "routed_recall_10": 0.06993006993006994,
-      "global_latency_ms": 10.61,
-      "oracle_latency_ms": 11.45,
-      "routed_latency_ms": 10.42
+      "global_latency_ms": 7.43,
+      "oracle_latency_ms": 11.41,
+      "routed_latency_ms": 10.24
     },
     {
       "query": "scalability engineering healthcare innovation",
@@ -6211,9 +6211,9 @@
       "global_recall_10": 0.07142857142857142,
       "oracle_recall_10": 0.07142857142857142,
       "routed_recall_10": 0.07142857142857142,
-      "global_latency_ms": 10.69,
-      "oracle_latency_ms": 10.69,
-      "routed_latency_ms": 10.9
+      "global_latency_ms": 9.03,
+      "oracle_latency_ms": 12.3,
+      "routed_latency_ms": 13.69
     },
     {
       "query": "tokenization methods recent advances",
@@ -6230,9 +6230,9 @@
       "global_recall_10": 0.0398406374501992,
       "oracle_recall_10": 0.0398406374501992,
       "routed_recall_10": 0.0398406374501992,
-      "global_latency_ms": 10.72,
-      "oracle_latency_ms": 9.94,
-      "routed_latency_ms": 9.76
+      "global_latency_ms": 7.84,
+      "oracle_latency_ms": 10.25,
+      "routed_latency_ms": 8.86
     },
     {
       "query": "sensor fusion encryption standards",
@@ -6251,9 +6251,9 @@
       "global_recall_10": 0.07092198581560284,
       "oracle_recall_10": 0.07092198581560284,
       "routed_recall_10": 0.07092198581560284,
-      "global_latency_ms": 10.45,
-      "oracle_latency_ms": 10.01,
-      "routed_latency_ms": 9.91
+      "global_latency_ms": 11.21,
+      "oracle_latency_ms": 8.53,
+      "routed_latency_ms": 8.78
     },
     {
       "query": "gradient descent computer vision",
@@ -6272,9 +6272,9 @@
       "global_recall_10": 0.0684931506849315,
       "oracle_recall_10": 0.0684931506849315,
       "routed_recall_10": 0.0684931506849315,
-      "global_latency_ms": 9.9,
-      "oracle_latency_ms": 11.03,
-      "routed_latency_ms": 10.84
+      "global_latency_ms": 7.4,
+      "oracle_latency_ms": 9.05,
+      "routed_latency_ms": 8.59
     },
     {
       "query": "training pipelines clinical trials",
@@ -6293,9 +6293,9 @@
       "global_recall_10": 0.06944444444444445,
       "oracle_recall_10": 0.06944444444444445,
       "routed_recall_10": 0.06944444444444445,
-      "global_latency_ms": 9.97,
-      "oracle_latency_ms": 10.46,
-      "routed_latency_ms": 10.94
+      "global_latency_ms": 7.31,
+      "oracle_latency_ms": 8.56,
+      "routed_latency_ms": 9.74
     },
     {
       "query": "medical imaging large language models",
@@ -6314,9 +6314,9 @@
       "global_recall_10": 0.06493506493506493,
       "oracle_recall_10": 0.06493506493506493,
       "routed_recall_10": 0.06493506493506493,
-      "global_latency_ms": 10.69,
-      "oracle_latency_ms": 10.79,
-      "routed_latency_ms": 10.52
+      "global_latency_ms": 7.39,
+      "oracle_latency_ms": 14.8,
+      "routed_latency_ms": 8.71
     },
     {
       "query": "serverless architecture best practices",
@@ -6334,9 +6334,9 @@
       "global_recall_10": 0.15151515151515152,
       "oracle_recall_10": 0.15151515151515152,
       "routed_recall_10": 0.15151515151515152,
-      "global_latency_ms": 10.88,
-      "oracle_latency_ms": 9.66,
-      "routed_latency_ms": 10.43
+      "global_latency_ms": 8.69,
+      "oracle_latency_ms": 13.69,
+      "routed_latency_ms": 8.67
     },
     {
       "query": "bert model future trends",
@@ -6353,9 +6353,9 @@
       "global_recall_10": 0.17857142857142858,
       "oracle_recall_10": 0.17857142857142858,
       "routed_recall_10": 0.17857142857142858,
-      "global_latency_ms": 9.81,
-      "oracle_latency_ms": 8.88,
-      "routed_latency_ms": 9.32
+      "global_latency_ms": 7.05,
+      "oracle_latency_ms": 6.75,
+      "routed_latency_ms": 9.89
     },
     {
       "query": "tokenization methods best practices",
@@ -6373,9 +6373,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 10.71,
-      "oracle_latency_ms": 9.54,
-      "routed_latency_ms": 10.58
+      "global_latency_ms": 7.01,
+      "oracle_latency_ms": 10.19,
+      "routed_latency_ms": 8.43
     },
     {
       "query": "large language models medical imaging",
@@ -6394,9 +6394,9 @@
       "global_recall_10": 0.06493506493506493,
       "oracle_recall_10": 0.06493506493506493,
       "routed_recall_10": 0.06493506493506493,
-      "global_latency_ms": 10.27,
-      "oracle_latency_ms": 10.72,
-      "routed_latency_ms": 10.81
+      "global_latency_ms": 7.49,
+      "oracle_latency_ms": 8.87,
+      "routed_latency_ms": 8.71
     },
     {
       "query": "clinical trials future trends",
@@ -6413,9 +6413,9 @@
       "global_recall_10": 0.1388888888888889,
       "oracle_recall_10": 0.1388888888888889,
       "routed_recall_10": 0.1388888888888889,
-      "global_latency_ms": 9.79,
-      "oracle_latency_ms": 8.89,
-      "routed_latency_ms": 9.3
+      "global_latency_ms": 6.85,
+      "oracle_latency_ms": 7.05,
+      "routed_latency_ms": 6.85
     },
     {
       "query": "clinical trials tokenization methods",
@@ -6434,9 +6434,9 @@
       "global_recall_10": 0.06944444444444445,
       "oracle_recall_10": 0.06944444444444445,
       "routed_recall_10": 0.06944444444444445,
-      "global_latency_ms": 10.2,
-      "oracle_latency_ms": 10.39,
-      "routed_latency_ms": 10.98
+      "global_latency_ms": 9.76,
+      "oracle_latency_ms": 8.33,
+      "routed_latency_ms": 13.64
     },
     {
       "query": "manipulator design semantic segmentation",
@@ -6455,9 +6455,9 @@
       "global_recall_10": 0.07518796992481203,
       "oracle_recall_10": 0.07518796992481203,
       "routed_recall_10": 0.07518796992481203,
-      "global_latency_ms": 10.29,
-      "oracle_latency_ms": 10.81,
-      "routed_latency_ms": 10.59
+      "global_latency_ms": 7.42,
+      "oracle_latency_ms": 9.15,
+      "routed_latency_ms": 8.53
     },
     {
       "query": "sensor fusion image recognition",
@@ -6476,9 +6476,9 @@
       "global_recall_10": 0.07633587786259542,
       "oracle_recall_10": 0.07633587786259542,
       "routed_recall_10": 0.07633587786259542,
-      "global_latency_ms": 9.83,
-      "oracle_latency_ms": 10.72,
-      "routed_latency_ms": 10.56
+      "global_latency_ms": 7.2,
+      "oracle_latency_ms": 8.37,
+      "routed_latency_ms": 8.41
     },
     {
       "query": "serverless architecture future trends",
@@ -6496,9 +6496,9 @@
       "global_recall_10": 0.15151515151515152,
       "oracle_recall_10": 0.15151515151515152,
       "routed_recall_10": 0.15151515151515152,
-      "global_latency_ms": 10.19,
-      "oracle_latency_ms": 9.84,
-      "routed_latency_ms": 10.6
+      "global_latency_ms": 12.34,
+      "oracle_latency_ms": 7.27,
+      "routed_latency_ms": 8.55
     },
     {
       "query": "neural network natural language processing",
@@ -6517,9 +6517,9 @@
       "global_recall_10": 0.05,
       "oracle_recall_10": 0.05,
       "routed_recall_10": 0.05,
-      "global_latency_ms": 10.39,
-      "oracle_latency_ms": 10.55,
-      "routed_latency_ms": 10.51
+      "global_latency_ms": 7.45,
+      "oracle_latency_ms": 8.66,
+      "routed_latency_ms": 8.59
     },
     {
       "query": "decentralization challenges",
@@ -6536,9 +6536,9 @@
       "global_recall_10": 0.45,
       "oracle_recall_10": 0.45,
       "routed_recall_10": 0.45,
-      "global_latency_ms": 9.82,
-      "oracle_latency_ms": 10.21,
-      "routed_latency_ms": 9.32
+      "global_latency_ms": 7.29,
+      "oracle_latency_ms": 7.39,
+      "routed_latency_ms": 7.15
     },
     {
       "query": "machine learning medical imaging",
@@ -6557,9 +6557,9 @@
       "global_recall_10": 0.06666666666666667,
       "oracle_recall_10": 0.06666666666666667,
       "routed_recall_10": 0.06666666666666667,
-      "global_latency_ms": 10.5,
-      "oracle_latency_ms": 10.34,
-      "routed_latency_ms": 10.23
+      "global_latency_ms": 7.95,
+      "oracle_latency_ms": 8.78,
+      "routed_latency_ms": 9.95
     },
     {
       "query": "decentralization recent advances",
@@ -6576,9 +6576,9 @@
       "global_recall_10": 0.043478260869565216,
       "oracle_recall_10": 0.043478260869565216,
       "routed_recall_10": 0.043478260869565216,
-      "global_latency_ms": 10.3,
-      "oracle_latency_ms": 11.33,
-      "routed_latency_ms": 9.75
+      "global_latency_ms": 7.53,
+      "oracle_latency_ms": 12.73,
+      "routed_latency_ms": 7.58
     },
     {
       "query": "image recognition robotics",
@@ -6597,9 +6597,9 @@
       "global_recall_10": 0.125,
       "oracle_recall_10": 0.125,
       "routed_recall_10": 0.125,
-      "global_latency_ms": 9.48,
-      "oracle_latency_ms": 10.17,
-      "routed_latency_ms": 9.82
+      "global_latency_ms": 7.21,
+      "oracle_latency_ms": 8.58,
+      "routed_latency_ms": 10.69
     },
     {
       "query": "sensor fusion best practices",
@@ -6617,9 +6617,9 @@
       "global_recall_10": 0.14705882352941177,
       "oracle_recall_10": 0.14705882352941177,
       "routed_recall_10": 0.14705882352941177,
-      "global_latency_ms": 9.79,
-      "oracle_latency_ms": 9.14,
-      "routed_latency_ms": 10.12
+      "global_latency_ms": 12.98,
+      "oracle_latency_ms": 7.06,
+      "routed_latency_ms": 10.74
     },
     {
       "query": "gradient descent tokenization methods",
@@ -6638,9 +6638,9 @@
       "global_recall_10": 0.07352941176470588,
       "oracle_recall_10": 0.07352941176470588,
       "routed_recall_10": 0.07352941176470588,
-      "global_latency_ms": 10.46,
-      "oracle_latency_ms": 10.67,
-      "routed_latency_ms": 10.38
+      "global_latency_ms": 7.15,
+      "oracle_latency_ms": 13.7,
+      "routed_latency_ms": 8.58
     },
     {
       "query": "blockchain technology threat detection",
@@ -6659,9 +6659,9 @@
       "global_recall_10": 0.07246376811594203,
       "oracle_recall_10": 0.07246376811594203,
       "routed_recall_10": 0.07246376811594203,
-      "global_latency_ms": 10.88,
-      "oracle_latency_ms": 10.94,
-      "routed_latency_ms": 10.73
+      "global_latency_ms": 7.39,
+      "oracle_latency_ms": 8.62,
+      "routed_latency_ms": 8.64
     },
     {
       "query": "diagnosis assistance devops practices",
@@ -6680,9 +6680,9 @@
       "global_recall_10": 0.06756756756756757,
       "oracle_recall_10": 0.06756756756756757,
       "routed_recall_10": 0.06756756756756757,
-      "global_latency_ms": 10.99,
-      "oracle_latency_ms": 10.57,
-      "routed_latency_ms": 10.52
+      "global_latency_ms": 11.3,
+      "oracle_latency_ms": 8.53,
+      "routed_latency_ms": 11.49
     }
   ]
 }

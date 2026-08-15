@@ -4,7 +4,7 @@
   "num_chunks": 10000,
   "simulated_days": 90,
   "seed": 42,
-  "injection_time_s": 18.94,
+  "injection_time_s": 23.16,
   "interference": {
     "high_sim_pairs": 495000,
     "interference_precision": 1.0
