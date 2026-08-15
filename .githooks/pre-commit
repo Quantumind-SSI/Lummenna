@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# pre-commit: refuse to create a commit unless it is authored AND committed by
+# the QuantumindSSI account. Enforces the project rule locally, before the
+# object is ever written, so bad-identity commits never enter history.
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=allowed-identity.sh
+. "$HOOK_DIR/allowed-identity.sh"
+
+# Resolve the identity git will actually stamp on this commit. Author can be
+# overridden by env; committer comes from user.email. Both must be allowed.
+author_email="$(git var GIT_AUTHOR_IDENT | sed -n 's/.*<\(.*\)>.*/\1/p')"
+author_name="$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*\) <.*/\1/p')"
+committer_email="$(git var GIT_COMMITTER_IDENT | sed -n 's/.*<\(.*\)>.*/\1/p')"
+
+fail=0
+if ! identity_email_allowed "$author_email"; then
+  echo "✗ commit blocked: author email '$author_email' is not the QuantumindSSI account." >&2
+  fail=1
+fi
+if ! identity_email_allowed "$committer_email"; then
+  echo "✗ commit blocked: committer email '$committer_email' is not the QuantumindSSI account." >&2
+  fail=1
+fi
+if [ "$author_name" != "$ALLOWED_NAME" ]; then
+  echo "✗ commit blocked: author name '$author_name' must be '$ALLOWED_NAME'." >&2
+  fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "" >&2
+  echo "This repository requires every commit to be made by the QuantumindSSI account." >&2
+  echo "Fix your identity, then re-commit:" >&2
+  echo "  git config user.name  \"$ALLOWED_NAME\"" >&2
+  echo "  git config user.email \"${ALLOWED_EMAILS[0]}\"" >&2
+  echo "Allowed identities:" >&2
+  print_allowed >&2
+  exit 1
+fi
+
+exit 0
