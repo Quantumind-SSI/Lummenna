@@ -62,6 +62,25 @@ class SqliteVecBackend:
                     embedding float[{dims}] distance_metric=cosine
                 )
             """)
+            # sqlite-vec changed its KNN query grammar across releases: older
+            # builds accept `... ORDER BY distance LIMIT ?`, while >= 0.1.x
+            # require an explicit `AND k = ?` constraint in the WHERE clause and
+            # reject a bare LIMIT. Probe once and remember which form to use so
+            # search() works regardless of the installed extension version.
+            self._knn_uses_k_constraint = self._detect_knn_syntax()
+
+    def _detect_knn_syntax(self) -> bool:
+        """Return True if this sqlite-vec build requires the `k = ?` KNN form."""
+        try:
+            probe = np.zeros(self.dims, dtype=np.float32).tobytes()
+            self.conn.execute(
+                "SELECT chunk_id FROM vec_chunks "
+                "WHERE embedding MATCH ? ORDER BY distance LIMIT ?",
+                (probe, 1),
+            ).fetchall()
+            return False  # LIMIT form accepted
+        except sqlite3.OperationalError:
+            return True  # requires `k = ?`
 
     def add(self, chunk_id: int, vector: np.ndarray) -> None:
         blob = vector.astype(np.float32).tobytes()
@@ -78,10 +97,19 @@ class SqliteVecBackend:
     def search(self, query_vector: np.ndarray, k: int) -> list[DenseHit]:
         blob = query_vector.astype(np.float32).tobytes()
         if self._has_sqlite_vec:
-            rows = self.conn.execute(
-                "SELECT chunk_id, distance FROM vec_chunks WHERE embedding MATCH ? ORDER BY distance LIMIT ?",
-                (blob, k),
-            ).fetchall()
+            if getattr(self, "_knn_uses_k_constraint", False):
+                # sqlite-vec >= 0.1.x grammar: k is a WHERE constraint.
+                rows = self.conn.execute(
+                    "SELECT chunk_id, distance FROM vec_chunks "
+                    "WHERE embedding MATCH ? AND k = ? ORDER BY distance",
+                    (blob, k),
+                ).fetchall()
+            else:
+                rows = self.conn.execute(
+                    "SELECT chunk_id, distance FROM vec_chunks "
+                    "WHERE embedding MATCH ? ORDER BY distance LIMIT ?",
+                    (blob, k),
+                ).fetchall()
             return [DenseHit(cid, 1.0 - (dist / 2.0), np.array([])) for cid, dist in rows]
         else:
             return self._brute_force_search(query_vector, k)

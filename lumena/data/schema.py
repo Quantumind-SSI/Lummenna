@@ -1,8 +1,11 @@
 """Schema initialisation helpers."""
 
 import os
+import re
 import sqlite3
 import stat
+import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from lumena.data.migrate import migrate
@@ -10,6 +13,81 @@ from lumena.logging import get_console_logger
 
 logger = get_console_logger(__name__)
 _SQL_PATH = Path(__file__).with_suffix(".sql")
+
+# SQLite gained the built-in unixepoch() function in 3.38.0. On older builds we
+# register a Python fallback so the schema DEFAULT (unixepoch()) and the many
+# queries that call it keep working. We only need to support the argument forms
+# actually used in this codebase: unixepoch() and unixepoch('now', '<±N unit>').
+_SQLITE_HAS_UNIXEPOCH = sqlite3.sqlite_version_info >= (3, 38, 0)
+
+_MODIFIER_RE = re.compile(r"^\s*([+-]?\d+)\s+(second|minute|hour|day|month|year)s?\s*$")
+_MODIFIER_SECONDS = {
+    "second": 1,
+    "minute": 60,
+    "hour": 3600,
+    "day": 86400,
+    # Calendar-aware units are approximated; the codebase only uses day/second
+    # modifiers, but we handle these defensively rather than silently erroring.
+    "month": 30 * 86400,
+    "year": 365 * 86400,
+}
+
+
+def _unixepoch_shim(*args: object) -> int:
+    """Pure-Python fallback for SQLite's unixepoch() (added in 3.38.0).
+
+    Mirrors the subset of behaviour used by Lumena:
+      * unixepoch()                     -> current unix time (UTC seconds)
+      * unixepoch('now')                -> current unix time
+      * unixepoch('now', '-7 days')     -> now shifted by the modifier
+      * unixepoch(<int-or-numeric>)     -> that value interpreted as a unix ts
+
+    Returns an integer number of seconds since the epoch, matching SQLite, which
+    truncates toward the second for the default 'unixepoch' format.
+    """
+    if not args:
+        return int(time.time())
+
+    base = args[0]
+    if base is None:
+        return int(time.time())
+
+    if isinstance(base, str) and base.strip().lower() == "now":
+        dt = datetime.now(timezone.utc)
+    elif isinstance(base, (int, float)):
+        # Bare numeric time value: SQLite treats it as a unix timestamp when the
+        # 'unixepoch' modifier is implied. Here we only receive it as seconds.
+        dt = datetime.fromtimestamp(float(base), tz=timezone.utc)
+    else:
+        # Unsupported time string form for this shim; fall back to now so the
+        # query still returns a sane value rather than raising inside SQLite.
+        dt = datetime.now(timezone.utc)
+
+    for modifier in args[1:]:
+        if not isinstance(modifier, str):
+            continue
+        match = _MODIFIER_RE.match(modifier)
+        if not match:
+            continue
+        amount = int(match.group(1))
+        unit = match.group(2)
+        dt = dt + timedelta(seconds=amount * _MODIFIER_SECONDS[unit])
+
+    return int(dt.timestamp())
+
+
+def register_compat_functions(conn: sqlite3.Connection) -> None:
+    """Register SQL function shims for older SQLite builds.
+
+    Idempotent and cheap: registering a UDF that also exists natively is
+    harmless (the UDF takes precedence), but we skip it when the native
+    function is available to preserve SQLite's exact semantics.
+    """
+    if _SQLITE_HAS_UNIXEPOCH:
+        return
+    # -1 arity => variadic, so both unixepoch() and unixepoch('now', '-7 days')
+    # resolve to our shim.
+    conn.create_function("unixepoch", -1, _unixepoch_shim, deterministic=False)
 
 # Graceful SQLCipher import
 try:
@@ -41,6 +119,10 @@ def _enforce_permissions(root_path: Path) -> None:
 
 def init_db(conn: sqlite3.Connection) -> None:
     """Execute the canonical schema SQL against an open connection."""
+    # Register unixepoch() BEFORE the schema runs: table DEFAULT (unixepoch())
+    # clauses are evaluated at insert time, but the function must be resolvable
+    # on this connection for any subsequent insert to succeed.
+    register_compat_functions(conn)
     sql = _SQL_PATH.read_text(encoding="utf-8")
     conn.executescript(sql)
     current = conn.execute("PRAGMA user_version").fetchone()[0]
@@ -106,6 +188,9 @@ def get_connection(config) -> sqlite3.Connection:
     # writer contention raises 'database is locked' immediately — with it,
     # SQLite retries internally for up to 5s before surfacing an error.
     conn.execute("PRAGMA busy_timeout = 5000")
+    # Register compat shims (e.g. unixepoch on SQLite < 3.38) before any schema
+    # DDL/DML runs on this connection.
+    register_compat_functions(conn)
     ensure_schema(conn)
     _enforce_permissions(cfg.store_path.parent)
     return conn
