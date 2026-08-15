@@ -1,26 +1,16 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "skills": {
-    "paths": [".opencode/skills"]
-  },
   "mcp": {
     "lumena": {
       "type": "local",
-      "command": [
-        "python",
-        "-m",
-        "lumena.integrations.mcp_server"
-      ],
+      "command": ["python3", "-m", "lumena.integrations.mcp_server"],
       "enabled": true,
-      "env": {
+      "environment": {
         "LUMENA_DEVICE": "generic",
         "LUMENA_STORE_PATH": "./.lumena/store",
-        "LUMENA_MODEL_PATH": "./.lumena/models"
+        "LUMENA_MODEL_PATH": "./.lumena/models",
+        "LUMENA_AUTO_PROVISION_MODEL": "1"
       }
     }
-  },
-  "instructions": [
-    "AGENTS.md",
-    ".opencode/skills/lumena/SKILL.md"
-  ]
+  }
 }
