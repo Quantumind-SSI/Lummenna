@@ -1,5 +1,17 @@
 name: Docker Publish
 
+# Publishes the runtime image to two registries:
+#   * GHCR  — public distribution (docker pull ghcr.io/quantumindssi/lumena)
+#   * ACR   — private pull source for AKS (deploy-aks.yml pulls from here)
+#
+# Both push identical semver + sha tags so a given release is bit-for-bit the
+# same artifact in both registries. ACR uses `az acr build` (server-side build)
+# via OIDC federation, so no registry passwords are stored.
+#
+# Required configuration for the ACR job (see infra/azure/README.md):
+#   secrets:   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#   variables: ACR_LOGIN_SERVER  (e.g. lumenaacr1234.azurecr.io)
+
 on:
   push:
     tags: ["v*"]
@@ -8,15 +20,18 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write        # required for Azure OIDC federation (ACR job)
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build-push:
-    name: Build & Push Image
+  build-push-ghcr:
+    name: Build & Push Image (GHCR)
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,3 +86,48 @@ jobs:
           fi
           curl -fsS http://localhost:8848/metrics/prometheus | grep -q lumena_http_requests_total
           docker rm -f lumena-smoke
+
+  build-push-acr:
+    name: Build & Push Image (ACR)
+    runs-on: ubuntu-latest
+    # Only push to ACR when the Azure federation is configured. Forks and repos
+    # without the ACR variable set simply skip this job instead of failing.
+    if: vars.ACR_LOGIN_SERVER != ''
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          # ACR_LOGIN_SERVER is e.g. lumenaacr1234.azurecr.io; the registry
+          # name is the first label. Build the same semver + sha tags GHCR uses.
+          ACR="${{ vars.ACR_LOGIN_SERVER }}"
+          REGISTRY="${ACR%%.*}"
+          SHA_TAG="sha-${GITHUB_SHA::7}"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="$SHA_TAG"
+          fi
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=$SHA_TAG" >> "$GITHUB_OUTPUT"
+
+      # Server-side build in ACR Tasks: no local docker build, no registry
+      # password. The AKS kubelet identity already has AcrPull (see main.bicep).
+      - name: ACR build & push
+        run: |
+          az acr build \
+            --registry "${{ steps.tags.outputs.registry }}" \
+            --image "lumena:${{ steps.tags.outputs.version }}" \
+            --image "lumena:${{ steps.tags.outputs.sha_tag }}" \
+            --file Dockerfile \
+            .
