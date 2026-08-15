@@ -13,7 +13,7 @@
 
 Lumena is an open-source, local-first memory framework that gives large language model (LLM) agents persistent, structured, and lifecycle-aware memory without cloud dependencies. Unlike conventional vector databases that treat memory as a flat collection of vectors, Lumena organizes information as a *memory palace* — a structured topology of rooms, loci, and corridors governed by a heuristic *Twin-Force Controller* that balances mnemonic conservation against contextual attention.
 
-The system operates entirely on-device via ONNX Runtime and SQLite, eliminating external API costs and preserving data sovereignty. Lumena provides native integrations for LangGraph, LangChain, MCP-compatible agents (OpenCode, Claude Desktop), and a production-hardened FastAPI REST server. At v1.0.0, topology-constrained search prunes ~80% of the corpus per query with ≥99.7% recall retention (routed ≥100% at all measured k; oracle worst case 99.69% at k=5) and a modest ~1.08× mean-latency improvement over flat global search (navigation benchmark; earlier 1.32–1.50× figures came from a biased mean-of-ratios statistic and have been retracted). Lumena ships with eleven benchmark suites spanning retrieval quality, forgetting behavior, navigation efficiency, and stress testing — eight with committed result artifacts, three (perf, stress, cross-system) with harnesses awaiting runs.
+The system operates entirely on-device via ONNX Runtime and SQLite, eliminating external API costs and preserving data sovereignty. Lumena provides native integrations for LangGraph, LangChain, MCP-compatible agents (OpenCode, Claude Desktop), and a production-hardened FastAPI REST server. At v1.0.0, topology-constrained search prunes ~80% of the corpus per query with ≥99.7% recall retention (routed ≥100% at all measured k; oracle worst case 99.69% at k=5) and a modest ~1.08× mean-latency improvement over flat global search (navigation benchmark; earlier 1.32–1.50× figures came from a biased mean-of-ratios statistic and have been retracted). Lumena ships with eleven benchmark suites spanning retrieval quality, forgetting behavior, navigation efficiency, and stress testing — ten with committed result artifacts, one (cross-system) with a harness awaiting runs. The ~1.08× navigation mean-latency figure is hardware-dependent and did not reproduce on all machines (a re-run on a commodity x86_64 VM measured ~0.9×, i.e. routing overhead exceeding the pruning benefit at that baseline); the pruning (~80%) and recall-retention (≥99.7%) results are stable across runs.
 
 ---
 
@@ -57,7 +57,7 @@ At its core, Lumena is not merely a vector database with extra features. It is a
 Lumena structures memory as a graph with three entity types:
 
 - **Rooms** (8–50 per palace): Top-level categories such as `decisions`, `architecture`, `preferences`, or `healthcare_ai`. Each room has a domain type (`domain`, `project`, `person`, `ephemeral`).
-- **Loci** (4–20 per room): Sub-locations acting as semantic clusters, each maintaining a cached vector centroid for rapid orientation.
+- **Loci** (4–20 per room): Sub-locations acting as semantic clusters. The schema reserves a `vector_mean` column for a cached centroid, but it is not yet populated by any code path (loci currently group chunks without a maintained centroid).
 - **Chunks** (per locus): Atomic memory units containing raw text, a 384-dimensional embedding vector, a learned value score V(m), bi-temporal validity markers, and a resolution quantifier (`FP32 → FP16 → INT8 → BINARY → RELEASED`).
 
 This topology is stored in a single SQLite database with WAL mode, FTS5 full-text indexing, and vector virtual tables. The entire database is one portable file.
@@ -90,7 +90,7 @@ Retrieval proceeds through five stages:
 
 ### 3.4 The V(m) Value Model
 
-Every chunk receives a scalar value `V(m) ∈ [0, 1]` computed from seven heuristic factors:
+Every chunk receives a scalar value `V(m) = sigmoid(⟨weights, factors⟩)` computed from seven heuristic factors. The sigmoid codomain is (0, 1); with the default weights (which sum to 1.0) and factors in [0, 1], the operational range is approximately [0.5, 0.73]. The seven factors are:
 
 - **Goal relevance** (0.20): Overlap with active user goals
 - **Value alignment** (0.15): Overlap with user-defined value keywords
@@ -98,7 +98,7 @@ Every chunk receives a scalar value `V(m) ∈ [0, 1]` computed from seven heuris
 - **Task utility** (0.15): Presence of action verbs
 - **Emotional intensity** (0.15): Lexicographic sentiment polarity
 - **Reliability** (0.10): Source-type weighting (user_input > agent_reasoning > import)
-- **Usage history** (0.10): Frequency and recency of access
+- **Usage history** (0.10): Reserved for access frequency/recency, but currently a fixed placeholder value (0.5) — `access_count` is tracked on retrieval (re-access reinforcement) but is not yet fed into this factor
 
 At ≥10 feedback samples, Nelder-Mead optimization adapts the weight vector to maximize the separation between positively and negatively rated chunks.
 
@@ -172,7 +172,7 @@ context = memory.retrieve_and_assemble("What UI settings does the user like?")
 
 ## 5. Benchmarks at a Glance
 
-Lumena ships with eleven benchmark suites. Eight have results committed to the repository as reproducible JSON artifacts; the performance, stress, and cross-system suites are harnesses whose results are not yet committed.
+Lumena ships with eleven benchmark suites. Ten have results committed to the repository as reproducible JSON artifacts (including performance and stress, run on a commodity x86_64 VM); only the cross-system suite is a harness whose results are not yet committed.
 
 | Suite | What It Measures | Key Result |
 |---|---|---|
@@ -184,7 +184,7 @@ Lumena ships with eleven benchmark suites. Eight have results committed to the r
 | **BEIR Subset** | Real-document retrieval (NFCorpus, SciFact, FiQA, ArguAna, SCIDOCS) | Harness validated on 500-doc/20-query subsets; full corpus pending |
 | **Optical Degradation** | Retrieval accuracy at FP32/FP16/INT8/BINARY | Dense recall degrades from 1.0 → 0.422 R@10 across precision levels (synthetic random-vector substrate; isolates quantization error) |
 | **TFC Sensitivity** | Grid search across controller parameters | 99.6% R@10 stability across 81 TFC configurations (synthetic random-vector substrate) |
-| **Stress Test** | 100K+ ingestion, multi-threaded throughput | Harness ready; no committed results yet |
+| **Stress Test** | Bulk ingestion, multi-threaded throughput | 20k chunks (x86_64): ~79 chunks/s ingest, ~114 qps, p50 29 ms / p99 66 ms; L3 eviction fired (11,261 chunks) |
 
 > **Honest caveat:** Sample sizes are modest (3 seeds for retrieval, 28 queries for E2E). The synthetic retrieval corpus is deliberately easy and near-saturates nDCG; the component-ablation suite showed **no accuracy differences between configurations** on its 111-chunk corpus (only latency differences are reportable — the corpus is too small to discriminate quality contributions). Bootstrap confidence intervals reflect resampling noise. Full BEIR/MTEB leaderboard submission remains future work.
 
@@ -226,7 +226,7 @@ Lumena is **stable software** — API-stable, actively developed, and suitable f
 ### What Works Today
 
 - End-to-end memory lifecycle: store → search → assemble → feedback → forget
-- 294 tests across 41 test files with ~74% line coverage
+- 327 tests across 43 test files with ~75% line coverage
 - FastAPI server with auth, rate limiting, and CORS
 - MCP server with 7 tools
 - LangChain and LangGraph native adapters

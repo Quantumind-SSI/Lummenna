@@ -126,7 +126,9 @@ Room (domain/project/person/ephemeral)
 Reciprocal Rank Fusion (k=60) weighted by:
 - V(m) scalar — learned memory value
 - FRQAD or cosine similarity — quantization-aware or raw vector distance
-- Recency boost — exponential decay over 168-hour half-life
+- Recency boost — `exp(-age_hours / 168)`, an exponential decay with a
+  168-hour (7-day) time constant τ (at τ the boost is 1/e ≈ 0.368, not a
+  half-life)
 - Goal relevance — keyword match bonus
 
 ### Repair
@@ -311,8 +313,8 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 
 1. **Encryption-at-rest is opt-in** — SQLCipher and Fernet modes are implemented and tested but disabled by default (`LUMENA_DATABASE_ENCRYPTION_MODE=none`). In Fernet mode, the FTS5 lexical index still contains plaintext tokens (see SECURITY.md).
 2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN (replay-nonce cache is in-memory only)
-3. **Benchmark results are subset-scale** — synthetic retrieval corpus is deliberately easy; BEIR results cover 500-doc/20-query subsets; perf/stress/cross-system have no committed results. Full-corpus BEIR leaderboard submission remains pending.
-4. **Some modules unwired** — backup and user_profile weight learning exist but await full integration
+3. **Benchmark results are subset-scale** — synthetic retrieval corpus is deliberately easy; BEIR results cover 500-doc/20-query subsets; perf and stress now have committed results (x86_64 VM), while cross-system has no committed results. Full-corpus BEIR leaderboard submission remains pending.
+4. **`vector_mean` / `last_entry_at` / `locus_count` unpopulated** — these schema columns are reserved but no code path writes them yet (loci have no maintained centroid). `learn_weights_from_feedback` (V(m) weight learning) and `backup_database` ARE wired — invoked from `conversation.py`/`langchain.py` and the sleep scheduler respectively.
 5. **Dual scheduler risk** — running both `lumena serve` and `lumena daemon start` creates duplicate schedulers
 
 ---

@@ -16,8 +16,8 @@
   <a href="https://github.com/QuantumindSSI/lumena/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lumena/ci.yml?branch=main&style=flat-square" alt="CI"></a>
   <a href="https://github.com/QuantumindSSI/lumena/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
-  <img src="https://img.shields.io/badge/coverage-74%25-brightgreen?style=flat-square" alt="Coverage">
-  <img src="https://img.shields.io/badge/tests-287%20passed-brightgreen?style=flat-square" alt="Tests">
+  <img src="https://img.shields.io/badge/coverage-75%25-brightgreen?style=flat-square" alt="Coverage">
+  <img src="https://img.shields.io/badge/tests-320%20passed-brightgreen?style=flat-square" alt="Tests">
 </p>
 
 <p><em>Production-ready. API-stable; actively developed. Contributions welcome.</em></p>
@@ -137,7 +137,7 @@ Lumena is **production-ready software**. It works end-to-end with API versioning
 
 | Dimension | Status | Detail |
 |---|---|---|
-| **Tests** | 287 passing, 7 skipped | 74% coverage. 41 test files. |
+| **Tests** | 320 passing, 7 skipped | 75% coverage. 43 test files. |
 | **Storage** | Working | SQLite with WAL, FTS5, bi-temporal tracking, provenance chains. |
 | **Retrieval** | Working | BM25 + dense + graph with RRF fusion. |
 | **Forgetting** | Working | L1 decay (Ebbinghaus), L2 interference, L3 budget eviction. |
@@ -164,11 +164,11 @@ All run with a single command from the repo root:
 | Navigation efficiency | `python -m benchmarks.navigation.run` | Run |
 | Ablation (component isolation) | `python -m benchmarks.ablation.run` | Run |
 | Forgetting (90-day survival) | `python -m benchmarks.forgetting.run` | Run (results available) |
-| Performance (latency/footprint) | `python -m benchmarks.perf.run` | Harness ready; no results yet |
+| Performance (latency/footprint) | `python -m benchmarks.perf.run` | Run (results available; x86_64) |
 | BEIR subset evaluation | `python -m benchmarks.beir.run` | Run (500-doc/20-query subset results available) |
 | Optical degradation | `python -m benchmarks.optical.run` | Run (results available) |
 | TFC sensitivity | `python -m benchmarks.tfc.run` | Run (results available) |
-| Stress (bulk ingest) | `python -m benchmarks.stress.run` | Harness ready; no results yet |
+| Stress (bulk ingest) | `python -m benchmarks.stress.run` | Run (20k-chunk results available; x86_64) |
 | Cross-system (vs Chroma/FAISS) | `python -m benchmarks.cross_system.run` | Harness ready; no results yet |
 | All suites | `python -m benchmarks.run_all` | Wraps all 11 suites |
 
@@ -210,7 +210,7 @@ lumena/
 ├── sovereign/         FRQAD, optical quantization, local LLM
 ├── brand/             Error hierarchy
 └── compliance/        Safety forgetting, PII audit
-tests/                41 test files, 294 tests
+tests/                43 test files, 327 tests
 benchmarks/           11 benchmark suites
 ```
 
