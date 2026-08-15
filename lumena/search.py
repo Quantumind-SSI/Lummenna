@@ -44,6 +44,34 @@ class SearchPipeline:
             self.embedder = get_embedder(config, allow_mock=False)
         self.graph = graph
 
+    def _filter_by_tenant(
+        self, results: list[RetrievedChunk], tenant_id: str
+    ) -> list[RetrievedChunk]:
+        """Drop chunks not owned by ``tenant_id``.
+
+        Enforces multi-tenant isolation as a post-retrieval scope: fusion ranks
+        across the whole palace, then this restricts the visible set to the
+        caller's tenant. No-op when the schema predates tenant support or when
+        the caller is the default tenant (single-tenant deployments pay nothing).
+
+        Extracted from ``execute`` so the primary path and the repair-loop path
+        share one implementation — previously the same query/placeholder/filter
+        block was duplicated verbatim, so tenant-scoping logic could silently
+        drift between the two.
+        """
+        if not results or tenant_id == "default" or not _tenant_id_supported(self.conn):
+            return results
+        chunk_ids = [r.chunk_id for r in results]
+        # placeholders is a generated "?,?,..." string; all values are bound
+        # parameters, so the f-string cannot inject SQL (bandit B608).
+        placeholders = "?," * (len(chunk_ids) - 1) + "?"
+        valid_rows = self.conn.execute(
+            f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",  # nosec B608
+            chunk_ids + [tenant_id],
+        ).fetchall()
+        valid_ids = {r[0] for r in valid_rows}
+        return [r for r in results if r.chunk_id in valid_ids]
+
     def _record_access(self, results: list[RetrievedChunk]) -> None:
         """Boost V(m) and update last_access_at for retrieved chunks.
 
@@ -136,16 +164,7 @@ class SearchPipeline:
             config=self.config,
         )
 
-        has_tenant = _tenant_id_supported(self.conn)
-        if has_tenant and tenant_id != "default" and results:
-            chunk_ids = [r.chunk_id for r in results]
-            placeholders = "?," * (len(chunk_ids) - 1) + "?"
-            valid_rows = self.conn.execute(
-                f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",  # nosec B608
-                chunk_ids + [tenant_id],
-            ).fetchall()
-            valid_ids = {r[0] for r in valid_rows}
-            results = [r for r in results if r.chunk_id in valid_ids]
+        results = self._filter_by_tenant(results, tenant_id)
 
         # Stage 4: Re-access reinforcement — retrieved chunks get a V(m) boost
         self._record_access(results)
@@ -173,18 +192,7 @@ class SearchPipeline:
                 repair = SearchRepair(self.tfc, self)
                 repaired = repair.attempt_repair(query, reason)
                 if repaired:
-                    has_tenant = _tenant_id_supported(self.conn)
-                    if has_tenant and tenant_id != "default" and repaired:
-                        chunk_ids = [r.chunk_id for r in repaired]
-                        placeholders = "?," * (len(chunk_ids) - 1) + "?"
-                        valid_rows = self.conn.execute(
-                            f"SELECT chunk_id FROM chunk WHERE chunk_id IN ({placeholders}) AND tenant_id = ?",  # nosec B608
-                            chunk_ids + [tenant_id],
-                        ).fetchall()
-                        valid_ids = {r[0] for r in valid_rows}
-                        results = [r for r in repaired if r.chunk_id in valid_ids]
-                    else:
-                        results = repaired
+                    results = self._filter_by_tenant(repaired, tenant_id)
 
         elapsed_ms = (time.perf_counter() - start) * 1000
         logger.info(
