@@ -17,6 +17,28 @@ This project adheres to a standard of respect, inclusivity, and intellectual hon
 
 ## How to Contribute
 
+### 0. Commit identity policy (enforced)
+
+Every commit and push to `origin/main` **must be made by the `QuantumindSSI`
+account**. This is enforced at two layers:
+
+- **Server-side (authoritative):** a GitHub repository ruleset on the default
+  branch requires the commit *author* and *committer* email to be the
+  `QuantumindSSI` account's address. Non-conforming pushes are rejected by
+  GitHub.
+- **Local (fast feedback):** versioned git hooks in `.githooks/` block commits
+  and pushes with the wrong identity before they leave your machine.
+
+Enable the local checks once after cloning:
+
+```bash
+./scripts/setup-identity.sh
+```
+
+This sets `core.hooksPath=.githooks` and your local commit identity. Pushing
+also requires a token with write access on the `QuantumindSSI` account (and the
+`workflow` scope when changing `.github/workflows/`).
+
 ### 1. Reporting Bugs
 
 Before opening an issue:
