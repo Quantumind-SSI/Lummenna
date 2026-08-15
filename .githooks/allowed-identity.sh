@@ -13,15 +13,39 @@
 ALLOWED_NAME="QuantumindSSI"
 ALLOWED_EMAILS=(
   "277343853+QuantumindSSI@users.noreply.github.com"
-  # If the account also commits under a verified primary email, add it here:
-  # "you@yourdomain.example"
+  # Account's verified primary email. GitHub stamps this as the author of
+  # squash/rebase merges performed in the web UI (e.g. main HEAD b1417cb), all
+  # correctly attributed to author.login = QuantumindSSI. Without it, pulling a
+  # web-merged commit back into a topic branch would trip this hook.
+  "admin@quantumindssi.com"
 )
 
-# Return 0 if $1 (an email) is in the allow-list, else 1.
+# Committer emails permitted IN ADDITION to the author allow-list. GitHub's
+# web merge bot ("web-flow") commits merges as noreply@github.com while the
+# author remains the QuantumindSSI account — this is a trusted server-side
+# identity, so it is allowed for the committer slot only, never the author.
+ALLOWED_COMMITTER_EMAILS=(
+  "277343853+QuantumindSSI@users.noreply.github.com"
+  "admin@quantumindssi.com"
+  "noreply@github.com"
+)
+
+# Return 0 if $1 (an email) is an allowed AUTHOR email, else 1.
 identity_email_allowed() {
   local candidate="$1"
   local e
   for e in "${ALLOWED_EMAILS[@]}"; do
+    [ "$candidate" = "$e" ] && return 0
+  done
+  return 1
+}
+
+# Return 0 if $1 (an email) is an allowed COMMITTER email, else 1. This is a
+# superset of the author list that also trusts GitHub's server-side merge bot.
+identity_committer_email_allowed() {
+  local candidate="$1"
+  local e
+  for e in "${ALLOWED_COMMITTER_EMAILS[@]}"; do
     [ "$candidate" = "$e" ] && return 0
   done
   return 1
