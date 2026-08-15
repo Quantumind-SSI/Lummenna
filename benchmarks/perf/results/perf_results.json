@@ -1,0 +1,66 @@
+{
+  "benchmark": "perf",
+  "seed": 42,
+  "embedder": "all-MiniLM-L6-v2",
+  "corpus_sizes": [
+    1000,
+    10000,
+    50000
+  ],
+  "per_size": [
+    {
+      "corpus_size": 1000,
+      "ingestion_time_s": 1.25,
+      "ram_mb": 1145.4,
+      "db_size_mb": 4.56,
+      "query_latency_ms": {
+        "p50_ms": 15.76,
+        "p95_ms": 17.6,
+        "p99_ms": 18.65,
+        "mean_ms": 15.33
+      },
+      "write_amplification": {
+        "naive_time_ms": 2.06,
+        "batch_time_ms": 17.02,
+        "speedup": 0.12,
+        "updates": 1000
+      }
+    },
+    {
+      "corpus_size": 10000,
+      "ingestion_time_s": 34.6,
+      "ram_mb": 1312.0,
+      "db_size_mb": 43.63,
+      "query_latency_ms": {
+        "p50_ms": 22.88,
+        "p95_ms": 25.28,
+        "p99_ms": 27.89,
+        "mean_ms": 22.06
+      },
+      "write_amplification": {
+        "naive_time_ms": 2.08,
+        "batch_time_ms": 54.05,
+        "speedup": 0.04,
+        "updates": 1000
+      }
+    },
+    {
+      "corpus_size": 50000,
+      "ingestion_time_s": 666.25,
+      "ram_mb": 1730.83,
+      "db_size_mb": 216.05,
+      "query_latency_ms": {
+        "p50_ms": 51.35,
+        "p95_ms": 79.41,
+        "p99_ms": 94.36,
+        "mean_ms": 55.47
+      },
+      "write_amplification": {
+        "naive_time_ms": 2.33,
+        "batch_time_ms": 135.77,
+        "speedup": 0.02,
+        "updates": 1000
+      }
+    }
+  ]
+}
