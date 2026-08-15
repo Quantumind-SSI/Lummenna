@@ -6,9 +6,11 @@ Secret sauce: Multi-channel RRF × V(m) × recency × FRQAD rerank
 """
 
 import sqlite3
-from dataclasses import dataclass
+from typing import Annotated
 
 import numpy as np
+from pydantic import Field
+from pydantic.dataclasses import dataclass
 
 from lumena.force.mnemonic.retrieval_dense import DenseHit
 from lumena.force.mnemonic.retrieval_graph import GraphHit
@@ -17,18 +19,43 @@ from lumena.logging import get_console_logger
 
 logger = get_console_logger(__name__)
 
+# Standard RRF constant from Cormack et al. (2009); the whitepaper (3.3) fixes
+# k_RRF = 60. Kept as a module constant so the claim has a single source of truth.
+K_RRF = 60
+# Graph-channel RRF contributions are down-weighted relative to lexical/dense.
+GRAPH_RRF_WEIGHT = 0.8
+# Recency half-life used in the exp(-age/τ) boost, in hours (168h = 7 days).
+RECENCY_TAU_HOURS = 168.0
 
-@dataclass
+
+@dataclass(config={"arbitrary_types_allowed": True})
 class RetrievedChunk:
+    """A fused/reranked retrieval result.
+
+    Grounded invariants (the quantities the whitepaper actually bounds):
+      * ``vm_score`` is the V(m) value and is bounded to [0, 1].
+      * ``frqad_score`` is a similarity in [-1, 1] (cosine range); the fusion
+        path narrows it to [0, 1], but the container also holds raw
+        dense-similarity scores (e.g. in ablation studies), which may be
+        negative.
+      * ``recency_hours`` is an age and cannot be negative.
+
+    ``rrf_score`` and ``final_score`` are *ranking scores* — only their order
+    matters — so they are intentionally unconstrained: a dense-only
+    configuration ranks by raw cosine similarity, which is legitimately negative
+    for anti-correlated vectors. Over-constraining them to be non-negative would
+    be a false claim, not a grounded one.
+    """
+
     chunk_id: int
     room_name: str
     locus_name: str
     content: str
     provenance_id: int | None
     rrf_score: float
-    vm_score: float
-    frqad_score: float
-    recency_hours: float
+    vm_score: Annotated[float, Field(ge=0.0, le=1.0)]
+    frqad_score: Annotated[float, Field(ge=-1.0, le=1.0)]
+    recency_hours: Annotated[float, Field(ge=0.0)]
     final_score: float
 
 
@@ -46,7 +73,9 @@ def fuse_and_rerank(
     """
     Stage 3: Reciprocal Rank Fusion + V(m) + FRQAD rerank + recency boost.
     """
-    k_rrf = 60  # standard RRF constant from Cormack et al. (2009)
+    k_rrf = K_RRF  # standard RRF constant from Cormack et al. (2009)
+    if budget_candidates < 1:
+        raise ValueError(f"budget_candidates must be >= 1, got {budget_candidates}")
 
     # Build candidate pool with RRF
     rrfs: dict[int, float] = {}
@@ -57,7 +86,9 @@ def fuse_and_rerank(
 
     if graph_hits:
         for rank, ghit in enumerate(graph_hits, 1):
-            rrfs[ghit.chunk_id] = rrfs.get(ghit.chunk_id, 0.0) + 1.0 / (k_rrf + rank) * 0.8
+            rrfs[ghit.chunk_id] = (
+                rrfs.get(ghit.chunk_id, 0.0) + 1.0 / (k_rrf + rank) * GRAPH_RRF_WEIGHT
+            )
 
     chunk_ids = list(rrfs.keys())[:budget_candidates]
     if not chunk_ids:
@@ -162,9 +193,16 @@ def fuse_and_rerank(
                 frqad_sim = 0.5
 
         rrf = rrfs.get(cid, 0.0)
-        recency_boost = float(np.exp(-(age_hours or 0) / 168.0))
+        recency_boost = float(np.exp(-(age_hours or 0) / RECENCY_TAU_HOURS))
 
-        final = rrf * (vm + 0.1) * (frqad_sim + 0.1) * recency_boost * goal_bonus
+        # Clamp the two similarity-derived quantities into their contractual
+        # [0, 1] range: cosine/FRQAD arithmetic and rounding can push values a
+        # hair outside the bounds, and a legacy vm_score could be out of range.
+        vm_clamped = min(1.0, max(0.0, float(vm if vm is not None else 0.0)))
+        frqad_clamped = min(1.0, max(0.0, float(frqad_sim)))
+        age_hours_nn = max(0.0, float(age_hours or 0.0))
+
+        final = rrf * (vm_clamped + 0.1) * (frqad_clamped + 0.1) * recency_boost * goal_bonus
 
         results.append(
             RetrievedChunk(
@@ -174,9 +212,9 @@ def fuse_and_rerank(
                 content=content,
                 provenance_id=prov,
                 rrf_score=rrf,
-                vm_score=vm,
-                frqad_score=frqad_sim,
-                recency_hours=age_hours or 0.0,
+                vm_score=vm_clamped,
+                frqad_score=frqad_clamped,
+                recency_hours=age_hours_nn,
                 final_score=final,
             )
         )

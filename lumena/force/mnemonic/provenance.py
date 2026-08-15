@@ -8,6 +8,7 @@ Secret sauce: Engram-inspired bi-temporal model + supersession chains
 import sqlite3
 from dataclasses import dataclass
 
+from lumena.contracts import SOURCE_TYPES
 from lumena.logging import get_console_logger
 
 logger = get_console_logger(__name__)
@@ -33,7 +34,18 @@ def create_provenance(
     extraction_method: str | None = None,
     parent_provenance: int | None = None,
 ) -> int:
-    """Bi-temporal provenance: every memory enters with a causal chain."""
+    """Bi-temporal provenance: every memory enters with a causal chain.
+
+    Grounds the documented provenance contract: ``source_type`` must be one of
+    the five documented values and ``confidence`` is a probability-like weight
+    in [0, 1].
+    """
+    if source_type not in SOURCE_TYPES:
+        raise ValueError(
+            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}"
+        )
+    if not (0.0 <= confidence <= 1.0):
+        raise ValueError(f"confidence must be in [0, 1], got {confidence}")
     cur = conn.execute(
         """INSERT INTO provenance
            (chunk_id, source_type, source_ref, confidence, extraction_method, parent_provenance)

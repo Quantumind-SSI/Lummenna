@@ -11,6 +11,7 @@ overhead that are irrelevant to Lumena's data footprint.
 
 import contextlib
 import sqlite3
+from typing import Literal
 
 from lumena.logging import get_console_logger
 from lumena.sovereign.wear import WearAwareBatcher
@@ -18,6 +19,15 @@ from lumena.sovereign.wear import WearAwareBatcher
 logger = get_console_logger(__name__)
 
 _BYTES_PER_CHUNK_ESTIMATE = 1800
+
+# Optical-degradation resolution ladder (whitepaper 3.1 / 3.5 L3).
+Resolution = Literal["FP32", "FP16", "INT8", "BINARY", "RELEASED"]
+_RESOLUTION_CHAIN: dict[Resolution, Resolution] = {
+    "FP32": "FP16",
+    "FP16": "INT8",
+    "INT8": "BINARY",
+    "BINARY": "RELEASED",
+}
 
 
 def budget_curated_eviction(
@@ -31,8 +41,13 @@ def budget_curated_eviction(
     Eviction = optical degradation (FP32→FP16→INT8→BINARY→RELEASED).
     """
     memory_limit_mb = getattr(config, "memory_limit_mb", 512)
+    if memory_limit_mb <= 0:
+        raise ValueError(f"memory_limit_mb must be > 0, got {memory_limit_mb}")
     if target_ram_mb is None:
         target_ram_mb = memory_limit_mb * 0.85
+    elif target_ram_mb < 0:
+        # 0 is legal: "evict down to an empty footprint". Negative is nonsensical.
+        raise ValueError(f"target_ram_mb must be >= 0, got {target_ram_mb}")
 
     # Chunk-count proxy for data-memory footprint (deterministic, testable, excludes interpreter overhead)
     row = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()
@@ -120,6 +135,10 @@ def budget_curated_eviction(
     return evicted
 
 
-def _next_resolution(current: str) -> str:
-    chain = {"FP32": "FP16", "FP16": "INT8", "INT8": "BINARY", "BINARY": "RELEASED"}
-    return chain.get(current, "RELEASED")
+def _next_resolution(current: str) -> Resolution:
+    """Return the next-lower resolution in the optical-degradation ladder.
+
+    Any unknown/absent resolution collapses to ``RELEASED``, so eviction always
+    makes monotonic progress toward release (the L3 termination guarantee).
+    """
+    return _RESOLUTION_CHAIN.get(current, "RELEASED")  # type: ignore[arg-type]

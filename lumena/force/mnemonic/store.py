@@ -12,6 +12,7 @@ import uuid
 
 import numpy as np
 
+from lumena.contracts import EMBEDDING_DIMS, SOURCE_TYPES
 from lumena.force.mnemonic.provenance import create_provenance
 from lumena.force.mnemonic.value_model import compute_vm
 from lumena.logging import get_console_logger
@@ -63,10 +64,31 @@ def store_memory(
     is wired into bulk callers (consolidation, decay, eviction) where it
     provides real SD/eMMC endurance benefits.
     """
+    # Ground the documented source_type contract at the write boundary
+    # (whitepaper 3.4 / schema CHECK) before any work is done.
+    if source_type not in SOURCE_TYPES:
+        raise ValueError(
+            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}"
+        )
+
     # Pre-store safety scan — apply configured PII strategy at the write path
     if config is None:
         from lumena.config import LumenaConfig
         config = LumenaConfig()
+
+    # Ground the embedding-dimensionality claim (whitepaper 3.1: 384-dim vectors)
+    # against the configured model dims (default 384). A mismatched vector would
+    # silently corrupt the dense index, so reject it at the boundary.
+    if embedding is not None:
+        emb_arr = np.asarray(embedding)
+        emb_dims = int(emb_arr.shape[-1]) if emb_arr.ndim else 0
+        expected_dims = int(getattr(config, "embedding_dims", EMBEDDING_DIMS))
+        if emb_dims != expected_dims:
+            raise ValueError(
+                f"embedding must be {expected_dims}-dimensional "
+                f"(configured embedding_dims; whitepaper 3.1 default "
+                f"{EMBEDDING_DIMS}), got {emb_dims}"
+            )
 
     if config.pii_detection_enabled:
         from lumena.compliance.safety_forgetting import apply_pii_strategy, safety_scan_chunk

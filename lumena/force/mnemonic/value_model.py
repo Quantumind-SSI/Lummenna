@@ -7,12 +7,28 @@ Secret sauce: Per-user learned weights, no API calls, CPU-only
 
 import json
 import math
+from typing import Annotated
 
 import numpy as np
+from pydantic import BaseModel, Field
 
+from lumena.contracts import SOURCE_TYPES
 from lumena.logging import get_console_logger
 
 logger = get_console_logger(__name__)
+
+# Whitepaper 3.4 reliability weighting, with the documented ordering
+# user_input > consolidation > agent_reasoning > import > p2p_share.
+# Keyed by the five canonical source types; an unknown key is a claim violation.
+RELIABILITY_BY_SOURCE: dict[str, float] = {
+    "user_input": 0.9,
+    "agent_reasoning": 0.7,
+    "consolidation": 0.75,
+    "import": 0.6,
+    "p2p_share": 0.5,
+}
+# The map must cover exactly the documented source types.
+assert set(RELIABILITY_BY_SOURCE) == set(SOURCE_TYPES)
 
 # Default weights for cold-start user (untrained)
 DEFAULT_WEIGHTS = {
@@ -26,6 +42,70 @@ DEFAULT_WEIGHTS = {
 }
 
 FACTOR_KEYS = list(DEFAULT_WEIGHTS.keys())
+
+# Whitepaper 3.4: each factor is a score in [0, 1].
+UnitScore = Annotated[float, Field(ge=0.0, le=1.0)]
+# Weights are non-negative; they parameterise a logistic and need not sum to 1.
+NonNegWeight = Annotated[float, Field(ge=0.0)]
+
+
+class ValueFactors(BaseModel):
+    """The seven V(m) heuristic factors, each constrained to [0, 1].
+
+    Grounds the whitepaper claim (3.4) that V(m) is "computed from seven
+    heuristic factors", each a bounded score.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    goal_relevance: UnitScore
+    value_alignment: UnitScore
+    self_relevance: UnitScore
+    task_utility: UnitScore
+    emotional_intensity: UnitScore
+    reliability: UnitScore
+    usage_history: UnitScore
+
+    def as_ordered_vector(self) -> np.ndarray:
+        """Return factors as a vector aligned with ``FACTOR_KEYS`` order."""
+        data = self.model_dump()
+        return np.array([data[k] for k in FACTOR_KEYS], dtype=float)
+
+
+class ValueWeights(BaseModel):
+    """Per-factor weights for the V(m) logistic. Non-negative by construction.
+
+    Unknown keys are ignored rather than rejected: the public ``store_memory``
+    API has always accepted arbitrary ``vm_weights`` dicts and silently used only
+    the recognised factor weights. We preserve that contract while still
+    enforcing the non-negativity invariant on the seven weights that matter.
+    """
+
+    model_config = {"extra": "ignore"}
+
+    goal_relevance: NonNegWeight
+    value_alignment: NonNegWeight
+    self_relevance: NonNegWeight
+    task_utility: NonNegWeight
+    emotional_intensity: NonNegWeight
+    reliability: NonNegWeight
+    usage_history: NonNegWeight
+
+    def as_ordered_vector(self) -> np.ndarray:
+        data = self.model_dump()
+        return np.array([data[k] for k in FACTOR_KEYS], dtype=float)
+
+
+class ValueScore(BaseModel):
+    """Result of ``compute_vm``: a bounded scalar plus its factor breakdown.
+
+    Enforces the claim ``V(m) ∈ [0, 1]``.
+    """
+
+    model_config = {"extra": "forbid"}
+
+    vm: UnitScore
+    factors: ValueFactors
 
 
 def _max_similarity_to_phrases(content: str, phrases: list[str]) -> float:
@@ -101,28 +181,32 @@ def extract_factors(
         pol = abs(_simple_sentiment_polarity(content))
     emo = max(0.3, pol)
 
-    # 6. Reliability
-    rel_map = {
-        "user_input": 0.9,
-        "agent_reasoning": 0.7,
-        "consolidation": 0.75,
-        "import": 0.6,
-        "p2p_share": 0.5,
-    }
-    rel = rel_map.get(source_type, 0.5)
+    # 6. Reliability — the whitepaper defines this factor only for the five
+    # documented source types. Reject anything else so the claim can't be
+    # silently violated by a default weight.
+    if source_type not in RELIABILITY_BY_SOURCE:
+        raise ValueError(
+            f"source_type must be one of {sorted(SOURCE_TYPES)}, got {source_type!r}"
+        )
+    rel = RELIABILITY_BY_SOURCE[source_type]
 
     # 7. Usage history
     usage = 0.5
 
-    return {
-        "goal_relevance": round(g_rel, 3),
-        "value_alignment": round(v_align, 3),
-        "self_relevance": round(self_rel, 3),
-        "task_utility": round(task_u, 3),
-        "emotional_intensity": round(emo, 3),
-        "reliability": round(rel, 3),
-        "usage_history": round(usage, 3),
-    }
+    # Validate the seven factors against their [0, 1] contract before returning.
+    # `emotional_intensity` in particular can exceed 1.0 for pathological input
+    # (e.g. every token a sentiment word); clamp task_utility/emo defensively so
+    # the model contract holds, then let Pydantic assert the invariant.
+    factors = ValueFactors(
+        goal_relevance=min(1.0, max(0.0, round(g_rel, 3))),
+        value_alignment=min(1.0, max(0.0, round(v_align, 3))),
+        self_relevance=min(1.0, max(0.0, round(self_rel, 3))),
+        task_utility=min(1.0, max(0.0, round(task_u, 3))),
+        emotional_intensity=min(1.0, max(0.0, round(emo, 3))),
+        reliability=min(1.0, max(0.0, round(rel, 3))),
+        usage_history=min(1.0, max(0.0, round(usage, 3))),
+    )
+    return factors.model_dump()
 
 
 def compute_vm(
@@ -133,16 +217,26 @@ def compute_vm(
     user_values: list[str] | None = None,
     sentiment_pipeline=None,
 ) -> tuple[float, dict[str, float]]:
-    """Scalar V(m) = sigmoid( dot(weights, factors) )."""
-    weights = {**DEFAULT_WEIGHTS, **(user_weights or {})}
-    factors = extract_factors(
-        content, source_type, user_goals or [], user_values or [], sentiment_pipeline
+    """Scalar V(m) = sigmoid( dot(weights, factors) ), with V(m) ∈ [0, 1].
+
+    Inputs and outputs are validated with Pydantic so the whitepaper contract
+    (seven bounded factors, non-negative weights, bounded scalar) is enforced at
+    runtime rather than merely asserted in tests.
+    """
+    merged = {**DEFAULT_WEIGHTS, **(user_weights or {})}
+    # Validates: exactly the 7 factor keys, all weights non-negative.
+    weights = ValueWeights.model_validate(merged)
+    factors = ValueFactors.model_validate(
+        extract_factors(
+            content, source_type, user_goals or [], user_values or [], sentiment_pipeline
+        )
     )
-    vec = np.array([factors[k] for k in FACTOR_KEYS])
-    w = np.array([weights[k] for k in FACTOR_KEYS])
-    z = float(np.dot(w, vec))
+    z = float(np.dot(weights.as_ordered_vector(), factors.as_ordered_vector()))
     vm = 1.0 / (1.0 + math.exp(-z))
-    return vm, factors
+    # sigmoid is mathematically in (0, 1); ValueScore asserts the [0, 1] contract
+    # and guards against NaN/inf leaking from a degenerate dot product.
+    result = ValueScore(vm=vm, factors=factors)
+    return result.vm, result.factors.model_dump()
 
 
 def learn_weights_from_feedback(
@@ -191,4 +285,6 @@ def learn_weights_from_feedback(
     s = sum(learned.values())
     if s == 0:
         s = 1.0
-    return {k: round(v / s, 4) for k, v in learned.items()}
+    normalized = {k: round(v / s, 4) for k, v in learned.items()}
+    # Enforce the non-negative-weights contract on learned output too.
+    return ValueWeights.model_validate(normalized).model_dump()
