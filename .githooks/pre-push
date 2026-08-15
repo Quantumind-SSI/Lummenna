@@ -53,7 +53,7 @@ while read -r _local_ref local_sha remote_ref remote_sha; do
   while IFS='|' read -r a_email a_name c_email; do
     [ -z "$a_email" ] && continue
     if ! identity_email_allowed "$a_email" \
-       || ! identity_email_allowed "$c_email" \
+       || ! identity_committer_email_allowed "$c_email" \
        || [ "$a_name" != "$ALLOWED_NAME" ]; then
       commit_sha="$(git log -1 --format='%h' --all --grep='' 2>/dev/null || true)"
       echo "✗ push blocked: a commit is not authored by the QuantumindSSI account:" >&2
