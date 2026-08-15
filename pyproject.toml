@@ -76,7 +76,7 @@ langgraph = [
     "langgraph>=0.2",
 ]
 mcp = [
-    "mcp>=1.0,<2.0",
+    "mcp>=1.0,<3.0",
 ]
 azure = [
     "azure-monitor-opentelemetry>=1.6",
