@@ -13,8 +13,8 @@ Or configured as an MCP server in host config::
       "mcp": {
         "lumena": {
           "type": "local",
-          "command": ["python", "-m", "lumena.integrations.mcp_server"],
-          "env": {"LUMENA_DEVICE": "generic"}
+          "command": ["python3", "-m", "lumena.integrations.mcp_server"],
+          "environment": {"LUMENA_DEVICE": "generic"}
         }
       }
     }
@@ -28,7 +28,9 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import Annotated, Any
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
 try:
     from mcp.server.fastmcp import Context, FastMCP
@@ -41,6 +43,7 @@ else:
 
 from lumena._init import initialize_palace
 from lumena.config import LumenaConfig
+from lumena.contracts import FeedbackType, SourceType
 from lumena.controller import TwinForceController
 from lumena.conversation import ConversationMemory
 from lumena.force.mnemonic.store import store_memory
@@ -48,6 +51,87 @@ from lumena.logging import get_console_logger
 from lumena.search import SearchPipeline
 
 logger = get_console_logger(__name__)
+
+# ---------------------------------------------------------------------------
+# Input guardrails — Pydantic models validating every tool argument at the
+# stdio boundary. MCP hosts are semi-trusted: an LLM can emit malformed,
+# out-of-range, or oversized arguments. Validating here (before any DB write or
+# embedding) turns those into clear, actionable errors instead of deep
+# stack traces or silent misbehaviour. Bounds and closed literal sets are
+# sourced from lumena.contracts (the documented-claims source of truth).
+# ---------------------------------------------------------------------------
+
+# Upper bound on free-text arguments. Guards against a single tool call trying
+# to persist a megabyte of text (which would blow the token budget and bloat
+# the palace). Aligned with the API's request_max_size default order of
+# magnitude while staying comfortable for normal notes/turns.
+_MAX_CONTENT_CHARS = 100_000
+_MAX_QUERY_CHARS = 8_000
+_MAX_NAME_CHARS = 200
+
+# A non-empty, whitespace-trimmed short identifier (room/locus names).
+NameStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_NAME_CHARS),
+]
+# A non-empty, trimmed body of text (content / messages).
+ContentStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_CONTENT_CHARS),
+]
+QueryStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_QUERY_CHARS),
+]
+# Retrieval fan-out is bounded to a sane range (docstrings already say 1–50).
+TopK = Annotated[int, Field(ge=1, le=50)]
+
+
+class _StrictModel(BaseModel):
+    """Base for tool-input models: reject unknown fields, forbid coercion sloppiness."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+
+class SearchInput(_StrictModel):
+    query: QueryStr
+    top_k: TopK = 5
+
+
+class StoreInput(_StrictModel):
+    content: ContentStr
+    room: NameStr
+    locus: NameStr | None = None
+    # SourceType is the documented closed set from lumena.contracts.
+    source_type: SourceType = "user_input"
+
+
+class AssembleInput(_StrictModel):
+    query: QueryStr
+    top_k: TopK = 5
+
+
+class TurnInput(_StrictModel):
+    user_msg: ContentStr
+    assistant_msg: ContentStr
+    room: NameStr = "conversations"
+
+
+class FeedbackInput(_StrictModel):
+    # Chunk IDs are positive autoincrement rowids.
+    chunk_id: Annotated[int, Field(ge=1)]
+    was_useful: bool
+    feedback_type: FeedbackType = "explicit"
+
+
+def _format_validation_error(func_name: str, exc: ValidationError) -> str:
+    """Render a Pydantic ValidationError as a concise, LLM-actionable message."""
+    problems = []
+    for err in exc.errors():
+        loc = ".".join(str(p) for p in err.get("loc", ())) or "(input)"
+        problems.append(f"{loc}: {err.get('msg', 'invalid')}")
+    return f"[{func_name}] Invalid arguments — " + "; ".join(problems)
+
 
 # ---------------------------------------------------------------------------
 # App lifecycle
@@ -176,13 +260,17 @@ async def lumena_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
         top_k: Maximum number of memories to return (1-50).
     """
     try:
+        args = SearchInput(query=query, top_k=top_k)
+    except ValidationError as exc:
+        return _format_validation_error("lumena_search", exc)
+    try:
         state = _state(ctx)
-        results = state.pipeline.execute(query, k=top_k)
+        results = state.pipeline.execute(args.query, k=args.top_k)
         if not results:
             return "No memories found."
 
-        lines = [f"Results for: {query}", ""]
-        for rank, rc in enumerate(results[:top_k], 1):
+        lines = [f"Results for: {args.query}", ""]
+        for rank, rc in enumerate(results[: args.top_k], 1):
             lines.append(
                 f"{rank}. [{rc.room_name}/{rc.locus_name}] score={rc.final_score:.3f} "
                 f"chunk_id={rc.chunk_id}\n   {rc.content[:300]}"
@@ -209,18 +297,32 @@ async def lumena_store(
         source_type: One of user_input, agent_reasoning, consolidation, import, p2p_share.
     """
     try:
+        # source_type is an untrusted plain string from the MCP host; Pydantic
+        # validates it against the SourceType literal set at runtime (the whole
+        # point of this guardrail), so the static type mismatch is expected.
+        args = StoreInput(
+            content=content,
+            room=room,
+            locus=locus,
+            source_type=source_type,  # type: ignore[arg-type]
+        )
+    except ValidationError as exc:
+        return _format_validation_error("lumena_store", exc)
+    try:
         state = _state(ctx)
-        embedding = state.embedder.encode_single(content) if state.embedder is not None else None
+        embedding = (
+            state.embedder.encode_single(args.content) if state.embedder is not None else None
+        )
         chunk_id = store_memory(
             state.conn,
-            content=content,
-            room_name=room,
-            locus_name=locus,
-            source_type=source_type,
+            content=args.content,
+            room_name=args.room,
+            locus_name=args.locus,
+            source_type=args.source_type,
             embedding=embedding,
             config=state.config,
         )
-        return f"Stored chunk_id={chunk_id} in room '{room}'."
+        return f"Stored chunk_id={chunk_id} in room '{args.room}'."
     except Exception as exc:
         return _tool_error("lumena_store", exc)
 
@@ -234,8 +336,12 @@ async def lumena_assemble(query: str, top_k: int = 5, ctx: Context = None) -> st
         top_k: Max memories to retrieve.
     """
     try:
+        args = AssembleInput(query=query, top_k=top_k)
+    except ValidationError as exc:
+        return _format_validation_error("lumena_assemble", exc)
+    try:
         state = _state(ctx)
-        turn = state.conversation.retrieve_and_assemble(query, top_k=top_k)
+        turn = state.conversation.retrieve_and_assemble(args.query, top_k=args.top_k)
         return (
             f"Assembled context ({len(turn.retrieved_chunks)} chunks retrieved):\n\n"
             f"{turn.assembled_context}"
@@ -259,15 +365,22 @@ async def lumena_turn(
         room: Room to store the turn in.
     """
     try:
+        args = TurnInput(user_msg=user_msg, assistant_msg=assistant_msg, room=room)
+    except ValidationError as exc:
+        return _format_validation_error("lumena_turn", exc)
+    try:
         state = _state(ctx)
-        turn = state.conversation.retrieve_and_assemble(user_msg, top_k=5)
+        turn = state.conversation.retrieve_and_assemble(args.user_msg, top_k=5)
         user_id, assistant_id = state.conversation.store_turn(
-            user_msg=user_msg,
-            assistant_msg=assistant_msg,
+            user_msg=args.user_msg,
+            assistant_msg=args.assistant_msg,
             retrieved_chunks=turn.retrieved_chunks,
-            room_name=room,
+            room_name=args.room,
         )
-        return f"Turn stored: user_chunk_id={user_id}, assistant_chunk_id={assistant_id} in room '{room}'."
+        return (
+            f"Turn stored: user_chunk_id={user_id}, "
+            f"assistant_chunk_id={assistant_id} in room '{args.room}'."
+        )
     except Exception as exc:
         return _tool_error("lumena_turn", exc)
 
@@ -287,13 +400,23 @@ async def lumena_feedback(
         feedback_type: explicit, implicit, or repair.
     """
     try:
-        state = _state(ctx)
-        state.conversation.log_explicit_feedback(
+        # feedback_type is an untrusted plain string from the MCP host; Pydantic
+        # validates it against the FeedbackType literal set at runtime.
+        args = FeedbackInput(
             chunk_id=chunk_id,
             was_useful=was_useful,
-            feedback_type=feedback_type,
+            feedback_type=feedback_type,  # type: ignore[arg-type]
         )
-        return f"Feedback logged for chunk_id={chunk_id} (useful={was_useful})."
+    except ValidationError as exc:
+        return _format_validation_error("lumena_feedback", exc)
+    try:
+        state = _state(ctx)
+        state.conversation.log_explicit_feedback(
+            chunk_id=args.chunk_id,
+            was_useful=args.was_useful,
+            feedback_type=args.feedback_type,
+        )
+        return f"Feedback logged for chunk_id={args.chunk_id} (useful={args.was_useful})."
     except Exception as exc:
         return _tool_error("lumena_feedback", exc)
 

@@ -47,6 +47,13 @@ class LumenaConfig(BaseSettings):
     # failing. Mock vectors make semantic search meaningless, so production
     # paths refuse to start without the real model unless this is set.
     allow_mock_embedder: bool = False
+    # First-run convenience (LUMENA_AUTO_PROVISION_MODEL=1): when the real ONNX
+    # embedding model is missing, download and export it automatically instead
+    # of failing at startup. This performs a ONE-TIME network fetch from the
+    # model hub and therefore crosses the sovereign boundary; it is opt-in and
+    # off by default. After the first launch the model is cached locally and
+    # every subsequent startup is fully offline/sovereign.
+    auto_provision_model: bool = False
     vector_index: Literal["sqlite-vec", "usearch"] = "sqlite-vec"
     enable_frqad: bool = True
     enable_local_llm: bool = False

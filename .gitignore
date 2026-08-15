@@ -94,3 +94,6 @@ dev-docs/
 ios/
 tmp/
 lumena/benchmarks/*/results/
+
+# Local Lumena runtime store + provisioned models (per-machine, never committed)
+.lumena/
