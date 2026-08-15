@@ -89,3 +89,68 @@ Then set repository secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
 `AZURE_SUBSCRIPTION_ID` (IDs, not secrets — OIDC exchanges tokens at runtime)
 and variables `AKS_RESOURCE_GROUP`, `AKS_CLUSTER_NAME`, `ACR_LOGIN_SERVER`
 for the `deploy-aks` workflow.
+
+## CI/CD pipeline overview
+
+The GitHub Actions workflows form an end-to-end Azure pipeline:
+
+| Stage | Workflow | Trigger | What it does |
+|---|---|---|---|
+| **CI** | `ci.yml` | PR / push to main | lint, typecheck, test matrix (3 OS × 3 py), build |
+| **Security** | `security.yml` | PR / push / daily | secrets scan, dep audit, SAST, license check |
+| **Infra** | `infra.yml` | PR on `infra/azure/**` (what-if); dispatch (apply) | provisions `main.bicep` via OIDC |
+| **Image → GHCR + ACR** | `docker-publish.yml` | tag `v*` / dispatch | builds once, pushes identical tags to GHCR (public) **and** ACR (AKS pull source) |
+| **Release** | `release.yml` | tag `v*.*.*` | sdist/wheel, GitHub release, PyPI (trusted publisher) |
+| **Deploy** | `deploy-aks.yml` | tag `v*.*.*` (auto → staging); dispatch (staging or production) | Helm upgrade with model-aware readiness gate |
+
+### Required repository configuration
+
+**Secrets** (IDs, not credentials — OIDC exchanges tokens at runtime):
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+
+**Variables:**
+
+| Variable | Used by | Example |
+|---|---|---|
+| `AZURE_RESOURCE_GROUP` | infra | `rg-lumena` |
+| `AZURE_LOCATION` | infra | `westeurope` |
+| `ACR_LOGIN_SERVER` | image, deploy | `lumenaacr1234.azurecr.io` |
+| `AKS_RESOURCE_GROUP` | deploy | `rg-lumena` |
+| `AKS_CLUSTER_NAME` | deploy | `lumena-aks` |
+
+### Two registries, one artifact
+
+`docker-publish.yml` pushes the **same** semver + `sha-<short>` tags to both
+GHCR (public distribution) and ACR (private, what AKS pulls). ACR uses
+server-side `az acr build` so no registry password is stored, and the AKS
+kubelet identity already holds `AcrPull` (granted in `main.bicep`).
+
+### Staging → production promotion
+
+`deploy-aks.yml` is progressive:
+
+- A tag push (`v1.2.3`) **auto-deploys to staging** (namespace `lumena-staging`).
+- A manual run deploys a chosen tag to **staging or production** (namespace
+  `lumena`).
+
+Production runs in the GitHub **`production` Environment**. Configure it with a
+**required reviewer** (Settings → Environments → production) so promotion is a
+human decision, not a merge side effect. Create a `staging` Environment too
+(no gate). Both namespaces need their own `lumena-auth` secret:
+
+```bash
+for ns in lumena-staging lumena; do
+  kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f -
+  kubectl -n "$ns" create secret generic lumena-auth \
+    --from-literal=api-key="$(openssl rand -hex 32)" \
+    --dry-run=client -o yaml | kubectl apply -f -
+done
+```
+
+### Provisioning via CI instead of the CLI
+
+Rather than the manual `az deployment group create` above, run the **Infra**
+workflow: open a PR touching `infra/azure/**` to get a `what-if` preview, then
+trigger `infra.yml` via *Run workflow* with `confirm=APPLY`. The apply job
+prints the ACR login server and AKS cluster name to the run summary so you can
+set the deploy variables.
