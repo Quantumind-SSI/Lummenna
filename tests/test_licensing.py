@@ -309,6 +309,134 @@ def test_multi_tenant_read_filter_blocks_community(tmp_path):
         conn.close()
 
 
+def test_two_tenants_can_share_room_name(tmp_path, signing_keypair):
+    """Regression for the migration-0004 defect: a global UNIQUE(room.name)
+
+    previously made two tenants collide on a shared room name. After the
+    tenant-scoped rebuild, both may use the same room name.
+    """
+    key = _mint(signing_keypair, features=["*"])
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        a = store_memory(conn, "alpha note", "notes", tenant_id="tenantA", config=cfg)
+        b = store_memory(conn, "beta note", "notes", tenant_id="tenantB", config=cfg)
+        conn.commit()
+        assert a > 0 and b > 0 and a != b
+        rooms = conn.execute(
+            "SELECT tenant_id FROM room WHERE name = 'notes' ORDER BY tenant_id"
+        ).fetchall()
+        assert [r[0] for r in rooms] == ["tenantA", "tenantB"]
+    finally:
+        conn.close()
+
+
+def test_migration_0004_makes_room_unique_tenant_scoped(tmp_path):
+    """The room UNIQUE index must be (name, tenant_id), not global (name)."""
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported
+
+    cfg = _tenant_cfg(tmp_path)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        unique_cols = [
+            [row[2] for row in conn.execute(f"PRAGMA index_info({idx[1]})").fetchall()]
+            for idx in conn.execute("PRAGMA index_list(room)").fetchall()
+            if idx[2]  # unique
+        ]
+        assert ["name", "tenant_id"] in unique_cols
+        # No lingering global UNIQUE(name)-only index.
+        assert ["name"] not in unique_cols
+        # Foreign keys survived the rebuild.
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+    finally:
+        conn.close()
+
+
+def test_fusion_query_isolates_tenants(tmp_path, signing_keypair):
+    """Query-level isolation: fuse_and_rerank must not return cross-tenant rows.
+
+    Both tenants' chunks are handed to fusion as candidates (as the retrieval
+    channels would, since they rank across the whole palace). The tenant
+    predicate at the relational chokepoint must drop the other tenant's chunk
+    *before* content is materialised/decrypted.
+    """
+    key = _mint(signing_keypair, features=["*"])
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.retrieval_lexical import LexicalHit
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lumena.fusion import fuse_and_rerank
+
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        a = store_memory(conn, "alpha secret about apples", "notes", tenant_id="A", config=cfg)
+        b = store_memory(conn, "beta secret about apples", "notes", tenant_id="B", config=cfg)
+        conn.commit()
+
+        # Both proposed as candidates, exactly as cross-tenant fusion would.
+        candidates = [
+            LexicalHit(chunk_id=a, rank=1.0, match_info=b""),
+            LexicalHit(chunk_id=b, rank=1.0, match_info=b""),
+        ]
+
+        res_a = fuse_and_rerank(candidates, [], [], conn, tenant_id="A")
+        res_b = fuse_and_rerank(candidates, [], [], conn, tenant_id="B")
+        res_default = fuse_and_rerank(candidates, [], [], conn, tenant_id="default")
+
+        assert [r.chunk_id for r in res_a] == [a]
+        assert [r.chunk_id for r in res_b] == [b]
+        # B's content must never surface in A's results.
+        assert all("beta" not in (r.content or "") for r in res_a)
+        # Default tenant is unrestricted (single-tenant deployments unaffected).
+        assert sorted(r.chunk_id for r in res_default) == sorted([a, b])
+    finally:
+        conn.close()
+
+
+def test_fusion_default_tenant_unrestricted_on_legacy_schema(memory_db):
+    """On a schema WITH tenant support, default tenant still sees all chunks;
+
+    the predicate is a no-op for 'default'. Uses the in-memory fixture to prove
+    the fast path adds no restriction and no error.
+    """
+    import hashlib
+
+    from lumena.force.mnemonic.retrieval_lexical import LexicalHit
+    from lumena.fusion import fuse_and_rerank
+
+    cur = memory_db.execute(
+        "INSERT INTO room(name, room_type, tenant_id) VALUES('r','domain','default')"
+    )
+    rid = cur.lastrowid
+    memory_db.execute(
+        "CREATE TABLE IF NOT EXISTS vec_fallback (chunk_id INTEGER PRIMARY KEY, embedding BLOB)"
+    )
+    for i in (1, 2):
+        content = f"chunk {i}"
+        memory_db.execute(
+            "INSERT INTO chunk(chunk_id, room_id, content, content_hash, created_at,"
+            " vm_score, resolution, tenant_id) VALUES(?,?,?,?,unixepoch(),0.5,'FP32','default')",
+            (i, rid, content, hashlib.sha256(content.encode()).hexdigest()),
+        )
+    memory_db.commit()
+    candidates = [
+        LexicalHit(chunk_id=1, rank=1.0, match_info=b""),
+        LexicalHit(chunk_id=2, rank=1.0, match_info=b""),
+    ]
+    res = fuse_and_rerank(candidates, [], [], memory_db, tenant_id="default")
+    assert sorted(r.chunk_id for r in res) == [1, 2]
+
+
 class _ChunkStub:
     """Minimal stand-in exposing only the .chunk_id that _filter_by_tenant reads."""
 
