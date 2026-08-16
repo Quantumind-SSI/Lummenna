@@ -29,7 +29,7 @@ payload_json = {
     "sub":       "<licensee/org>",
     "edition":   "pro",
     "features":  ["*"] | ["compliance", "encryption_at_rest", ...],
-    "seats":     10,                 # informational
+    "seats":     10,                 # max concurrent non-default tenants (0=unlimited)
     "exp":       "2027-08-15",       # ISO date; omit for perpetual
     "iss":       "QuantumindSSI",
     "id":        "<license-id>"      # opaque id; used for offline revocation
@@ -53,9 +53,11 @@ from datetime import date, datetime
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from lumena.brand.errors import LicenseInvalidError, LicenseRequiredError
+from lumena.brand.errors import LicenseInvalidError, LicenseRequiredError, SeatLimitError
 
 if TYPE_CHECKING:
+    import sqlite3
+
     from lumena.config import LumenaConfig
 
 
@@ -303,6 +305,59 @@ def assert_licensed(feature: str, config: LumenaConfig | None = None) -> None:
     lic = load_license(config)
     if not lic.grants(feature):
         raise LicenseRequiredError(PRO_FEATURES.get(feature, feature))
+
+
+def licensed_seats(config: LumenaConfig | None = None) -> int:
+    """Return the licensed seat count, or 0 for unlimited.
+
+    Seats are enforced as the maximum number of concurrent **non-default
+    tenants** (the one countable, offline-checkable resource in a sovereign
+    single-node deployment). A value of 0 (the default when a key omits
+    ``seats``) means unlimited — perpetual/wildcard licences are not seat-capped.
+    """
+    lic = load_license(config)
+    return lic.seats if lic.is_pro else 0
+
+
+def _distinct_nondefault_tenants(conn: sqlite3.Connection) -> set[str]:
+    """Return the set of distinct non-default tenant ids present in ``room``.
+
+    ``room`` is where a tenant first materialises (a store under a new tenant
+    inserts its room), so it is the authoritative place to count live tenants.
+    Returns an empty set on schemas that predate tenant support.
+    """
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT tenant_id FROM room WHERE tenant_id != 'default'"
+        ).fetchall()
+    except Exception:
+        # Schema predates the tenant_id column (migration 0002); no tenants.
+        return set()
+    return {r[0] for r in rows if r[0]}
+
+
+def assert_seat_available(
+    conn: sqlite3.Connection, tenant_id: str, config: LumenaConfig | None = None
+) -> None:
+    """Raise ``SeatLimitError`` if creating ``tenant_id`` would exceed the seats.
+
+    A no-op when: the tenant is ``default`` (never counts against seats), the
+    licence is unlimited (``seats == 0``), or ``tenant_id`` is already an active
+    tenant (using an existing seat, not claiming a new one). Only the creation of
+    a *new* non-default tenant beyond the licensed count is rejected.
+
+    Call this at the tenant write boundary, after the ``multi_tenant`` gate.
+    """
+    if tenant_id == "default":
+        return
+    seats = licensed_seats(config)
+    if seats <= 0:
+        return  # unlimited
+    active = _distinct_nondefault_tenants(conn)
+    if tenant_id in active:
+        return  # reusing an existing seat
+    if len(active) >= seats:
+        raise SeatLimitError(seats=seats, current=len(active))
 
 
 def clear_license_cache() -> None:
