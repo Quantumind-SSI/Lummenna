@@ -149,6 +149,12 @@ def get_connection(config) -> sqlite3.Connection:
 
     mode = getattr(cfg, "database_encryption_mode", "none")
 
+    # Pro gate: encryption-at-rest (SQLCipher/Fernet) is a commercial feature.
+    # The default (mode == "none") is fully functional in Community; enabling
+    # any encryption mode requires a valid Pro license.
+    if mode != "none":
+        cfg.assert_licensed("encryption_at_rest")
+
     if mode == "sqlcipher":
         if not _HAS_SQLCIPHER:
             raise RuntimeError(

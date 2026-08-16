@@ -14,7 +14,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lumena.brand.errors import ModelNotAvailableError
+from lumena.brand.errors import LicenseRequiredError, ModelNotAvailableError
 from lumena.cli.models import model_app
 from lumena.compliance.safety_forgetting import get_recent_audit_events
 from lumena.config import DeviceProfile, LumenaConfig
@@ -41,6 +41,20 @@ app.add_typer(compliance_app)
 app.add_typer(model_app)
 app.add_typer(daemon_app)
 app.add_typer(p2p_app)
+
+
+def _assert_pro_or_exit(feature: str, config: "LumenaConfig | None" = None) -> None:
+    """Gate a Pro-only CLI command, exiting cleanly (no traceback) if unlicensed.
+
+    Mirrors ``LumenaConfig.assert_licensed`` but renders a friendly Rich message
+    and a non-zero exit code instead of surfacing a stack trace to the user.
+    """
+    cfg = config if config is not None else LumenaConfig()
+    try:
+        cfg.assert_licensed(feature)
+    except LicenseRequiredError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(2) from exc
 
 
 def _validate_device(device: str) -> DeviceProfile:
@@ -296,6 +310,10 @@ def compliance_audit(n: int = typer.Option(10, "--n")):
     import datetime
     import json as _json
 
+    # Pro gate: audit-trail export is a commercial compliance feature.
+    # Basic regex PII detection on write stays free (Community).
+    _assert_pro_or_exit("compliance")
+
     events = get_recent_audit_events(n)
     if not events:
         console.print("[yellow]No compliance events found.[/yellow]")
@@ -342,6 +360,8 @@ def compliance_forget(
     from lumena.compliance.safety_forgetting import safety_forget_chunk
 
     config = LumenaConfig()
+    # Pro gate: right-to-be-forgotten (RTBF) is a commercial compliance feature.
+    _assert_pro_or_exit("compliance", config)
     conn = get_connection(config)
     try:
         row = conn.execute(

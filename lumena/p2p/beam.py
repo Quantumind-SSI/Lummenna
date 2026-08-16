@@ -169,6 +169,24 @@ class BeamNode:
             await self._azc.async_close()
             self._azc = None
 
+    def rotate_key(self, new_key: str) -> None:
+        """Rotate the P2P encryption/signing key without recreating the node.
+
+        Pro-gated (``advanced_p2p``): live key-rotation is a commercial Advanced
+        P2P capability. Basic single-key LAN sharing (constructing a ``BeamNode``
+        and running ``start()``) stays free in Community.
+
+        After rotation, frames are encrypted/signed with ``new_key``; peers must
+        rotate to the same key to keep exchanging frames.
+        """
+        self.config.assert_licensed("advanced_p2p")
+        if not new_key:
+            raise ValueError("rotate_key requires a non-empty new_key")
+        self._crypto = P2PCrypto(new_key)
+        self._signer = P2PSign(new_key)
+        self.config.p2p_encryption_key = new_key
+        logger.info("beam_key_rotated device=%s", self.device_name)
+
     async def _handle_peer(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:

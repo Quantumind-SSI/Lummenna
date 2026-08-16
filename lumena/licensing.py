@@ -83,9 +83,10 @@ PRO_FEATURES: dict[str, str] = {
 WILDCARD = "*"
 
 #: Embedded QuantumindSSI license-signing public key (Ed25519, base64url, raw
-#: 32 bytes). Replace this placeholder with the real production public key
-#: before shipping commercially. The PRIVATE key never lives in this repo.
-_QUANTUMINDSSI_PUBLIC_KEY_B64: str = ""
+#: 32 bytes). This is the PUBLIC half only; the PRIVATE signing key never lives
+#: in this repo (it stays in an offline signing vault). Keys are minted with
+#: ``scripts/issue_license.py`` and verified here fully offline (no phone-home).
+_QUANTUMINDSSI_PUBLIC_KEY_B64: str = "eqwqRl8UYNfDvuiW_OD59xL8EybR2DnCSBscifPPTeY"
 
 
 @dataclass(frozen=True)
