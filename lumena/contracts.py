@@ -12,8 +12,6 @@ The intent is that a documented claim like
 
 is not merely asserted in the docs and hoped-for in the code, but is *grounded*:
 the code refuses to construct or persist a value that violates it.
-
-See ``docs/CLAIMS_AUDIT.md`` for the claim → code → enforcement mapping.
 """
 
 from __future__ import annotations

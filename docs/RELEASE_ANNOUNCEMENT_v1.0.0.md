@@ -3,7 +3,12 @@
 **Release Date:** 7 August 2026  
 **Version:** v1.0.0  
 **Repository:** https://github.com/QuantumindSSI/lumena  
-**License:** Apache 2.0  
+**License (at release):** Apache 2.0  
+
+> **Note:** This is the historical v1.0.0 announcement. Lumena is now
+> **dual-licensed** — AGPL-3.0-or-later (Community) or a commercial license from
+> QuantumindSSI (Pro). See `LICENSE` and `COMMERCIAL-LICENSE.md`. The Apache 2.0
+> grant on releases up to and including v1.0.0 remains irrevocable.
 
 ---
 

@@ -1,0 +1,28 @@
+Lumena Authors
+==============
+
+Lumena is developed and owned by QuantumindSSI.
+
+Copyright holder (all rights, including for dual-licensing and relicensing):
+
+    QuantumindSSI <admin@quantumindssi.com>
+
+All contributions to this repository are made under the Contributor License
+Agreement (see CONTRIBUTING.md, section "Contributor License Agreement"),
+which assigns to QuantumindSSI the rights necessary to offer the software
+under both the AGPL-3.0 Community license and the commercial Pro license.
+
+Contributors
+------------
+
+Lumena is authored solely by QuantumindSSI.
+
+    QuantumindSSI <admin@quantumindssi.com>   (copyright holder)
+
+The git author identity "Oluwaferanmi <oluwaferanmi@Oluwaferanmis-MacBook-
+Air.local>" is a QuantumindSSI-owned development alias, not a separate
+contributor. Its commits are original QuantumindSSI works and require no
+CLA. See docs/cla/ownership-attestation-oluwaferanmi-alias.md.
+
+External contributors: to be listed here, sign the CLA (docs/cla/) and open a
+pull request adding your name.

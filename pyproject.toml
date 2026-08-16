@@ -8,14 +8,15 @@ version = "1.0.0"
 description = "Twin-force memory and context framework for sovereign AI agents"
 requires-python = ">=3.10"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE", "LICENSES/*.txt"]
 authors = [
-    { name = "Lumena Contributors" },
+    { name = "QuantumindSSI", email = "admin@quantumindssi.com" },
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -43,12 +44,14 @@ dependencies = [
     "msgspec>=0.18",
     "psutil>=5.9",
     "zeroconf>=0.132",
-    # NLP / embeddings
-    "spacy>=3.7",
+    # NLP / embeddings — RUNTIME inference only.
+    # onnxruntime runs the exported ONNX model; transformers provides the
+    # tokenizer (AutoTokenizer). transformers WITHOUT its optional [torch] extra
+    # is torch-free, so the runtime install stays lean. The heavy export
+    # toolchain (optimum -> torch/CUDA, ~2GB) lives in the [export] extra;
+    # spaCy (onboarding wizard only) lives in [wizard]; llama-cpp in [localllm].
     "onnxruntime>=1.17",
-    "optimum[onnxruntime]>=1.17",
-    # Local LLM (optional, large)
-    "llama-cpp-python>=0.2.0 ; platform_machine == 'aarch64' or platform_machine == 'x86_64'",
+    "transformers>=4.36",
     # API server (pilot requirement)
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
@@ -77,6 +80,26 @@ langgraph = [
 ]
 mcp = [
     "mcp>=1.0,<3.0",
+]
+# Heavy ONNX EXPORT toolchain (optimum pulls torch/CUDA, ~2GB). Only needed to
+# run `lumena model download/export`. Consumers who use a prebuilt ONNX model
+# bundle never need this — keeping the base install lean (<300MB target).
+export = [
+    "optimum[onnxruntime]>=1.17",
+]
+# spaCy-powered onboarding wizard (`lumena illuminate`). Optional; the wizard
+# degrades gracefully when spaCy is absent.
+wizard = [
+    "spacy>=3.7",
+]
+# On-device LLM for narrative consolidation (off by default; large native dep).
+localllm = [
+    "llama-cpp-python>=0.2.0 ; platform_machine == 'aarch64' or platform_machine == 'x86_64'",
+]
+# Convenience: the full local-first stack (export toolchain + wizard + local LLM
+# + MCP). Equivalent to the previous fat default install.
+full = [
+    "lumena[mcp,export,wizard,localllm]",
 ]
 azure = [
     "azure-monitor-opentelemetry>=1.6",

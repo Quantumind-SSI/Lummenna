@@ -15,6 +15,41 @@ This project adheres to a standard of respect, inclusivity, and intellectual hon
 
 ---
 
+## Contributor License Agreement (CLA)
+
+**Lumena is dual-licensed** — the Community Edition under **AGPL-3.0-or-later**,
+and a **commercial Pro Edition** under a proprietary license from QuantumindSSI.
+To keep this model legally sound, **every contributor must agree to the Lumena
+Contributor License Agreement (CLA) before their contribution can be merged.**
+
+By submitting a contribution (pull request, patch, or any other form) you
+represent and agree that:
+
+1. **Ownership.** You are the original author of the contribution, or you have
+   the right to submit it, and it does not knowingly infringe any third party's
+   rights.
+2. **Grant of rights.** You grant QuantumindSSI a perpetual, worldwide,
+   non-exclusive, royalty-free, irrevocable license — **including the right to
+   sublicense and relicense** — to use, reproduce, modify, distribute, and
+   commercially exploit your contribution, **under both the AGPL-3.0 Community
+   license and the QuantumindSSI commercial license**, in current and future
+   versions of Lumena.
+3. **You retain copyright** in your contribution; this CLA is a license grant,
+   not an ownership transfer, but it gives QuantumindSSI everything required to
+   dual-license Lumena.
+4. **No obligation.** QuantumindSSI is not obligated to use or include your
+   contribution.
+
+**How to sign:** For your first contribution, add your name to `AUTHORS` and
+include the line `I agree to the Lumena CLA (see CONTRIBUTING.md).` in your pull
+request description. For significant contributions, a signed CLA may be
+requested and stored under `docs/cla/`.
+
+> Without an agreed CLA, contributions **cannot be merged**, because they could
+> not lawfully be offered under the commercial license.
+
+---
+
 ## How to Contribute
 
 ### 0. Commit identity policy (enforced)

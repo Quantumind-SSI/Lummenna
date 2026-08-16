@@ -83,9 +83,21 @@ def _export_via_optimum(repo_id: str, dest: Path, config=None, revision: str | N
         except (subprocess.CalledProcessError, FileNotFoundError):
             pass
 
-    # Attempt 2: Python API (only path that supports revision pinning)
+    # Attempt 2: Python API (only path that supports revision pinning).
+    # optimum is intentionally NOT a base dependency (it pulls torch/CUDA, ~2GB).
+    # If it's missing, guide the user to the [export] extra — or, better, to a
+    # prebuilt model bundle so they never need the toolchain.
     try:
         from optimum.onnxruntime import ORTModelForFeatureExtraction
+    except ImportError as exc:
+        raise RuntimeError(
+            "Model export requires the optimum toolchain, which is not installed "
+            "(it is heavy: it pulls torch/CUDA). Either:\n"
+            "  1. Use a prebuilt model bundle (recommended — no toolchain), or\n"
+            "  2. Install the export extra:  pip install 'lumena[export]'"
+        ) from exc
+
+    try:
         from transformers import AutoTokenizer
 
         tokenizer = AutoTokenizer.from_pretrained(repo_id, revision=revision)
@@ -102,7 +114,7 @@ def _export_via_optimum(repo_id: str, dest: Path, config=None, revision: str | N
             return alt
     except Exception as exc:
         raise RuntimeError(
-            f"ONNX export failed for {repo_id}. Install optimum[onnxruntime] and try again."
+            f"ONNX export failed for {repo_id}. Install 'lumena[export]' and try again."
         ) from exc
 
     raise RuntimeError(f"ONNX export succeeded but model.onnx not found in {dest}")

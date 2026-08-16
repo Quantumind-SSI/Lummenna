@@ -90,6 +90,7 @@ credentials/
 # Internal / local-only documentation and assets (not for public repo)
 AGENTS.md
 dev-docs/
+docs/internal/
 .opencode/
 ios/
 tmp/

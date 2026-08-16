@@ -4,7 +4,7 @@
 
 **Version:** v1.0.0  
 **Organization:** QuantumindSSI Research  
-**License:** Apache 2.0  
+**License:** AGPL-3.0-or-later (Community) / Commercial (Pro) — see `LICENSE`  
 **Date:** August 2026
 
 ---
@@ -254,7 +254,9 @@ The complete source code (~9K lines of Python across 65 modules), documentation,
 
 > **https://github.com/QuantumindSSI/lumena**
 
-Released under the Apache 2.0 license.
+Dual-licensed: AGPL-3.0-or-later (Community Edition) or a commercial license
+from QuantumindSSI (Pro Edition). Versions up to and including v1.0.0 were
+released under Apache 2.0; that grant on those releases is irrevocable.
 
 ---
 
@@ -276,6 +278,6 @@ Released under the Apache 2.0 license.
 
 ---
 
-*QuantumindSSI — August 2026 — Apache 2.0 License*
+*QuantumindSSI — August 2026 — AGPL-3.0-or-later (Community) / Commercial (Pro)*
 
 *Local-first memory for your agents. On your hardware. Your way.*

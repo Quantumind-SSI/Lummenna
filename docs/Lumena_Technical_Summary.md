@@ -1,6 +1,6 @@
 # Lumena: Technical Summary
 
-**Version:** v1.0.0 | **Type:** Local-first agentic memory framework | **License:** Apache 2.0
+**Version:** v1.0.0 | **Type:** Local-first agentic memory framework | **License:** AGPL-3.0-or-later (Community) / Commercial (Pro)
 
 ---
 

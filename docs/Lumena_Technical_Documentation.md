@@ -1,7 +1,7 @@
 # Lumena — Technical Documentation
 
 **Version:** v1.0.0
-**License:** Apache 2.0
+**License:** AGPL-3.0-or-later (Community) / Commercial (Pro) — see `LICENSE`
 **Python:** 3.10+
 
 ---

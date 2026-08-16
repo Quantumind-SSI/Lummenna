@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
+# Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
+# NOTE: Advanced compliance features (RTBF, audit trails, custom PII governance)
+# in this module are gated as Lumena Pro (see COMMERCIAL-LICENSE.md, P1).
 """A11: Safety-Triggered Forgetting (L4) & Compliance.
 
 Input wire: Regex / spaCy NER patterns, user command channel

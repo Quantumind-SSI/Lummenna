@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
+# Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
+# NOTE: Encryption-at-rest + key management built on these primitives are gated
+# as Lumena Pro (see COMMERCIAL-LICENSE.md, P2). Primitives themselves are Community.
 """S1: Encryption primitives for Lumena.
 
 Provides:

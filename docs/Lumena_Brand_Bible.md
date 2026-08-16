@@ -19,7 +19,10 @@
 **v1.0.0** — Confirmed in `lumena/api/server.py` app title, MCP server dashboard text, `CHANGELOG.md`, and `pyproject.toml`.
 
 ### 1.5 License
-Apache License 2.0 (LICENSE file, pyproject.toml classifiers).
+Dual-licensed: AGPL-3.0-or-later (Community Edition) or a commercial license
+from QuantumindSSI (Pro Edition) — see `LICENSE` and `COMMERCIAL-LICENSE.md`.
+Versions up to and including v1.0.0 were released under Apache 2.0 (irrevocable
+for those releases).
 
 ### 1.6 Repository
 `https://github.com/QuantumindSSI/lumena` (confirmed in pyproject.toml URLs, integrations configs, and docs).

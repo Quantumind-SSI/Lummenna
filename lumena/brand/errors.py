@@ -148,3 +148,37 @@ class FeedbackLogError(LumenaError):
         if detail:
             msg += f" ({detail})"
         super().__init__(msg)
+
+
+class LicenseError(LumenaError):
+    """Base for licensing / entitlement errors."""
+
+    code = "LLC-4000"
+
+
+class LicenseRequiredError(LicenseError):
+    """A Pro feature was used without a valid commercial license."""
+
+    code = "LLC-4001"
+
+    def __init__(self, feature: str) -> None:
+        super().__init__(
+            f"'{feature}' is a Lumena Pro feature and requires a commercial license. "
+            "Set LUMENA_LICENSE_KEY (or license_key in config), or contact "
+            "licensing@quantumindssi.com. See COMMERCIAL-LICENSE.md."
+        )
+        self.feature = feature
+
+
+class LicenseInvalidError(LicenseError):
+    """A license key was supplied but failed validation."""
+
+    code = "LLC-4002"
+
+    def __init__(self, reason: str = "") -> None:
+        msg = "The supplied Lumena license key is invalid or expired."
+        if reason:
+            msg += f" ({reason})"
+        msg += " Contact licensing@quantumindssi.com."
+        super().__init__(msg)
+        self.reason = reason

@@ -97,6 +97,11 @@ class LumenaConfig(BaseSettings):
     database_encryption_mode: Literal["sqlcipher", "fernet", "none"] = "none"
     p2p_encryption_key: str | None = None
 
+    # Licensing / entitlement (dual-license Pro edition). A signed license key
+    # (LUMENA_LICENSE_KEY) unlocks Pro features; absent/invalid → Community.
+    # Validation is fully offline (no phone-home) to preserve sovereignty.
+    license_key: str | None = None
+
     _resolved: bool = PrivateAttr(default=False)
 
     def assert_sovereign(self, attempted_call: str) -> None:
@@ -108,6 +113,23 @@ class LumenaConfig(BaseSettings):
             from lumena.brand.errors import SovereignViolationError
 
             raise SovereignViolationError(attempted_call)
+
+    @property
+    def edition(self) -> str:
+        """Active edition: 'pro' if a valid Pro license is present, else 'community'."""
+        from lumena.licensing import current_edition
+
+        return current_edition(self)
+
+    def assert_licensed(self, feature: str) -> None:
+        """Raise LicenseRequiredError unless a valid license entitles ``feature``.
+
+        Call this before any Pro-only code path. Mirrors ``assert_sovereign``.
+        See ``lumena.licensing.PRO_FEATURES`` for valid feature keys.
+        """
+        from lumena.licensing import assert_licensed
+
+        assert_licensed(feature, self)
 
     def model_post_init(self, __context: object) -> None:
         """After field population, apply device-profile defaults."""
