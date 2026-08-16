@@ -68,7 +68,7 @@ if TYPE_CHECKING:
 PRO_FEATURES: dict[str, str] = {
     # Built + gated in code:
     "compliance": "Compliance: RTBF, audit trails, custom PII governance (P1)",
-    "encryption_at_rest": "Encryption-at-rest (SQLCipher/Fernet) + key mgmt (P2)",
+    "encryption_at_rest": "Encryption-at-rest: SQLCipher (AES-256, whole-DB) or Fernet field-level, PBKDF2 key derivation (P2)",
     "multi_tenant": "Real storage-layer multi-tenant isolation (P4)",
     "advanced_p2p": "Advanced P2P: live encryption/signing key-rotation (P6)",
     # Non-code commercial entitlements (support/release commitments, not a code
