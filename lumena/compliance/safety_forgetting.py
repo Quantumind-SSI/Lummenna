@@ -130,42 +130,58 @@ def safety_forget_chunk(conn: sqlite3.Connection, chunk_id: int, reason: str) ->
 
     LumenaConfig().assert_licensed("compliance")
 
-    log_audit_event(
-        conn=conn,
-        event_type="compliance",
-        actor="system",
-        action="safety_forget",
-        resource_id=chunk_id,
-        resource_type="chunk",
-        metadata_json=json.dumps({"reason": reason}),
-        client_ip=None,
-        request_id=None,
-    )
+    # Atomicity: the audit record and the erasure must commit together. Writing
+    # the audit event with commit=False and wrapping everything in a single
+    # transaction ensures a failure cannot leave a committed "safety_forget"
+    # claim while the data survives (a false compliance record). Either the
+    # erasure and its audit both land, or neither does.
+    try:
+        log_audit_event(
+            conn=conn,
+            event_type="compliance",
+            actor="system",
+            action="safety_forget",
+            resource_id=chunk_id,
+            resource_type="chunk",
+            metadata_json=json.dumps({"reason": reason}),
+            client_ip=None,
+            request_id=None,
+            commit=False,
+        )
 
-    # Remove from FTS5
-    conn.execute("DELETE FROM chunk_fts WHERE rowid = ?", (chunk_id,))
-    # Remove the embedding vectors: leaving them behind would keep
-    # recoverable derived data on disk after a right-to-be-forgotten request.
-    for vec_table in ("vec_fallback", "vec_chunks"):
-        try:
-            conn.execute(
-                f"DELETE FROM {vec_table} WHERE chunk_id = ?",  # nosec B608 — fixed table names
-                (chunk_id,),
-            )
-        except sqlite3.OperationalError:
-            # Table may not exist depending on the configured vector backend.
-            logger.debug("safety_forget_vec_table_missing", table=vec_table)
-    # Break FK from chunk -> provenance before clearing provenance
-    conn.execute("UPDATE chunk SET provenance_root = NULL WHERE chunk_id = ?", (chunk_id,))
-    # Clear provenance tree recursively
-    _clear_provenance_tree(conn, chunk_id)
-    # Logical delete in chunk table
-    conn.execute(
-        """UPDATE chunk
-           SET valid_to = unixepoch(), content = '[REDACTED]', optical_level = 2
-           WHERE chunk_id = ?""",
-        (chunk_id,),
-    )
+        # Remove from FTS5
+        conn.execute("DELETE FROM chunk_fts WHERE rowid = ?", (chunk_id,))
+        # Remove the embedding vectors: leaving them behind would keep
+        # recoverable derived data on disk after a right-to-be-forgotten request.
+        for vec_table in ("vec_fallback", "vec_chunks"):
+            try:
+                conn.execute(
+                    f"DELETE FROM {vec_table} WHERE chunk_id = ?",  # nosec B608 — fixed table names
+                    (chunk_id,),
+                )
+            except sqlite3.OperationalError:
+                # Table may not exist depending on the configured vector backend.
+                logger.debug("safety_forget_vec_table_missing", table=vec_table)
+        # Break FK from chunk -> provenance before clearing provenance
+        conn.execute("UPDATE chunk SET provenance_root = NULL WHERE chunk_id = ?", (chunk_id,))
+        # Clear provenance tree recursively
+        _clear_provenance_tree(conn, chunk_id)
+        # Logical delete in chunk table. content_hash is SHA-256 of the ORIGINAL
+        # plaintext; leaving it on the tombstone is a recoverable/confirmable
+        # artifact of "forgotten" low-entropy PII (SSN, phone, email), so clear
+        # it as part of erasure.
+        conn.execute(
+            """UPDATE chunk
+               SET valid_to = unixepoch(), content = '[REDACTED]',
+                   content_hash = '', optical_level = 2
+               WHERE chunk_id = ?""",
+            (chunk_id,),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        logger.error("safety_forget_failed_rolled_back", chunk_id=chunk_id, reason=reason)
+        raise
 
     logger.warning("safety_forget_executed", chunk_id=chunk_id, reason=reason)
 
@@ -192,19 +208,25 @@ def _clear_provenance_tree(conn: sqlite3.Connection, chunk_id: int) -> None:
 
 
 def get_recent_audit_events(n: int = 10) -> list[dict]:
-    """Read last N compliance audit events from SQLite audit_log."""
+    """Read last N compliance audit events from SQLite audit_log.
+
+    Ordered by ``audit_id`` (true append order) rather than ``created_at`` so
+    events written within the same 1-second tick are not silently reordered.
+    A database error is re-raised, not swallowed: a compliance read that returns
+    an empty list on failure would falsely imply "no events", which is itself a
+    compliance hazard.
+    """
     from lumena.config import LumenaConfig
     from lumena.data.schema import get_connection
 
+    conn = get_connection(LumenaConfig())
     try:
-        conn = get_connection(LumenaConfig())
         rows = conn.execute(
             """SELECT audit_id, event_type, actor, resource_type, resource_id,
                       action, metadata_json, client_ip, request_id, created_at
-               FROM audit_log ORDER BY created_at DESC LIMIT ?""",
+               FROM audit_log ORDER BY audit_id DESC LIMIT ?""",
             (n,),
         ).fetchall()
-        conn.close()
         return [dict(r) for r in rows]
-    except Exception:
-        return []
+    finally:
+        conn.close()
