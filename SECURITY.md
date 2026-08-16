@@ -83,6 +83,16 @@ Encryption at rest is **implemented but opt-in** (`LUMENA_DATABASE_ENCRYPTION_MO
 
 Beam P2P sharing is **encrypted and authenticated by default**: every frame is AES-256-GCM encrypted and HMAC-SHA256 signed, with a timestamp window plus nonce cache for replay protection. A Beam listener refuses to start without `LUMENA_P2P_ENCRYPTION_KEY` unless `LUMENA_P2P_INSECURE=1` is explicitly set (not recommended). Caveats: the replay-nonce cache is in-memory only (resets on restart), and key distribution between peers is manual.
 
+## License Signing Key
+
+Lumena Pro entitlements are authorised by an **Ed25519 signing key**; only the
+matching public key is embedded in the shipped code (`lumena/licensing.py`), and
+verification is fully offline. The private signing key is the root of trust for
+all commercial licenses and is **never committed to this repository**. Its
+generation, storage, rotation, and revocation are governed by the custody
+runbook: [`docs/LICENSE_SIGNING_KEY_CUSTODY.md`](docs/LICENSE_SIGNING_KEY_CUSTODY.md).
+Tooling lives in `scripts/issue_license.py` (`keygen` and `issue` subcommands).
+
 ## Known Limitations
 
 1. **Encryption at rest is off by default** — see above; plaintext SQLite unless a mode is configured.
