@@ -119,8 +119,16 @@ def safety_forget_chunk(conn: sqlite3.Connection, chunk_id: int, reason: str) ->
     """
     Immediate deletion with provenance-chain clearance.
     Write-ahead audit BEFORE mutation.
+
+    Pro-gated: right-to-be-forgotten (RTBF) is a commercial compliance feature.
+    Basic regex PII detection/redaction on write stays free (Community). This
+    is a defense-in-depth gate so the entitlement holds even when the function
+    is called programmatically (not just via the CLI).
     """
     from lumena.audit import log_audit_event
+    from lumena.config import LumenaConfig
+
+    LumenaConfig().assert_licensed("compliance")
 
     log_audit_event(
         conn=conn,

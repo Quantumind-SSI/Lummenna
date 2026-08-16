@@ -39,6 +39,46 @@ def fresh_config(tmp_path: Path):
 
 
 @pytest.fixture
+def pro_license(monkeypatch):
+    """Grant a valid Pro license for tests exercising Pro-gated features.
+
+    Generates an ephemeral Ed25519 keypair, embeds the public half, mints a
+    signed wildcard key, and exposes it via LUMENA_LICENSE_KEY so gates that
+    read the environment (e.g. RTBF defense-in-depth) resolve to Pro.
+    """
+    import base64
+    import json
+
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from lumena import licensing
+
+    def _b64url(data: bytes) -> str:
+        return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+    priv = Ed25519PrivateKey.generate()
+    pub_raw = priv.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
+    monkeypatch.setattr(licensing, "_QUANTUMINDSSI_PUBLIC_KEY_B64", _b64url(pub_raw))
+
+    payload = {
+        "sub": "Test Suite",
+        "edition": "pro",
+        "features": ["*"],
+        "iss": "QuantumindSSI",
+        "id": "test",
+    }
+    payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+    key = f"LUMENA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
+    monkeypatch.setenv("LUMENA_LICENSE_KEY", key)
+    licensing.clear_license_cache()
+    yield key
+    licensing.clear_license_cache()
+
+
+@pytest.fixture
 def fresh_conn(fresh_config: LumenaConfig):
     """Yield a freshly initialised DB connection."""
     conn = get_connection(fresh_config)
@@ -198,7 +238,7 @@ class TestUserStorySafetyAndCompliance:
         assert "phone" in safety_scan_chunk("Call 555-123-4567")
         assert safety_scan_chunk("Just a normal thought") == []
 
-    def test_safety_forget_redacts_chunk(self, fresh_conn, fresh_config, embedder):
+    def test_safety_forget_redacts_chunk(self, fresh_conn, fresh_config, embedder, pro_license):
         content = "My secret is alice@example.com"
         cid = store_memory(
             fresh_conn,
@@ -402,7 +442,7 @@ class TestUserStoryEventBuffer:
         assert len(buf.query_since(0)) == 2
 
 
-def test_safety_forget_removes_vectors(fresh_config):
+def test_safety_forget_removes_vectors(fresh_config, pro_license):
     """RTBF must delete the chunk's embedding, not just redact content.
 
     Regression test: safety_forget_chunk used to leave the vector blob in
