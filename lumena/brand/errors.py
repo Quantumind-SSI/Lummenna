@@ -182,3 +182,19 @@ class LicenseInvalidError(LicenseError):
         msg += " Contact licensing@quantumindssi.com."
         super().__init__(msg)
         self.reason = reason
+
+
+class SeatLimitError(LicenseError):
+    """An operation would exceed the license's seat (concurrent-tenant) limit."""
+
+    code = "LLC-4003"
+
+    def __init__(self, seats: int, current: int) -> None:
+        super().__init__(
+            f"This Lumena Pro license permits {seats} tenant seat(s); "
+            f"{current} are already in use, so a new tenant cannot be created. "
+            "Reduce active tenants or upgrade your seat count — contact "
+            "licensing@quantumindssi.com. See COMMERCIAL-LICENSE.md."
+        )
+        self.seats = seats
+        self.current = current

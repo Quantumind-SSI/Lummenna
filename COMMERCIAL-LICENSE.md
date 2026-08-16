@@ -102,6 +102,11 @@ QuantumindSSI grants the licensee a non-exclusive, non-transferable license to
 use the Lumena Pro Edition within the scope (seats, tenants, nodes, or
 deployments) defined in the order form, for the license term.
 
+**Seats** are enforced by the entitlement engine as the maximum number of
+concurrent non-default **tenants** (a `seats` value of 0 or omitted means
+unlimited). Creating a new tenant beyond the licensed seat count is refused; the
+`default` single-tenant workspace never counts against seats.
+
 Restrictions (unless expressly permitted in your agreement): no redistribution
 of the Pro modules as source, no sublicensing, no removal of license/entitlement
 enforcement, no use beyond the licensed scope.

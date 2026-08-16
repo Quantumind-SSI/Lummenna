@@ -354,6 +354,97 @@ def test_multi_tenant_read_filter_blocks_community(tmp_path):
         conn.close()
 
 
+def test_seats_unlimited_when_zero(tmp_path, signing_keypair):
+    """A licence without a seats field (seats == 0) is uncapped."""
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    key = _mint(signing_keypair, features=["*"])  # no seats -> 0 -> unlimited
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        for i in range(5):
+            store_memory(conn, "x", "r", tenant_id=f"T{i}", config=cfg)
+        conn.commit()
+        assert licensing.licensed_seats(cfg) == 0
+    finally:
+        conn.close()
+
+
+def _mint_with_seats(priv, seats: int) -> str:
+    payload = {
+        "sub": "Seat Corp",
+        "edition": "pro",
+        "features": ["*"],
+        "iss": "QuantumindSSI",
+        "id": f"seat-{seats}",
+        "seats": seats,
+    }
+    payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+    return f"LUMENA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
+
+
+def test_seat_limit_blocks_new_tenant_over_cap(tmp_path, signing_keypair):
+    from lumena.brand.errors import SeatLimitError
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    key = _mint_with_seats(signing_keypair, 2)
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        store_memory(conn, "a", "r", tenant_id="A", config=cfg)
+        store_memory(conn, "b", "r", tenant_id="B", config=cfg)
+        conn.commit()
+        assert licensing.licensed_seats(cfg) == 2
+        # A third distinct tenant exceeds the 2 seats.
+        with pytest.raises(SeatLimitError):
+            store_memory(conn, "c", "r", tenant_id="C", config=cfg)
+    finally:
+        conn.close()
+
+
+def test_seat_limit_allows_reuse_of_existing_tenant(tmp_path, signing_keypair):
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    key = _mint_with_seats(signing_keypair, 1)
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        store_memory(conn, "a", "r1", tenant_id="solo", config=cfg)
+        # Re-storing under the SAME tenant uses the existing seat, not a new one.
+        store_memory(conn, "a2", "r2", tenant_id="solo", config=cfg)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_default_tenant_never_counts_against_seats(tmp_path, signing_keypair):
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    key = _mint_with_seats(signing_keypair, 1)
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        store_memory(conn, "a", "r", tenant_id="only", config=cfg)  # fills the 1 seat
+        # default tenant is always free and must not trip the seat limit.
+        cid = store_memory(conn, "d", "r", tenant_id="default", config=cfg)
+        conn.commit()
+        assert cid > 0
+    finally:
+        conn.close()
+
+
 def test_two_tenants_can_share_room_name(tmp_path, signing_keypair):
     """Regression for the migration-0004 defect: a global UNIQUE(room.name)
 

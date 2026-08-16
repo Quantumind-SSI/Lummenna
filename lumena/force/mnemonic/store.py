@@ -130,6 +130,12 @@ def store_memory(
     # persist tenant-scoped data (AGENTS.md Rule 2; mirrors search read gate).
     if has_tenant and tenant_id != "default":
         config.assert_licensed("multi_tenant")
+        # Seat enforcement: seats cap the number of concurrent non-default
+        # tenants. Reject a store that would introduce a new tenant beyond the
+        # licensed seat count (no-op for unlimited licences or existing tenants).
+        from lumena.licensing import assert_seat_available
+
+        assert_seat_available(conn, tenant_id, config)
 
     with conn:
         # 1. Resolve room
