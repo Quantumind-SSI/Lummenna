@@ -44,13 +44,21 @@ def signing_keypair(monkeypatch):
     licensing.clear_license_cache()
 
 
-def _mint(priv, *, features=("*",), edition="pro", exp=None, subject="Test Corp") -> str:
+def _mint(
+    priv,
+    *,
+    features=("*",),
+    edition="pro",
+    exp=None,
+    subject="Test Corp",
+    license_id="test-license",
+) -> str:
     payload: dict[str, object] = {
         "sub": subject,
         "edition": edition,
         "features": list(features),
         "iss": "QuantumindSSI",
-        "id": "test-license",
+        "id": license_id,
     }
     if exp:
         payload["exp"] = exp
@@ -115,6 +123,43 @@ def test_unknown_feature_key_is_programming_error(signing_keypair):
     cfg = LumenaConfig(license_key=key)
     with pytest.raises(ValueError):
         cfg.assert_licensed("not_a_real_feature")
+
+
+# --------------------------------------------------------------------------- #
+# Offline revocation
+# --------------------------------------------------------------------------- #
+
+
+def test_revoked_license_id_resolves_to_community(signing_keypair, monkeypatch):
+    """A validly-signed key whose id is revoked must not grant Pro."""
+    key = _mint(signing_keypair, features=["*"], license_id="revoked-123")
+    monkeypatch.setattr(licensing, "REVOKED_LICENSE_IDS", frozenset({"revoked-123"}))
+    licensing.clear_license_cache()
+    cfg = LumenaConfig(license_key=key)
+    # Fail-closed: revoked key resolves to Community, and the Pro gate raises.
+    assert cfg.edition == "community"
+    with pytest.raises(LicenseRequiredError):
+        cfg.assert_licensed("compliance")
+
+
+def test_revocation_raises_specific_error_on_parse(signing_keypair, monkeypatch):
+    from lumena.brand.errors import LicenseInvalidError
+
+    key = _mint(signing_keypair, features=["*"], license_id="revoked-xyz")
+    monkeypatch.setattr(licensing, "REVOKED_LICENSE_IDS", frozenset({"revoked-xyz"}))
+    licensing.clear_license_cache()
+    with pytest.raises(LicenseInvalidError, match="revoked"):
+        licensing.parse_license_key(key)
+
+
+def test_non_revoked_key_still_valid(signing_keypair, monkeypatch):
+    """Revoking one id must not affect a different, valid key."""
+    key = _mint(signing_keypair, features=["*"], license_id="good-key")
+    monkeypatch.setattr(licensing, "REVOKED_LICENSE_IDS", frozenset({"some-other-id"}))
+    licensing.clear_license_cache()
+    cfg = LumenaConfig(license_key=key)
+    assert cfg.edition == "pro"
+    cfg.assert_licensed("compliance")  # must not raise
 
 
 def test_no_public_key_embedded_is_fail_closed(monkeypatch, signing_keypair):

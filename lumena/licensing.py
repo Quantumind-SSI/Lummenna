@@ -32,8 +32,15 @@ payload_json = {
     "seats":     10,                 # informational
     "exp":       "2027-08-15",       # ISO date; omit for perpetual
     "iss":       "QuantumindSSI",
-    "id":        "<license-id>"
+    "id":        "<license-id>"      # opaque id; used for offline revocation
 }
+
+Revocation
+----------
+Validation is offline, so a compromised key cannot be disabled by a server call.
+Instead its ``id`` is added to ``REVOKED_LICENSE_IDS`` (embedded below) and shipped
+in the next release; any listed key then resolves to Community. Pair with a
+short ``exp`` policy to bound the exposure window of a leaked key.
 """
 
 from __future__ import annotations
@@ -95,6 +102,23 @@ PLANNED_PRO_FEATURES: dict[str, str] = {
 
 #: Wildcard that grants all Pro features (issued to full-license customers).
 WILDCARD = "*"
+
+#: Offline license revocation list. Because validation is fully offline (no
+#: phone-home), a leaked, refunded, or charged-back key cannot be disabled by a
+#: server call. Instead, revoked license *ids* (the ``id`` field of the signed
+#: payload) are embedded here and shipped in the next release; any key whose id
+#: is listed resolves to Community regardless of its (valid) signature. This is
+#: the sovereign-friendly revocation mechanism: paired with short-dated keys
+#: (an ``exp`` policy), it bounds the exposure window of a compromised key.
+#:
+#: Operational note: to revoke a key, add its ``id`` here (with a comment noting
+#: date + reason) and cut a release. Ids are opaque strings (uuid4 by default),
+#: so listing one leaks nothing about the customer.
+REVOKED_LICENSE_IDS: frozenset[str] = frozenset(
+    {
+        # "<license-id>",  # YYYY-MM-DD reason (e.g. refunded, key leaked)
+    }
+)
 
 #: Embedded QuantumindSSI license-signing public key (Ed25519, base64url, raw
 #: 32 bytes). This is the PUBLIC half only; the PRIVATE signing key never lives
@@ -201,13 +225,21 @@ def parse_license_key(key: str) -> License:
         except ValueError as exc:
             raise LicenseInvalidError("invalid 'exp' date") from exc
 
+    license_id = str(payload.get("id", ""))
+    # Offline revocation: a validly-signed key whose id is on the embedded
+    # revocation list is rejected (resolves to Community via the caller's
+    # fail-closed handling). Checked before expiry so a revoked key reports the
+    # more specific reason.
+    if license_id and license_id in REVOKED_LICENSE_IDS:
+        raise LicenseInvalidError(f"license {license_id} has been revoked")
+
     lic = License(
         subject=str(payload.get("sub", "unknown")),
         edition=str(payload.get("edition", "community")),
         features=frozenset(payload.get("features", [])),
         seats=int(payload.get("seats", 0) or 0),
         expires=expires,
-        license_id=str(payload.get("id", "")),
+        license_id=license_id,
         raw=key,
     )
     if lic.expired:
