@@ -70,7 +70,7 @@ PRO_FEATURES: dict[str, str] = {
     "compliance": "Compliance: RTBF, audit trails, custom PII governance (P1)",
     "encryption_at_rest": "Encryption-at-rest (SQLCipher/Fernet) + key mgmt (P2)",
     "multi_tenant": "Real storage-layer multi-tenant isolation (P4)",
-    "advanced_p2p": "Advanced P2P: key-rotation, multi-node mesh (P6)",
+    "advanced_p2p": "Advanced P2P: live encryption/signing key-rotation (P6)",
     # Non-code commercial entitlements (support/release commitments, not a code
     # path — legitimately flag-only, granted by license, never a stub in code):
     "priority_support": "Priority support + SLA (V5)",
