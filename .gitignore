@@ -88,7 +88,9 @@ credentials/
 !*.env.sample
 
 # Internal / local-only documentation and assets (not for public repo)
-AGENTS.md
+# NOTE: AGENTS.md is intentionally TRACKED — it is the enforced engineering
+# constitution (No-Vaporware / No-False-Claims) that coding agents load every
+# session and CI references. Keeping it out of the repo would defeat its purpose.
 dev-docs/
 docs/internal/
 .opencode/

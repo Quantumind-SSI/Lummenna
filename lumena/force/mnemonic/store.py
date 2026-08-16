@@ -124,6 +124,13 @@ def store_memory(
 
     has_tenant = _tenant_id_supported(conn)
 
+    # Multi-tenant isolation is a Pro capability. Writing under a real (non-
+    # default) tenant requires a license; the default single-tenant path is
+    # always free. Gate at the write boundary so unlicensed callers cannot
+    # persist tenant-scoped data (AGENTS.md Rule 2; mirrors search read gate).
+    if has_tenant and tenant_id != "default":
+        config.assert_licensed("multi_tenant")
+
     with conn:
         # 1. Resolve room
         if has_tenant:

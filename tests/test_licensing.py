@@ -184,3 +184,143 @@ def test_advanced_p2p_rotate_key_allowed_with_pro(signing_keypair):
     node = BeamNode(cfg)
     node.rotate_key("n" * 32)  # must NOT raise
     assert cfg.p2p_encryption_key == "n" * 32
+
+
+# --------------------------------------------------------------------------- #
+# Registry integrity — no vaporware, no false claims (AGENTS.md Rule 2/3)
+# --------------------------------------------------------------------------- #
+
+
+def test_pro_and_planned_registries_are_disjoint():
+    """A feature is either enforceable now OR planned — never both."""
+    overlap = set(licensing.PRO_FEATURES) & set(licensing.PLANNED_PRO_FEATURES)
+    assert not overlap, f"features in both PRO_FEATURES and PLANNED_PRO_FEATURES: {overlap}"
+
+
+def test_planned_feature_cannot_be_gated_as_available(signing_keypair):
+    """Even with a wildcard Pro key, a planned feature must not silently gate.
+
+    Gating a not-yet-built capability would be a false 'available' claim; the
+    engine surfaces it as a programming error instead.
+    """
+    key = _mint(signing_keypair, features=["*"])
+    cfg = LumenaConfig(license_key=key)
+    for planned in licensing.PLANNED_PRO_FEATURES:
+        with pytest.raises(ValueError, match="planned but not yet built"):
+            cfg.assert_licensed(planned)
+
+
+def test_every_enforceable_pro_feature_is_actually_gated():
+    """Each code-backed PRO_FEATURES key must have a real assert_licensed gate.
+
+    Non-code commercial entitlements (support/release commitments) are exempt:
+    they are granted by license but have no code path to gate.
+    """
+    import pathlib
+
+    non_code_entitlements = {"priority_support", "lts"}
+    code_features = set(licensing.PRO_FEATURES) - non_code_entitlements
+
+    root = pathlib.Path(__file__).resolve().parent.parent / "lumena"
+    sources = "\n".join(
+        p.read_text(encoding="utf-8") for p in root.rglob("*.py") if p.name != "licensing.py"
+    )
+    for feature in code_features:
+        assert (
+            f'assert_licensed("{feature}")' in sources or f"assert_licensed('{feature}')" in sources
+        ), f"PRO_FEATURES key {feature!r} is declared but never gated by assert_licensed()"
+
+
+# --------------------------------------------------------------------------- #
+# multi_tenant (P4) gate — read + write boundaries
+# --------------------------------------------------------------------------- #
+
+
+def _tenant_cfg(tmp_path, license_key=None):
+    return LumenaConfig(store_path=str(tmp_path / ".lumena"), license_key=license_key)
+
+
+def test_multi_tenant_write_blocks_community(tmp_path):
+    licensing.clear_license_cache()
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    cfg = _tenant_cfg(tmp_path)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        with pytest.raises(LicenseRequiredError):
+            store_memory(conn, "secret", "room", tenant_id="acme", config=cfg)
+    finally:
+        conn.close()
+
+
+def test_default_tenant_write_is_free(tmp_path):
+    licensing.clear_license_cache()
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import store_memory
+
+    cfg = _tenant_cfg(tmp_path)
+    conn = get_connection(cfg)
+    try:
+        cid = store_memory(conn, "hello world", "room", tenant_id="default", config=cfg)
+        assert cid > 0  # community single-tenant path must NOT be gated
+    finally:
+        conn.close()
+
+
+def test_multi_tenant_write_allowed_with_pro(tmp_path, signing_keypair):
+    key = _mint(signing_keypair, features=["*"])
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+
+    cfg = _tenant_cfg(tmp_path, license_key=key)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+    try:
+        cid = store_memory(conn, "tenant secret", "room", tenant_id="acme", config=cfg)
+        assert cid > 0  # Pro key must NOT raise
+    finally:
+        conn.close()
+
+
+def test_multi_tenant_read_filter_blocks_community(tmp_path):
+    licensing.clear_license_cache()
+    from lumena.data.schema import get_connection
+    from lumena.force.mnemonic.store import _tenant_id_supported
+
+    cfg = _tenant_cfg(tmp_path)
+    conn = get_connection(cfg)
+    if not _tenant_id_supported(conn):
+        pytest.skip("schema predates tenant support")
+
+    pipeline = _SearchPipelineForTenant(conn, cfg)
+    # _filter_by_tenant only reads .chunk_id; a light stub avoids constructing a
+    # full RetrievedChunk (many required fields) unrelated to the gate under test.
+    fake = [_ChunkStub(1)]
+    try:
+        with pytest.raises(LicenseRequiredError):
+            pipeline._filter_by_tenant(fake, "acme")
+        # default tenant must never be gated
+        assert pipeline._filter_by_tenant(fake, "default") == fake
+    finally:
+        conn.close()
+
+
+class _ChunkStub:
+    """Minimal stand-in exposing only the .chunk_id that _filter_by_tenant reads."""
+
+    def __init__(self, chunk_id: int) -> None:
+        self.chunk_id = chunk_id
+
+
+def _SearchPipelineForTenant(conn, cfg):
+    """Construct a SearchPipeline without triggering real embedder loading."""
+    from lumena.search import SearchPipeline
+
+    pipeline = SearchPipeline.__new__(SearchPipeline)
+    pipeline.conn = conn
+    pipeline.config = cfg
+    return pipeline

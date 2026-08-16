@@ -58,25 +58,39 @@ if TYPE_CHECKING:
 # only Pro-gated capabilities need an entry.
 # ---------------------------------------------------------------------------
 
-#: Canonical Pro feature keys. Referenced by assert_licensed(<key>).
+#: Canonical Pro feature keys that are **built and enforceable today**. Every
+#: entry here MUST have a real implementation gated by ``assert_licensed(<key>)``
+#: in the codebase (see AGENTS.md Rule 2). Referenced by ``assert_licensed``.
+#:
+#: Do NOT add a key here until its capability actually exists and is gated. A
+#: declared-but-ungated feature is either a revenue leak or false advertising —
+#: unbuilt work belongs in ``PLANNED_PRO_FEATURES`` and ``ROADMAP.md`` instead.
 PRO_FEATURES: dict[str, str] = {
-    # 2a — ready to gate (already built)
+    # Built + gated in code:
     "compliance": "Compliance: RTBF, audit trails, custom PII governance (P1)",
     "encryption_at_rest": "Encryption-at-rest (SQLCipher/Fernet) + key mgmt (P2)",
-    "advanced_p2p": "Advanced P2P: key-rotation, multi-node mesh (P6)",
-    # 2b — build then gate
-    "advanced_auth": "RBAC / OIDC / per-user API keys / SSO (P3)",
     "multi_tenant": "Real storage-layer multi-tenant isolation (P4)",
+    "advanced_p2p": "Advanced P2P: key-rotation, multi-node mesh (P6)",
+    # Non-code commercial entitlements (support/release commitments, not a code
+    # path — legitimately flag-only, granted by license, never a stub in code):
+    "priority_support": "Priority support + SLA (V5)",
+    "lts": "Long-term support (LTS) releases (V8)",
+}
+
+#: Planned Pro features — **not yet built, not advertised as available**. These
+#: are roadmap items (see ROADMAP.md → "Enterprise Pro Roadmap"), kept OUT of the
+#: enforceable ``PRO_FEATURES`` registry so nothing here can be sold or gated as a
+#: present capability. When one is built to enterprise grade, MOVE its key into
+#: ``PRO_FEATURES`` and add its ``assert_licensed`` gate in the same change.
+PLANNED_PRO_FEATURES: dict[str, str] = {
+    "advanced_auth": "RBAC / OIDC / per-user API keys / SSO (P3)",
     "scale_out": "Scale-out backend (Postgres/pgvector), HA (P5)",
-    # value-enhancement additions
     "team_analytics": "Team dashboard & analytics (V1)",
     "key_vault": "Managed key vault / HSM integration (V2)",
     "compliance_reporting": "Compliance reporting & exports (V3)",
     "sso_directory_sync": "SSO / directory sync — OIDC, SAML, SCIM (V4)",
-    "priority_support": "Priority support + SLA (V5)",
     "backup_pitr": "Backup/restore orchestration & PITR (V6)",
     "ha_topology": "Horizontal read scaling & HA topology (V7)",
-    "lts": "Long-term support (LTS) releases (V8)",
 }
 
 #: Wildcard that grants all Pro features (issued to full-license customers).
@@ -242,6 +256,14 @@ def assert_licensed(feature: str, config: LumenaConfig | None = None) -> None:
     Raises:
         LicenseRequiredError: no valid license entitles ``feature``.
     """
+    if feature in PLANNED_PRO_FEATURES:
+        # A planned-but-unbuilt feature must never be silently gated as if it
+        # exists (AGENTS.md Rule 2/3). If code reaches here, the capability was
+        # wired before it was implemented — surface that as a programming error.
+        raise ValueError(
+            f"Pro feature {feature!r} is planned but not yet built "
+            f"(see PLANNED_PRO_FEATURES / ROADMAP.md); do not gate it as available."
+        )
     if feature not in PRO_FEATURES and feature != WILDCARD:
         # Guard against typos: an unknown feature key is a programming error,
         # not a licensing decision. Surface it loudly in that case.
