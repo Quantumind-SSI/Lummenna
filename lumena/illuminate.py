@@ -39,8 +39,10 @@ def _load_nlp():
         return _NLP_CACHE
     except Exception as exc:
         raise RuntimeError(
-            "spaCy model 'en_core_web_sm' is required for onboarding. "
-            "Install it with: python -m spacy download en_core_web_sm"
+            "The onboarding wizard needs spaCy. Install the wizard extra:\n"
+            "  pip install 'lumena[wizard]'\n"
+            "then download the model:\n"
+            "  python -m spacy download en_core_web_sm"
         ) from exc
 
 

@@ -14,7 +14,7 @@
 
 <p>
   <a href="https://github.com/QuantumindSSI/lumena/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lumena/ci.yml?branch=main&style=flat-square" alt="CI"></a>
-  <a href="https://github.com/QuantumindSSI/lumena/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
+  <a href="https://github.com/QuantumindSSI/lumena/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%7C%20Commercial-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
   <img src="https://img.shields.io/badge/coverage-75%25-brightgreen?style=flat-square" alt="Coverage">
   <img src="https://img.shields.io/badge/tests-320%20passed-brightgreen?style=flat-square" alt="Tests">
@@ -41,10 +41,10 @@ Lumena is a **local-first memory store for LLM agents** — it organizes agent m
 ## Quick Start
 
 ```bash
-# Clone and install
+# Clone and install (lean runtime — no torch/CUDA)
 git clone https://github.com/QuantumindSSI/lumena.git
 cd lumena
-pip install -e ".[dev]"
+pip install -e .            # runtime: sqlite-vec, onnxruntime, transformers tokenizer…
 
 # Initialize
 lumena init --device generic
@@ -54,6 +54,25 @@ lumena serve
 # Dashboard at http://localhost:8848/dashboard
 # API docs at http://localhost:8848/docs
 ```
+
+> **First run needs an embedding model.** By default `lumena` will try to export
+> one, which requires the heavy `[export]` toolchain. The lean, recommended path
+> is a **prebuilt model bundle** (no toolchain): set `LUMENA_PREBUILT_MODEL_URL`
+> or use the one-command installer.
+
+### Install options (extras)
+
+The base install is deliberately **lean** (no torch/CUDA). Add extras only when needed:
+
+| Install | Adds | When |
+|---|---|---|
+| `pip install lumena` | Core runtime + inference | Always |
+| `pip install 'lumena[mcp]'` | MCP server for coding agents | Using OpenCode/Copilot/Claude/etc. |
+| `pip install 'lumena[export]'` | ONNX export toolchain (optimum → torch, ~2GB) | Only to *build* a model yourself |
+| `pip install 'lumena[wizard]'` | spaCy onboarding wizard | `lumena illuminate` |
+| `pip install 'lumena[localllm]'` | On-device LLM (llama-cpp) | Narrative consolidation |
+| `pip install 'lumena[langchain]'` / `[langgraph]` | Framework adapters | Those frameworks |
+| `pip install 'lumena[full]'` | Everything above | Kitchen-sink local dev |
 
 ### Store and retrieve
 
@@ -254,7 +273,6 @@ ruff check lumena/ tests/             # Lint
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | Integration guides for each platform |
 | [`ROADMAP.md`](ROADMAP.md) | Development milestones and open work |
 | [`docs/Lumena_Whitepaper.md`](docs/Lumena_Whitepaper.md) | Introductory white paper |
-| [`docs/Lumena_State_of_the_Codebase.md`](docs/Lumena_State_of_the_Codebase.md) | AST-audited state, known defects, and honest airworthiness assessment |
 
 ---
 
@@ -269,7 +287,18 @@ ruff check lumena/ tests/             # Lint
 
 ## License
 
-Apache 2.0. See [`LICENSE`](LICENSE).
+Lumena is **dual-licensed**:
+
+- **Community Edition** — [AGPL-3.0-or-later](LICENSE). Free and open source.
+  If you run a modified Lumena as a network service, AGPL requires you to make
+  your source available to its users.
+- **Pro / Commercial Edition** — a commercial license from QuantumindSSI that
+  removes the AGPL obligations and unlocks Pro features. See
+  [`COMMERCIAL-LICENSE.md`](COMMERCIAL-LICENSE.md).
+
+Versions up to and including v1.0.0 were released under Apache 2.0
+([`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt)); that grant on those
+releases is irrevocable. Commercial inquiries: **licensing@quantumindssi.com**.
 
 ---
 

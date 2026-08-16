@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
+# Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
+# NOTE: Advanced P2P (key-rotation, persistent replay store, multi-node mesh)
+# is gated as Lumena Pro (see COMMERCIAL-LICENSE.md, P6). Basic LAN sharing is Community.
 """C10: P2P Memory Sharing (Beam Protocol).
 
 Household-only, LAN-scoped memory sharing with mandatory encryption,

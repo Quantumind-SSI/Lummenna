@@ -1,7 +1,7 @@
 """Grounding tests: documented claims must be enforced, not merely asserted.
 
 Each test corresponds to a concrete claim in docs/Lumena_Whitepaper.md and
-proves the code refuses to violate it. See docs/CLAIMS_AUDIT.md.
+proves the code refuses to violate it.
 """
 
 import math
