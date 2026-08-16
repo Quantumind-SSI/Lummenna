@@ -62,7 +62,7 @@ gated by Lumena's entitlement engine, `lumena.licensing.PRO_FEATURES`).
 | P1 | Compliance: right-to-be-forgotten (RTBF), audit trails, custom PII governance |
 | P2 | Encryption-at-rest (SQLCipher/Fernet) + key management / rotation |
 | P4 | Real (storage-layer) multi-tenant isolation |
-| P6 | Advanced P2P (key-rotation, persistent replay store, multi-node mesh) |
+| P6 | Advanced P2P: live encryption/signing key-rotation (`BeamNode.rotate_key`) over the encrypted, HMAC-signed, replay-protected LAN Beam transport |
 | V5 | Priority support + SLA (commercial support commitment) |
 | V8 | Long-term support (LTS) releases (commercial release commitment) |
 
@@ -86,6 +86,7 @@ capabilities.
 | V4 | SSO / directory sync (OIDC, SAML, SCIM) | Not yet available |
 | V6 | Backup/restore orchestration & point-in-time recovery | Not yet available |
 | V7 | Horizontal read scaling & HA topology | Not yet available |
+| P6+ | Advanced P2P hardening: multi-node mesh routing & persistent (durable) replay-nonce store | Not yet available |
 
 Access to Pro features is enabled by a valid **license key** issued by
 QuantumindSSI and validated by Lumena's entitlement engine

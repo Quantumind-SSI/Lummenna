@@ -1,7 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
-# NOTE: Advanced P2P (key-rotation, persistent replay store, multi-node mesh)
-# is gated as Lumena Pro (see COMMERCIAL-LICENSE.md, P6). Basic LAN sharing is Community.
+# NOTE: Advanced P2P — currently the live encryption/signing key-rotation
+# capability (BeamNode.rotate_key) — is gated as Lumena Pro (see
+# COMMERCIAL-LICENSE.md, P6). Basic single-key LAN sharing (constructing a
+# BeamNode and running start()/share_room()) is Community.
+#
+# NOT YET BUILT (roadmap, see ROADMAP.md, must not be advertised as available):
+#   * multi-node mesh routing — discovery + transport here are flat mDNS with
+#     direct 1-hop TCP sends; there is no multi-hop/relay/gossip topology.
+#   * persistent replay store — the replay-nonce set (P2PSign._seen_nonces) is
+#     in-memory only and resets on restart; it is not durable across restarts.
 """C10: P2P Memory Sharing (Beam Protocol).
 
 Household-only, LAN-scoped memory sharing with mandatory encryption,
@@ -9,8 +17,10 @@ HMAC signing, replay protection, and TTL enforcement.
 
 SECURITY POSTURE:
   - Encryption: AES-256-GCM (via P2PCrypto).
-  - Integrity / Authenticity: HMAC-SHA256 with 30-second replay window.
+  - Integrity / Authenticity: HMAC-SHA256 with a 30-second replay window and an
+    in-memory replay-nonce set (per-process; not persisted across restarts).
   - TTL: packets older than their ttl_hours are dropped at reception.
+  - Topology: flat mDNS peer discovery with direct 1-hop TCP delivery (no mesh).
   - Plaintext fallback: REMOVED. Enabling Beam without a p2p_encryption_key
     raises a SecurityError. To override (e.g. for local testing), set
     LUMENA_P2P_INSECURE=1 in the environment.

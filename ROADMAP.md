@@ -157,6 +157,20 @@ Read-replica fan-out and failover (builds on `scale_out`).
 - [ ] Chaos/failover test proving no data loss and bounded recovery time on primary failure
 - [ ] Gated by `assert_licensed("ha_topology")`
 
+### EP-P6+ — Advanced P2P hardening (extends the shipped `advanced_p2p`)
+Today `advanced_p2p` ships **live encryption/signing key-rotation** only
+(`BeamNode.rotate_key`). The following P2P hardening is **not built** — the Beam
+transport is flat mDNS discovery with direct 1-hop TCP delivery and an in-memory
+replay-nonce set. These extend the same gate when delivered.
+- [ ] **Multi-node mesh routing** — multi-hop relay/forwarding across peers with a
+      documented topology and partition handling (currently 1-hop only)
+- [ ] **Persistent replay store** — durable replay-nonce store surviving process
+      restart (currently `P2PSign._seen_nonces` is in-memory, reset on restart),
+      with a documented retention/eviction policy
+- [ ] Key-rotation handshake so peers negotiate the new key rather than relying on
+      out-of-band agreement
+- [ ] Adversarial-network test coverage for the above
+
 ---
 
 ## Honest Claim Posture
