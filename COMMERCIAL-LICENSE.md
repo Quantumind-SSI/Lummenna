@@ -60,7 +60,7 @@ gated by Lumena's entitlement engine, `lumena.licensing.PRO_FEATURES`).
 | Ref | Pro capability |
 |-----|----------------|
 | P1 | Compliance: right-to-be-forgotten (RTBF) with atomic erasure, tamper-evident (hash-chained) audit trails, custom PII governance |
-| P2 | Encryption-at-rest (SQLCipher/Fernet) + key management / rotation |
+| P2 | Encryption-at-rest: SQLCipher (AES-256, whole-database) or Fernet field-level encryption, with PBKDF2 passphrase-derived keys and a persisted per-store salt |
 | P4 | Real (storage-layer) multi-tenant isolation |
 | P6 | Advanced P2P: live encryption/signing key-rotation (`BeamNode.rotate_key`) over the encrypted, HMAC-signed, replay-protected LAN Beam transport |
 | V5 | Priority support + SLA (commercial support commitment) |

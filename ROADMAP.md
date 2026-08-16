@@ -123,6 +123,7 @@ material only).
 - [ ] Pluggable KMS provider interface with at least one real backend (e.g. cloud KMS or PKCS#11 HSM)
 - [ ] Envelope encryption: data keys wrapped by a KMS-held master key; plaintext keys never persisted
 - [ ] Key rotation without data re-encryption downtime; old keys retained for decrypt only
+- [ ] **Encryption-at-rest key rotation** — rekey an existing store (SQLCipher `PRAGMA rekey` + Fernet field re-wrap) without data loss. Today P2 provides PBKDF2 key *derivation* only; rotating `LUMENA_ENCRYPTION_KEY` does not re-encrypt existing data, so it is not yet supported.
 - [ ] Fail-closed if the vault is unreachable; explicit, tested error paths
 - [ ] Gated by `assert_licensed("key_vault")`
 
