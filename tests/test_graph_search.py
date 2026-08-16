@@ -70,6 +70,34 @@ def test_graph_hits_score_boost(memory_db):
     assert rrf_with_graph > rrf_no_graph
 
 
+def test_traverse_from_seed_missing_node_does_not_raise(memory_db):
+    """Regression: a seed absent from the graph snapshot must not crash.
+
+    The NetworkX graph is a snapshot built at construction, while dense-channel
+    seeds come from the vector index. When the two drift (e.g. a chunk stored
+    after the snapshot, or tombstoned since), ``DiGraph.neighbors`` would raise
+    ``NetworkXError: The node <id> is not in the digraph`` and abort search /
+    assemble. Traversal must instead degrade to zero graph-channel hits.
+    """
+    _setup_db(memory_db)
+    graph = GraphChannel(memory_db)
+    # Only the NetworkX path exercises the previously-unguarded neighbors() call.
+    if graph._nx is None or not hasattr(graph, "_graph"):
+        import pytest
+
+        pytest.skip("networkx unavailable; sqlite fallback path is already guarded")
+
+    # 999 exists in neither the chunk table nor the graph snapshot — exactly the
+    # vector/graph drift that triggered the production error.
+    assert 999 not in graph._graph
+    hits = graph.traverse_from_seed(999, hops=2)
+    assert hits == []
+
+    # A valid in-snapshot seed still traverses normally (no regression).
+    valid_hits = graph.traverse_from_seed(1, hops=2)
+    assert isinstance(valid_hits, list)
+
+
 def test_search_pipeline_with_graph_boosts_results(
     monkeypatch, memory_db, test_config, mock_embedder
 ):
