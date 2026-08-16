@@ -126,6 +126,142 @@ def test_unknown_feature_key_is_programming_error(signing_keypair):
 
 
 # --------------------------------------------------------------------------- #
+# Fail-closed on adversarial payload coercion (audit finding 1 + 2)
+# --------------------------------------------------------------------------- #
+
+
+def _mint_raw(priv, payload: dict) -> str:
+    """Sign an arbitrary payload dict (allows malformed fields for fuzzing)."""
+    payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+    return f"LUMENA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"seats": "notanint"},  # non-numeric string -> was ValueError
+        {"seats": -5},  # negative -> was silently "unlimited"
+        {"seats": True},  # bool masquerading as int
+        {"seats": [1]},  # wrong type
+        {"features": 5},  # non-iterable -> was TypeError
+        {"features": {"x": 1}},  # dict -> was TypeError on frozenset
+        {"features": ["ok", 3]},  # mixed non-str members
+    ],
+)
+def test_adversarial_payload_raises_license_invalid(signing_keypair, bad):
+    """A validly-signed but malformed payload must raise LicenseInvalidError,
+
+    never an uncaught ValueError/TypeError. This is what lets the engine
+    fail-closed to Community instead of crashing the caller.
+    """
+    from lumena.brand.errors import LicenseInvalidError
+
+    payload = {
+        "sub": "t",
+        "edition": "pro",
+        "features": ["*"],
+        "iss": "QuantumindSSI",
+        "id": "adv",
+        **bad,
+    }
+    key = _mint_raw(signing_keypair, payload)
+    licensing.clear_license_cache()
+    with pytest.raises(LicenseInvalidError):
+        licensing.parse_license_key(key)
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"seats": "notanint"},
+        {"seats": -5},
+        {"features": 5},
+        {"features": None},
+    ],
+)
+def test_adversarial_payload_fails_closed_to_community(signing_keypair, bad):
+    """The config resolution path must degrade to Community, not crash.
+
+    Regression for the audit finding where a malformed 'seats'/'features' field
+    escaped parse_license_key and crashed config.edition with ValueError/TypeError.
+    """
+    payload = {
+        "sub": "t",
+        "edition": "pro",
+        "features": ["*"],
+        "iss": "QuantumindSSI",
+        "id": "adv2",
+        **bad,
+    }
+    key = _mint_raw(signing_keypair, payload)
+    licensing.clear_license_cache()
+    cfg = LumenaConfig(license_key=key)
+    # features=None is a *valid* empty-entitlement Pro key (grants nothing);
+    # all the others are malformed and fail closed. Neither may raise here.
+    if bad == {"features": None}:
+        assert cfg.edition == "pro"
+        assert not licensing.is_licensed("compliance", cfg)
+    else:
+        assert cfg.edition == "community"
+
+
+def test_valid_seats_variants_accepted(signing_keypair):
+    """Legitimate seat encodings still parse: numeric string, float, zero."""
+    for raw, expected in (("10", 10), (3.7, 3), (0, 0)):
+        payload = {
+            "sub": "t",
+            "edition": "pro",
+            "features": ["*"],
+            "iss": "QuantumindSSI",
+            "id": "sv",
+            "seats": raw,
+        }
+        licensing.clear_license_cache()
+        lic = licensing.parse_license_key(_mint_raw(signing_keypair, payload))
+        assert lic.seats == expected
+
+
+def test_string_features_treated_as_single_feature(signing_keypair):
+    """A bare-string 'features' must be one feature, not a set of characters."""
+    payload = {
+        "sub": "t",
+        "edition": "pro",
+        "features": "compliance",
+        "iss": "QuantumindSSI",
+        "id": "sf",
+    }
+    licensing.clear_license_cache()
+    lic = licensing.parse_license_key(_mint_raw(signing_keypair, payload))
+    assert lic.features == frozenset({"compliance"})
+    assert lic.grants("compliance")
+    assert not lic.grants("c")  # not exploded into characters
+
+
+def test_coerce_helpers_unit():
+    """Direct unit coverage of the coercion helpers."""
+    from lumena.brand.errors import LicenseInvalidError
+
+    assert licensing._coerce_features(None) == frozenset()
+    assert licensing._coerce_features("x") == frozenset({"x"})
+    assert licensing._coerce_features(["a", "b"]) == frozenset({"a", "b"})
+    with pytest.raises(LicenseInvalidError):
+        licensing._coerce_features(5)
+    with pytest.raises(LicenseInvalidError):
+        licensing._coerce_features(["a", 3])
+
+    assert licensing._coerce_seats(None) == 0
+    assert licensing._coerce_seats("") == 0
+    assert licensing._coerce_seats("7") == 7
+    assert licensing._coerce_seats(3.9) == 3
+    with pytest.raises(LicenseInvalidError):
+        licensing._coerce_seats("nope")
+    with pytest.raises(LicenseInvalidError):
+        licensing._coerce_seats(-1)
+    with pytest.raises(LicenseInvalidError):
+        licensing._coerce_seats(True)
+
+
+# --------------------------------------------------------------------------- #
 # Offline revocation
 # --------------------------------------------------------------------------- #
 
