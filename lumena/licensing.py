@@ -28,8 +28,8 @@ License key format
 payload_json = {
     "sub":       "<licensee/org>",
     "edition":   "pro",
-    "features":  ["*"] | ["compliance", "encryption_at_rest", ...],
-    "seats":     10,                 # max concurrent non-default tenants (0=unlimited)
+    "features":  ["*"] | ["compliance", "encryption_at_rest", ...],  # list[str]
+    "seats":     10,                 # non-negative int; max concurrent non-default tenants (0=unlimited)
     "exp":       "2027-08-15",       # ISO date; omit for perpetual
     "iss":       "QuantumindSSI",
     "id":        "<license-id>"      # opaque id; used for offline revocation
@@ -192,6 +192,54 @@ def _verify_signature(payload_bytes: bytes, signature: bytes) -> bool:
         return False
 
 
+def _coerce_features(raw: object) -> frozenset[str]:
+    """Coerce the payload ``features`` field to a frozenset[str], fail-closed.
+
+    A signed payload is still untrusted structurally: a tampered or corrupted key
+    may carry a non-list ``features`` (an int, null, dict, ...). ``frozenset()``
+    on a non-iterable raises ``TypeError``, and iterating a string would silently
+    explode into single characters — both wrong. Normalise here so any malformed
+    shape becomes a ``LicenseInvalidError`` (which the caller maps to Community),
+    never an uncaught exception or a nonsense entitlement set.
+    """
+    if raw is None:
+        return frozenset()
+    # A bare string (e.g. "compliance") is a common mistake; treat it as a
+    # single feature rather than a set of its characters.
+    if isinstance(raw, str):
+        return frozenset({raw})
+    if isinstance(raw, list | tuple | set | frozenset):
+        items = list(raw)
+        if not all(isinstance(f, str) for f in items):
+            raise LicenseInvalidError("'features' must be a list of strings")
+        return frozenset(items)
+    raise LicenseInvalidError("'features' has an invalid type")
+
+
+def _coerce_seats(raw: object) -> int:
+    """Coerce the payload ``seats`` field to a non-negative int, fail-closed.
+
+    ``int("notanint")`` raises ``ValueError``; a negative seat count is
+    meaningless and must not be silently reinterpreted as "unlimited" (which the
+    seat enforcer treats ``<= 0`` as). Reject both rather than crash or grant an
+    unbounded entitlement.
+    """
+    if raw is None or raw == "":
+        return 0
+    # Only accept the JSON scalar types a seat count could legitimately arrive
+    # as; anything else (list, dict, bool-in-disguise) is malformed. bool is a
+    # subclass of int, so exclude it explicitly to avoid True -> 1 surprises.
+    if isinstance(raw, bool) or not isinstance(raw, int | float | str):
+        raise LicenseInvalidError("'seats' has an invalid type")
+    try:
+        seats = int(raw)  # int, float (truncates), or numeric str
+    except (TypeError, ValueError) as exc:
+        raise LicenseInvalidError("'seats' is not an integer") from exc
+    if seats < 0:
+        raise LicenseInvalidError("'seats' must be non-negative")
+    return seats
+
+
 def parse_license_key(key: str) -> License:
     """Parse and cryptographically verify a license key.
 
@@ -238,8 +286,8 @@ def parse_license_key(key: str) -> License:
     lic = License(
         subject=str(payload.get("sub", "unknown")),
         edition=str(payload.get("edition", "community")),
-        features=frozenset(payload.get("features", [])),
-        seats=int(payload.get("seats", 0) or 0),
+        features=_coerce_features(payload.get("features", [])),
+        seats=_coerce_seats(payload.get("seats", 0)),
         expires=expires,
         license_id=license_id,
         raw=key,
