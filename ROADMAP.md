@@ -71,6 +71,94 @@ This document tracks ongoing and future work for Lumena following the v1.0.0 pub
 
 ---
 
+## Enterprise Pro Roadmap — NOT YET AVAILABLE
+
+These are **planned** commercial (Pro) capabilities. They are **not built and not
+available today**, and they must never be advertised, gated, or claimed as
+present until delivered (see `AGENTS.md`). They are registered in
+`PLANNED_PRO_FEATURES` in `lumena/licensing.py` — deliberately separate from the
+enforceable `PRO_FEATURES` registry — so nothing here can be sold as a live
+feature. Calling `assert_licensed(<planned-key>)` intentionally raises, because
+gating an unbuilt capability would be a false availability claim.
+
+When an item below is delivered to its acceptance criteria, in the **same
+change**: (1) implement it completely (no stubs), (2) add its `assert_licensed`
+gate at the real code boundary with tests proving Community is blocked and Pro is
+allowed, (3) move its key from `PLANNED_PRO_FEATURES` to `PRO_FEATURES`, and (4)
+move it into the "Available now" table of `COMMERCIAL-LICENSE.md`.
+
+Current status of every item: **Not started** (design only).
+
+### EP-P3 — Advanced API auth (`advanced_auth`)
+RBAC, OIDC/JWT, per-user API keys, session/SSO. Replaces the single shared
+`X-API-Key`.
+- [ ] Role model (roles, permissions, role→permission mapping) persisted and migration-managed
+- [ ] Per-user API keys: issue, rotate, revoke; keys stored only as salted hashes
+- [ ] OIDC/JWT bearer validation (issuer, audience, expiry, signature via JWKS) with clock-skew tolerance
+- [ ] Authorization enforced at every API route (deny-by-default); tests prove each route rejects insufficient scope
+- [ ] Audit log entry for every auth decision (grant/deny) with actor, resource, decision
+- [ ] Gated by `assert_licensed("advanced_auth")`; Community keeps the existing single-key auth
+
+### EP-P5 — Scale-out backend (`scale_out`)
+Postgres/pgvector backend with replication and HA, as an alternative to the
+single-node SQLite store.
+- [ ] Storage abstraction so retrieval/store paths are backend-agnostic (SQLite | Postgres+pgvector)
+- [ ] Postgres schema + migrations at parity with the SQLite schema (rooms, loci, chunks, provenance, feedback, tenant_id)
+- [ ] pgvector ANN index with recall parity to `sqlite-vec` on the committed benchmark set (documented R@k delta ≤ agreed threshold)
+- [ ] Connection pooling, statement timeouts, and read-replica routing for read paths
+- [ ] Backend matrix in CI: full test suite green on both SQLite and Postgres
+- [ ] Gated by `assert_licensed("scale_out")`
+
+### EP-V1 — Team dashboard & analytics (`team_analytics`)
+Multi-user/tenant analytics beyond the single-node effectiveness dashboard.
+- [ ] Per-tenant/per-user usage, retrieval-quality, and memory-lifecycle metrics with time-range queries
+- [ ] Aggregation queries bounded and indexed (no full-table scans on the hot path)
+- [ ] Access-controlled endpoints (requires `advanced_auth`) — a tenant sees only its own data
+- [ ] Exportable (CSV/JSON) with documented schema
+- [ ] Gated by `assert_licensed("team_analytics")`
+
+### EP-V2 — Managed key vault / HSM (`key_vault`)
+External KMS/HSM integration for encryption and signing keys (vs. local key
+material only).
+- [ ] Pluggable KMS provider interface with at least one real backend (e.g. cloud KMS or PKCS#11 HSM)
+- [ ] Envelope encryption: data keys wrapped by a KMS-held master key; plaintext keys never persisted
+- [ ] Key rotation without data re-encryption downtime; old keys retained for decrypt only
+- [ ] Fail-closed if the vault is unreachable; explicit, tested error paths
+- [ ] Gated by `assert_licensed("key_vault")`
+
+### EP-V3 — Compliance reporting & exports (`compliance_reporting`)
+GDPR/SOC2-oriented report generation and evidence exports.
+- [ ] RTBF/erasure reports: what was erased, when, by whom, with tamper-evident audit references
+- [ ] Data-subject access export (all data for a subject/tenant) in a documented machine-readable format
+- [ ] Access/audit-trail exports over a selectable time range
+- [ ] Deterministic, reproducible report artifacts with a documented schema and integrity hash
+- [ ] Gated by `assert_licensed("compliance_reporting")`
+
+### EP-V4 — SSO / directory sync (`sso_directory_sync`)
+OIDC/SAML SSO plus SCIM directory synchronization.
+- [ ] SAML 2.0 and OIDC login flows (SP-initiated), signature/assertion validation, replay protection
+- [ ] SCIM 2.0 user/group provisioning and deprovisioning endpoints
+- [ ] Just-in-time provisioning mapped onto the `advanced_auth` role model
+- [ ] Deprovisioning revokes access immediately; tested end-to-end
+- [ ] Gated by `assert_licensed("sso_directory_sync")`
+
+### EP-V6 — Backup/restore orchestration & PITR (`backup_pitr`)
+Point-in-time recovery beyond the current best-effort file-copy helper.
+- [ ] Continuous WAL/changelog archiving with a documented retention policy
+- [ ] Restore to an arbitrary timestamp within the retention window, verified by an automated restore test
+- [ ] Backup integrity verification (checksums) and restore-drill automation in CI
+- [ ] Encrypted backups at rest (integrates with `key_vault` when present)
+- [ ] Gated by `assert_licensed("backup_pitr")`
+
+### EP-V7 — Horizontal read scaling & HA topology (`ha_topology`)
+Read-replica fan-out and failover (builds on `scale_out`).
+- [ ] Read-replica routing with health checks and automatic failover
+- [ ] Documented consistency model (replica lag bounds) and per-query routing controls
+- [ ] Chaos/failover test proving no data loss and bounded recovery time on primary failure
+- [ ] Gated by `assert_licensed("ha_topology")`
+
+---
+
 ## Honest Claim Posture
 
 As stated in the whitepaper:

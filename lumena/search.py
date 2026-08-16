@@ -61,6 +61,10 @@ class SearchPipeline:
         """
         if not results or tenant_id == "default" or not _tenant_id_supported(self.conn):
             return results
+        # Multi-tenant isolation is a Pro capability: gate any non-default tenant
+        # scope. Community (or an unlicensed key) requesting a real tenant gets a
+        # clear LicenseRequiredError rather than silent free Pro (AGENTS.md R2).
+        self.config.assert_licensed("multi_tenant")
         chunk_ids = [r.chunk_id for r in results]
         # placeholders is a generated "?,?,..." string; all values are bound
         # parameters, so the f-string cannot inject SQL (bandit B608).

@@ -52,26 +52,45 @@ users).
 The following capabilities are licensed **only** under this commercial license
 and are **not** covered by the AGPL Community grant.
 
+### 3.1 Available now
+
+These capabilities are **built, shipping, and license-enforced today** (each is
+gated by Lumena's entitlement engine, `lumena.licensing.PRO_FEATURES`).
+
 | Ref | Pro capability |
 |-----|----------------|
 | P1 | Compliance: right-to-be-forgotten (RTBF), audit trails, custom PII governance |
 | P2 | Encryption-at-rest (SQLCipher/Fernet) + key management / rotation |
-| P3 | Advanced API auth: RBAC, OIDC/JWT, per-user API keys, SSO/SCIM |
 | P4 | Real (storage-layer) multi-tenant isolation |
-| P5 | Scale-out backend (Postgres/pgvector), replication, high availability |
 | P6 | Advanced P2P (key-rotation, persistent replay store, multi-node mesh) |
-| V1 | Team dashboard & analytics |
-| V2 | Managed key vault / HSM integration |
-| V3 | Compliance reporting & exports (GDPR/SOC2-ready) |
-| V4 | SSO / directory sync (OIDC, SAML, SCIM) |
-| V5 | Priority support + SLA |
-| V6 | Backup/restore orchestration & point-in-time recovery |
-| V7 | Horizontal read scaling & HA topology |
-| V8 | Long-term support (LTS) releases |
+| V5 | Priority support + SLA (commercial support commitment) |
+| V8 | Long-term support (LTS) releases (commercial release commitment) |
+
+### 3.2 On the commercial roadmap — NOT yet available
+
+These capabilities are **planned and not yet available**. They are listed here so
+prospective customers can see the direction of the Pro edition, but they are
+**not** part of any current license grant and must not be relied upon until
+delivered. Their acceptance criteria and status are tracked in `ROADMAP.md`
+("Enterprise Pro Roadmap"); they are registered in `PLANNED_PRO_FEATURES`,
+separate from the enforceable registry, so they cannot be gated as present
+capabilities.
+
+| Ref | Planned Pro capability | Status |
+|-----|------------------------|--------|
+| P3 | Advanced API auth: RBAC, OIDC/JWT, per-user API keys | Not yet available |
+| P5 | Scale-out backend (Postgres/pgvector), replication, high availability | Not yet available |
+| V1 | Team dashboard & analytics | Not yet available |
+| V2 | Managed key vault / HSM integration | Not yet available |
+| V3 | Compliance reporting & exports (GDPR/SOC2-ready) | Not yet available |
+| V4 | SSO / directory sync (OIDC, SAML, SCIM) | Not yet available |
+| V6 | Backup/restore orchestration & point-in-time recovery | Not yet available |
+| V7 | Horizontal read scaling & HA topology | Not yet available |
 
 Access to Pro features is enabled by a valid **license key** issued by
 QuantumindSSI and validated by Lumena's entitlement engine
-(`lumena.licensing`).
+(`lumena.licensing`). A license key never unlocks a roadmap (§3.2) feature,
+because those capabilities do not exist in the software yet.
 
 ---
 

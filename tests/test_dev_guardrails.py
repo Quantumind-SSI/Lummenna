@@ -167,6 +167,131 @@ def test_scan_paths_skips_non_python(tmp_path):
     assert not report.passed
 
 
+# --------------------------------------------------------------------------- #
+# Anti-vaporware: stub bodies
+# --------------------------------------------------------------------------- #
+
+
+def test_stub_pass_body_flagged():
+    r = scan_source("def foo():\n    pass\n", "x.py")
+    assert "no-vaporware-stub" in _rules(r)
+    assert not r.passed
+
+
+def test_stub_ellipsis_body_flagged():
+    r = scan_source("def foo():\n    ...\n", "x.py")
+    assert "no-vaporware-stub" in _rules(r)
+
+
+def test_stub_not_implemented_error_flagged():
+    r = scan_source("def foo():\n    raise NotImplementedError\n", "x.py")
+    assert "no-vaporware-stub" in _rules(r)
+
+
+def test_stub_not_implemented_error_with_message_flagged():
+    r = scan_source("def foo():\n    raise NotImplementedError('later')\n", "x.py")
+    assert "no-vaporware-stub" in _rules(r)
+
+
+def test_documented_stub_still_flagged():
+    # A docstring does not make an unimplemented function real.
+    r = scan_source('def foo():\n    """Does a thing."""\n    pass\n', "x.py")
+    assert "no-vaporware-stub" in _rules(r)
+
+
+def test_async_stub_flagged():
+    r = scan_source("async def foo():\n    ...\n", "x.py")
+    assert "no-vaporware-stub" in _rules(r)
+
+
+# --------------------------------------------------------------------------- #
+# Anti-vaporware: legitimate abstractions are exempt
+# --------------------------------------------------------------------------- #
+
+
+def test_abstractmethod_not_flagged():
+    src = "from abc import abstractmethod\nclass A:\n    @abstractmethod\n    def foo(self): ...\n"
+    r = scan_source(src, "x.py")
+    assert "no-vaporware-stub" not in _rules(r)
+
+
+def test_abc_subclass_method_not_flagged():
+    src = "from abc import ABC\nclass A(ABC):\n    def foo(self): ...\n"
+    r = scan_source(src, "x.py")
+    assert "no-vaporware-stub" not in _rules(r)
+
+
+def test_protocol_method_not_flagged():
+    src = "from typing import Protocol\nclass A(Protocol):\n    def foo(self) -> int: ...\n"
+    r = scan_source(src, "x.py")
+    assert "no-vaporware-stub" not in _rules(r)
+
+
+def test_abcmeta_metaclass_not_flagged():
+    src = "from abc import ABCMeta\nclass A(metaclass=ABCMeta):\n    def foo(self): ...\n"
+    r = scan_source(src, "x.py")
+    assert "no-vaporware-stub" not in _rules(r)
+
+
+def test_stub_noqa_suppresses():
+    r = scan_source("def foo():\n    pass  # noqa: guardrail\n", "x.py")
+    assert "no-vaporware-stub" not in _rules(r)
+
+
+def test_stubs_exempt_in_test_files():
+    r = scan_source("def foo():\n    pass\n", "test_something.py")
+    assert "no-vaporware-stub" not in _rules(r)
+
+
+# --------------------------------------------------------------------------- #
+# Anti-vaporware / no-false-claims: text markers
+# --------------------------------------------------------------------------- #
+
+
+def test_todo_marker_flagged():
+    r = scan_source("def foo():\n    return 1  # TODO: fix later\n", "x.py")
+    assert "no-vaporware-marker" in _rules(r)
+
+
+def test_fixme_marker_flagged():
+    r = scan_source("def foo():\n    return 1  # FIXME broken\n", "x.py")
+    assert "no-vaporware-marker" in _rules(r)
+
+
+def test_false_claim_marker_flagged():
+    src = "def foo():\n    # in a real implementation we would call the API\n    return {}\n"
+    r = scan_source(src, "x.py")
+    assert "no-vaporware-marker" in _rules(r)
+
+
+def test_left_as_exercise_marker_flagged():
+    r = scan_source('def foo():\n    """Rest left as an exercise."""\n    return 1\n', "x.py")
+    assert "no-vaporware-marker" in _rules(r)
+
+
+def test_markers_exempt_in_test_files():
+    r = scan_source("def foo():\n    return 1  # TODO: fix\n", "test_something.py")
+    assert "no-vaporware-marker" not in _rules(r)
+
+
+def test_marker_only_matches_prose_not_identifiers():
+    # 'todo_items' is an identifier, not a marker; must not be flagged.
+    r = scan_source("todo_items = []\ndef q():\n    return todo_items\n", "x.py")
+    assert "no-vaporware-marker" not in _rules(r)
+
+
+def test_sql_placeholder_comment_not_flagged():
+    # 'placeholders' in the SQL bind-parameter sense is legitimate, not vaporware.
+    src = "# placeholders is a generated '?,?,...' string\ndef q():\n    return 1\n"
+    r = scan_source(src, "x.py")
+    assert "no-vaporware-marker" not in _rules(r)
+
+
+def test_marker_noqa_suppresses():
+    r = scan_source("def foo():\n    return 1  # TODO fix  # noqa: guardrail\n", "x.py")
+    assert "no-vaporware-marker" not in _rules(r)
+
+
 def test_lumena_package_passes_guardrails():
     """The shipped library must itself pass the HIGH-severity gate."""
     import pathlib

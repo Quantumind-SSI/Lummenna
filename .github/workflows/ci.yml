@@ -105,9 +105,10 @@ jobs:
 
       # Deterministic, offline guardrail gate over the Python changed in this PR
       # (AST dangerous-calls, hardcoded secrets, SQL string-formatting, unsafe
-      # yaml/pickle, bare excepts). Fails on HIGH/BLOCKER. This is the enforced
-      # baseline for all generated code; the pydantic-ai reviewer is an optional
-      # local semantic layer on top.
+      # yaml/pickle, bare excepts, plus the No-Vaporware / No-False-Claims rules:
+      # placeholder stub bodies and TODO/FIXME/false-availability markers — see
+      # AGENTS.md). Fails on HIGH/BLOCKER. This is the enforced baseline for all
+      # generated code; the pydantic-ai reviewer is an optional semantic layer.
       - name: Guardrail scan of changed Python
         run: |
           BASE="origin/${{ github.base_ref || 'main' }}"

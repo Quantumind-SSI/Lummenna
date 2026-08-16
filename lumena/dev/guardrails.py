@@ -20,8 +20,24 @@ Checks
 * ``pickle.load(s)`` / ``yaml.load`` (no SafeLoader) → HIGH
 * hardcoded secrets (api_key/secret/password/token literals) → HIGH
 * SQL built via f-string / ``%`` / ``+`` concatenation → HIGH
+* vaporware stub bodies (``pass`` / ``...`` / ``raise NotImplementedError``
+  as a function/class placeholder, outside a real ABC/Protocol) → HIGH
+* vaporware / false-claim text markers (TODO, FIXME, "implement this",
+  "your code here", "in a real implementation", "left as an exercise",
+  "rest of the implementation", "placeholder", ...) → HIGH
 * bare ``except:``                         → MEDIUM
 * ``assert`` used for validation in non-test code → LOW
+
+No-Vaporware / No-False-Claims discipline
+-----------------------------------------
+The stub and marker rules exist to enforce Lumena's engineering constitution
+(see ``AGENTS.md``): every function that ships must be fully implemented, and
+nothing may be described as working when it is not. Unbuilt capabilities belong
+in ``ROADMAP.md`` as explicitly-labelled future work — never as a stubbed body
+or a "done" claim in code. Legitimate abstractions (``abc.ABC`` subclasses,
+``typing.Protocol`` bodies, ``@abstractmethod``) are exempt because their empty
+bodies are the interface contract, not a placeholder. Genuinely-necessary
+exceptions on any rule can be marked ``# noqa: guardrail`` on the line.
 """
 
 from __future__ import annotations
@@ -127,6 +143,48 @@ _SECRET_ALLOW = ("example", "placeholder", "your-", "changeme", "xxxx", "dummy",
 
 _DANGEROUS_CALLS_BLOCKER = {"eval", "exec", "compile"}
 
+# --------------------------------------------------------------------------- #
+# Anti-vaporware / no-false-claims markers
+# --------------------------------------------------------------------------- #
+
+#: Case-insensitive substrings that signal unfinished work or a false "done"
+#: claim embedded in code or comments. Matched against comment text and string
+#: literals only (see ``_marker_issues``) so ordinary identifiers are safe.
+#: Each entry is a (needle, human-message) pair.
+_VAPORWARE_MARKERS: tuple[tuple[str, str], ...] = (
+    ("todo", "Unfinished-work marker 'TODO' — implement fully or move to ROADMAP.md."),
+    ("fixme", "Unfinished-work marker 'FIXME' — fix before landing; do not ship broken code."),
+    ("implement this", "'implement this' placeholder — write the real implementation."),
+    ("implement me", "'implement me' placeholder — write the real implementation."),
+    ("your code here", "'your code here' placeholder — write the real implementation."),
+    ("your implementation here", "placeholder text — write the real implementation."),
+    ("for now", "'for now' signals a temporary shortcut — ship the real behaviour."),
+    ("in a real implementation", "false-claim marker — this IS the implementation; make it real."),
+    ("in a real system", "false-claim marker — this IS the system; make it real."),
+    ("in production you would", "false-claim marker — build the production behaviour now."),
+    ("left as an exercise", "iteration-deferral marker — complete the implementation."),
+    ("rest of the implementation", "scaffold-deception marker — write the whole implementation."),
+    ("rest of implementation", "scaffold-deception marker — write the whole implementation."),
+    ("placeholder implementation", "placeholder implementation — write the real one."),
+    ("placeholder for now", "placeholder marker — write the real implementation."),
+    ("just a placeholder", "placeholder marker — write the real implementation."),
+    ("is a placeholder", "placeholder marker — write the real implementation."),
+    ("this is a stub", "stub marker — provide a real implementation or gate as roadmap."),
+    ("stubbed out", "'stubbed out' — provide a real implementation or gate as roadmap."),
+    ("not implemented yet", "false-availability claim — implement it or mark it roadmap in docs."),
+    ("coming soon", "false-availability claim — do not claim availability before it exists."),
+    ("mock implementation", "'mock implementation' in non-test code — ship the real one."),
+    ("dummy implementation", "'dummy implementation' in non-test code — ship the real one."),
+)
+
+#: A ``pass`` / ``...`` / ``raise NotImplementedError`` body is legitimate inside
+#: these abstraction contexts (the empty body IS the contract). We detect the
+#: context via base classes and decorators rather than banning the tokens.
+_ABSTRACT_BASES: frozenset[str] = frozenset({"ABC", "ABCMeta", "Protocol"})
+_ABSTRACT_DECORATORS: frozenset[str] = frozenset(
+    {"abstractmethod", "abstractproperty", "abstractclassmethod", "abstractstaticmethod"}
+)
+
 
 def _secret_issues(source: str, filename: str) -> list[GuardrailIssue]:
     issues: list[GuardrailIssue] = []
@@ -144,6 +202,187 @@ def _secret_issues(source: str, filename: str) -> list[GuardrailIssue]:
                     message=f"Possible hardcoded {name}; load from env/secret store instead.",
                 )
             )
+    return issues
+
+
+def _comment_and_string_spans(source: str) -> list[tuple[int, str]]:
+    """Return ``(line_number, text)`` for every comment and string literal.
+
+    Vaporware markers are only meaningful inside human-readable text (comments,
+    docstrings, string literals). Restricting the search to these spans means an
+    ordinary identifier like ``todo_list`` or ``placeholder_sql`` is never
+    flagged — only actual prose is. Falls back to a whole-line scan if the source
+    cannot be tokenised (a syntax error is reported separately as a BLOCKER).
+    """
+    import io
+    import tokenize
+
+    spans: list[tuple[int, str]] = []
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+        for tok in tokens:
+            if tok.type in (tokenize.COMMENT, tokenize.STRING):
+                spans.append((tok.start[0], tok.string))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        # Degrade gracefully: scan raw lines so markers are still caught even
+        # when tokenisation fails. The syntax error itself is a separate BLOCKER.
+        for idx, line in enumerate(source.splitlines(), start=1):
+            spans.append((idx, line))
+    return spans
+
+
+def _marker_issues(source: str, filename: str, is_test: bool) -> list[GuardrailIssue]:
+    """Flag vaporware / false-claim text markers in comments and string literals.
+
+    Skipped entirely for test files (fixtures legitimately contain the words)
+    and for this guardrails module, whose rule table lists the markers as data.
+    """
+    if is_test or Path(filename).name == "guardrails.py":
+        return []
+    issues: list[GuardrailIssue] = []
+    for line_no, text in _comment_and_string_spans(source):
+        low = text.lower()
+        for needle, message in _VAPORWARE_MARKERS:
+            if needle in low:
+                issues.append(
+                    GuardrailIssue(
+                        rule="no-vaporware-marker",
+                        severity=Severity.HIGH,
+                        file=filename,
+                        line=line_no,
+                        message=message,
+                    )
+                )
+                # One finding per span is enough; avoid stacking on one comment.
+                break
+    return issues
+
+
+def _decorator_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
+    names: set[str] = set()
+    for dec in node.decorator_list:
+        if isinstance(dec, ast.Name):
+            names.add(dec.id)
+        elif isinstance(dec, ast.Attribute):
+            names.add(dec.attr)
+    return names
+
+
+def _class_base_names(node: ast.ClassDef) -> set[str]:
+    names: set[str] = set()
+    for base in node.bases:
+        if isinstance(base, ast.Name):
+            names.add(base.id)
+        elif isinstance(base, ast.Attribute):
+            names.add(base.attr)
+    for kw in node.keywords:
+        # metaclass=ABCMeta
+        if isinstance(kw.value, ast.Name):
+            names.add(kw.value.id)
+        elif isinstance(kw.value, ast.Attribute):
+            names.add(kw.value.attr)
+    return names
+
+
+def _is_abstract_class(node: ast.ClassDef) -> bool:
+    return bool(_class_base_names(node) & _ABSTRACT_BASES)
+
+
+def _body_is_stub(body: list[ast.stmt]) -> tuple[str, int] | None:
+    """Classify a function/method body as a placeholder stub, or ``None``.
+
+    Returns ``(reason, line)`` — where ``line`` is the offending statement's line
+    so a ``# noqa: guardrail`` placed on it suppresses the finding — when the body
+    is *only* one of:
+    * ``pass``
+    * ``...`` (an ``Expr`` wrapping the ``Ellipsis`` constant)
+    * ``raise NotImplementedError`` (with or without a message/call)
+
+    An optional leading docstring is allowed and ignored, so a documented but
+    unimplemented function is still correctly flagged as a stub.
+    """
+    stmts = list(body)
+    if (
+        stmts
+        and isinstance(stmts[0], ast.Expr)
+        and isinstance(stmts[0].value, ast.Constant)
+        and isinstance(stmts[0].value.value, str)
+    ):
+        stmts = stmts[1:]  # drop the docstring
+    if len(stmts) != 1:
+        return None
+    only = stmts[0]
+    line = getattr(only, "lineno", 1)
+    if isinstance(only, ast.Pass):
+        return "empty 'pass' body — implement the function fully.", line
+    if (
+        isinstance(only, ast.Expr)
+        and isinstance(only.value, ast.Constant)
+        and only.value.value is Ellipsis
+    ):
+        return "'...' placeholder body — implement the function fully.", line
+    if isinstance(only, ast.Raise):
+        exc = only.exc
+        name = ""
+        if isinstance(exc, ast.Call) and isinstance(exc.func, ast.Name):
+            name = exc.func.id
+        elif isinstance(exc, ast.Name):
+            name = exc.id
+        if name == "NotImplementedError":
+            return "raises NotImplementedError — implement it or declare it abstract.", line
+    return None
+
+
+def _stub_issues(source: str, filename: str, is_test: bool) -> list[GuardrailIssue]:
+    """Flag placeholder function/method bodies, exempting real abstractions.
+
+    A body of ``pass`` / ``...`` / ``raise NotImplementedError`` is a vaporware
+    stub UNLESS it is an interface contract: an ``@abstractmethod``, a method on
+    an ``abc.ABC`` subclass, or a member of a ``typing.Protocol``. Test files are
+    exempt (fixtures deliberately use stubs).
+    """
+    if is_test:
+        return []
+    try:
+        tree = ast.parse(source, filename=filename)
+    except SyntaxError:
+        return []  # reported as a BLOCKER by _ast_issues
+    issues: list[GuardrailIssue] = []
+    # Track abstract-class context so methods inside them are exempt.
+    abstract_class_stack: list[bool] = [False]
+
+    class _Visitor(ast.NodeVisitor):
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            abstract_class_stack.append(_is_abstract_class(node))
+            self.generic_visit(node)
+            abstract_class_stack.pop()
+
+        def _visit_func(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+            stub = _body_is_stub(node.body)
+            if stub is not None:
+                reason, line = stub
+                is_abstract = abstract_class_stack[-1] or bool(
+                    _decorator_names(node) & _ABSTRACT_DECORATORS
+                )
+                if not is_abstract:
+                    issues.append(
+                        GuardrailIssue(
+                            rule="no-vaporware-stub",
+                            severity=Severity.HIGH,
+                            file=filename,
+                            line=line,
+                            message=f"Stub '{node.name}': {reason}",
+                        )
+                    )
+            self.generic_visit(node)
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            self._visit_func(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            self._visit_func(node)
+
+    _Visitor().visit(tree)
     return issues
 
 
@@ -376,6 +615,8 @@ def scan_source(
     suppressed = _suppressed_lines(source)
     issues = [i for i in _ast_issues(source, filename, is_test) if i.line not in suppressed]
     issues.extend(i for i in _secret_issues(source, filename) if i.line not in suppressed)
+    issues.extend(i for i in _stub_issues(source, filename, is_test) if i.line not in suppressed)
+    issues.extend(i for i in _marker_issues(source, filename, is_test) if i.line not in suppressed)
     return GuardrailReport(files_scanned=1, issues=issues, fail_at=fail_at)
 
 
