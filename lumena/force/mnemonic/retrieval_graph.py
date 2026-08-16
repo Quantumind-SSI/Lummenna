@@ -85,12 +85,29 @@ class GraphChannel:
         return self._traverse_sqlite(seed_chunk_id, hops)
 
     def _traverse_nx(self, seed_chunk_id: int, hops: int) -> list[GraphHit]:
+        # The NetworkX graph is a snapshot built once at construction
+        # (``_build_nx_graph``), while dense-channel seeds come from the vector
+        # index. The two stores can drift: a chunk present in the vector store
+        # may be absent from the graph snapshot (stored after the snapshot was
+        # built, or tombstoned since). ``DiGraph.neighbors`` raises
+        # ``NetworkXError: The node <id> is not in the digraph`` for a missing
+        # node, which previously crashed search/assemble. Guard membership at
+        # every access, mirroring the proven pattern in ``spreading.py`` — a
+        # missing seed simply yields no graph-channel hits rather than an error.
+        if seed_chunk_id not in self._graph:
+            logger.debug("graph_seed_not_in_snapshot", seed_chunk_id=seed_chunk_id)
+            return []
         hits = []
         visited = {seed_chunk_id: [seed_chunk_id]}
         queue = [(seed_chunk_id, 0)]
         while queue:
             node, depth = queue.pop(0)
             if depth >= hops:
+                continue
+            if node not in self._graph:
+                # Defensive: a node can only enter the queue as a confirmed
+                # neighbor of an in-graph node, so this should not happen — but
+                # guard anyway so traversal can never raise on graph drift.
                 continue
             for neighbor in self._graph.neighbors(node):
                 if neighbor not in visited:
