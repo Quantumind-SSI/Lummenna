@@ -28,6 +28,17 @@ GRAPH_RRF_WEIGHT = 0.8
 RECENCY_TAU_HOURS = 168.0
 
 
+def _chunk_has_tenant_column(conn: sqlite3.Connection) -> bool:
+    """Return True if the ``chunk`` table has a ``tenant_id`` column.
+
+    Mirrors ``lumena.force.mnemonic.store._tenant_id_supported`` but is kept
+    local to avoid coupling the fusion layer to the store module. Used so the
+    tenant predicate degrades to a no-op on databases whose schema predates
+    multi-tenant support (migration 0002).
+    """
+    return any(row[1] == "tenant_id" for row in conn.execute("PRAGMA table_info(chunk)").fetchall())
+
+
 @dataclass(config={"arbitrary_types_allowed": True})
 class RetrievedChunk:
     """A fused/reranked retrieval result.
@@ -69,9 +80,20 @@ def fuse_and_rerank(
     graph_hits: list[GraphHit] | None = None,
     enable_frqad: bool | None = None,
     config=None,
+    tenant_id: str = "default",
 ) -> list[RetrievedChunk]:
     """
     Stage 3: Reciprocal Rank Fusion + V(m) + FRQAD rerank + recency boost.
+
+    ``tenant_id`` enforces multi-tenant isolation at the single relational
+    chokepoint below: all channels (lexical, dense, graph) propose candidate
+    chunk ids, but every candidate is materialised from the ``chunk`` table by
+    this one query before any content is decrypted or scored. Restricting that
+    query with ``AND c.tenant_id = ?`` drops cross-tenant candidates *before*
+    decryption/scoring, so other tenants' plaintext is never processed in memory
+    (Pro feature ``multi_tenant``; see COMMERCIAL-LICENSE.md). The default tenant
+    and schemas predating tenant support are unrestricted, so single-tenant
+    deployments pay nothing.
     """
     k_rrf = K_RRF  # standard RRF constant from Cormack et al. (2009)
     if budget_candidates < 1:
@@ -97,7 +119,25 @@ def fuse_and_rerank(
     # placeholders is a generated "?,?,..." string; all values are bound
     # parameters, so the f-strings below cannot inject SQL (bandit B608).
     placeholders = "?," * (len(chunk_ids) - 1) + "?"
-    rows = conn.execute(
+
+    # Multi-tenant isolation at the relational chokepoint: apply the tenant
+    # predicate here so cross-tenant candidates are filtered in SQL before any
+    # content is decrypted/scored below. No-op for the default tenant or for
+    # schemas that predate tenant support (single-tenant deployments pay
+    # nothing); tenant_id is a bound parameter, never string-interpolated.
+    params: list[object] = list(chunk_ids)
+    tenant_clause = ""
+    if tenant_id != "default" and _chunk_has_tenant_column(conn):
+        tenant_clause = " AND c.tenant_id = ?"
+        params.append(tenant_id)
+
+    # Only code-controlled fragments are interpolated: `placeholders` is a
+    # generated "?,?,..." string and `tenant_clause` is one of two fixed
+    # literals ("" or " AND c.tenant_id = ?"). All runtime values (chunk ids,
+    # tenant_id) are bound parameters in `params`, so there is no injection
+    # surface. Assembled as one string so the audited-safe suppression sits on
+    # the execute() call line.
+    candidate_sql = (
         f"SELECT c.chunk_id, r.name AS room_name, l.name AS locus_name,"  # nosec B608
         f" c.content, c.vm_score, c.provenance_root,"
         f" (strftime('%s','now') - c.created_at) / 3600.0 AS age_hours,"
@@ -105,9 +145,9 @@ def fuse_and_rerank(
         f" FROM chunk c"
         f" LEFT JOIN room r ON r.room_id = c.room_id"
         f" LEFT JOIN locus l ON l.locus_id = c.locus_id"
-        f" WHERE c.chunk_id IN ({placeholders}) AND c.valid_to IS NULL",
-        chunk_ids,
-    ).fetchall()
+        f" WHERE c.chunk_id IN ({placeholders}) AND c.valid_to IS NULL{tenant_clause}"
+    )
+    rows = conn.execute(candidate_sql, params).fetchall()
 
     # Pre-fetch query embedding for FRQAD if provided
     query_vec = query_embedding

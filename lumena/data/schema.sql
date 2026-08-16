@@ -7,6 +7,11 @@ PRAGMA journal_mode = WAL;
 PRAGMA synchronous = NORMAL;
 PRAGMA foreign_keys = ON;
 
+-- NOTE: room.name is UNIQUE here at schema v1, but migration 0002 adds a
+-- tenant_id column and migration 0004 rebuilds this table to make uniqueness
+-- tenant-scoped: UNIQUE(name, tenant_id). The global UNIQUE below is therefore
+-- only the v1 shape; the effective constraint after migration is composite so
+-- two tenants may share a room name. See lumena/data/migrations/0004.py.
 CREATE TABLE IF NOT EXISTS room (
     room_id     INTEGER PRIMARY KEY,
     name        TEXT NOT NULL UNIQUE,          -- e.g. "preferences", "travel:japan"
@@ -26,6 +31,8 @@ CREATE TABLE IF NOT EXISTS locus (
     created_at  INTEGER DEFAULT (unixepoch()),
     access_count INTEGER DEFAULT 0,
     last_access_at INTEGER,
+    -- v1 shape; migration 0004 rebuilds this to UNIQUE(room_id, name, tenant_id)
+    -- so loci are explicitly tenant-scoped. See lumena/data/migrations/0004.py.
     UNIQUE(room_id, name)
 );
 

@@ -166,8 +166,13 @@ class SearchPipeline:
             graph_hits=graph_hits or None,
             enable_frqad=self.config.enable_frqad,
             config=self.config,
+            tenant_id=tenant_id,
         )
 
+        # Primary isolation is the query-level tenant predicate inside
+        # fuse_and_rerank (candidates filtered before decrypt/score). This
+        # post-filter is retained as defense-in-depth: it re-verifies tenant
+        # ownership of the final set and licence-gates any non-default tenant.
         results = self._filter_by_tenant(results, tenant_id)
 
         # Stage 4: Re-access reinforcement — retrieved chunks get a V(m) boost
