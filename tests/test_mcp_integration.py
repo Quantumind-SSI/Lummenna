@@ -9,7 +9,7 @@ pytestmark = pytest.mark.skipif(
     reason="mcp package not installed",
 )
 
-from lumena.integrations.mcp_server import app_lifespan, mcp  # noqa: E402
+from lumena.integrations.mcp_server import _preview, app_lifespan, mcp  # noqa: E402
 
 
 class TestMCPServer:
@@ -110,3 +110,35 @@ class TestMCPServer:
                 assert "source_type" in text3
 
         asyncio.run(_run())
+
+
+class TestSearchPreview:
+    """`_preview` bounds `lumena_search` content to the configurable length."""
+
+    def test_short_content_unchanged(self):
+        assert _preview("short", 300) == "short"
+
+    def test_content_at_exact_boundary_not_marked(self):
+        exact = "x" * 300
+        assert _preview(exact, 300) == exact
+
+    def test_long_content_cut_with_ellipsis(self):
+        result = _preview("x" * 400, 300)
+        assert result == "x" * 300 + "\u2026"
+        assert len(result) == 301
+
+    def test_larger_limit_shows_more(self):
+        content = "x" * 1500
+        assert _preview(content, 2000) == content
+        assert _preview(content, 1000) == "x" * 1000 + "\u2026"
+
+    def test_zero_disables_truncation(self):
+        content = "x" * 5000
+        assert _preview(content, 0) == content
+
+    def test_negative_disables_truncation(self):
+        content = "x" * 5000
+        assert _preview(content, -7) == content
+
+    def test_empty_content(self):
+        assert _preview("", 300) == ""
