@@ -40,6 +40,13 @@ class LumenaConfig(BaseSettings):
     device: DeviceProfile = "generic"
     context_budget: int = 2048
     memory_limit_mb: int = 300
+    # Maximum characters of chunk content shown per result by the
+    # `lumena_search` MCP tool (a ranked preview, not a full-content reader).
+    # When a chunk's content exceeds this length it is cut and an ellipsis
+    # marker is appended so the caller can tell a preview from a full chunk.
+    # Raise it (e.g. LUMENA_SEARCH_PREVIEW_CHARS=2000) to see more per hit, or
+    # read the chunk in full from the store via its chunk_id.
+    search_preview_chars: int = 300
     embedding_model: str = "bge-small-en-v1.5"
     embedding_dims: int = 384
     # Testing escape hatch ONLY (LUMENA_ALLOW_MOCK_EMBEDDER=1): when the real

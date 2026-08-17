@@ -246,6 +246,25 @@ def _tool_error(func_name: str, exc: Exception) -> str:
     return f"[{func_name}] Unexpected error: {exc}"
 
 
+_PREVIEW_ELLIPSIS = "…"
+
+
+def _preview(content: str, max_chars: int) -> str:
+    """Return a search-preview of *content* bounded to *max_chars* characters.
+
+    ``lumena_search`` is a ranked index, not a full-content reader, so long
+    chunks are shown as a preview. When the content is cut, a single-character
+    ellipsis marker is appended so the caller can distinguish a genuinely short
+    chunk from a truncated one (read the full chunk from the store via its
+    ``chunk_id``). A non-positive *max_chars* disables truncation entirely.
+
+    Complexity: O(max_chars) — a single bounded slice, no scan of the tail.
+    """
+    if max_chars <= 0 or len(content) <= max_chars:
+        return content
+    return content[:max_chars] + _PREVIEW_ELLIPSIS
+
+
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
@@ -269,11 +288,13 @@ async def lumena_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
         if not results:
             return "No memories found."
 
+        preview_chars = state.config.search_preview_chars
         lines = [f"Results for: {args.query}", ""]
         for rank, rc in enumerate(results[: args.top_k], 1):
+            preview = _preview(rc.content, preview_chars)
             lines.append(
                 f"{rank}. [{rc.room_name}/{rc.locus_name}] score={rc.final_score:.3f} "
-                f"chunk_id={rc.chunk_id}\n   {rc.content[:300]}"
+                f"chunk_id={rc.chunk_id}\n   {preview}"
             )
         return "\n".join(lines)
     except Exception as exc:
