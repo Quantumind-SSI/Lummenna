@@ -1,4 +1,4 @@
-# Lumena Production Deployment Guide
+# Lummenna Production Deployment Guide
 
 **Version:** v1.0.0  
 **Platforms:** Raspberry Pi 5, Jetson Orin Nano, Generic x86_64, ARM64 SBCs
@@ -49,7 +49,7 @@ sudo systemctl disable dphys-swapfile
 python3 -m venv ~/.venvs/lummenna
 source ~/.venvs/lummenna/bin/activate
 
-# Install Lumena from PyPI (when published)
+# Install Lummenna from PyPI (when published)
 pip install lummenna
 
 # Or install from source
@@ -83,9 +83,9 @@ docker build -t lummenna:latest .
 docker run -d \
   --name lummenna \
   -p 8848:8848 \
-  -v ~/.lumena:/root/.lumena \
-  -e LUMENA_DEVICE=generic \
-  -e LUMENA_LOG_LEVEL=info \
+  -v ~/.lummenna:/root/.lummenna \
+  -e LUMMENNA_DEVICE=generic \
+  -e LUMMENNA_LOG_LEVEL=info \
   --restart unless-stopped \
   lummenna:latest
 
@@ -102,12 +102,12 @@ services:
     ports:
       - "8848:8848"
     volumes:
-      - ~/.lumena:/root/.lumena
+      - ~/.lummenna:/root/.lummenna
     environment:
-      - LUMENA_DEVICE=generic
-      - LUMENA_LOG_LEVEL=info
-      - LUMENA_API_HOST=0.0.0.0
-      - LUMENA_API_PORT=8848
+      - LUMMENNA_DEVICE=generic
+      - LUMMENNA_LOG_LEVEL=info
+      - LUMMENNA_API_HOST=0.0.0.0
+      - LUMMENNA_API_PORT=8848
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8848/health')"]
@@ -123,7 +123,7 @@ services:
 
 ### 3.1 Device Profiles
 
-Create `~/.lumena/config.toml`:
+Create `~/.lummenna/config.toml`:
 
 ```toml
 # Raspberry Pi 5
@@ -156,25 +156,25 @@ enable_frqad = true
 
 ```bash
 # Required
-export LUMENA_DEVICE="generic"          # rpi5 | jetson-orin | orange-pi | generic
-export LUMENA_CONTEXT_BUDGET="4096"     # tokens
-export LUMENA_MEMORY_LIMIT="500mb"      # RAM cap
+export LUMMENNA_DEVICE="generic"          # rpi5 | jetson-orin | orange-pi | generic
+export LUMMENNA_CONTEXT_BUDGET="4096"     # tokens
+export LUMMENNA_MEMORY_LIMIT="500mb"      # RAM cap
 
 # Twin-Force Controller defaults
-export LUMENA_TFC_E="0.5"               # conservation bias (0-1)
-export LUMENA_TFC_A="0.5"               # attentional temperature (0-1)
-export LUMENA_TFC_TAU="7d"              # temporal horizon
-export LUMENA_TFC_R="3"                 # resolution level (0-5)
+export LUMMENNA_TFC_E="0.5"               # conservation bias (0-1)
+export LUMMENNA_TFC_A="0.5"               # attentional temperature (0-1)
+export LUMMENNA_TFC_TAU="7d"              # temporal horizon
+export LUMMENNA_TFC_R="3"                 # resolution level (0-5)
 
 # Sovereign mode
-export LUMENA_SOVEREIGN="true"          # block all external API calls
-export LUMENA_LOG_LEVEL="info"          # debug | info | warning | error
+export LUMMENNA_SOVEREIGN="true"          # block all external API calls
+export LUMMENNA_LOG_LEVEL="info"          # debug | info | warning | error
 ```
 
 ### 3.3 SQLite Tuning for Production
 
 ```bash
-sqlite3 ~/.lumena/store/lumena.db <<EOF
+sqlite3 ~/.lummenna/store/lummenna.db <<EOF
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
 PRAGMA mmap_size=268435456;  -- 256 MB
@@ -214,7 +214,7 @@ curl http://localhost:8848/metrics/prometheus
 lummenna status
 
 # Output:
-# Lumena Status
+# Lummenna Status
 # Device: generic
 # Rooms: 12
 # Active chunks: 2341
@@ -227,26 +227,26 @@ lummenna status
 
 ```bash
 # Structured JSON logs
-tail -f ~/.lumena/logs/audit.jsonl | jq .
+tail -f ~/.lummenna/logs/audit.jsonl | jq .
 
 # Log format:
-# {"timestamp":"2026-07-20T12:00:00Z","component":"LUMENA:FORCE:MNEMONIC",
+# {"timestamp":"2026-07-20T12:00:00Z","component":"LUMMENNA:FORCE:MNEMONIC",
 #  "level":"info","event":"CONSOLIDATE","room":"preferences","new_chunks":12}
 ```
 
 ### 4.4 Azure Monitor / Application Insights (opt-in)
 
-Lumena can export OpenTelemetry traces and logs to Application Insights.
+Lummenna can export OpenTelemetry traces and logs to Application Insights.
 This is **sovereignty-gated and fail-loud**:
 
 - Set `APPLICATIONINSIGHTS_CONNECTION_STRING` (standard Azure convention).
-- Set `LUMENA_SOVEREIGN=false` — export while sovereign mode is on raises
+- Set `LUMMENNA_SOVEREIGN=false` — export while sovereign mode is on raises
   `SovereignViolationError` at startup instead of silently leaking traces.
 - Install the extra: `pip install "lummenna[azure]"`. If the connection string
   is set but the package is missing, startup fails with an actionable error —
-  Lumena never runs without telemetry the operator configured.
+  Lummenna never runs without telemetry the operator configured.
 
-Memory content is never attached to spans by Lumena's instrumentation.
+Memory content is never attached to spans by Lummenna's instrumentation.
 
 For metrics-only monitoring without leaving sovereign mode, scrape
 `/metrics/prometheus` with any Prometheus-compatible agent (including Azure
@@ -301,35 +301,35 @@ same volume.
 
 ### 5.1 API Authentication
 
-Lumena supports optional API key authentication via the `X-API-Key` header.
+Lummenna supports optional API key authentication via the `X-API-Key` header.
 
 ```bash
 # 1. Generate a strong key
-export LUMENA_API_KEY=$(openssl rand -hex 32)
+export LUMMENNA_API_KEY=$(openssl rand -hex 32)
 
 # 2. Add it to your config
-export LUMENA_API_KEY="$LUMENA_API_KEY"
+export LUMMENNA_API_KEY="$LUMMENNA_API_KEY"
 ```
 
 **Authenticated request:**
 ```bash
-curl -H "X-API-Key: $LUMENA_API_KEY" http://localhost:8848/v1/search \
+curl -H "X-API-Key: $LUMMENNA_API_KEY" http://localhost:8848/v1/search \
   -H "Content-Type: application/json" \
   -d '{"query": "sovereign AI memory", "top_k": 5}'
 ```
 
 **Multi-tenant headers:**
 ```bash
-curl -H "X-API-Key: $LUMENA_API_KEY" \
+curl -H "X-API-Key: $LUMMENNA_API_KEY" \
   -H "X-Tenant-ID: customer-acme" \
   http://localhost:8848/v1/status
 ```
 
-> **Warning:** When `LUMENA_API_KEY` is unset, the API is open. Always set it before exposing Lumena to any network.
+> **Warning:** When `LUMMENNA_API_KEY` is unset, the API is open. Always set it before exposing Lummenna to any network.
 
 ### 5.2 Encryption at Rest
 
-Lumena does not yet implement built-in database encryption. Use OS-level full-disk encryption:
+Lummenna does not yet implement built-in database encryption. Use OS-level full-disk encryption:
 
 | OS | Technology | Enable |
 |---|---|---|
@@ -338,7 +338,7 @@ Lumena does not yet implement built-in database encryption. Use OS-level full-di
 | Linux | LUKS/dm-crypt | `cryptsetup luksFormat /dev/sdX` |
 | Raspberry Pi | LUKS + initramfs | See [Raspberry Pi LUKS guide](https://www.raspberrypi.com/documentation/computers/configuration.html) |
 
-SQLCipher integration is planned for v0.3.0. On startup, Lumena logs a reminder:
+SQLCipher integration is planned for v0.3.0. On startup, Lummenna logs a reminder:
 
 ```
 encryption_at_rest_disabled
@@ -347,13 +347,13 @@ recommendation='Use OS-level disk encryption (FileVault, BitLocker, LUKS) for pr
 
 ### 5.3 File Permissions
 
-File permissions are enforced automatically on startup (fail-fast if the process cannot chmod). The entire `~/.lumena` tree is set to `700` for directories and `600` for files. Ensure the Lumena process owns the path:
+File permissions are enforced automatically on startup (fail-fast if the process cannot chmod). The entire `~/.lummenna` tree is set to `700` for directories and `600` for files. Ensure the Lummenna process owns the path:
 
 ```bash
-# Secure the Lumena home directory
-chmod 700 ~/.lumena
-chmod 600 ~/.lumena/config.toml
-chmod 600 ~/.lumena/store/lumena.db
+# Secure the Lummenna home directory
+chmod 700 ~/.lummenna
+chmod 600 ~/.lummenna/config.toml
+chmod 600 ~/.lummenna/store/lummenna.db
 ```
 
 ### 5.4 Systemd Service (Linux)
@@ -362,7 +362,7 @@ Create `/etc/systemd/system/lummenna.service`:
 
 ```ini
 [Unit]
-Description=Lumena Memory API Server
+Description=Lummenna Memory API Server
 After=network.target
 
 [Service]
@@ -370,10 +370,10 @@ Type=simple
 User=lummenna
 Group=lummenna
 WorkingDirectory=/home/lummenna
-Environment="LUMENA_DEVICE=generic"
-Environment="LUMENA_LOG_LEVEL=info"
-Environment="LUMENA_SOVEREIGN=true"
-Environment="LUMENA_API_KEY=your-api-key-here"
+Environment="LUMMENNA_DEVICE=generic"
+Environment="LUMMENNA_LOG_LEVEL=info"
+Environment="LUMMENNA_SOVEREIGN=true"
+Environment="LUMMENNA_API_KEY=your-api-key-here"
 Environment="PATH=/home/lummenna/.venvs/lummenna/bin"
 ExecStart=/home/lummenna/.venvs/lummenna/bin/uvicorn lummenna.api.server:app --host 0.0.0.0 --port 8848
 Restart=always
@@ -383,7 +383,7 @@ CPUQuota=80%
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/home/lummenna/.lumena
+ReadWritePaths=/home/lummenna/.lummenna
 
 [Install]
 WantedBy=multi-user.target
@@ -391,8 +391,8 @@ WantedBy=multi-user.target
 
 ```bash
 sudo useradd -r -s /bin/false lummenna
-sudo mkdir -p /home/lummenna/.lumena
-sudo chown -R lummenna:lummenna /home/lummenna/.lumena
+sudo mkdir -p /home/lummenna/.lummenna
+sudo chown -R lummenna:lummenna /home/lummenna/.lummenna
 sudo systemctl daemon-reload
 sudo systemctl enable --now lummenna
 ```
@@ -428,13 +428,13 @@ server {
 ### 6.1 What to Back Up
 
 ```bash
-~/.lumena/config.toml          # Device profile and TFC settings
-~/.lumena/palace.toml          # Room topology
-~/.lumena/user.toml            # Per-user weights
-~/.lumena/store/lumena.db       # SQLite database (WAL mode)
-~/.lumena/store/lumena.db-wal   # WAL file (must be backed up together)
-~/.lumena/store/vectors.usearch # USearch index (if used)
-~/.lumena/logs/audit.jsonl     # Compliance audit trail
+~/.lummenna/config.toml          # Device profile and TFC settings
+~/.lummenna/palace.toml          # Room topology
+~/.lummenna/user.toml            # Per-user weights
+~/.lummenna/store/lummenna.db       # SQLite database (WAL mode)
+~/.lummenna/store/lummenna.db-wal   # WAL file (must be backed up together)
+~/.lummenna/store/vectors.usearch # USearch index (if used)
+~/.lummenna/logs/audit.jsonl     # Compliance audit trail
 ```
 
 ### 6.2 Automated Backup Script
@@ -447,13 +447,13 @@ BACKUP_DIR="/backup/lummenna/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Checkpoint WAL before backup
-sqlite3 ~/.lumena/store/lumena.db "PRAGMA wal_checkpoint(TRUNCATE);"
+sqlite3 ~/.lummenna/store/lummenna.db "PRAGMA wal_checkpoint(TRUNCATE);"
 
 # Atomic copy
-cp ~/.lumena/config.toml "$BACKUP_DIR/"
-cp ~/.lumena/palace.toml "$BACKUP_DIR/"
-cp ~/.lumena/store/lumena.db "$BACKUP_DIR/"
-cp -r ~/.lumena/logs "$BACKUP_DIR/"
+cp ~/.lummenna/config.toml "$BACKUP_DIR/"
+cp ~/.lummenna/palace.toml "$BACKUP_DIR/"
+cp ~/.lummenna/store/lummenna.db "$BACKUP_DIR/"
+cp -r ~/.lummenna/logs "$BACKUP_DIR/"
 
 # Compress
 tar czf "${BACKUP_DIR}.tar.gz" -C "$(dirname "$BACKUP_DIR")" "$(basename "$BACKUP_DIR")"
@@ -489,11 +489,11 @@ sudo sysctl -w vm.dirty_background_ratio=2
 ### 7.3 Monitoring Metrics
 
 Key metrics to alert on:
-- `lumena_memory_usage_mb` > 80% of `LUMENA_MEMORY_LIMIT`
-- `lumena_context_usage_ratio` > 0.95
-- `lumena_forgetting_queue_depth` > 1000
-- `lumena_retrieval_latency_p99` > 500ms
-- `lumena_consolidation_failures` > 0 in 1h
+- `lummenna_memory_usage_mb` > 80% of `LUMMENNA_MEMORY_LIMIT`
+- `lummenna_context_usage_ratio` > 0.95
+- `lummenna_forgetting_queue_depth` > 1000
+- `lummenna_retrieval_latency_p99` > 500ms
+- `lummenna_consolidation_failures` > 0 in 1h
 
 ---
 
@@ -526,7 +526,7 @@ curl http://localhost:8848/health
 ```bash
 # Restore from backup
 sudo systemctl stop lummenna
-sqlite3 ~/.lumena/store/lumena.db ".restore '${BACKUP_DIR}/lumena.db'"
+sqlite3 ~/.lummenna/store/lummenna.db ".restore '${BACKUP_DIR}/lummenna.db'"
 # Reinstall previous version
 pip install lummenna==$PREVIOUS_VERSION
 sudo systemctl start lummenna
@@ -543,7 +543,7 @@ sudo systemctl start lummenna
 | `sqlite3.OperationalError: database is locked` | WAL checkpoint stuck | `PRAGMA wal_checkpoint(TRUNCATE);` |
 | High RAM usage | USearch index loaded into RAM | Switch to `vector_index = "sqlite-vec"` |
 | Slow retrieval | No FTS5 index | Ensure schema is initialized with `lummenna init` |
-| `SovereignViolation` error | External API blocked | Set `LUMENA_SOVEREIGN=false` or use offline embedder |
+| `SovereignViolation` error | External API blocked | Set `LUMMENNA_SOVEREIGN=false` or use offline embedder |
 | SD card wear | Too many random writes | Enable WAL + `synchronous=NORMAL` |
 
 ### 9.2 Diagnostic Commands
@@ -553,7 +553,7 @@ sudo systemctl start lummenna
 lummenna status
 
 # Check database integrity
-sqlite3 ~/.lumena/store/lumena.db "PRAGMA integrity_check;"
+sqlite3 ~/.lummenna/store/lummenna.db "PRAGMA integrity_check;"
 
 # View recent audit events (last N entries)
 lummenna compliance audit --n 10
@@ -577,4 +577,4 @@ curl -X POST http://localhost:8848/v1/search \
 ---
 
 *Last updated: 2026-07-20*  
-*Maintainer: Lumena Engineering Team*
+*Maintainer: Lummenna Engineering Team*

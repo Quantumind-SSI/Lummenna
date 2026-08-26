@@ -1,6 +1,6 @@
-# Lumena Production Readiness Roadmap
+# Lummenna Production Readiness Roadmap
 
-This document tracks ongoing and future work for Lumena following the v1.0.0 public release.
+This document tracks ongoing and future work for Lummenna following the v1.0.0 public release.
 
 ---
 
@@ -16,7 +16,7 @@ This document tracks ongoing and future work for Lumena following the v1.0.0 pub
 - [ ] Implement SQLCipher integration (`PRAGMA key = ...`) in `get_connection()`
 - [ ] Support Fernet field-level encryption fallback for standard sqlite3
 - [x] OS-level encryption guidance (FileVault, BitLocker, LUKS) documented in DEPLOYMENT.md and SECURITY.md
-- [x] File permissions enforcement: `~/.lumena` is `700` by default
+- [x] File permissions enforcement: `~/.lummenna` is `700` by default
 
 ### 1.3 API Hardening
 - [x] Document `X-API-Key` and `X-Tenant-ID` headers in API docs
@@ -123,7 +123,7 @@ material only).
 - [ ] Pluggable KMS provider interface with at least one real backend (e.g. cloud KMS or PKCS#11 HSM)
 - [ ] Envelope encryption: data keys wrapped by a KMS-held master key; plaintext keys never persisted
 - [ ] Key rotation without data re-encryption downtime; old keys retained for decrypt only
-- [ ] **Encryption-at-rest key rotation** — rekey an existing store (SQLCipher `PRAGMA rekey` + Fernet field re-wrap) without data loss. Today P2 provides PBKDF2 key *derivation* only; rotating `LUMENA_ENCRYPTION_KEY` does not re-encrypt existing data, so it is not yet supported.
+- [ ] **Encryption-at-rest key rotation** — rekey an existing store (SQLCipher `PRAGMA rekey` + Fernet field re-wrap) without data loss. Today P2 provides PBKDF2 key *derivation* only; rotating `LUMMENNA_ENCRYPTION_KEY` does not re-encrypt existing data, so it is not yet supported.
 - [ ] Fail-closed if the vault is unreachable; explicit, tested error paths
 - [ ] Gated by `assert_licensed("key_vault")`
 
@@ -178,6 +178,6 @@ replay-nonce set. These extend the same gate when delivered.
 
 As stated in the whitepaper:
 
-> Lumena is a production-grade framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation as ongoing work.
+> Lummenna is a production-grade framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation as ongoing work.
 
 This roadmap tracks continued improvement beyond the v1.0.0 public release.

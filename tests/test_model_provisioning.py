@@ -42,7 +42,7 @@ def test_model_download_existing_model(tmp_path: Path) -> None:
     model_dir = tmp_path / "bge-small-en-v1.5"
     model_dir.mkdir()
     (model_dir / "model.onnx").write_text("fake")
-    with patch("lummenna.config.LumenaConfig") as MockCfg:
+    with patch("lummenna.config.LummennaConfig") as MockCfg:
         MockCfg.return_value.model_path = tmp_path
         result = runner.invoke(app, ["model", "download", "bge-small-en-v1.5"])
         assert result.exit_code == 0

@@ -64,13 +64,13 @@ jobs:
       # vuln-scan policy). Revisit when optimum-onnx supports transformers 5.x.
       #
       # transformers 4.57.x — PYSEC-2025-217, PYSEC-2026-2288/2289/2290: all
-      #   require loading untrusted checkpoints/configs from the Hub. Lumena
+      #   require loading untrusted checkpoints/configs from the Hub. Lummenna
       #   only loads models pinned to immutable commit SHAs (lummenna/cli/models.py
       #   KNOWN_MODELS) or local dirs it exported itself, behind a sovereign-mode
       #   network block by default. Upgrading to fixed 5.x is blocked:
       #   optimum-onnx (0.1.0) requires transformers<4.58.
       # diskcache 5.6.3 — PYSEC-2026-2447: pickle deserialization; no fixed
-      #   release exists. Transitive via langchain; Lumena never imports it.
+      #   release exists. Transitive via langchain; Lummenna never imports it.
       - name: Dependency audit
         run: |
           python -m pip install --upgrade pip

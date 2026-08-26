@@ -6,7 +6,7 @@ Orchestrates: intent classify → parallel BM25 + dense retrieval → fusion →
 import sqlite3
 import time
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.force.mnemonic.retrieval_dense import VectorChannel
 from lummenna.force.mnemonic.retrieval_graph import GraphChannel, GraphHit
@@ -25,7 +25,7 @@ class SearchPipeline:
     def __init__(
         self,
         conn: sqlite3.Connection,
-        config: LumenaConfig,
+        config: LummennaConfig,
         tfc: TwinForceController | None = None,
         embedder=None,
         graph: GraphChannel | None = None,

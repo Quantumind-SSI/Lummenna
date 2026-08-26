@@ -23,7 +23,7 @@ from lummenna.audit import (
     log_audit_event,
     verify_audit_chain,
 )
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 
 
@@ -47,7 +47,7 @@ def _write(conn, i: int) -> None:
 
 
 def test_clean_chain_verifies(tmp_path):
-    conn = get_connection(LumenaConfig(store_path=str(tmp_path / ".lumena")))
+    conn = get_connection(LummennaConfig(store_path=str(tmp_path / ".lummenna")))
     try:
         for i in range(5):
             _write(conn, i)
@@ -60,7 +60,7 @@ def test_clean_chain_verifies(tmp_path):
 
 
 def test_first_row_uses_genesis_prev_hash(tmp_path):
-    conn = get_connection(LumenaConfig(store_path=str(tmp_path / ".lumena")))
+    conn = get_connection(LummennaConfig(store_path=str(tmp_path / ".lummenna")))
     try:
         _write(conn, 0)
         prev = conn.execute(
@@ -72,7 +72,7 @@ def test_first_row_uses_genesis_prev_hash(tmp_path):
 
 
 def test_altered_row_is_detected(tmp_path):
-    conn = get_connection(LumenaConfig(store_path=str(tmp_path / ".lumena")))
+    conn = get_connection(LummennaConfig(store_path=str(tmp_path / ".lummenna")))
     try:
         for i in range(4):
             _write(conn, i)
@@ -88,7 +88,7 @@ def test_altered_row_is_detected(tmp_path):
 
 
 def test_deleted_row_is_detected(tmp_path):
-    conn = get_connection(LumenaConfig(store_path=str(tmp_path / ".lumena")))
+    conn = get_connection(LummennaConfig(store_path=str(tmp_path / ".lummenna")))
     try:
         for i in range(4):
             _write(conn, i)
@@ -128,7 +128,7 @@ def test_compute_entry_hash_is_deterministic():
 
 
 def test_migration_backfills_legacy_rows(tmp_path):
-    cfg = LumenaConfig(store_path=str(tmp_path / ".lumena"))
+    cfg = LummennaConfig(store_path=str(tmp_path / ".lummenna"))
     conn = get_connection(cfg)
     try:
         # Simulate legacy (pre-0005) rows with no chain, then force a re-migration.
@@ -169,9 +169,9 @@ def _b64(data: bytes) -> str:
 
 @pytest.fixture
 def pro_env(monkeypatch):
-    """Embed an ephemeral signing key and set LUMENA_LICENSE_KEY for the gate.
+    """Embed an ephemeral signing key and set LUMMENNA_LICENSE_KEY for the gate.
 
-    safety_forget_chunk constructs a fresh LumenaConfig() for its defense-in-depth
+    safety_forget_chunk constructs a fresh LummennaConfig() for its defense-in-depth
     gate, which reads the key from the environment, so the license must be set
     there rather than only on a passed config.
     """
@@ -186,8 +186,8 @@ def pro_env(monkeypatch):
         separators=(",", ":"),
         sort_keys=True,
     ).encode()
-    key = f"LUMENA-{_b64(payload)}.{_b64(priv.sign(payload))}"
-    monkeypatch.setenv("LUMENA_LICENSE_KEY", key)
+    key = f"LUMMENNA-{_b64(payload)}.{_b64(priv.sign(payload))}"
+    monkeypatch.setenv("LUMMENNA_LICENSE_KEY", key)
     licensing.clear_license_cache()
     yield key
     licensing.clear_license_cache()
@@ -197,7 +197,7 @@ def test_safety_forget_is_atomic_and_clears_hash(tmp_path, pro_env):
     from lummenna.compliance.safety_forgetting import safety_forget_chunk
     from lummenna.force.mnemonic.store import store_memory
 
-    cfg = LumenaConfig(store_path=str(tmp_path / ".lumena"), license_key=pro_env)
+    cfg = LummennaConfig(store_path=str(tmp_path / ".lummenna"), license_key=pro_env)
     conn = get_connection(cfg)
     try:
         cid = store_memory(conn, "sensitive 123-45-6789", "secrets", config=cfg)

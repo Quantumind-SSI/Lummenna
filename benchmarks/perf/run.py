@@ -1,5 +1,5 @@
 """
-Performance Benchmark for Lumena.
+Performance Benchmark for Lummenna.
 
 Measures query latency (p50/p95/p99), RAM footprint, storage size,
 and write amplification with/without WearAwareBatcher for 1k/10k/50k corpora.
@@ -43,7 +43,7 @@ except ImportError as exc:
 
 import contextlib
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
 from lummenna.search import SearchPipeline
@@ -91,7 +91,7 @@ def _get_embedder():
     try:
         from lummenna.force.contextual.embed import LocalEmbedder
 
-        model_dir = LumenaConfig().model_path / EMBEDDER_MODEL
+        model_dir = LummennaConfig().model_path / EMBEDDER_MODEL
         if model_dir.exists():
             _embedder = LocalEmbedder(model_dir, dims=EMBED_DIMS)
             print(f"[INFO] Perf benchmark using local ONNX embedder: {model_dir}")
@@ -211,8 +211,8 @@ def run_benchmark() -> dict[str, Any]:
 
     for size in CORPUS_SIZES:
         print(f"[INFO] Benchmarking corpus size {size:,} ...")
-        tmpdir = tempfile.mkdtemp(prefix=f"lumena_benchmark_perf_{size}_")
-        config = LumenaConfig(
+        tmpdir = tempfile.mkdtemp(prefix=f"lummenna_benchmark_perf_{size}_")
+        config = LummennaConfig(
             store_path=Path(tmpdir) / "store",
             embedding_dims=EMBED_DIMS,
             vector_index="sqlite-vec",

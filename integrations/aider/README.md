@@ -1,10 +1,10 @@
-# Aider + Lumena Integration
+# Aider + Lummenna Integration
 
-[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively and has no custom slash-command configuration, so the integration paths below use aider's built-in `/run` command, shell wrappers, and the Lumena HTTP API. Start `lummenna serve` first.
+[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively and has no custom slash-command configuration, so the integration paths below use aider's built-in `/run` command, shell wrappers, and the Lummenna HTTP API. Start `lummenna serve` first.
 
 ## Option 1: Aider's built-in `/run` command
 
-Aider's `/run` executes a shell command and can add its output to the chat. Use it to query Lumena mid-session:
+Aider's `/run` executes a shell command and can add its output to the chat. Use it to query Lummenna mid-session:
 
 ```
 /run curl -s -X POST http://localhost:8848/v1/search -H "Content-Type: application/json" -d '{"query":"database indexing decision","top_k":5}'
@@ -18,10 +18,10 @@ To avoid typing the full curl each time, wrap them in small scripts on your `PAT
 
 ## Option 2: Python Hook (Advanced)
 
-Create `~/.aider/lumena_hook.py`:
+Create `~/.aider/lummenna_hook.py`:
 
 ```python
-"""Aider pre-commit hook that stores file changes in Lumena."""
+"""Aider pre-commit hook that stores file changes in Lummenna."""
 
 import json
 import subprocess
@@ -34,7 +34,7 @@ def main():
     if not content.strip():
         return
 
-    # Store the commit/context in Lumena. json.dumps produces valid JSON
+    # Store the commit/context in Lummenna. json.dumps produces valid JSON
     # (Python repr() would emit single-quoted strings the API rejects).
     body = json.dumps(
         {"content": content[:2000], "room": "commits", "source_type": "import"}
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 Add to your shell profile:
 
 ```bash
-# Aider with Lumena context injection
+# Aider with Lummenna context injection
 aider-lummenna() {
   context=$(curl -s -X POST http://localhost:8848/v1/assemble \
     -H "Content-Type: application/json" \

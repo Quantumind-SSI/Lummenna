@@ -1,5 +1,5 @@
 """
-Lumena Retrieval Benchmark — Scientific Evaluation Suite.
+Lummenna Retrieval Benchmark — Scientific Evaluation Suite.
 
 Evaluates Hybrid (SearchPipeline), BM25-only (lexical), Dense-only (vector),
 and a standard rank-bm25 baseline on either MS MARCO v1.1 or a synthetic
@@ -30,7 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.retrieval_dense import VectorChannel
 from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel
@@ -70,7 +70,7 @@ def _get_embedder(model_name):
 
     Resolution order:
     1. sentence-transformers (exact requested model).
-    2. Lumena's local ONNX export — only if the on-disk model directory
+    2. Lummenna's local ONNX export — only if the on-disk model directory
        matches the requested model name (never a silent substitute).
 
     Raises:
@@ -104,10 +104,10 @@ def _get_embedder(model_name):
     except Exception as exc:
         errors.append(f"sentence-transformers: {exc}")
 
-    # Fallback: Lumena's own ONNX export, but ONLY for the exact model requested.
+    # Fallback: Lummenna's own ONNX export, but ONLY for the exact model requested.
     try:
         from lummenna.force.contextual.embed import LocalEmbedder
-        config = LumenaConfig()
+        config = LummennaConfig()
         model_dir = config.model_path / _short_model_name(model_name)
         if model_dir.exists():
             e = LocalEmbedder(model_dir, dims=EMBED_DIMS)
@@ -391,11 +391,11 @@ def _bootstrap_ci(values, n_bootstrap=N_BOOTSTRAP):
 
 
 # ---------------------------------------------------------------------------
-# Standard BM25 baseline (rank-bm25 — independent of Lumena's FTS5)
+# Standard BM25 baseline (rank-bm25 — independent of Lummenna's FTS5)
 # ---------------------------------------------------------------------------
 
 def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
-    """Independent rank-bm25 baseline, not using Lumena's FTS5 table.
+    """Independent rank-bm25 baseline, not using Lummenna's FTS5 table.
 
     Raises:
         RuntimeError: If rank-bm25 is not installed. Emitting an artifact
@@ -434,8 +434,8 @@ def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
 def run_single_benchmark(seed, passages, queries, query_relevant_pids, corpus_name, embedder_model):
     rng = np.random.default_rng(seed)
 
-    tmpdir = tempfile.mkdtemp(prefix=f"lumena_bench_retrieval_{seed}_")
-    config = LumenaConfig(
+    tmpdir = tempfile.mkdtemp(prefix=f"lummenna_bench_retrieval_{seed}_")
+    config = LummennaConfig(
         store_path=Path(tmpdir) / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",

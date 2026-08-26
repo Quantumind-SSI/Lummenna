@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.mnemonic.consolidation import (
     _get_recent_fact_bullets,
@@ -19,7 +19,7 @@ from lummenna.force.mnemonic.event_buffer import Event, EventMemoryBuffer
 
 @pytest.fixture
 def memory_db():
-    """Yield an in-memory SQLite connection with the Lumena schema."""
+    """Yield an in-memory SQLite connection with the Lummenna schema."""
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
     init_db(conn)
@@ -29,10 +29,10 @@ def memory_db():
 
 @pytest.fixture
 def tmp_config(tmp_path: Path):
-    """Return a LumenaConfig backed by a temporary store path."""
+    """Return a LummennaConfig backed by a temporary store path."""
     store_path = tmp_path / "store"
     store_path.mkdir(parents=True)
-    return LumenaConfig(
+    return LummennaConfig(
         vector_index="sqlite-vec",
         device="generic",
         store_path=str(store_path),

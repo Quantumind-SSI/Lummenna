@@ -184,10 +184,10 @@ def fuse_and_rerank(
         cid, room_name, locus_name, content, vm, prov, age_hours, res, encrypted = row
         if encrypted:
             if _enc is None:
-                from lummenna.config import LumenaConfig
+                from lummenna.config import LummennaConfig
                 from lummenna.data.schema import get_encryption
 
-                _enc = get_encryption(config if config is not None else LumenaConfig())
+                _enc = get_encryption(config if config is not None else LummennaConfig())
             if _enc.enabled:
                 try:
                     content = _enc.decrypt(content)
@@ -195,12 +195,12 @@ def fuse_and_rerank(
                     # Wrong or rotated key: never leak the raw Fernet token
                     # and never crash the whole search for one bad chunk.
                     logger.warning("chunk_decrypt_failed", chunk_id=cid, error=str(exc))
-                    content = "[DECRYPTION FAILED — check LUMENA_ENCRYPTION_KEY]"
+                    content = "[DECRYPTION FAILED — check LUMMENNA_ENCRYPTION_KEY]"
             else:
                 # Chunk was written with encryption but no key is configured
                 # now: do not leak the raw ciphertext token as if it were text.
                 logger.warning("chunk_encrypted_but_no_key", chunk_id=cid)
-                content = "[ENCRYPTED — set LUMENA_ENCRYPTION_KEY to read]"
+                content = "[ENCRYPTED — set LUMMENNA_ENCRYPTION_KEY to read]"
         # Goal bonus
         goal_bonus = 1.0 + (
             0.2 if any(kw.lower() in (content or "").lower() for kw in goal_tree_keywords) else 0.0

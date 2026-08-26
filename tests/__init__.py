@@ -1,1 +1,1 @@
-"""Lumena test suite."""
+"""Lummenna test suite."""

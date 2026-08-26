@@ -13,7 +13,7 @@ from typing import Any
 
 import psutil
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.logging import get_console_logger
 
 logger = get_console_logger(__name__)
@@ -48,7 +48,7 @@ class LocalLLM:
     minimise RAM pressure on single-board computers.
     """
 
-    def __init__(self, config: LumenaConfig) -> None:
+    def __init__(self, config: LummennaConfig) -> None:
         self.config = config
         self._model: Any = None
         self._path: Path = config.model_path / config.local_llm_model
@@ -63,7 +63,7 @@ class LocalLLM:
             return False
 
         try:
-            cfg = LumenaConfig()
+            cfg = LummennaConfig()
             return (cfg.model_path / cfg.local_llm_model).is_file()
         except Exception:
             return False

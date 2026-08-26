@@ -2,14 +2,14 @@
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.goals import GoalTree
 
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenaConfig(
+    cfg = LummennaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",

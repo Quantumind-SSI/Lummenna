@@ -1,13 +1,13 @@
-# Devin + Lumena Integration
+# Devin + Lummenna Integration
 
-> **Honesty note:** Devin's tooling surface is proprietary and changes frequently; nothing in this document is an officially supported Devin feature, and we have not verified these recipes against a live Devin workspace. The only guaranteed interface is Lumena's HTTP API (Option 1), which works from any environment that can run `curl`.
+> **Honesty note:** Devin's tooling surface is proprietary and changes frequently; nothing in this document is an officially supported Devin feature, and we have not verified these recipes against a live Devin workspace. The only guaranteed interface is Lummenna's HTTP API (Option 1), which works from any environment that can run `curl`.
 
 ## Option 1: Direct HTTP (Bash tool) — Recommended
 
-Devin can execute shell commands. Use the Lumena REST API directly:
+Devin can execute shell commands. Use the Lummenna REST API directly:
 
 ```bash
-# Start Lumena server in background (one-time)
+# Start Lummenna server in background (one-time)
 nohup lummenna serve --host 0.0.0.0 --port 8848 > /tmp/lummenna.log 2>&1 &
 
 # Search memories
@@ -36,13 +36,13 @@ curl -s http://localhost:8848/v1/status | jq .
 
 ## Option 2: Sidecar Container (Advanced)
 
-Devin's sandbox base images are not publicly distributed, so you cannot bake Lumena into them. Instead, run Lumena as a sidecar container on the same network and point Devin's shell commands at it:
+Devin's sandbox base images are not publicly distributed, so you cannot bake Lummenna into them. Instead, run Lummenna as a sidecar container on the same network and point Devin's shell commands at it:
 
 ```bash
 docker run -d --name lummenna \
   -p 8848:8848 \
-  -v lummenna-store:/root/.lumena \
-  -e LUMENA_API_HOST=0.0.0.0 \
+  -v lummenna-store:/root/.lummenna \
+  -e LUMMENNA_API_HOST=0.0.0.0 \
   python:3.11-slim \
   sh -c "pip install 'lummenna @ git+https://github.com/QuantmindSSI/lummenna' && lummenna init --device generic && lummenna serve --host 0.0.0.0 --port 8848"
 ```

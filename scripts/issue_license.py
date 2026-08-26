@@ -2,14 +2,14 @@
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 """QuantumindSSI offline license-key signer.
 
-Mints Lumena Pro license keys by signing a JSON payload with the QuantumindSSI
+Mints Lummenna Pro license keys by signing a JSON payload with the QuantumindSSI
 Ed25519 **private** key. The private key MUST be kept in an offline signing
 vault and is NEVER committed to this repository. Only the matching public key is
 embedded in ``lummenna/licensing.py`` for offline verification.
 
 Key format (must match ``lummenna.licensing.parse_license_key``)::
 
-    LUMENA-<base64url(payload_json)>.<base64url(ed25519_signature)>
+    LUMMENNA-<base64url(payload_json)>.<base64url(ed25519_signature)>
 
 See ``docs/LICENSE_SIGNING_KEY_CUSTODY.md`` for the full generate / safeguard /
 rotate / revoke runbook.
@@ -22,7 +22,7 @@ Generate a signing keypair (offline, one-time)::
     # prints the PUBLIC key to stdout for embedding in lummenna/licensing.py
 
 Mint a license — provide the private key via ``--private-key-file`` (raw-32
-base64url, one line) or the ``LUMENA_SIGNING_PRIVATE_KEY_B64`` environment
+base64url, one line) or the ``LUMMENNA_SIGNING_PRIVATE_KEY_B64`` environment
 variable::
 
     python scripts/issue_license.py \
@@ -36,7 +36,7 @@ variable::
     python scripts/issue_license.py --subject "Acme" \
         --features compliance,encryption_at_rest --expires 2027-01-01
 
-The script prints the signed ``LUMENA-...`` key to stdout. It also verifies the
+The script prints the signed ``LUMMENNA-...`` key to stdout. It also verifies the
 key against the embedded public key before printing, so a mismatched keypair
 fails loudly instead of shipping an unusable license.
 """
@@ -68,12 +68,12 @@ def _load_private_key_bytes(args: argparse.Namespace) -> bytes:
     if args.private_key_file:
         with open(args.private_key_file, encoding="utf-8") as fh:
             raw_b64 = fh.read().strip()
-    elif os.environ.get("LUMENA_SIGNING_PRIVATE_KEY_B64"):
-        raw_b64 = os.environ["LUMENA_SIGNING_PRIVATE_KEY_B64"].strip()
+    elif os.environ.get("LUMMENNA_SIGNING_PRIVATE_KEY_B64"):
+        raw_b64 = os.environ["LUMMENNA_SIGNING_PRIVATE_KEY_B64"].strip()
     else:
         sys.exit(
             "error: no private key provided. Use --private-key-file or set "
-            "LUMENA_SIGNING_PRIVATE_KEY_B64."
+            "LUMMENNA_SIGNING_PRIVATE_KEY_B64."
         )
     try:
         key_bytes = _b64url_decode(raw_b64)
@@ -115,7 +115,7 @@ def sign_license(payload: dict, private_key_bytes: bytes) -> str:
     # Canonical, stable JSON so the signed bytes are reproducible.
     payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
     signature = priv.sign(payload_bytes)
-    return f"LUMENA-{_b64url_encode(payload_bytes)}.{_b64url_encode(signature)}"
+    return f"LUMMENNA-{_b64url_encode(payload_bytes)}.{_b64url_encode(signature)}"
 
 
 def _self_verify(key: str) -> None:
@@ -254,7 +254,7 @@ def _add_issue_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def cmd_issue(args: argparse.Namespace) -> None:
-    """Mint and print a signed Lumena Pro license key."""
+    """Mint and print a signed Lummenna Pro license key."""
     private_key_bytes = _load_private_key_bytes(args)
     payload = build_payload(args)
     key = sign_license(payload, private_key_bytes)
@@ -269,7 +269,7 @@ def cmd_issue(args: argparse.Namespace) -> None:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="issue_license.py",
-        description="Lumena Pro license tooling (offline): generate a signing "
+        description="Lummenna Pro license tooling (offline): generate a signing "
         "keypair (keygen) or mint a license key (issue).",
     )
     sub = parser.add_subparsers(dest="command")
@@ -287,7 +287,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     p_keygen.set_defaults(func=cmd_keygen)
 
-    p_issue = sub.add_parser("issue", help="Mint a Lumena Pro license key.")
+    p_issue = sub.add_parser("issue", help="Mint a Lummenna Pro license key.")
     _add_issue_arguments(p_issue)
     p_issue.set_defaults(func=cmd_issue)
 

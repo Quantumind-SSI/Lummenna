@@ -73,7 +73,7 @@ jobs:
         run: |
           IMAGE=$(echo "${{ steps.meta.outputs.tags }}" | head -1)
           docker run -d --name lummenna-smoke -p 8848:8848 \
-            -e LUMENA_ALLOW_MOCK_EMBEDDER=0 "$IMAGE"
+            -e LUMMENNA_ALLOW_MOCK_EMBEDDER=0 "$IMAGE"
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8848/health > /dev/null 2>&1; then break; fi
             sleep 2
@@ -84,7 +84,7 @@ jobs:
             echo "expected /ready=503 without a provisioned model, got $READY_CODE" >&2
             exit 1
           fi
-          curl -fsS http://localhost:8848/metrics/prometheus | grep -q lumena_http_requests_total
+          curl -fsS http://localhost:8848/metrics/prometheus | grep -q lummenna_http_requests_total
           docker rm -f lummenna-smoke
 
   build-push-acr:

@@ -15,7 +15,7 @@ from lummenna.force.mnemonic.retrieval_temporal import (
 
 @pytest.fixture
 def memory_db():
-    """Yield an in-memory SQLite connection with the Lumena schema applied."""
+    """Yield an in-memory SQLite connection with the Lummenna schema applied."""
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
     init_db(conn)

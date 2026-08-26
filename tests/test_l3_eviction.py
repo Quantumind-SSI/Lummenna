@@ -2,7 +2,7 @@
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.contextual.embed import MockEmbedder
 from lummenna.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
@@ -11,9 +11,9 @@ from lummenna.force.mnemonic.store import store_memory
 
 @pytest.fixture
 def l3_config(tmp_path):
-    return LumenaConfig(
-        store_path=tmp_path / ".lumena" / "store",
-        model_path=tmp_path / ".lumena" / "models",
+    return LummennaConfig(
+        store_path=tmp_path / ".lummenna" / "store",
+        model_path=tmp_path / ".lummenna" / "models",
         vector_index="sqlite-vec",
         device="generic",
         memory_limit_mb=16,  # Very low to force eviction with few chunks

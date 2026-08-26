@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 # NOTE: Encryption-at-rest + key management built on these primitives are gated
-# as Lumena Pro (see COMMERCIAL-LICENSE.md, P2). Primitives themselves are Community.
-"""S1: Encryption primitives for Lumena.
+# as Lummenna Pro (see COMMERCIAL-LICENSE.md, P2). Primitives themselves are Community.
+"""S1: Encryption primitives for Lummenna.
 
 Provides:
   - Fernet field-level encryption (fallback when SQLCipher is unavailable).
@@ -31,10 +31,10 @@ if TYPE_CHECKING:
 def derive_sqlcipher_passphrase(key: str, store_path: Path, iterations: int = 256_000) -> str:
     """Derive a high-entropy hex passphrase for SQLCipher PRAGMA key.
 
-    Persists a random 16-byte salt in *store_path/.lumena_salt* so the
+    Persists a random 16-byte salt in *store_path/.lummenna_salt* so the
     same user key always yields the same derived passphrase across restarts.
     """
-    salt_path = store_path / ".lumena_salt"
+    salt_path = store_path / ".lummenna_salt"
     if salt_path.exists():
         salt = salt_path.read_bytes()
     else:

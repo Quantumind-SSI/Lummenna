@@ -2,7 +2,7 @@
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 """D18: Licensing & Entitlement Engine.
 
-Input wire: LUMENA_LICENSE_KEY / config.license_key
+Input wire: LUMMENNA_LICENSE_KEY / config.license_key
 Output wire: every Pro-gated feature (compliance RTBF, encryption-at-rest,
              advanced auth, multi-tenant, scale-out, advanced P2P)
 Secret sauce: offline, sovereign-friendly Ed25519-signed license keys — NO
@@ -12,7 +12,7 @@ Secret sauce: offline, sovereign-friendly Ed25519-signed license keys — NO
 Design goals
 ------------
 * Sovereign: validation is fully offline. No network call, ever. This mirrors
-  ``LumenaConfig.assert_sovereign`` — Pro must not betray the local-first ethos.
+  ``LummennaConfig.assert_sovereign`` — Pro must not betray the local-first ethos.
 * Fail-closed for Pro: if no valid license is present, Pro features raise
   ``LicenseRequiredError``. Community features are never gated.
 * Tamper-evident: keys are signed. A user cannot fabricate entitlements by
@@ -23,7 +23,7 @@ Design goals
 
 License key format
 ------------------
-``LUMENA-<base64url(payload_json)>.<base64url(ed25519_signature)>``
+``LUMMENNA-<base64url(payload_json)>.<base64url(ed25519_signature)>``
 
 payload_json = {
     "sub":       "<licensee/org>",
@@ -58,7 +58,7 @@ from lummenna.brand.errors import LicenseInvalidError, LicenseRequiredError, Sea
 if TYPE_CHECKING:
     import sqlite3
 
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
 
 
 # ---------------------------------------------------------------------------
@@ -247,9 +247,9 @@ def parse_license_key(key: str) -> License:
         LicenseInvalidError: malformed, badly signed, or expired key.
     """
     key = key.strip()
-    if not key.startswith("LUMENA-"):
+    if not key.startswith("LUMMENNA-"):
         raise LicenseInvalidError("unrecognized key format")
-    body = key[len("LUMENA-") :]
+    body = key[len("LUMMENNA-") :]
     if "." not in body:
         raise LicenseInvalidError("missing signature segment")
     payload_seg, sig_seg = body.split(".", 1)
@@ -310,7 +310,7 @@ def _load_license_cached(key: str | None) -> License:
         return COMMUNITY
 
 
-def load_license(config: LumenaConfig | None = None) -> License:
+def load_license(config: LummennaConfig | None = None) -> License:
     """Resolve the active license from config/env.
 
     Precedence: explicit ``config.license_key`` → COMMUNITY.
@@ -321,17 +321,17 @@ def load_license(config: LumenaConfig | None = None) -> License:
     return _load_license_cached(key)
 
 
-def current_edition(config: LumenaConfig | None = None) -> str:
+def current_edition(config: LummennaConfig | None = None) -> str:
     return "pro" if load_license(config).is_pro else "community"
 
 
-def is_licensed(feature: str, config: LumenaConfig | None = None) -> bool:
+def is_licensed(feature: str, config: LummennaConfig | None = None) -> bool:
     """Non-raising check: is ``feature`` entitled under the active license?"""
     return load_license(config).grants(feature)
 
 
-def assert_licensed(feature: str, config: LumenaConfig | None = None) -> None:
-    """Gate a Pro feature. Mirrors ``LumenaConfig.assert_sovereign``.
+def assert_licensed(feature: str, config: LummennaConfig | None = None) -> None:
+    """Gate a Pro feature. Mirrors ``LummennaConfig.assert_sovereign``.
 
     Call this at the entry of any Pro-only code path.
 
@@ -355,7 +355,7 @@ def assert_licensed(feature: str, config: LumenaConfig | None = None) -> None:
         raise LicenseRequiredError(PRO_FEATURES.get(feature, feature))
 
 
-def licensed_seats(config: LumenaConfig | None = None) -> int:
+def licensed_seats(config: LummennaConfig | None = None) -> int:
     """Return the licensed seat count, or 0 for unlimited.
 
     Seats are enforced as the maximum number of concurrent **non-default
@@ -385,7 +385,7 @@ def _distinct_nondefault_tenants(conn: sqlite3.Connection) -> set[str]:
 
 
 def assert_seat_available(
-    conn: sqlite3.Connection, tenant_id: str, config: LumenaConfig | None = None
+    conn: sqlite3.Connection, tenant_id: str, config: LummennaConfig | None = None
 ) -> None:
     """Raise ``SeatLimitError`` if creating ``tenant_id`` would exceed the seats.
 

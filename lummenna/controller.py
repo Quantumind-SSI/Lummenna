@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
 
 from pydantic import BaseModel, Field
 
@@ -46,7 +46,7 @@ class InteractionSignal(BaseModel):
 class TwinForceController:
     """TFC state machine with deterministic update rules."""
 
-    def __init__(self, state: TFCState | None = None, config: LumenaConfig | None = None):
+    def __init__(self, state: TFCState | None = None, config: LummennaConfig | None = None):
         self.state = state or TFCState()
         self.config = config
 

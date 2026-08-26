@@ -1,4 +1,4 @@
-// Lumena on AKS — minimal, honest Azure footprint.
+// Lummenna on AKS — minimal, honest Azure footprint.
 //
 // Provisions: AKS (1 system pool), ACR (image supply chain), Log Analytics +
 // Application Insights (observability), and the AcrPull grant so the cluster
@@ -8,7 +8,7 @@
 //   az deployment group create -g rg-lummenna -f main.bicep -p namePrefix=lummenna
 //
 // Deliberately NOT provisioned: multi-zone HA, autoscaling beyond the node
-// pool, geo-replication — Lumena is a single-writer, single-replica workload
+// pool, geo-replication — Lummenna is a single-writer, single-replica workload
 // and pretending otherwise in infrastructure would be dishonest.
 
 @description('Prefix for all resource names (3-12 lowercase alphanumerics).')
@@ -19,10 +19,10 @@ param namePrefix string = 'lummenna'
 @description('Azure region for all resources.')
 param location string = resourceGroup().location
 
-@description('AKS node VM size. Lumena + ONNX inference fits comfortably in 4 vCPU / 16 GiB.')
+@description('AKS node VM size. Lummenna + ONNX inference fits comfortably in 4 vCPU / 16 GiB.')
 param nodeVmSize string = 'Standard_D4s_v5'
 
-@description('Node count for the system pool. Lumena itself uses one pod; extra nodes are for the rest of your workloads.')
+@description('Node count for the system pool. Lummenna itself uses one pod; extra nodes are for the rest of your workloads.')
 @minValue(1)
 @maxValue(10)
 param nodeCount int = 2
@@ -53,8 +53,8 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: {
     Application_Type: 'web'
     WorkspaceResourceId: logAnalytics.id
-    // Connection string feeds APPLICATIONINSIGHTS_CONNECTION_STRING; Lumena
-    // only exports telemetry when LUMENA_SOVEREIGN=false (fail-loud gate).
+    // Connection string feeds APPLICATIONINSIGHTS_CONNECTION_STRING; Lummenna
+    // only exports telemetry when LUMMENNA_SOVEREIGN=false (fail-loud gate).
   }
 }
 

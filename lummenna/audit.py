@@ -1,4 +1,4 @@
-"""Audit logging helpers for the Lumena memory palace.
+"""Audit logging helpers for the Lummenna memory palace.
 
 The audit log is tamper-evident: every row commits to the hash of the row before
 it (a hash chain). ``log_audit_event`` computes and stores ``prev_hash`` and

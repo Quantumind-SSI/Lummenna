@@ -6,8 +6,8 @@
       "command": ["python", "-m", "lummenna.integrations.mcp_server"],
       "enabled": true,
       "env": {
-        "LUMENA_DEVICE": "generic",
-        "LUMENA_API_KEY": ""
+        "LUMMENNA_DEVICE": "generic",
+        "LUMMENNA_API_KEY": ""
       }
     }
   }
