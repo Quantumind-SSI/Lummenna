@@ -34,10 +34,10 @@ from pathlib import Path
 
 # Non-code entitlements: granted purely by license flag, legitimately without a
 # code gate (they are support/release commitments, not a code path). Sourced
-# from the PRO_FEATURES comments in lumena/licensing.py.
+# from the PRO_FEATURES comments in lummenna/licensing.py.
 _NON_CODE_ENTITLEMENTS: frozenset[str] = frozenset({"priority_support", "lts"})
 
-_LICENSING_REL = Path("lumena") / "licensing.py"
+_LICENSING_REL = Path("lummenna") / "licensing.py"
 _GATE_FUNCS: frozenset[str] = frozenset({"assert_licensed", "is_licensed"})
 
 
@@ -57,9 +57,9 @@ class Report:
 
 
 def _iter_python_files(root: Path) -> list[Path]:
-    """Every tracked .py file under lumena/ (skip tests, caches, venvs)."""
+    """Every tracked .py file under lummenna/ (skip tests, caches, venvs)."""
     files: list[Path] = []
-    for path in sorted((root / "lumena").rglob("*.py")):
+    for path in sorted((root / "lummenna").rglob("*.py")):
         parts = set(path.parts)
         if parts & {".venv", "__pycache__", ".mypy_cache", ".ruff_cache"}:
             continue

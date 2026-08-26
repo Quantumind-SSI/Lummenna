@@ -13,8 +13,8 @@
 <p><strong>Local-first memory and context framework for sovereign AI agents.</strong></p>
 
 <p>
-  <a href="https://github.com/QuantumindSSI/lumena/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lumena/ci.yml?branch=main&style=flat-square" alt="CI"></a>
-  <a href="https://github.com/QuantumindSSI/lumena/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%7C%20Commercial-blue.svg?style=flat-square" alt="License"></a>
+  <a href="https://github.com/QuantmindSSI/lummenna/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lummenna/ci.yml?branch=main&style=flat-square" alt="CI"></a>
+  <a href="https://github.com/QuantmindSSI/lummenna/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%7C%20Commercial-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
   <img src="https://img.shields.io/badge/coverage-75%25-brightgreen?style=flat-square" alt="Coverage">
   <img src="https://img.shields.io/badge/tests-320%20passed-brightgreen?style=flat-square" alt="Tests">
@@ -31,7 +31,7 @@
 Lumena is a **local-first memory store for LLM agents** — it organizes agent memories in a structured memory palace (rooms, loci, chunks) with hybrid retrieval, managed decay, and native integrations. It runs entirely on your hardware with no cloud dependencies.
 
 - **No cloud.** Embeddings run locally via ONNX Runtime. Storage is single-file SQLite.
-- **Optional daemon.** Background scheduler auto-starts with `lumena serve`; can also run standalone with `lumena daemon start`.
+- **Optional daemon.** Background scheduler auto-starts with `lummenna serve`; can also run standalone with `lummenna daemon start`.
 - **Hybrid retrieval.** BM25 (SQLite FTS5), cosine-similarity vector search, and optional graph traversal with reciprocal rank fusion.
 - **Managed memory lifecycle.** Three-layer forgetting: time-based decay, similarity interference, and budget eviction.
 - **Integrations.** LangGraph checkpoint saver, LangChain memory adapter, MCP server, FastAPI REST API.
@@ -42,20 +42,20 @@ Lumena is a **local-first memory store for LLM agents** — it organizes agent m
 
 ```bash
 # Clone and install (lean runtime — no torch/CUDA)
-git clone https://github.com/QuantumindSSI/lumena.git
-cd lumena
+git clone https://github.com/QuantmindSSI/lummenna.git
+cd lummenna
 pip install -e .            # runtime: sqlite-vec, onnxruntime, transformers tokenizer…
 
 # Initialize
-lumena init --device generic
+lummenna init --device generic
 
 # Start the server
-lumena serve
+lummenna serve
 # Dashboard at http://localhost:8848/dashboard
 # API docs at http://localhost:8848/docs
 ```
 
-> **First run needs an embedding model.** By default `lumena` will try to export
+> **First run needs an embedding model.** By default `lummenna` will try to export
 > one, which requires the heavy `[export]` toolchain. The lean, recommended path
 > is a **prebuilt model bundle** (no toolchain): set `LUMENA_PREBUILT_MODEL_URL`
 > or use the one-command installer.
@@ -66,20 +66,20 @@ The base install is deliberately **lean** (no torch/CUDA). Add extras only when 
 
 | Install | Adds | When |
 |---|---|---|
-| `pip install lumena` | Core runtime + inference | Always |
-| `pip install 'lumena[mcp]'` | MCP server for coding agents | Using OpenCode/Copilot/Claude/etc. |
-| `pip install 'lumena[export]'` | ONNX export toolchain (optimum → torch, ~2GB) | Only to *build* a model yourself |
-| `pip install 'lumena[wizard]'` | spaCy onboarding wizard | `lumena illuminate` |
-| `pip install 'lumena[localllm]'` | On-device LLM (llama-cpp) | Narrative consolidation |
-| `pip install 'lumena[langchain]'` / `[langgraph]` | Framework adapters | Those frameworks |
-| `pip install 'lumena[full]'` | Everything above | Kitchen-sink local dev |
+| `pip install lummenna` | Core runtime + inference | Always |
+| `pip install 'lummenna[mcp]'` | MCP server for coding agents | Using OpenCode/Copilot/Claude/etc. |
+| `pip install 'lummenna[export]'` | ONNX export toolchain (optimum → torch, ~2GB) | Only to *build* a model yourself |
+| `pip install 'lummenna[wizard]'` | spaCy onboarding wizard | `lummenna illuminate` |
+| `pip install 'lummenna[localllm]'` | On-device LLM (llama-cpp) | Narrative consolidation |
+| `pip install 'lummenna[langchain]'` / `[langgraph]` | Framework adapters | Those frameworks |
+| `pip install 'lummenna[full]'` | Everything above | Kitchen-sink local dev |
 
 ### Store and retrieve
 
 ```python
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.store import store_memory
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.store import store_memory
 
 config = LumenaConfig()
 conn = get_connection(config)
@@ -94,9 +94,9 @@ conn.close()
 ```
 
 ```python
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.conversation import ConversationMemory
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.conversation import ConversationMemory
 
 config = LumenaConfig()
 conn = get_connection(config)
@@ -107,7 +107,7 @@ print(turn.assembled_context)
 ```
 
 ```bash
-$ lumena status
+$ lummenna status
 Lumena Status
 Device: generic
 Rooms: 5
@@ -199,10 +199,10 @@ All run with a single command from the repo root:
 
 | Integration | What it does | How to use |
 |---|---|---|
-| **MCP Server** | Exposes Lumena tools to OpenCode, Claude Desktop | `python -m lumena.integrations.mcp_server` |
+| **MCP Server** | Exposes Lumena tools to OpenCode, Claude Desktop | `python -m lummenna.integrations.mcp_server` |
 | **LangChain** | `LumenaChatMemory` adapter | `pip install langchain` |
 | **LangGraph** | `LumenaCheckpointSaver` for graph state | `pip install langgraph` |
-| **FastAPI** | REST API with auth/rate-limiting | `lumena serve` |
+| **FastAPI** | REST API with auth/rate-limiting | `lummenna serve` |
 | **OpenCode** | Native skill for memory workflows | See `INTEGRATIONS.md` |
 
 ---
@@ -210,7 +210,7 @@ All run with a single command from the repo root:
 ## Project Structure
 
 ```
-lumena/
+lummenna/
 ├── config.py          Configuration (pydantic-settings)
 ├── search.py          Search pipeline orchestration
 ├── fusion.py          RRF fusion + reranking
@@ -240,7 +240,7 @@ benchmarks/           11 benchmark suites
 We welcome contributions. The best way to start:
 
 1. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md)** — setup, branch naming, code standards.
-2. **Pick a `good first issue`** from the [issues tracker](https://github.com/QuantumindSSI/lumena/issues).
+2. **Pick a `good first issue`** from the [issues tracker](https://github.com/QuantmindSSI/lummenna/issues).
 3. **Run the tests:** `pytest tests/` (must pass with ≥50% coverage).
 4. **Submit a PR** against `main`.
 
@@ -257,8 +257,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 pytest tests/                        # Run full suite
-pytest tests/ --cov=lumena            # With coverage
-ruff check lumena/ tests/             # Lint
+pytest tests/ --cov=lummenna            # With coverage
+ruff check lummenna/ tests/             # Lint
 ```
 
 ---
@@ -278,10 +278,10 @@ ruff check lumena/ tests/             # Lint
 
 ## Community
 
-- [GitHub Discussions](https://github.com/QuantumindSSI/lumena/discussions)
-- [Issue Tracker](https://github.com/QuantumindSSI/lumena/issues)
-- [Security Advisories](https://github.com/QuantumindSSI/lumena/security/advisories)
-- Matrix: `#lumena:matrix.org`
+- [GitHub Discussions](https://github.com/QuantmindSSI/lummenna/discussions)
+- [Issue Tracker](https://github.com/QuantmindSSI/lummenna/issues)
+- [Security Advisories](https://github.com/QuantmindSSI/lummenna/security/advisories)
+- Matrix: `#lummenna:matrix.org`
 
 ---
 

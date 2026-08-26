@@ -33,8 +33,8 @@ mod = _load_module()
 
 
 def _make_repo(tmp_path: Path, licensing_src: str, gate_files: dict[str, str]) -> Path:
-    """Materialise a minimal repo: lumena/licensing.py plus gate-site modules."""
-    pkg = tmp_path / "lumena"
+    """Materialise a minimal repo: lummenna/licensing.py plus gate-site modules."""
+    pkg = tmp_path / "lummenna"
     pkg.mkdir()
     (pkg / "__init__.py").write_text("")
     (pkg / "licensing.py").write_text(licensing_src)
@@ -145,7 +145,7 @@ class TestRealRepo:
     def test_lumena_repo_is_honest(self):
         """The actual Lumena repo must pass: every PRO feature gated, no leaks."""
         root = Path(__file__).resolve().parents[1]
-        if not (root / "lumena" / "licensing.py").exists():
+        if not (root / "lummenna" / "licensing.py").exists():
             pytest.skip("licensing module not present")
         report = mod.build_report(root)
         out = mod.render(report)

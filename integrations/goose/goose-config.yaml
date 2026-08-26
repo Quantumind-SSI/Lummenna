@@ -1,10 +1,10 @@
 extensions:
-  lumena:
+  lummenna:
     type: stdio
     cmd: python
     args:
       - -m
-      - lumena.integrations.mcp_server
+      - lummenna.integrations.mcp_server
     env:
       LUMENA_DEVICE: generic
       LUMENA_STORE_PATH: "${HOME}/.lumena/store"

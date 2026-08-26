@@ -17,25 +17,25 @@ Each platform communicates with Lumena through one of three interfaces:
 ## Prerequisites
 
 ```bash
-cd lumena
+cd lummenna
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 
 # Initialize the palace
-lumena init --device generic
+lummenna init --device generic
 ```
 
 The FastAPI server must be running for HTTP-based integrations:
 
 ```bash
-lumena serve --host 0.0.0.0 --port 8848
+lummenna serve --host 0.0.0.0 --port 8848
 ```
 
 Or use the built-in MCP stdio server (no HTTP required):
 
 ```bash
-python -m lumena.integrations.mcp_server
+python -m lummenna.integrations.mcp_server
 ```
 
 ---
@@ -52,9 +52,9 @@ Create `.opencode/opencode.json` in your project root:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "lumena": {
+    "lummenna": {
       "type": "local",
-      "command": ["python", "-m", "lumena.integrations.mcp_server"],
+      "command": ["python", "-m", "lummenna.integrations.mcp_server"],
       "enabled": true,
       "env": {
         "LUMENA_DEVICE": "generic",
@@ -81,7 +81,7 @@ The MCP server is **stdio-only** — Lumena does not currently expose an MCP end
 
 ```bash
 # On the remote host
-lumena serve --host 0.0.0.0 --port 8848
+lummenna serve --host 0.0.0.0 --port 8848
 
 # From the client
 curl -X POST http://REMOTE_HOST:8848/v1/search \
@@ -97,12 +97,12 @@ Set `LUMENA_API_KEY` on the server before exposing it to any network (see `SECUR
 Skills teach the agent *when* and *how* to use Lumena. Create:
 
 ```
-.opencode/skills/lumena/SKILL.md
+.opencode/skills/lummenna/SKILL.md
 ```
 
 ```markdown
 ---
-name: lumena
+name: lummenna
 description: >
   Use when the user asks to remember, recall, persist, or search across
   project decisions, code snippets, architecture notes, or conversation
@@ -146,7 +146,7 @@ For dedicated memory management, define a subagent:
 ```json
 {
   "agent": {
-    "lumena-librarian": {
+    "lummenna-librarian": {
       "description": "Specialist for storing, retrieving, and curating Lumena memories.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
@@ -162,7 +162,7 @@ For dedicated memory management, define a subagent:
 
 Lumena's MCP server (stdio) and HTTP API are supported by any platform that speaks MCP or JSON/REST, including
 OpenCode, Claude Desktop, and any custom agent using the Python SDK. The OpenCode section above provides
-configuration examples; the same `python -m lumena.integrations.mcp_server` command works for any MCP-compatible
+configuration examples; the same `python -m lummenna.integrations.mcp_server` command works for any MCP-compatible
 platform.
 
 ---
@@ -171,8 +171,8 @@ platform.
 
 1. **Sovereign mode**: By default Lumena stores everything locally in SQLite (`~/.lumena/store/lumena.db`). No cloud leakage.
 2. **API Key**: Set `LUMENA_API_KEY` and provide it via headers / env vars for multi-user environments.
-3. **P2P sharing**: `lumena p2p share` is opt-in; memories do not leave the device unless explicitly shared.
-4. **Forgetting**: Lumena supports compliance-driven deletion: `lumena compliance forget <chunk_id> --reason "..."` permanently forgets a chunk (audit event, FTS removal, provenance purge, content redaction), and `lumena compliance audit` shows the audit trail. Use these to honour GDPR/CCPA deletion requests.
+3. **P2P sharing**: `lummenna p2p share` is opt-in; memories do not leave the device unless explicitly shared.
+4. **Forgetting**: Lumena supports compliance-driven deletion: `lummenna compliance forget <chunk_id> --reason "..."` permanently forgets a chunk (audit event, FTS removal, provenance purge, content redaction), and `lummenna compliance audit` shows the audit trail. Use these to honour GDPR/CCPA deletion requests.
 
 ---
 
@@ -180,9 +180,9 @@ platform.
 
 | Symptom | Fix |
 |---------|-----|
-| `Database not initialised` | Run `lumena init --device generic` |
-| `embedder_fallback` warning | Download embedding model: `lumena init --download-model` |
-| MCP server not found | Ensure `lumena` package is in the Python environment used by the platform |
+| `Database not initialised` | Run `lummenna init --device generic` |
+| `embedder_fallback` warning | Download embedding model: `lummenna init --download-model` |
+| MCP server not found | Ensure `lummenna` package is in the Python environment used by the platform |
 | 413 Request too large | Increase `LUMENA_REQUEST_MAX_SIZE_BYTES` (default 1 MB) |
 | CORS errors in browser | Set `LUMENA_ALLOWED_ORIGINS` to your domain |
 
@@ -190,9 +190,9 @@ platform.
 
 ## Next Steps
 
-1. Start the Lumena server: `lumena serve`
+1. Start the Lumena server: `lummenna serve`
 2. Configure your platform's MCP / tool registry with the endpoints above.
-3. Seed initial memories: `lumena illuminate` (interactive onboarding wizard).
+3. Seed initial memories: `lummenna illuminate` (interactive onboarding wizard).
 4. Iterate on room taxonomy for your team.
 
-For programmatic Python usage, see `lumena/integrations/langchain.py` and `lumena/conversation.py`.
+For programmatic Python usage, see `lummenna/integrations/langchain.py` and `lummenna/conversation.py`.

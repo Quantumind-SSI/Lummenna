@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from lumena.api.server import _auth_failures, _config, _state, app
+from lummenna.api.server import _auth_failures, _config, _state, app
 
 
 @pytest.fixture

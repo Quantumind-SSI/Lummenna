@@ -22,9 +22,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import ensure_schema, get_connection
-from lumena.force.mnemonic.store import store_memory
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import ensure_schema, get_connection
+from lummenna.force.mnemonic.store import store_memory
 
 
 def _get_embedder(model_name: str = "all-MiniLM-L6-v2"):
@@ -50,7 +50,7 @@ def _get_embedder(model_name: str = "all-MiniLM-L6-v2"):
         return _Real(model)
     except Exception as exc:
         print(f"[WARN] Real embedder unavailable ({exc}). Using MockEmbedder.")
-        from lumena.force.contextual.embed import MockEmbedder
+        from lummenna.force.contextual.embed import MockEmbedder
 
         config = LumenaConfig()
         return MockEmbedder(dims=config.embedding_dims)

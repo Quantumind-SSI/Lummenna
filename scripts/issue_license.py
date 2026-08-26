@@ -5,9 +5,9 @@
 Mints Lumena Pro license keys by signing a JSON payload with the QuantumindSSI
 Ed25519 **private** key. The private key MUST be kept in an offline signing
 vault and is NEVER committed to this repository. Only the matching public key is
-embedded in ``lumena/licensing.py`` for offline verification.
+embedded in ``lummenna/licensing.py`` for offline verification.
 
-Key format (must match ``lumena.licensing.parse_license_key``)::
+Key format (must match ``lummenna.licensing.parse_license_key``)::
 
     LUMENA-<base64url(payload_json)>.<base64url(ed25519_signature)>
 
@@ -19,7 +19,7 @@ Usage
 Generate a signing keypair (offline, one-time)::
 
     python scripts/issue_license.py keygen --out quantumindssi-license-private-key.b64
-    # prints the PUBLIC key to stdout for embedding in lumena/licensing.py
+    # prints the PUBLIC key to stdout for embedding in lummenna/licensing.py
 
 Mint a license — provide the private key via ``--private-key-file`` (raw-32
 base64url, one line) or the ``LUMENA_SIGNING_PRIVATE_KEY_B64`` environment
@@ -54,7 +54,7 @@ from datetime import datetime
 
 
 def _b64url_encode(data: bytes) -> str:
-    """Base64url without padding, matching lumena.licensing._b64url_decode."""
+    """Base64url without padding, matching lummenna.licensing._b64url_decode."""
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
 
@@ -126,10 +126,10 @@ def _self_verify(key: str) -> None:
     if repo_root not in sys.path:
         sys.path.insert(0, repo_root)
     try:
-        from lumena.licensing import clear_license_cache, parse_license_key
+        from lummenna.licensing import clear_license_cache, parse_license_key
     except Exception as exc:  # noqa: BLE001
         print(
-            f"warning: could not import lumena.licensing to self-verify ({exc}). "
+            f"warning: could not import lummenna.licensing to self-verify ({exc}). "
             "Key was signed but not verified against the embedded public key.",
             file=sys.stderr,
         )
@@ -141,7 +141,7 @@ def _self_verify(key: str) -> None:
         sys.exit(
             f"error: minted key failed verification against the embedded public "
             f"key ({exc}). The private key likely does not match "
-            f"lumena.licensing._QUANTUMINDSSI_PUBLIC_KEY_B64."
+            f"lummenna.licensing._QUANTUMINDSSI_PUBLIC_KEY_B64."
         )
     print(
         f"verified: edition={lic.edition} subject={lic.subject!r} "
@@ -155,7 +155,7 @@ def generate_keypair() -> tuple[str, str]:
 
     Both halves are raw 32-byte keys, base64url-encoded without padding — the
     exact format ``_load_private_key_bytes`` and
-    ``lumena.licensing._QUANTUMINDSSI_PUBLIC_KEY_B64`` expect.
+    ``lummenna.licensing._QUANTUMINDSSI_PUBLIC_KEY_B64`` expect.
     """
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -190,7 +190,7 @@ def cmd_keygen(args: argparse.Namespace) -> None:
 
     The private key is written to ``--out`` (0600) if given, else printed to
     stderr with a loud warning. The public key is printed to stdout so it can be
-    pasted into ``lumena.licensing._QUANTUMINDSSI_PUBLIC_KEY_B64``.
+    pasted into ``lummenna.licensing._QUANTUMINDSSI_PUBLIC_KEY_B64``.
     """
     priv_b64, pub_b64 = generate_keypair()
 
@@ -214,7 +214,7 @@ def cmd_keygen(args: argparse.Namespace) -> None:
         print(priv_b64, file=sys.stderr)
 
     print(
-        "public key — paste into lumena/licensing.py " "_QUANTUMINDSSI_PUBLIC_KEY_B64:",
+        "public key — paste into lummenna/licensing.py " "_QUANTUMINDSSI_PUBLIC_KEY_B64:",
         file=sys.stderr,
     )
     # The public key is the one artifact meant for stdout (pipe-friendly).

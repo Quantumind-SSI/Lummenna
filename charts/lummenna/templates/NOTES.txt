@@ -1,0 +1,28 @@
+Lumena {{ .Chart.AppVersion }} deployed as a single-replica StatefulSet.
+
+1. Wait for readiness (the pod is NotReady until the embedding model is
+   provisioned into the models volume):
+
+     kubectl -n {{ .Release.Namespace }} rollout status statefulset/{{ include "lummenna.fullname" . }}
+     kubectl -n {{ .Release.Namespace }} get pod -l app.kubernetes.io/instance={{ .Release.Name }}
+
+{{- if not .Values.model.url }}
+
+2. No model.url was configured, so the init container was skipped. Provision
+   the model manually, e.g.:
+
+     kubectl -n {{ .Release.Namespace }} exec {{ include "lummenna.fullname" . }}-0 -- \
+       python -c "print('use kubectl cp to place the ONNX model dir at /data/models/{{ .Values.model.name }}')"
+     kubectl -n {{ .Release.Namespace }} cp ./{{ .Values.model.name }} \
+       {{ include "lummenna.fullname" . }}-0:/data/models/{{ .Values.model.name }}
+{{- end }}
+
+3. Access the API from inside the cluster:
+
+     http://{{ include "lummenna.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
+     Liveness:  GET /health      Readiness: GET /ready
+     Metrics:   GET /metrics/prometheus   (scrape annotations already set)
+
+HONEST LIMITS: one replica, one writer, no HA. Backups: snapshot the `store`
+PVC (Azure Disk snapshots) or use `lummenna` backups inside the pod. Scaling
+this chart out is refused by design.

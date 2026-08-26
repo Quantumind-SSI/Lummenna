@@ -2,7 +2,7 @@
 
 import pytest
 
-from lumena.force.mnemonic.spreading import SPREAD_GAMMA, spread_activation
+from lummenna.force.mnemonic.spreading import SPREAD_GAMMA, spread_activation
 
 
 @pytest.fixture
@@ -109,13 +109,13 @@ def test_spreading_stage_wired_into_search_pipeline(tmp_path, monkeypatch):
     pipeline's failure log to prove it completes without an exception.
     """
     pytest.importorskip("networkx")
-    import lumena.search as search_mod
-    from lumena.config import LumenaConfig
-    from lumena.data.schema import get_connection, init_db
-    from lumena.force.contextual.embed import MockEmbedder
-    from lumena.force.mnemonic.retrieval_graph import GraphChannel
-    from lumena.force.mnemonic.store import store_memory
-    from lumena.search import GraphHit, SearchPipeline  # GraphHit import is the fix
+    import lummenna.search as search_mod
+    from lummenna.config import LumenaConfig
+    from lummenna.data.schema import get_connection, init_db
+    from lummenna.force.contextual.embed import MockEmbedder
+    from lummenna.force.mnemonic.retrieval_graph import GraphChannel
+    from lummenna.force.mnemonic.store import store_memory
+    from lummenna.search import GraphHit, SearchPipeline  # GraphHit import is the fix
 
     assert GraphHit is not None
 
@@ -146,7 +146,7 @@ def test_spreading_stage_wired_into_search_pipeline(tmp_path, monkeypatch):
         calls["seed_ids"] = list(seed_ids)
         return real_spread(graph, seed_ids, a)
 
-    monkeypatch.setattr("lumena.force.mnemonic.spreading.spread_activation", _spy)
+    monkeypatch.setattr("lummenna.force.mnemonic.spreading.spread_activation", _spy)
 
     # Record any swallowed stage failure.
     failures = []

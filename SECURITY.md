@@ -13,11 +13,11 @@
 
 Lumena takes security seriously. If you discover a vulnerability, please report it via the GitHub Security Advisory page or email.
 
-**Report via:** https://github.com/QuantumindSSI/lumena/security/advisories/new
+**Report via:** https://github.com/QuantmindSSI/lummenna/security/advisories/new
 
 **PGP Key:** For sensitive disclosures, encrypt emails to:
 ```
-security@lumena.ai
+security@lummenna.ai
 ```
 
 Public key (ED25519):
@@ -86,7 +86,7 @@ Beam P2P sharing is **encrypted and authenticated by default**: every frame is A
 ## License Signing Key
 
 Lumena Pro entitlements are authorised by an **Ed25519 signing key**; only the
-matching public key is embedded in the shipped code (`lumena/licensing.py`), and
+matching public key is embedded in the shipped code (`lummenna/licensing.py`), and
 verification is fully offline. The private signing key is the root of trust for
 all commercial licenses and is **never committed to this repository**. Its
 generation, storage, rotation, and revocation are governed by the custody

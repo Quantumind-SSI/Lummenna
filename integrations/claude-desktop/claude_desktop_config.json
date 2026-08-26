@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "lumena": {
+    "lummenna": {
       "command": "python",
-      "args": ["-m", "lumena.integrations.mcp_server"],
+      "args": ["-m", "lummenna.integrations.mcp_server"],
       "env": {
         "LUMENA_DEVICE": "generic",
         "LUMENA_STORE_PATH": "${userHome}/.lumena/store",

@@ -6,18 +6,18 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumena.compliance.safety_forgetting import safety_scan_chunk
-from lumena.config import LumenaConfig
-from lumena.controller import TFCState, TwinForceController
-from lumena.data.schema import init_db
-from lumena.force.contextual.assembly import assemble_context
-from lumena.force.contextual.embed import FallbackEmbedder
-from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumena.force.mnemonic.retrieval_dense import SqliteVecBackend
-from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumena.force.mnemonic.store import store_memory
-from lumena.force.mnemonic.value_model import compute_vm
-from lumena.fusion import fuse_and_rerank
+from lummenna.compliance.safety_forgetting import safety_scan_chunk
+from lummenna.config import LumenaConfig
+from lummenna.controller import TFCState, TwinForceController
+from lummenna.data.schema import init_db
+from lummenna.force.contextual.assembly import assemble_context
+from lummenna.force.contextual.embed import FallbackEmbedder
+from lummenna.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lummenna.force.mnemonic.retrieval_dense import SqliteVecBackend
+from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.force.mnemonic.value_model import compute_vm
+from lummenna.fusion import fuse_and_rerank
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ def test_safety_scan_detects_email():
 
 
 def test_context_assembly_respects_budget(memory_db, test_config):
-    from lumena.fusion import RetrievedChunk
+    from lummenna.fusion import RetrievedChunk
 
     chunks = [
         RetrievedChunk(

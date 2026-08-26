@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
           body: JSON.stringify({ query, top_k: 5 }),
         });
         if (!res.ok) {
-          response.markdown(`Lumena server error: ${res.statusText}. Is \\"lumena serve\\" running?`);
+          response.markdown(`Lumena server error: ${res.statusText}. Is \\"lummenna serve\\" running?`);
           return;
         }
         const data = await res.json();
@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
       } catch (err) {
         response.markdown(
           `Failed to reach Lumena server at localhost:8848. ` +
-          `Please start it with: \`lumena serve\``
+          `Please start it with: \`lummenna serve\``
         );
       }
     }

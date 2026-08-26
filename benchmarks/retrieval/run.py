@@ -30,12 +30,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.retrieval_dense import VectorChannel
-from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumena.force.mnemonic.store import store_memory
-from lumena.search import SearchPipeline
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.retrieval_dense import VectorChannel
+from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.search import SearchPipeline
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -106,7 +106,7 @@ def _get_embedder(model_name):
 
     # Fallback: Lumena's own ONNX export, but ONLY for the exact model requested.
     try:
-        from lumena.force.contextual.embed import LocalEmbedder
+        from lummenna.force.contextual.embed import LocalEmbedder
         config = LumenaConfig()
         model_dir = config.model_path / _short_model_name(model_name)
         if model_dir.exists():
@@ -122,7 +122,7 @@ def _get_embedder(model_name):
     raise RuntimeError(
         f"No real embedder available for '{model_name}'. Refusing to run the "
         f"benchmark with mock embeddings (the results would be meaningless). "
-        f"Install sentence-transformers or run 'lumena model download "
+        f"Install sentence-transformers or run 'lummenna model download "
         f"{_short_model_name(model_name)}'. Errors: {'; '.join(errors)}"
     )
 

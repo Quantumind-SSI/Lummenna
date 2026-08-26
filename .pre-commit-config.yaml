@@ -6,9 +6,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
-        files: ^lumena/
+        files: ^lummenna/
       - id: ruff-format
-        files: ^lumena/
+        files: ^lummenna/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -40,7 +40,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-all]
-        files: ^lumena/
+        files: ^lummenna/
         args: [--ignore-missing-imports]
 
   - repo: https://github.com/gitleaks/gitleaks

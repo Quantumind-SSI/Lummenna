@@ -9,21 +9,21 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from lumena.compliance.safety_forgetting import safety_forget_chunk, safety_scan_chunk
-from lumena.config import LumenaConfig
-from lumena.controller import TFCState, TwinForceController
-from lumena.curiosity import curiosity_probe
-from lumena.data.schema import get_connection
-from lumena.force.contextual.assembly import assemble_context
-from lumena.force.contextual.embed import FallbackEmbedder
-from lumena.force.mnemonic.event_buffer import Event, EventMemoryBuffer
-from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumena.force.mnemonic.retrieval_temporal import temporal_point_query
-from lumena.force.mnemonic.store import store_memory
-from lumena.force.mnemonic.value_model import compute_vm
-from lumena.fusion import RetrievedChunk
-from lumena.search import SearchPipeline
-from lumena.sovereign.optical import quantize_vector
+from lummenna.compliance.safety_forgetting import safety_forget_chunk, safety_scan_chunk
+from lummenna.config import LumenaConfig
+from lummenna.controller import TFCState, TwinForceController
+from lummenna.curiosity import curiosity_probe
+from lummenna.data.schema import get_connection
+from lummenna.force.contextual.assembly import assemble_context
+from lummenna.force.contextual.embed import FallbackEmbedder
+from lummenna.force.mnemonic.event_buffer import Event, EventMemoryBuffer
+from lummenna.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lummenna.force.mnemonic.retrieval_temporal import temporal_point_query
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.force.mnemonic.value_model import compute_vm
+from lummenna.fusion import RetrievedChunk
+from lummenna.search import SearchPipeline
+from lummenna.sovereign.optical import quantize_vector
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def pro_license(monkeypatch):
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-    from lumena import licensing
+    from lummenna import licensing
 
     def _b64url(data: bytes) -> str:
         return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
@@ -451,9 +451,9 @@ def test_safety_forget_removes_vectors(fresh_config, pro_license):
     """
     import numpy as np
 
-    from lumena.compliance.safety_forgetting import safety_forget_chunk
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import store_memory
+    from lummenna.compliance.safety_forgetting import safety_forget_chunk
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import store_memory
 
     conn = get_connection(fresh_config)
     emb = np.random.default_rng(1).standard_normal(fresh_config.embedding_dims).astype("float32")
@@ -491,7 +491,7 @@ def test_safety_forget_removes_vectors(fresh_config, pro_license):
 
 def test_custom_pii_patterns_are_redacted():
     """custom_N hits must actually be redacted/hashed, not merely detected."""
-    from lumena.compliance.safety_forgetting import apply_pii_strategy, safety_scan_chunk
+    from lummenna.compliance.safety_forgetting import apply_pii_strategy, safety_scan_chunk
 
     content = "employee id EMP-12345 works here"
     custom = r"EMP-\d{5}"

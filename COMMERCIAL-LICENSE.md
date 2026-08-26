@@ -55,7 +55,7 @@ and are **not** covered by the AGPL Community grant.
 ### 3.1 Available now
 
 These capabilities are **built, shipping, and license-enforced today** (each is
-gated by Lumena's entitlement engine, `lumena.licensing.PRO_FEATURES`).
+gated by Lumena's entitlement engine, `lummenna.licensing.PRO_FEATURES`).
 
 | Ref | Pro capability |
 |-----|----------------|
@@ -90,7 +90,7 @@ capabilities.
 
 Access to Pro features is enabled by a valid **license key** issued by
 QuantumindSSI and validated by Lumena's entitlement engine
-(`lumena.licensing`). A license key never unlocks a roadmap (§3.2) feature,
+(`lummenna.licensing`). A license key never unlocks a roadmap (§3.2) feature,
 because those capabilities do not exist in the software yet.
 
 ---

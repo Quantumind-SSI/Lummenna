@@ -1,11 +1,11 @@
-"""Tests for lumena.sleep."""
+"""Tests for lummenna.sleep."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.sleep import SleepScheduler
+from lummenna.config import LumenaConfig
+from lummenna.sleep import SleepScheduler
 
 
 @pytest.fixture
@@ -90,9 +90,9 @@ def test_run_now_calls_consolidation(scheduler):
     depend on the CI/dev machine's real charge state.
     """
     with (
-        patch("lumena.sleep.run_consolidation_pass") as mock_run,
-        patch("lumena.data.schema._enforce_permissions"),
-        patch("lumena.sleep.psutil.sensors_battery", return_value=None),
+        patch("lummenna.sleep.run_consolidation_pass") as mock_run,
+        patch("lummenna.data.schema._enforce_permissions"),
+        patch("lummenna.sleep.psutil.sensors_battery", return_value=None),
     ):
         scheduler.run_now()
         mock_run.assert_called_once()
@@ -105,10 +105,10 @@ def test_exception_in_consolidation_caught_and_logged(scheduler):
     Battery sensor patched to None (desktop) for determinism.
     """
     with (
-        patch("lumena.sleep.run_consolidation_pass") as mock_run,
-        patch("lumena.data.schema._enforce_permissions"),
-        patch("lumena.sleep.psutil.sensors_battery", return_value=None),
-        patch("lumena.sleep.logger") as mock_logger,
+        patch("lummenna.sleep.run_consolidation_pass") as mock_run,
+        patch("lummenna.data.schema._enforce_permissions"),
+        patch("lummenna.sleep.psutil.sensors_battery", return_value=None),
+        patch("lummenna.sleep.logger") as mock_logger,
     ):
         mock_run.side_effect = RuntimeError("boom")
         scheduler._maybe_consolidate()

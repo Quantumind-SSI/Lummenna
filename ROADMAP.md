@@ -58,7 +58,7 @@ This document tracks ongoing and future work for Lumena following the v1.0.0 pub
 - [ ] Verify L3 budget eviction triggers correctly under RSS pressure — re-run with committed artifact
 
 ### 3.2 P2P / Beam Security Audit
-- [x] Transport encryption — AES-256-GCM + HMAC-SHA256 with replay protection shipped in `lumena/p2p/beam.py` / `lumena/security/crypto.py`; a Beam listener refuses to start without a key
+- [x] Transport encryption — AES-256-GCM + HMAC-SHA256 with replay protection shipped in `lummenna/p2p/beam.py` / `lummenna/security/crypto.py`; a Beam listener refuses to start without a key
 - [ ] Harden Beam protocol for adversarial networks (persistent replay-nonce store, key rotation) — target v0.3.0
 - [x] Document trust model and household-local limitation
 
@@ -76,7 +76,7 @@ This document tracks ongoing and future work for Lumena following the v1.0.0 pub
 These are **planned** commercial (Pro) capabilities. They are **not built and not
 available today**, and they must never be advertised, gated, or claimed as
 present until delivered (see `AGENTS.md`). They are registered in
-`PLANNED_PRO_FEATURES` in `lumena/licensing.py` — deliberately separate from the
+`PLANNED_PRO_FEATURES` in `lummenna/licensing.py` — deliberately separate from the
 enforceable `PRO_FEATURES` registry — so nothing here can be sold as a live
 feature. Calling `assert_licensed(<planned-key>)` intentionally raises, because
 gating an unbuilt capability would be a false availability claim.

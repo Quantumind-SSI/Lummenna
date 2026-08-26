@@ -1,6 +1,6 @@
 # Aider + Lumena Integration
 
-[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively and has no custom slash-command configuration, so the integration paths below use aider's built-in `/run` command, shell wrappers, and the Lumena HTTP API. Start `lumena serve` first.
+[Aider](https://aider.chat) is an AI pair programming tool that works with your local git repo. It does not support MCP natively and has no custom slash-command configuration, so the integration paths below use aider's built-in `/run` command, shell wrappers, and the Lumena HTTP API. Start `lummenna serve` first.
 
 ## Option 1: Aider's built-in `/run` command
 
@@ -14,7 +14,7 @@ Aider's `/run` executes a shell command and can add its output to the chat. Use 
 /run curl -s -X POST http://localhost:8848/v1/assemble -H "Content-Type: application/json" -d '{"query":"implement retry logic","top_k":5}'
 ```
 
-To avoid typing the full curl each time, wrap them in small scripts on your `PATH` (e.g. `lumena-search`, `lumena-store`) and call `/run lumena-search database indexing decision`.
+To avoid typing the full curl each time, wrap them in small scripts on your `PATH` (e.g. `lummenna-search`, `lummenna-store`) and call `/run lummenna-search database indexing decision`.
 
 ## Option 2: Python Hook (Advanced)
 
@@ -59,7 +59,7 @@ Add to your shell profile:
 
 ```bash
 # Aider with Lumena context injection
-aider-lumena() {
+aider-lummenna() {
   context=$(curl -s -X POST http://localhost:8848/v1/assemble \
     -H "Content-Type: application/json" \
     -d "{\"query\":\"$*\",\"top_k\":3}" | jq -r '.assembled_context // empty')
@@ -73,5 +73,5 @@ aider-lumena() {
 
 Usage:
 ```bash
-aider-lumena "Refactor the database layer to use connection pooling"
+aider-lummenna "Refactor the database layer to use connection pooling"
 ```

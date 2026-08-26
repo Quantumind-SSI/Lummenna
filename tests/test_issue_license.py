@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from lumena import licensing
+from lummenna import licensing
 
 _SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "issue_license.py"
 

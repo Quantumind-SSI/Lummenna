@@ -1,5 +1,5 @@
 {
-  "name": "lumena-copilot",
+  "name": "lummenna-copilot",
   "displayName": "Lumena Memory for Copilot",
   "description": "Connects GitHub Copilot Chat to the Lumena memory palace.",
   "version": "0.1.0",
@@ -13,7 +13,7 @@
     "chatParticipants": [
       {
         "id": "copilot.lumena",
-        "name": "lumena",
+        "name": "lummenna",
         "description": "Search and retrieve memories from the Lumena palace",
         "isSticky": true
       }

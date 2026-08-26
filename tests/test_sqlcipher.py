@@ -12,13 +12,13 @@ import json
 
 import pytest
 
-from lumena import licensing
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection, get_encryption
-from lumena.force.contextual.embed import MockEmbedder
-from lumena.force.mnemonic.store import store_memory
-from lumena.search import SearchPipeline
-from lumena.security.crypto import derive_sqlcipher_passphrase
+from lummenna import licensing
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection, get_encryption
+from lummenna.force.contextual.embed import MockEmbedder
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.search import SearchPipeline
+from lummenna.security.crypto import derive_sqlcipher_passphrase
 
 # Skip the whole module when the SQLCipher driver is unavailable rather than
 # fail: the capability itself is exercised only when sqlcipher3 is importable.
@@ -155,7 +155,7 @@ class TestSQLCipherIntegration:
     def test_plaintext_fallback_when_sqlcipher_unavailable(
         self, tmp_path, monkeypatch, pro_license
     ):
-        monkeypatch.setattr("lumena.data.schema._HAS_SQLCIPHER", False)
+        monkeypatch.setattr("lummenna.data.schema._HAS_SQLCIPHER", False)
         config = LumenaConfig(
             store_path=tmp_path / ".lumena" / "store",
             model_path=tmp_path / ".lumena" / "models",
@@ -170,7 +170,7 @@ class TestSQLCipherIntegration:
 
     def test_sqlcipher_blocked_without_pro_license(self, tmp_path):
         """Community (no license) must not be able to enable encryption-at-rest."""
-        from lumena.brand.errors import LicenseRequiredError
+        from lummenna.brand.errors import LicenseRequiredError
 
         licensing.clear_license_cache()
         config = LumenaConfig(

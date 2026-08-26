@@ -1,6 +1,6 @@
 import time
 
-from lumena.force.mnemonic.event_buffer import Event, EventMemoryBuffer
+from lummenna.force.mnemonic.event_buffer import Event, EventMemoryBuffer
 
 
 def test_append_adds_event():

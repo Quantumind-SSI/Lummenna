@@ -6,9 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.p2p.beam import BeamNode, decode_frame, encode_frame
-from lumena.security.crypto import P2PSign
+from lummenna.config import LumenaConfig
+from lummenna.p2p.beam import BeamNode, decode_frame, encode_frame
+from lummenna.security.crypto import P2PSign
 
 
 @pytest.fixture
@@ -131,9 +131,9 @@ class TestHardenedBeamProtocol:
         framed = encode_frame(old_packet, crypto=node._crypto, signer=node._signer)
 
         calls = []
-        monkeypatch.setattr("lumena.p2p.beam.store_memory", lambda *a, **k: calls.append(k))
+        monkeypatch.setattr("lummenna.p2p.beam.store_memory", lambda *a, **k: calls.append(k))
         monkeypatch.setattr(
-            "lumena.p2p.beam.get_connection",
+            "lummenna.p2p.beam.get_connection",
             lambda cfg: type(
                 "C",
                 (),

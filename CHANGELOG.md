@@ -35,11 +35,11 @@ All notable changes to Lumena will be documented in this file.
 - Palace seed script (`datasets/seed.py`) — populates a Lumena instance from the domain corpus JSON with real embeddings, creating a production-ready knowledge base in ~2 seconds.
 - Palace Navigation Efficiency (PNE) benchmark (`benchmarks/navigation/`) — proprietary evaluation suite measuring latency speedup, recall retention, intent-routing accuracy, and pruning efficiency of Lumena's room/locus topology vs. flat global search. Outputs JSON + Markdown.
 - End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 7 sessions. Measures R@k recall, similarity scores, and per-query latency using embedding-similarity self-grading (no LLM judge, no comparison against MemGPT/Mem0/Zep).
-- LangGraph integration (`lumena.integrations.langgraph`) — `LumenaCheckpointSaver` for graph state persistence and `LumenaGraphStore` for cross-thread long-term memory. Installable via `pip install lumena[langgraph]`. Includes 9 test cases.
-- Centralized logging helper (`lumena.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
+- LangGraph integration (`lummenna.integrations.langgraph`) — `LumenaCheckpointSaver` for graph state persistence and `LumenaGraphStore` for cross-thread long-term memory. Installable via `pip install lummenna[langgraph]`. Includes 9 test cases.
+- Centralized logging helper (`lummenna.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
 - API versioning (`/v1/` prefix) for all operational endpoints with backward-compatible public paths (`/health`, `/dashboard`, `/metrics`).
 - Subresource Integrity (SRI) hash for Chart.js CDN resource in dashboard HTML.
-- PGP key for `security@lumena.ai` published in `SECURITY.md`.
+- PGP key for `security@lummenna.ai` published in `SECURITY.md`.
 - Optical degradation benchmark (`benchmarks/optical/run.py`) — evaluates retrieval quality at FP32, FP16, INT8, and BINARY quantization levels.
 - TFC sensitivity benchmark (`benchmarks/tfc/run.py`) — grid search across Twin-Force Controller parameters.
 - Stress test benchmark (`benchmarks/stress/run.py`) — 100k+ chunk ingestion, multi-threaded query throughput, and L3 budget eviction validation.
@@ -59,12 +59,12 @@ All notable changes to Lumena will be documented in this file.
 - L2 interference checking (`forgetting_l2_interference.py`) now reads embeddings from `vec_chunks` when `vec_fallback` is empty, fixing a blind spot for sqlite-vec-only deployments.
 - API `/turn` endpoint (`server.py`) now resolves real `room_name`, `locus_name`, `vm_score`, and `age_hours` from the database instead of using hardcoded placeholder values.
 - LangGraph `alist()` async method now yields items as a proper async generator instead of returning a sync Iterator.
-- Removed trailing whitespace in `lumena/api/server.py` docstring.
-- Removed unused `os` import in `lumena/api/server.py`.
+- Removed trailing whitespace in `lummenna/api/server.py` docstring.
+- Removed unused `os` import in `lummenna/api/server.py`.
 - Replaced unused local variable assignments with `_` in `tests/test_beam.py` and `tests/test_core.py`.
 - Sorted and cleaned import blocks across multiple test files (auto-fixed by ruff).
 - Removed dead `pass` in `benchmarks/beir/run.py` except block.
-- Removed empty `if TYPE_CHECKING: pass` block in `lumena/curiosity.py`.
+- Removed empty `if TYPE_CHECKING: pass` block in `lummenna/curiosity.py`.
 - Fixed FTS5 lexical search failing on apostrophes, periods, and other punctuation characters in query strings (`retrieval_lexical.py`).
 - Fixed benchmark scripts failing when `_enforce_permissions` attempted to chmod `/tmp` by ensuring store paths are nested under temp directories.
 

@@ -2,12 +2,12 @@
 #
 # Multi-stage, non-root, read-only-friendly. The embedding model is NOT baked
 # into the image (models are data, not code): provision it into the models
-# volume via the init container / `lumena model download`, or mount a
+# volume via the init container / `lummenna model download`, or mount a
 # pre-provisioned volume. A pod without a model reports NOT READY at /ready
 # rather than serving degraded results.
 #
-# Build:  docker build -t lumena:latest .
-# Run:    docker run -p 8848:8848 -v lumena-data:/data/store -v lumena-models:/data/models lumena:latest
+# Build:  docker build -t lummenna:latest .
+# Run:    docker run -p 8848:8848 -v lummenna-data:/data/store -v lummenna-models:/data/models lummenna:latest
 
 # --- Build stage -----------------------------------------------------------
 FROM python:3.12-slim AS build
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
-COPY lumena/ lumena/
+COPY lummenna/ lummenna/
 
 # Build a wheel and install into an isolated prefix that the runtime copies.
 RUN pip install --prefix=/install .
@@ -33,7 +33,7 @@ FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="Lumena Memory API"
 LABEL org.opencontainers.image.description="Local-first memory and context framework for sovereign AI agents"
-LABEL org.opencontainers.image.source="https://github.com/QuantumindSSI/lumena"
+LABEL org.opencontainers.image.source="https://github.com/QuantmindSSI/lummenna"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 ENV PYTHONUNBUFFERED=1 \
@@ -47,10 +47,10 @@ ENV PYTHONUNBUFFERED=1 \
 COPY --from=build /install /usr/local
 
 # Non-root user; /data owned by it for the store and models volumes.
-RUN groupadd --gid 10001 lumena \
-    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin lumena \
+RUN groupadd --gid 10001 lummenna \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin lummenna \
     && mkdir -p /data/store /data/models \
-    && chown -R lumena:lumena /data
+    && chown -R lummenna:lummenna /data
 
 USER 10001:10001
 
@@ -62,4 +62,4 @@ EXPOSE 8848
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8848/health')" || exit 1
 
-CMD ["uvicorn", "lumena.api.server:app", "--host", "0.0.0.0", "--port", "8848", "--log-level", "info"]
+CMD ["uvicorn", "lummenna.api.server:app", "--host", "0.0.0.0", "--port", "8848", "--log-level", "info"]

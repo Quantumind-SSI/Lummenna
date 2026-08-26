@@ -4,8 +4,8 @@
 // Application Insights (observability), and the AcrPull grant so the cluster
 // can pull images. Scope: resource group.
 //
-//   az group create -n rg-lumena -l westeurope
-//   az deployment group create -g rg-lumena -f main.bicep -p namePrefix=lumena
+//   az group create -n rg-lummenna -l westeurope
+//   az deployment group create -g rg-lummenna -f main.bicep -p namePrefix=lummenna
 //
 // Deliberately NOT provisioned: multi-zone HA, autoscaling beyond the node
 // pool, geo-replication — Lumena is a single-writer, single-replica workload
@@ -14,7 +14,7 @@
 @description('Prefix for all resource names (3-12 lowercase alphanumerics).')
 @minLength(3)
 @maxLength(12)
-param namePrefix string = 'lumena'
+param namePrefix string = 'lummenna'
 
 @description('Azure region for all resources.')
 param location string = resourceGroup().location

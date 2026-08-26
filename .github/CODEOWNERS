@@ -1,17 +1,17 @@
 # Global default fallback
-* @QuantumindSSI/maintainers
+* @QuantumindSSI
 
 # CI/CD and security workflows
-/.github/ @QuantumindSSI/maintainers
+/.github/ @QuantumindSSI
 
 # Core source code
-/lumena/ @QuantumindSSI/maintainers
+/lummenna/ @QuantumindSSI
 
 # Tests
-/tests/ @QuantumindSSI/maintainers
+/tests/ @QuantumindSSI
 
 # Documentation
-*.md @QuantumindSSI/maintainers
+*.md @QuantumindSSI
 
 # Package and build configuration
-/pyproject.toml @QuantumindSSI/maintainers
+/pyproject.toml @QuantumindSSI

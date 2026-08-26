@@ -32,14 +32,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumena.config import LumenaConfig
-from lumena.controller import TwinForceController
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.retrieval_dense import VectorChannel
-from lumena.force.mnemonic.retrieval_graph import GraphChannel
-from lumena.force.mnemonic.retrieval_lexical import LexicalChannel
-from lumena.force.mnemonic.store import store_memory
-from lumena.fusion import RetrievedChunk, fuse_and_rerank
+from lummenna.config import LumenaConfig
+from lummenna.controller import TwinForceController
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.retrieval_dense import VectorChannel
+from lummenna.force.mnemonic.retrieval_graph import GraphChannel
+from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.fusion import RetrievedChunk, fuse_and_rerank
 
 # ---------------------------------------------------------------------------
 # Corpus

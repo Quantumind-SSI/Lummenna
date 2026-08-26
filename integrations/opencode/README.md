@@ -7,7 +7,7 @@
 1. Install Lumena with MCP support:
 
    ```bash
-   pip install lumena[mcp]
+   pip install lummenna[mcp]
    ```
 
 2. Provision the local embedding model **once** (the MCP server refuses to start
@@ -15,7 +15,7 @@
    meaningless):
 
    ```bash
-   lumena model download bge-small-en-v1.5
+   lummenna model download bge-small-en-v1.5
    ```
 
    Alternatively, set `LUMENA_AUTO_PROVISION_MODEL=1` (see below) and Lumena
@@ -32,9 +32,9 @@ into your existing `opencode.json` / global `~/.config/opencode/opencode.json`):
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "lumena": {
+    "lummenna": {
       "type": "local",
-      "command": ["python3", "-m", "lumena.integrations.mcp_server"],
+      "command": ["python3", "-m", "lummenna.integrations.mcp_server"],
       "enabled": true,
       "environment": {
         "LUMENA_DEVICE": "generic",
