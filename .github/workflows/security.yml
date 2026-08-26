@@ -77,15 +77,15 @@ jobs:
       #
       # transformers 4.57.x — PYSEC-2025-217, PYSEC-2026-2288, PYSEC-2026-2289,
       #   PYSEC-2026-2290: all require loading untrusted checkpoints/configs
-      #   from the Hub. Lumena only loads models pinned to immutable commit
+      #   from the Hub. Lummenna only loads models pinned to immutable commit
       #   SHAs (see lummenna/cli/models.py KNOWN_MODELS) or local directories it
       #   exported itself, behind a sovereign-mode network block by default.
       #   Upgrading to the fixed 5.x line is blocked: optimum-onnx (latest
       #   0.1.0) requires transformers<4.58, and it provides the ONNX export
-      #   path Lumena's embedding provisioning depends on.
+      #   path Lummenna's embedding provisioning depends on.
       #
       # diskcache 5.6.3 — PYSEC-2026-2447: pickle deserialization; no fixed
-      #   release exists. Transitive dependency of langchain; Lumena never
+      #   release exists. Transitive dependency of langchain; Lummenna never
       #   imports or writes to diskcache.
       - name: Run pip-audit
         run: |

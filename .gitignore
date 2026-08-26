@@ -27,7 +27,6 @@ MANIFEST
 *.spec
 
 # Virtual environments
-.env
 .venv
 env/
 venv/
@@ -38,7 +37,6 @@ venv.bak/
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
@@ -49,6 +47,7 @@ venv.bak/
 .coverage
 .coverage.*
 htmlcov/
+temp_auto_push.bat
 coverage.xml
 coverage.json
 *.cover
@@ -63,7 +62,7 @@ coverage.json
 # Jupyter
 .ipynb_checkpoints
 
-# Lumena-specific artifacts
+# Lummenna-specific artifacts
 *.log
 *.db
 *.db-wal
@@ -83,7 +82,6 @@ benchmarks/results/
 *.crt
 secrets/
 credentials/
-.env*
 !.env.example
 !*.env.sample
 
@@ -98,5 +96,9 @@ ios/
 tmp/
 lummenna/benchmarks/*/results/
 
-# Local Lumena runtime store + provisioned models (per-machine, never committed)
-.lumena/
+# Local Lummenna runtime store + provisioned models (per-machine, never committed)
+.lummenna/
+.gitignore
+branch_structure.json
+config.bat
+node_modules

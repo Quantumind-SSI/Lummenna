@@ -5,12 +5,12 @@ from __future__ import annotations
 import pytest
 
 from lummenna.brand.errors import ModelNotAvailableError
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.force.contextual.embed import MockEmbedder
 
 
 def _config(tmp_path, **overrides):
-    return LumenaConfig(
+    return LummennaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         **overrides,
@@ -19,7 +19,7 @@ def _config(tmp_path, **overrides):
 
 def test_guard_disabled_by_default_raises(tmp_path, monkeypatch):
     """Without auto_provision_model, a missing model still fails loudly."""
-    monkeypatch.delenv("LUMENA_ALLOW_MOCK_EMBEDDER", raising=False)
+    monkeypatch.delenv("LUMMENNA_ALLOW_MOCK_EMBEDDER", raising=False)
     from lummenna import _init
 
     cfg = _config(tmp_path, auto_provision_model=False, allow_mock_embedder=False)

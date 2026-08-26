@@ -15,11 +15,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _default_config_path() -> Path:
-    return Path.home() / ".lumena" / "config.toml"
+    return Path.home() / ".lummenna" / "config.toml"
 
 
 # Supported device profiles — the single source of truth for the closed set,
-# reused by LumenaConfig.device and validated at the CLI boundary.
+# reused by LummennaConfig.device and validated at the CLI boundary.
 DeviceProfile = Literal["rpi5", "jetson-orin", "orange-pi", "generic"]
 
 
@@ -31,9 +31,9 @@ DEVICE_PROFILES: dict[str, dict[str, object]] = {
 }
 
 
-class LumenaConfig(BaseSettings):
+class LummennaConfig(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="LUMENA_",
+        env_prefix="LUMMENNA_",
         toml_file=_default_config_path(),
     )
 
@@ -41,20 +41,20 @@ class LumenaConfig(BaseSettings):
     context_budget: int = 2048
     memory_limit_mb: int = 300
     # Maximum characters of chunk content shown per result by the
-    # `lumena_search` MCP tool (a ranked preview, not a full-content reader).
+    # `lummenna_search` MCP tool (a ranked preview, not a full-content reader).
     # When a chunk's content exceeds this length it is cut and an ellipsis
     # marker is appended so the caller can tell a preview from a full chunk.
-    # Raise it (e.g. LUMENA_SEARCH_PREVIEW_CHARS=2000) to see more per hit, or
+    # Raise it (e.g. LUMMENNA_SEARCH_PREVIEW_CHARS=2000) to see more per hit, or
     # read the chunk in full from the store via its chunk_id.
     search_preview_chars: int = 300
     embedding_model: str = "bge-small-en-v1.5"
     embedding_dims: int = 384
-    # Testing escape hatch ONLY (LUMENA_ALLOW_MOCK_EMBEDDER=1): when the real
+    # Testing escape hatch ONLY (LUMMENNA_ALLOW_MOCK_EMBEDDER=1): when the real
     # ONNX model is missing, substitute hash-based mock embeddings instead of
     # failing. Mock vectors make semantic search meaningless, so production
     # paths refuse to start without the real model unless this is set.
     allow_mock_embedder: bool = False
-    # First-run convenience (LUMENA_AUTO_PROVISION_MODEL=1): when the real ONNX
+    # First-run convenience (LUMMENNA_AUTO_PROVISION_MODEL=1): when the real ONNX
     # embedding model is missing, download and export it automatically instead
     # of failing at startup. This performs a ONE-TIME network fetch from the
     # model hub and therefore crosses the sovereign boundary; it is opt-in and
@@ -75,13 +75,13 @@ class LumenaConfig(BaseSettings):
     # AES-256-GCM-encrypted and HMAC-signed.
     local_ip: str = "0.0.0.0"  # nosec B104
     beam_port: int = 8847
-    store_path: Path = Path.home() / ".lumena" / "store"
-    model_path: Path = Path.home() / ".lumena" / "models"
+    store_path: Path = Path.home() / ".lummenna" / "store"
+    model_path: Path = Path.home() / ".lummenna" / "models"
     memory_budget_mb: int = 64
     sovereign: bool = True
     log_level: str = "info"
     # Loopback by default: the memory API must not listen on the LAN unless
-    # explicitly configured (LUMENA_API_HOST=0.0.0.0 — Docker does this).
+    # explicitly configured (LUMMENNA_API_HOST=0.0.0.0 — Docker does this).
     api_host: str = "127.0.0.1"
     api_port: int = 8848
     api_key: str | None = None
@@ -105,7 +105,7 @@ class LumenaConfig(BaseSettings):
     p2p_encryption_key: str | None = None
 
     # Licensing / entitlement (dual-license Pro edition). A signed license key
-    # (LUMENA_LICENSE_KEY) unlocks Pro features; absent/invalid → Community.
+    # (LUMMENNA_LICENSE_KEY) unlocks Pro features; absent/invalid → Community.
     # Validation is fully offline (no phone-home) to preserve sovereignty.
     license_key: str | None = None
 
@@ -144,11 +144,11 @@ class LumenaConfig(BaseSettings):
 
     @property
     def db_uri(self) -> str:
-        return f"{self.store_path}/lumena.db"
+        return f"{self.store_path}/lummenna.db"
 
     @property
     def db_path(self) -> Path:
-        return self.store_path / "lumena.db"
+        return self.store_path / "lummenna.db"
 
     def resolve_device_defaults(self) -> None:
         """Apply device-profile defaults for fields still at their generic defaults."""
@@ -169,4 +169,4 @@ class LumenaConfig(BaseSettings):
 
 
 # Backward-compatible alias
-LumenaConfig = LumenaConfig
+LummennaConfig = LummennaConfig

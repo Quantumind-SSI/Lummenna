@@ -8,7 +8,7 @@
         └───┘
 </pre>
 
-<h1>Lumena</h1>
+<h1>Lummenna</h1>
 
 <p><strong>Local-first memory and context framework for sovereign AI agents.</strong></p>
 
@@ -26,9 +26,9 @@
 
 ---
 
-## What is Lumena?
+## What is Lummenna?
 
-Lumena is a **local-first memory store for LLM agents** — it organizes agent memories in a structured memory palace (rooms, loci, chunks) with hybrid retrieval, managed decay, and native integrations. It runs entirely on your hardware with no cloud dependencies.
+Lummenna is a **local-first memory store for LLM agents** — it organizes agent memories in a structured memory palace (rooms, loci, chunks) with hybrid retrieval, managed decay, and native integrations. It runs entirely on your hardware with no cloud dependencies.
 
 - **No cloud.** Embeddings run locally via ONNX Runtime. Storage is single-file SQLite.
 - **Optional daemon.** Background scheduler auto-starts with `lummenna serve`; can also run standalone with `lummenna daemon start`.
@@ -57,7 +57,7 @@ lummenna serve
 
 > **First run needs an embedding model.** By default `lummenna` will try to export
 > one, which requires the heavy `[export]` toolchain. The lean, recommended path
-> is a **prebuilt model bundle** (no toolchain): set `LUMENA_PREBUILT_MODEL_URL`
+> is a **prebuilt model bundle** (no toolchain): set `LUMMENNA_PREBUILT_MODEL_URL`
 > or use the one-command installer.
 
 ### Install options (extras)
@@ -77,11 +77,11 @@ The base install is deliberately **lean** (no torch/CUDA). Add extras only when 
 ### Store and retrieve
 
 ```python
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
 
-config = LumenaConfig()
+config = LummennaConfig()
 conn = get_connection(config)
 
 chunk_id = store_memory(
@@ -94,11 +94,11 @@ conn.close()
 ```
 
 ```python
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.conversation import ConversationMemory
 
-config = LumenaConfig()
+config = LummennaConfig()
 conn = get_connection(config)
 memory = ConversationMemory(config=config, conn=conn)
 
@@ -108,7 +108,7 @@ print(turn.assembled_context)
 
 ```bash
 $ lummenna status
-Lumena Status
+Lummenna Status
 Device: generic
 Rooms: 5
 Active chunks: 58
@@ -152,7 +152,7 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 
 ## State of the Project
 
-Lumena is **production-ready software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for production, evaluation, development, and trusted-LAN deployments.
+Lummenna is **production-ready software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for production, evaluation, development, and trusted-LAN deployments.
 
 | Dimension | Status | Detail |
 |---|---|---|
@@ -162,11 +162,11 @@ Lumena is **production-ready software**. It works end-to-end with API versioning
 | **Forgetting** | Working | L1 decay (Ebbinghaus), L2 interference, L3 budget eviction. |
 | **PII detection** | Working | Regex-based scanning at storage time. Configurable block/redact/hash. |
 | **Audit logging** | Working | SQLite audit_log table with request tracing. |
-| **API server** | Working | FastAPI with `/v1/` versioning, opt-in API-key auth (off until `LUMENA_API_KEY` is set), rate limiting on POST endpoints, CORS, security headers. |
+| **API server** | Working | FastAPI with `/v1/` versioning, opt-in API-key auth (off until `LUMMENNA_API_KEY` is set), rate limiting on POST endpoints, CORS, security headers. |
 | **MCP server** | Working | 7 tools (search, store, assemble, turn, feedback, status, dashboard). |
-| **LangChain** | Working | LumenaChatMemory adapter (requires `langchain` package). |
-| **LangGraph** | Working | LumenaCheckpointSaver (requires `langgraph` package). |
-| **Encryption-at-rest** | Implemented, opt-in | SQLCipher (full-DB) or Fernet (field-level) via `LUMENA_DATABASE_ENCRYPTION_MODE`. Default is `none` — enable it or use OS-level disk encryption. |
+| **LangChain** | Working | LummennaChatMemory adapter (requires `langchain` package). |
+| **LangGraph** | Working | LummennaCheckpointSaver (requires `langgraph` package). |
+| **Encryption-at-rest** | Implemented, opt-in | SQLCipher (full-DB) or Fernet (field-level) via `LUMMENNA_DATABASE_ENCRYPTION_MODE`. Default is `none` — enable it or use OS-level disk encryption. |
 | **BEIR benchmarks** | Partially evaluated | 500-doc/20-query subset results available. Full-corpus evaluation deferred to HPC. |
 | **P2P sharing** | Working | Beam protocol with AES-256-GCM encryption, HMAC-SHA256 signing, replay protection. Requires p2p key. |
 
@@ -199,9 +199,9 @@ All run with a single command from the repo root:
 
 | Integration | What it does | How to use |
 |---|---|---|
-| **MCP Server** | Exposes Lumena tools to OpenCode, Claude Desktop | `python -m lummenna.integrations.mcp_server` |
-| **LangChain** | `LumenaChatMemory` adapter | `pip install langchain` |
-| **LangGraph** | `LumenaCheckpointSaver` for graph state | `pip install langgraph` |
+| **MCP Server** | Exposes Lummenna tools to OpenCode, Claude Desktop | `python -m lummenna.integrations.mcp_server` |
+| **LangChain** | `LummennaChatMemory` adapter | `pip install langchain` |
+| **LangGraph** | `LummennaCheckpointSaver` for graph state | `pip install langgraph` |
 | **FastAPI** | REST API with auth/rate-limiting | `lummenna serve` |
 | **OpenCode** | Native skill for memory workflows | See `INTEGRATIONS.md` |
 
@@ -272,7 +272,7 @@ ruff check lummenna/ tests/             # Lint
 | [`SECURITY.md`](SECURITY.md) | Security policy and known limitations |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | Integration guides for each platform |
 | [`ROADMAP.md`](ROADMAP.md) | Development milestones and open work |
-| [`docs/Lumena_Whitepaper.md`](docs/Lumena_Whitepaper.md) | Introductory white paper |
+| [`docs/Lummenna_Whitepaper.md`](docs/Lummenna_Whitepaper.md) | Introductory white paper |
 
 ---
 
@@ -287,10 +287,10 @@ ruff check lummenna/ tests/             # Lint
 
 ## License
 
-Lumena is **dual-licensed**:
+Lummenna is **dual-licensed**:
 
 - **Community Edition** — [AGPL-3.0-or-later](LICENSE). Free and open source.
-  If you run a modified Lumena as a network service, AGPL requires you to make
+  If you run a modified Lummenna as a network service, AGPL requires you to make
   your source available to its users.
 - **Pro / Commercial Edition** — a commercial license from QuantumindSSI that
   removes the AGPL obligations and unlocks Pro features. See

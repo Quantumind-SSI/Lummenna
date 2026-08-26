@@ -1,5 +1,5 @@
 """
-End-to-End Memory Quality Benchmark for Lumena.
+End-to-End Memory Quality Benchmark for Lummenna.
 
 Simulates 7 multi-turn conversation sessions, one per agent persona
 (7 personas, 4 queries each = 28 queries). Each session stores facts,
@@ -43,7 +43,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
 from lummenna.search import SearchPipeline
@@ -104,7 +104,7 @@ def _get_embedder():
     try:
         from lummenna.force.contextual.embed import LocalEmbedder
 
-        config = LumenaConfig()
+        config = LummennaConfig()
         model_dir = config.model_path / "all-MiniLM-L6-v2"
         if model_dir.exists():
             _embedder = LocalEmbedder(model_dir, dims=EMBED_DIMS)
@@ -565,8 +565,8 @@ def run_e2e_benchmark():
         print(f"Session {session_idx+1}: {session['persona']} in room '{session['room']}'")
         print(f"{'='*60}")
 
-        tmpdir = tempfile.mkdtemp(prefix=f"lumena_e2e_{session['room']}_")
-        config = LumenaConfig(
+        tmpdir = tempfile.mkdtemp(prefix=f"lummenna_e2e_{session['room']}_")
+        config = LummennaConfig(
             store_path=Path(tmpdir) / "store",
             embedding_dims=EMBED_DIMS,
             vector_index="sqlite-vec",

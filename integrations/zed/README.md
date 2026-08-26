@@ -1,4 +1,4 @@
-# Zed + Lumena Integration
+# Zed + Lummenna Integration
 
 [Zed](https://zed.dev) is a high-performance AI-native code editor. Zed supports **context servers** (their term for MCP-like integrations) and **slash commands**.
 
@@ -15,14 +15,14 @@ Add to your Zed `settings.json` (via `cmd+,` or `ctrl+,`):
         "args": ["-m", "lummenna.integrations.mcp_server"]
       },
       "settings": {
-        "LUMENA_DEVICE": "generic"
+        "LUMMENNA_DEVICE": "generic"
       }
     }
   }
 }
 ```
 
-Restart Zed. The Lumena tools will appear in the AI assistant panel.
+Restart Zed. The Lummenna tools will appear in the AI assistant panel.
 
 ## Option 2: Zed Slash Command (Workaround)
 
@@ -41,7 +41,7 @@ Add to `~/.config/zed/settings.json`:
 }
 ```
 
-Then create a Zed extension or use the inline assistant with a custom prompt that calls Lumena via HTTP. Zed's extension API for custom slash commands is evolving; check the [Zed extensions docs](https://zed.dev/docs/extensions) for the latest.
+Then create a Zed extension or use the inline assistant with a custom prompt that calls Lummenna via HTTP. Zed's extension API for custom slash commands is evolving; check the [Zed extensions docs](https://zed.dev/docs/extensions) for the latest.
 
 ## Option 3: Zed Extension (Advanced)
 
@@ -50,18 +50,18 @@ Create `~/.config/zed/extensions/lummenna/extension.json`:
 ```json
 {
   "id": "lummenna",
-  "name": "Lumena Memory",
+  "name": "Lummenna Memory",
   "version": "0.1.0",
-  "authors": ["Lumena Contributors"],
-  "description": "Integrate Lumena memory palace with Zed AI assistant",
+  "authors": ["Lummenna Contributors"],
+  "description": "Integrate Lummenna memory palace with Zed AI assistant",
   "repository": "https://github.com/QuantmindSSI/lummenna"
 }
 ```
 
-And `~/.config/zed/extensions/lummenna/src/lib.rs` (WASM extension that calls Lumena HTTP API). This requires Rust/WASM knowledge. For a pilot, Option 1 (context server) is sufficient.
+And `~/.config/zed/extensions/lummenna/src/lib.rs` (WASM extension that calls Lummenna HTTP API). This requires Rust/WASM knowledge. For a pilot, Option 1 (context server) is sufficient.
 
 ## Quick Test
 
-1. Start Lumena: `lummenna serve`
+1. Start Lummenna: `lummenna serve`
 2. Open Zed AI panel (`ctrl+~` or `cmd+~`)
 3. Type: `@lummenna search for decisions about caching`

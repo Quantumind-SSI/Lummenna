@@ -94,7 +94,13 @@ def _ast_guardrails(source: str, filename: str = "<unknown>") -> list[dict]:
     try:
         tree = ast.parse(source)
     except SyntaxError as exc:
-        return [{"severity": "BLOCKER", "line": exc.lineno or 1, "description": f"Syntax error: {exc.msg}"}]
+        return [
+            {
+                "severity": "BLOCKER",
+                "line": exc.lineno or 1,
+                "description": f"Syntax error: {exc.msg}",
+            }
+        ]
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
@@ -191,7 +197,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         try:
             ast.parse(source)
         except SyntaxError as exc:
-            issues.append({"severity": "BLOCKER", "line": exc.lineno or 1, "message": f"Syntax error: {exc.msg}"})
+            issues.append(
+                {
+                    "severity": "BLOCKER",
+                    "line": exc.lineno or 1,
+                    "message": f"Syntax error: {exc.msg}",
+                }
+            )
 
         # Static checks
         issues.extend(_ast_guardrails(source, filename))
@@ -212,7 +224,14 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             summary = ai_text[:500]
             valid = len(issues) == 0
 
-        return [TextContent(type="text", text=json.dumps({"valid": valid, "filename": filename, "issues": issues, "summary": summary}))]
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {"valid": valid, "filename": filename, "issues": issues, "summary": summary}
+                ),
+            )
+        ]
 
     if name == "security_guardrail":
         source = arguments.get("source", "")
@@ -245,7 +264,12 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             TextContent(
                 type="text",
                 text=json.dumps(
-                    {"passed": passed, "filename": filename, "issues": issues, "recommendation": recommendation}
+                    {
+                        "passed": passed,
+                        "filename": filename,
+                        "issues": issues,
+                        "recommendation": recommendation,
+                    }
                 ),
             )
         ]
@@ -253,7 +277,9 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     if name == "sanitize_text":
         text = arguments.get("text", "")
         # Heuristic pre-pass
-        redacted = re.sub(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[REDACTED_EMAIL]", text)
+        redacted = re.sub(
+            r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[REDACTED_EMAIL]", text
+        )
         redacted = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "[REDACTED_IP]", redacted)
         redacted = re.sub(r"sk-[a-zA-Z0-9]{20,}", "[REDACTED_API_KEY]", redacted)
 

@@ -5,9 +5,9 @@
       "command": "python",
       "args": ["-m", "lummenna.integrations.mcp_server"],
       "env": {
-        "LUMENA_DEVICE": "generic",
-        "LUMENA_STORE_PATH": "${userHome}/.lumena/store",
-        "LUMENA_MODEL_PATH": "${userHome}/.lumena/models"
+        "LUMMENNA_DEVICE": "generic",
+        "LUMMENNA_STORE_PATH": "${userHome}/.lummenna/store",
+        "LUMMENNA_MODEL_PATH": "${userHome}/.lummenna/models"
       }
     }
   ]

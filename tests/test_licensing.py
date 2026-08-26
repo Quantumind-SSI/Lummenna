@@ -21,7 +21,7 @@ import pytest
 
 from lummenna import licensing
 from lummenna.brand.errors import LicenseRequiredError
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 
 
 def _b64url(data: bytes) -> str:
@@ -64,7 +64,7 @@ def _mint(
         payload["exp"] = exp
     payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
     sig = priv.sign(payload_bytes)
-    return f"LUMENA-{_b64url(payload_bytes)}.{_b64url(sig)}"
+    return f"LUMMENNA-{_b64url(payload_bytes)}.{_b64url(sig)}"
 
 
 # --------------------------------------------------------------------------- #
@@ -74,14 +74,14 @@ def _mint(
 
 def test_no_key_is_community():
     licensing.clear_license_cache()
-    cfg = LumenaConfig(license_key=None)
+    cfg = LummennaConfig(license_key=None)
     assert cfg.edition == "community"
     assert not licensing.is_licensed("compliance", cfg)
 
 
 def test_valid_pro_key_grants_all_features(signing_keypair):
     key = _mint(signing_keypair, features=["*"])
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     assert cfg.edition == "pro"
     for feature in ("compliance", "encryption_at_rest", "advanced_p2p"):
         assert licensing.is_licensed(feature, cfg)
@@ -90,7 +90,7 @@ def test_valid_pro_key_grants_all_features(signing_keypair):
 
 def test_feature_subset_key_grants_only_listed(signing_keypair):
     key = _mint(signing_keypair, features=["compliance"])
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     assert licensing.is_licensed("compliance", cfg)
     assert not licensing.is_licensed("encryption_at_rest", cfg)
     with pytest.raises(LicenseRequiredError):
@@ -100,18 +100,18 @@ def test_feature_subset_key_grants_only_listed(signing_keypair):
 def test_tampered_key_falls_back_to_community(signing_keypair):
     key = _mint(signing_keypair, features=["*"])
     # Flip a character in the payload segment -> signature no longer verifies.
-    body = key[len("LUMENA-") :]
+    body = key[len("LUMMENNA-") :]
     payload_seg, sig_seg = body.split(".", 1)
     tampered = (
-        "LUMENA-" + payload_seg[:-1] + ("A" if payload_seg[-1] != "A" else "B") + "." + sig_seg
+        "LUMMENNA-" + payload_seg[:-1] + ("A" if payload_seg[-1] != "A" else "B") + "." + sig_seg
     )
-    cfg = LumenaConfig(license_key=tampered)
+    cfg = LummennaConfig(license_key=tampered)
     assert cfg.edition == "community"
 
 
 def test_expired_key_is_not_pro(signing_keypair):
     key = _mint(signing_keypair, features=["*"], exp="2000-01-01")
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     # Expired -> load resolves to Community (fail-closed), assert raises.
     assert cfg.edition == "community"
     with pytest.raises(LicenseRequiredError):
@@ -120,7 +120,7 @@ def test_expired_key_is_not_pro(signing_keypair):
 
 def test_unknown_feature_key_is_programming_error(signing_keypair):
     key = _mint(signing_keypair, features=["*"])
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     with pytest.raises(ValueError):
         cfg.assert_licensed("not_a_real_feature")
 
@@ -133,7 +133,7 @@ def test_unknown_feature_key_is_programming_error(signing_keypair):
 def _mint_raw(priv, payload: dict) -> str:
     """Sign an arbitrary payload dict (allows malformed fields for fuzzing)."""
     payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
-    return f"LUMENA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
+    return f"LUMMENNA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
 
 
 @pytest.mark.parametrize(
@@ -195,7 +195,7 @@ def test_adversarial_payload_fails_closed_to_community(signing_keypair, bad):
     }
     key = _mint_raw(signing_keypair, payload)
     licensing.clear_license_cache()
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     # features=None is a *valid* empty-entitlement Pro key (grants nothing);
     # all the others are malformed and fail closed. Neither may raise here.
     if bad == {"features": None}:
@@ -271,7 +271,7 @@ def test_revoked_license_id_resolves_to_community(signing_keypair, monkeypatch):
     key = _mint(signing_keypair, features=["*"], license_id="revoked-123")
     monkeypatch.setattr(licensing, "REVOKED_LICENSE_IDS", frozenset({"revoked-123"}))
     licensing.clear_license_cache()
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     # Fail-closed: revoked key resolves to Community, and the Pro gate raises.
     assert cfg.edition == "community"
     with pytest.raises(LicenseRequiredError):
@@ -293,7 +293,7 @@ def test_non_revoked_key_still_valid(signing_keypair, monkeypatch):
     key = _mint(signing_keypair, features=["*"], license_id="good-key")
     monkeypatch.setattr(licensing, "REVOKED_LICENSE_IDS", frozenset({"some-other-id"}))
     licensing.clear_license_cache()
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     assert cfg.edition == "pro"
     cfg.assert_licensed("compliance")  # must not raise
 
@@ -303,7 +303,7 @@ def test_no_public_key_embedded_is_fail_closed(monkeypatch, signing_keypair):
     key = _mint(signing_keypair, features=["*"])
     monkeypatch.setattr(licensing, "_QUANTUMINDSSI_PUBLIC_KEY_B64", "")
     licensing.clear_license_cache()
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     assert cfg.edition == "community"
 
 
@@ -314,8 +314,8 @@ def test_no_public_key_embedded_is_fail_closed(monkeypatch, signing_keypair):
 
 def test_encryption_at_rest_gate_blocks_community(tmp_path):
     licensing.clear_license_cache()
-    cfg = LumenaConfig(
-        store_path=str(tmp_path / ".lumena"),
+    cfg = LummennaConfig(
+        store_path=str(tmp_path / ".lummenna"),
         database_encryption_mode="sqlcipher",
         encryption_key="x" * 16,
     )
@@ -327,8 +327,8 @@ def test_encryption_at_rest_gate_blocks_community(tmp_path):
 
 def test_encryption_none_works_in_community(tmp_path):
     licensing.clear_license_cache()
-    cfg = LumenaConfig(
-        store_path=str(tmp_path / ".lumena"),
+    cfg = LummennaConfig(
+        store_path=str(tmp_path / ".lummenna"),
         database_encryption_mode="none",
     )
     from lummenna.data.schema import get_connection
@@ -349,7 +349,7 @@ def test_compliance_rtbf_gate_blocks_community():
 
 def test_advanced_p2p_rotate_key_gate_blocks_community():
     licensing.clear_license_cache()
-    cfg = LumenaConfig(p2p_encryption_key="k" * 32)
+    cfg = LummennaConfig(p2p_encryption_key="k" * 32)
     from lummenna.p2p.beam import BeamNode
 
     node = BeamNode(cfg)
@@ -359,7 +359,7 @@ def test_advanced_p2p_rotate_key_gate_blocks_community():
 
 def test_advanced_p2p_rotate_key_allowed_with_pro(signing_keypair):
     key = _mint(signing_keypair, features=["*"])
-    cfg = LumenaConfig(license_key=key, p2p_encryption_key="k" * 32)
+    cfg = LummennaConfig(license_key=key, p2p_encryption_key="k" * 32)
     from lummenna.p2p.beam import BeamNode
 
     node = BeamNode(cfg)
@@ -385,7 +385,7 @@ def test_planned_feature_cannot_be_gated_as_available(signing_keypair):
     engine surfaces it as a programming error instead.
     """
     key = _mint(signing_keypair, features=["*"])
-    cfg = LumenaConfig(license_key=key)
+    cfg = LummennaConfig(license_key=key)
     for planned in licensing.PLANNED_PRO_FEATURES:
         with pytest.raises(ValueError, match="planned but not yet built"):
             cfg.assert_licensed(planned)
@@ -418,7 +418,7 @@ def test_every_enforceable_pro_feature_is_actually_gated():
 
 
 def _tenant_cfg(tmp_path, license_key=None):
-    return LumenaConfig(store_path=str(tmp_path / ".lumena"), license_key=license_key)
+    return LummennaConfig(store_path=str(tmp_path / ".lummenna"), license_key=license_key)
 
 
 def test_multi_tenant_write_blocks_community(tmp_path):
@@ -519,7 +519,7 @@ def _mint_with_seats(priv, seats: int) -> str:
         "seats": seats,
     }
     payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
-    return f"LUMENA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
+    return f"LUMMENNA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
 
 
 def test_seat_limit_blocks_new_tenant_over_cap(tmp_path, signing_keypair):

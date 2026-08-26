@@ -11,7 +11,7 @@ from pathlib import Path
 from jinja2 import BaseLoader, Environment
 
 from lummenna.brand.errors import BudgetExceededError
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TFCState
 from lummenna.force.contextual.token_budget import get_token_counter
 from lummenna.fusion import RetrievedChunk
@@ -44,7 +44,7 @@ def assemble_context(
     retrieved_chunks: list[RetrievedChunk],
     active_goals: list[str],
     tfc_state: TFCState,
-    config: LumenaConfig,
+    config: LummennaConfig,
     token_counter=None,
     system_prompt_override: str | None = None,
 ) -> str:

@@ -9,13 +9,13 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import init_db
 
 
 @pytest.fixture
 def memory_db():
-    """Yield an in-memory SQLite connection with the Lumena schema applied."""
+    """Yield an in-memory SQLite connection with the Lummenna schema applied."""
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
     init_db(conn)
@@ -42,9 +42,9 @@ def mock_embedder():
 
 @pytest.fixture
 def test_config():
-    """Return a LumenaConfig tuned for testing."""
-    return LumenaConfig(
+    """Return a LummennaConfig tuned for testing."""
+    return LummennaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumena-test",
+        store_path="/tmp/.lummenna-test",
     )

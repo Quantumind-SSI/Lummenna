@@ -27,7 +27,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.retrieval_dense import DenseHit
 from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
@@ -301,8 +301,8 @@ def _run_single_seed(seed, embedder_model):
     print(f"[INFO] Embedding {len(passages)} passages with {embedder_model} ...")
     embeddings = embedder.encode(texts)
 
-    tmpdir = tempfile.mkdtemp(prefix=f"lumena_pne_real_{seed}_")
-    config = LumenaConfig(store_path=Path(tmpdir) / "store", embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    tmpdir = tempfile.mkdtemp(prefix=f"lummenna_pne_real_{seed}_")
+    config = LummennaConfig(store_path=Path(tmpdir) / "store", embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
     conn = get_connection(config)
 
     room_name_to_id = {}

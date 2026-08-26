@@ -13,7 +13,7 @@ import json
 import pytest
 
 from lummenna import licensing
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection, get_encryption
 from lummenna.force.contextual.embed import MockEmbedder
 from lummenna.force.mnemonic.store import store_memory
@@ -51,7 +51,7 @@ def pro_license(monkeypatch):
         separators=(",", ":"),
         sort_keys=True,
     ).encode()
-    key = f"LUMENA-{_b64(payload)}.{_b64(priv.sign(payload))}"
+    key = f"LUMMENNA-{_b64(payload)}.{_b64(priv.sign(payload))}"
     licensing.clear_license_cache()
     yield key
     licensing.clear_license_cache()
@@ -59,9 +59,9 @@ def pro_license(monkeypatch):
 
 @pytest.fixture
 def sqlcipher_config(tmp_path, pro_license):
-    return LumenaConfig(
-        store_path=tmp_path / ".lumena" / "store",
-        model_path=tmp_path / ".lumena" / "models",
+    return LummennaConfig(
+        store_path=tmp_path / ".lummenna" / "store",
+        model_path=tmp_path / ".lummenna" / "models",
         vector_index="sqlite-vec",
         device="generic",
         encryption_key="test-sqlcipher-key-12345",
@@ -97,7 +97,7 @@ class TestSQLCipherIntegration:
     def test_salt_file_created(self, sqlcipher_config):
         conn = get_connection(sqlcipher_config)
         conn.close()
-        salt_path = sqlcipher_config.store_path / ".lumena_salt"
+        salt_path = sqlcipher_config.store_path / ".lummenna_salt"
         assert salt_path.exists()
         assert salt_path.stat().st_size == 16
 
@@ -156,9 +156,9 @@ class TestSQLCipherIntegration:
         self, tmp_path, monkeypatch, pro_license
     ):
         monkeypatch.setattr("lummenna.data.schema._HAS_SQLCIPHER", False)
-        config = LumenaConfig(
-            store_path=tmp_path / ".lumena" / "store",
-            model_path=tmp_path / ".lumena" / "models",
+        config = LummennaConfig(
+            store_path=tmp_path / ".lummenna" / "store",
+            model_path=tmp_path / ".lummenna" / "models",
             vector_index="sqlite-vec",
             device="generic",
             encryption_key="key",
@@ -173,9 +173,9 @@ class TestSQLCipherIntegration:
         from lummenna.brand.errors import LicenseRequiredError
 
         licensing.clear_license_cache()
-        config = LumenaConfig(
-            store_path=tmp_path / ".lumena" / "store",
-            model_path=tmp_path / ".lumena" / "models",
+        config = LummennaConfig(
+            store_path=tmp_path / ".lummenna" / "store",
+            model_path=tmp_path / ".lummenna" / "models",
             vector_index="sqlite-vec",
             device="generic",
             encryption_key="test-sqlcipher-key-12345",

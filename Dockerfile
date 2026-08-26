@@ -1,4 +1,4 @@
-# Lumena Memory API — production image
+# Lummenna Memory API — production image
 #
 # Multi-stage, non-root, read-only-friendly. The embedding model is NOT baked
 # into the image (models are data, not code): provision it into the models
@@ -31,18 +31,18 @@ RUN pip install --prefix=/install .
 # --- Runtime stage ---------------------------------------------------------
 FROM python:3.12-slim
 
-LABEL org.opencontainers.image.title="Lumena Memory API"
+LABEL org.opencontainers.image.title="Lummenna Memory API"
 LABEL org.opencontainers.image.description="Local-first memory and context framework for sovereign AI agents"
 LABEL org.opencontainers.image.source="https://github.com/QuantmindSSI/lummenna"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    LUMENA_LOG_LEVEL=info \
-    LUMENA_API_HOST=0.0.0.0 \
-    LUMENA_API_PORT=8848 \
-    LUMENA_STORE_PATH=/data/store \
-    LUMENA_MODEL_PATH=/data/models
+    LUMMENNA_LOG_LEVEL=info \
+    LUMMENNA_API_HOST=0.0.0.0 \
+    LUMMENNA_API_PORT=8848 \
+    LUMMENNA_STORE_PATH=/data/store \
+    LUMMENNA_MODEL_PATH=/data/models
 
 COPY --from=build /install /usr/local
 

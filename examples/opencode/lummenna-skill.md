@@ -3,12 +3,12 @@ name: lummenna
 description: >
   Use when the user asks to remember, recall, persist, or search across
   project decisions, code snippets, architecture notes, or conversation
-  history stored in the Lumena memory palace. Trigger keywords:
+  history stored in the Lummenna memory palace. Trigger keywords:
   "remember", "recall", "what did we decide", "search my notes",
-  "persist", "store this", "Lumena".
+  "persist", "store this", "Lummenna".
 ---
 
-# Lumena Memory Skill
+# Lummenna Memory Skill
 
 ## When to use
 - The user wants to save a decision, pattern, or insight for later retrieval.
@@ -16,10 +16,10 @@ description: >
 - You need to assemble relevant prior context before making a code change.
 
 ## Workflow
-1. If the user asks to retrieve: call `lumena_search` or `lumena_assemble`.
-2. If the user shares an insight to persist: call `lumena_store` with an appropriate `room` (e.g., `architecture`, `decisions`, `snippets`).
-3. After a successful turn (user request + your response): call `lumena_turn` to store both messages and log implicit feedback.
-4. If the user says a retrieved memory was wrong or unhelpful: call `lumena_feedback` with `was_useful: false`.
+1. If the user asks to retrieve: call `lummenna_search` or `lummenna_assemble`.
+2. If the user shares an insight to persist: call `lummenna_store` with an appropriate `room` (e.g., `architecture`, `decisions`, `snippets`).
+3. After a successful turn (user request + your response): call `lummenna_turn` to store both messages and log implicit feedback.
+4. If the user says a retrieved memory was wrong or unhelpful: call `lummenna_feedback` with `was_useful: false`.
 
 ## Room naming conventions
 | Room | Purpose |
@@ -33,4 +33,4 @@ description: >
 
 ## Example
 User: "Remember that we decided to use SQLite for the cache layer."
-→ Call `lumena_store` with `room="decisions"`, `content="Use SQLite for cache layer because..."`
+→ Call `lummenna_store` with `room="decisions"`, `content="Use SQLite for cache layer because..."`

@@ -1,10 +1,10 @@
-# OpenCode + Lumena Integration
+# OpenCode + Lummenna Integration
 
-[OpenCode](https://opencode.ai) is an open-source terminal coding agent. It supports **MCP servers** natively, so it can call Lumena's memory palace directly.
+[OpenCode](https://opencode.ai) is an open-source terminal coding agent. It supports **MCP servers** natively, so it can call Lummenna's memory palace directly.
 
 ## Prerequisites
 
-1. Install Lumena with MCP support:
+1. Install Lummenna with MCP support:
 
    ```bash
    pip install lummenna[mcp]
@@ -18,14 +18,14 @@
    lummenna model download bge-small-en-v1.5
    ```
 
-   Alternatively, set `LUMENA_AUTO_PROVISION_MODEL=1` (see below) and Lumena
+   Alternatively, set `LUMMENNA_AUTO_PROVISION_MODEL=1` (see below) and Lummenna
    will download and export the model automatically on first launch. The
    auto-provision path is a one-time network download; the model is cached
    locally and every subsequent launch is fully sovereign (offline).
 
 ## Configuration
 
-Copy `opencode.json` into your project root (or merge the `mcp.lumena` block
+Copy `opencode.json` into your project root (or merge the `mcp.lummenna` block
 into your existing `opencode.json` / global `~/.config/opencode/opencode.json`):
 
 ```json
@@ -37,10 +37,10 @@ into your existing `opencode.json` / global `~/.config/opencode/opencode.json`):
       "command": ["python3", "-m", "lummenna.integrations.mcp_server"],
       "enabled": true,
       "environment": {
-        "LUMENA_DEVICE": "generic",
-        "LUMENA_STORE_PATH": "./.lumena/store",
-        "LUMENA_MODEL_PATH": "./.lumena/models",
-        "LUMENA_AUTO_PROVISION_MODEL": "1"
+        "LUMMENNA_DEVICE": "generic",
+        "LUMMENNA_STORE_PATH": "./.lummenna/store",
+        "LUMMENNA_MODEL_PATH": "./.lummenna/models",
+        "LUMMENNA_AUTO_PROVISION_MODEL": "1"
       }
     }
   }
@@ -53,7 +53,7 @@ Notes:
   ship a bare `python` alias, and OpenCode does not run the command through a
   login shell, so `python` will fail with "command not found".
 - Paths are relative to the OpenCode launch directory. Use absolute paths in a
-  **global** config so Lumena resolves the same store regardless of which
+  **global** config so Lummenna resolves the same store regardless of which
   project you launch from.
 - `command` must be an array of strings, and the key is `environment` (not
   `env`) — this is OpenCode's schema, which differs from some other agents.
@@ -63,7 +63,7 @@ startup and is not hot-reloaded.
 
 ## Usage
 
-Once configured, OpenCode can call Lumena tools automatically:
+Once configured, OpenCode can call Lummenna tools automatically:
 
 ```
 Search my memory palace for decisions about the database layer.
@@ -73,29 +73,29 @@ Assemble relevant context for implementing user authentication.
 
 OpenCode will invoke:
 
-- `lumena_search` for recall queries
-- `lumena_store` for persistence requests
-- `lumena_assemble` for context-rich tasks
-- `lumena_turn` after completing conversation turns
-- `lumena_status` / `lumena_dashboard` for health and effectiveness
+- `lummenna_search` for recall queries
+- `lummenna_store` for persistence requests
+- `lummenna_assemble` for context-rich tasks
+- `lummenna_turn` after completing conversation turns
+- `lummenna_status` / `lummenna_dashboard` for health and effectiveness
 
 ## Persistent memory instructions
 
-To encourage OpenCode to persist its reasoning and decisions to Lumena, add to
+To encourage OpenCode to persist its reasoning and decisions to Lummenna, add to
 your project `AGENTS.md`:
 
 ```markdown
 ## Memory Management
-- Use lumena_store to persist important decisions, patterns, and architectural notes.
-- Use lumena_search to recall prior decisions before making changes.
-- After completing a task, call lumena_turn to log the conversation.
+- Use lummenna_store to persist important decisions, patterns, and architectural notes.
+- Use lummenna_search to recall prior decisions before making changes.
+- After completing a task, call lummenna_turn to log the conversation.
 ```
 
 ## Environment variables
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `LUMENA_DEVICE` | `generic` | Device profile (tunes budgets/scheduler). |
-| `LUMENA_STORE_PATH` | `./.lumena/store` | SQLite palace location. |
-| `LUMENA_MODEL_PATH` | `./.lumena/models` | ONNX embedding model location. |
-| `LUMENA_AUTO_PROVISION_MODEL` | unset | If `1`/`true`, auto-download+export the embedding model on first launch if missing. One-time network access; sovereign thereafter. |
+| `LUMMENNA_DEVICE` | `generic` | Device profile (tunes budgets/scheduler). |
+| `LUMMENNA_STORE_PATH` | `./.lummenna/store` | SQLite palace location. |
+| `LUMMENNA_MODEL_PATH` | `./.lummenna/models` | ONNX embedding model location. |
+| `LUMMENNA_AUTO_PROVISION_MODEL` | unset | If `1`/`true`, auto-download+export the embedding model on first launch if missing. One-time network access; sovereign thereafter. |

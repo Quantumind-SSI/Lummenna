@@ -1,20 +1,20 @@
 {
   "name": "lummenna-copilot",
-  "displayName": "Lumena Memory for Copilot",
-  "description": "Connects GitHub Copilot Chat to the Lumena memory palace.",
+  "displayName": "Lummenna Memory for Copilot",
+  "description": "Connects GitHub Copilot Chat to the Lummenna memory palace.",
   "version": "0.1.0",
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": ["Machine Learning", "Other"],
-  "activationEvents": ["onChatParticipant:copilot.lumena"],
+  "activationEvents": ["onChatParticipant:copilot.lummenna"],
   "main": "./out/extension.js",
   "contributes": {
     "chatParticipants": [
       {
-        "id": "copilot.lumena",
+        "id": "copilot.lummenna",
         "name": "lummenna",
-        "description": "Search and retrieve memories from the Lumena palace",
+        "description": "Search and retrieve memories from the Lummenna palace",
         "isSticky": true
       }
     ]

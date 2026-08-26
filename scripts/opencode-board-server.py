@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""OpenCode Metrics Board Server for Lumena.
+"""OpenCode Metrics Board Server for Lummenna.
 
 Serves a lightweight, auto-refreshing real-time dashboard on port 8850.
-Fetches live data from the Lumena API (default localhost:8848).
+Fetches live data from the Lummenna API (default localhost:8848).
 
 Usage:
     python3 scripts/opencode-board-server.py
@@ -19,9 +19,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-LUMENA_BASE = os.environ.get("LUMENA_API_URL", "http://localhost:8848")
-LUMENA_METRICS_URL = f"{LUMENA_BASE}/metrics"
-LUMENA_DATA_URL = f"{LUMENA_BASE}/dashboard-data"
+LUMMENNA_BASE = os.environ.get("LUMMENNA_API_URL", "http://localhost:8848")
+LUMMENNA_METRICS_URL = f"{LUMMENNA_BASE}/metrics"
+LUMMENNA_DATA_URL = f"{LUMMENNA_BASE}/dashboard-data"
 PORT = int(os.environ.get("OPENCODE_BOARD_PORT", "8850"))
 
 _HTML = """<!DOCTYPE html>
@@ -29,7 +29,7 @@ _HTML = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumena + OpenCode — Real-Time Metrics Board</title>
+  <title>Lummenna + OpenCode — Real-Time Metrics Board</title>
   <style>
     :root {
       --bg: #0b0f19;
@@ -89,21 +89,21 @@ _HTML = """<!DOCTYPE html>
 </head>
 <body>
   <header>
-    <h1>Lumena + OpenCode <span id="liveBadge" class="badge ok">LIVE</span></h1>
+    <h1>Lummenna + OpenCode <span id="liveBadge" class="badge ok">LIVE</span></h1>
     <p>Real-Time Memory Palace Metrics Board</p>
   </header>
   <div class="container">
     <div id="content">
       <p style="text-align:center;color:var(--muted);padding:2rem;">Loading metrics...</p>
     </div>
-    <div class="refresh">Auto-refreshes every 3 seconds &middot; Lumena API: <span id="apiUrl">...</span></div>
+    <div class="refresh">Auto-refreshes every 3 seconds &middot; Lummenna API: <span id="apiUrl">...</span></div>
   </div>
   <footer>
-    Lumena v0.1.0-alpha &middot; OpenCode Integration &middot; Press Ctrl+C to stop
+    Lummenna v0.1.0-alpha &middot; OpenCode Integration &middot; Press Ctrl+C to stop
   </footer>
   <script>
-    const LUMENA_API = "<!--LUMENA_API-->";
-    document.getElementById('apiUrl').textContent = LUMENA_API;
+    const LUMMENNA_API = "<!--LUMMENNA_API-->";
+    document.getElementById('apiUrl').textContent = LUMMENNA_API;
 
     async function fetchMetrics() {
       try {
@@ -116,8 +116,8 @@ _HTML = """<!DOCTYPE html>
       } catch (e) {
         document.getElementById('content').innerHTML = `
           <div class="error">
-            <h3>Cannot reach Lumena server</h3>
-            <p>Make sure Lumena is running on ${LUMENA_API}</p>
+            <h3>Cannot reach Lummenna server</h3>
+            <p>Make sure Lummenna is running on ${LUMMENNA_API}</p>
             <code style="display:block;margin-top:1rem;padding:1rem;background:#111827;border-radius:.5rem;">${e.message}</code>
           </div>`;
         document.getElementById('liveBadge').className = 'badge err';
@@ -242,7 +242,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
 
     def _serve_html(self):
-        html = _HTML.replace("<!--LUMENA_API-->", LUMENA_BASE)
+        html = _HTML.replace("<!--LUMMENNA_API-->", LUMMENNA_BASE)
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -251,7 +251,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 
     def _proxy_metrics(self):
         try:
-            with urllib.request.urlopen(LUMENA_METRICS_URL, timeout=5) as resp:
+            with urllib.request.urlopen(LUMMENNA_METRICS_URL, timeout=5) as resp:
                 data = resp.read()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -277,7 +277,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 def main():
     with socketserver.TCPServer(("", PORT), _Handler) as httpd:
         print(f"OpenCode Metrics Board running at http://localhost:{PORT}")
-        print(f"Proxying Lumena API from {LUMENA_BASE}")
+        print(f"Proxying Lummenna API from {LUMMENNA_BASE}")
         print("Press Ctrl+C to stop")
         try:
             httpd.serve_forever()

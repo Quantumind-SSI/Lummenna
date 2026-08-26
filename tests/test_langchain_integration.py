@@ -2,15 +2,15 @@
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.contextual.embed import MockEmbedder
-from lummenna.integrations.langchain import LumenaChatMemory
+from lummenna.integrations.langchain import LummennaChatMemory
 
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenaConfig(
+    cfg = LummennaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",
@@ -21,10 +21,10 @@ def fresh_config(tmp_path):
     return cfg
 
 
-class TestLumenaChatMemory:
+class TestLummennaChatMemory:
     def test_retrieve_and_save(self, fresh_config):
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        mem = LumenaChatMemory(
+        mem = LummennaChatMemory(
             config=fresh_config,
             user_id="alice",
             room="support",
@@ -38,13 +38,13 @@ class TestLumenaChatMemory:
 
     def test_user_scoping(self, fresh_config):
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        mem_alice = LumenaChatMemory(
+        mem_alice = LummennaChatMemory(
             config=fresh_config,
             user_id="alice",
             room="test",
             embedder=embedder,
         )
-        mem_bob = LumenaChatMemory(
+        mem_bob = LummennaChatMemory(
             config=fresh_config,
             user_id="bob",
             room="test",
@@ -61,7 +61,7 @@ class TestLumenaChatMemory:
 
     def test_feedback_and_learn(self, fresh_config):
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        mem = LumenaChatMemory(
+        mem = LummennaChatMemory(
             config=fresh_config,
             user_id="alice",
             room="test",
@@ -85,7 +85,7 @@ class TestLumenaChatMemory:
 
     def test_system_prompt_override(self, fresh_config):
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        mem = LumenaChatMemory(
+        mem = LummennaChatMemory(
             config=fresh_config,
             system_prompt_override="You are a pirate.",
             embedder=embedder,
@@ -94,15 +94,15 @@ class TestLumenaChatMemory:
         assert "pirate" in ctx
 
 
-class TestLumenaStore:
+class TestLummennaStore:
     def test_mset_mget(self, fresh_config):
         try:
-            from lummenna.integrations.langchain import LumenaStore
+            from lummenna.integrations.langchain import LummennaStore
         except Exception as exc:
-            pytest.skip(f"LumenaStore unavailable: {exc}")
+            pytest.skip(f"LummennaStore unavailable: {exc}")
 
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        store = LumenaStore(config=fresh_config, default_namespace="kv", embedder=embedder)
+        store = LummennaStore(config=fresh_config, default_namespace="kv", embedder=embedder)
         store.mset([("key1", b"value1"), ("key2", b"value2")])
         results = store.mget(["key1", "key2", "missing"])
         assert results[0] == b"value1"
@@ -111,12 +111,12 @@ class TestLumenaStore:
 
     def test_mdelete_and_yield_keys(self, fresh_config):
         try:
-            from lummenna.integrations.langchain import LumenaStore
+            from lummenna.integrations.langchain import LummennaStore
         except Exception as exc:
-            pytest.skip(f"LumenaStore unavailable: {exc}")
+            pytest.skip(f"LummennaStore unavailable: {exc}")
 
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        store = LumenaStore(config=fresh_config, default_namespace="del", embedder=embedder)
+        store = LummennaStore(config=fresh_config, default_namespace="del", embedder=embedder)
         store.mset([("k1", b"v1")])
         store.mdelete(["k1"])
         results = store.mget(["k1"])

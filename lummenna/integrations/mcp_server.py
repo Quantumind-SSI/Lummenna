@@ -1,6 +1,6 @@
-"""MCP (Model Context Protocol) server for Lumena memory operations.
+"""MCP (Model Context Protocol) server for Lummenna memory operations.
 
-Exposes Lumena's palace via stdio to any MCP-compatible host:
+Exposes Lummenna's palace via stdio to any MCP-compatible host:
   OpenCode, GitHub Copilot, Claude Desktop, etc.
 
 Usage::
@@ -14,7 +14,7 @@ Or configured as an MCP server in host config::
         "lummenna": {
           "type": "local",
           "command": ["python3", "-m", "lummenna.integrations.mcp_server"],
-          "environment": {"LUMENA_DEVICE": "generic"}
+          "environment": {"LUMMENNA_DEVICE": "generic"}
         }
       }
     }
@@ -42,7 +42,7 @@ else:
     _MCP_ERROR = None
 
 from lummenna._init import initialize_palace
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.contracts import FeedbackType, SourceType
 from lummenna.controller import TwinForceController
 from lummenna.conversation import ConversationMemory
@@ -139,8 +139,8 @@ def _format_validation_error(func_name: str, exc: ValidationError) -> str:
 
 
 @dataclass
-class LumenaAppState:
-    config: LumenaConfig
+class LummennaAppState:
+    config: LummennaConfig
     conn: sqlite3.Connection
     embedder: Any
     pipeline: SearchPipeline
@@ -149,21 +149,21 @@ class LumenaAppState:
     embedding_model_available: bool
 
 
-_module_state: LumenaAppState | None = None
+_module_state: LummennaAppState | None = None
 
 
 @asynccontextmanager
-async def app_lifespan(server: FastMCP) -> AsyncIterator[LumenaAppState]:
-    """Initialize Lumena on server startup and close on shutdown."""
+async def app_lifespan(server: FastMCP) -> AsyncIterator[LummennaAppState]:
+    """Initialize Lummenna on server startup and close on shutdown."""
     global _module_state
     try:
-        config = LumenaConfig()
+        config = LummennaConfig()
         config.store_path.mkdir(parents=True, exist_ok=True)
         config.model_path.mkdir(parents=True, exist_ok=True)
 
         palace = initialize_palace(config)
 
-        state = LumenaAppState(
+        state = LummennaAppState(
             config=config,
             conn=palace["conn"],
             embedder=palace["embedder"],
@@ -222,16 +222,16 @@ mcp = FastMCP("lummenna", lifespan=app_lifespan) if _MCP_AVAILABLE else _Unavail
 # ---------------------------------------------------------------------------
 
 
-def _state(ctx: Context | None = None) -> LumenaAppState:
+def _state(ctx: Context | None = None) -> LummennaAppState:
     if ctx is not None:
         try:
-            state: LumenaAppState = ctx.request_context.lifespan_context
+            state: LummennaAppState = ctx.request_context.lifespan_context
             return state
         except Exception:
             pass
     if _module_state is not None:
         return _module_state
-    raise RuntimeError("Lumena MCP server is not initialized. Run inside an active lifespan.")
+    raise RuntimeError("Lummenna MCP server is not initialized. Run inside an active lifespan.")
 
 
 def _tool_error(func_name: str, exc: Exception) -> str:
@@ -252,7 +252,7 @@ _PREVIEW_ELLIPSIS = "…"
 def _preview(content: str, max_chars: int) -> str:
     """Return a search-preview of *content* bounded to *max_chars* characters.
 
-    ``lumena_search`` is a ranked index, not a full-content reader, so long
+    ``lummenna_search`` is a ranked index, not a full-content reader, so long
     chunks are shown as a preview. When the content is cut, a single-character
     ellipsis marker is appended so the caller can distinguish a genuinely short
     chunk from a truncated one (read the full chunk from the store via its
@@ -271,8 +271,8 @@ def _preview(content: str, max_chars: int) -> str:
 
 
 @mcp.tool()
-async def lumena_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
-    """Search the Lumena memory palace with semantic + lexical hybrid retrieval.
+async def lummenna_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
+    """Search the Lummenna memory palace with semantic + lexical hybrid retrieval.
 
     Args:
         query: Natural-language search query.
@@ -281,7 +281,7 @@ async def lumena_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
     try:
         args = SearchInput(query=query, top_k=top_k)
     except ValidationError as exc:
-        return _format_validation_error("lumena_search", exc)
+        return _format_validation_error("lummenna_search", exc)
     try:
         state = _state(ctx)
         results = state.pipeline.execute(args.query, k=args.top_k)
@@ -298,18 +298,18 @@ async def lumena_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
             )
         return "\n".join(lines)
     except Exception as exc:
-        return _tool_error("lumena_search", exc)
+        return _tool_error("lummenna_search", exc)
 
 
 @mcp.tool()
-async def lumena_store(
+async def lummenna_store(
     content: str,
     room: str,
     locus: str | None = None,
     source_type: str = "user_input",
     ctx: Context = None,
 ) -> str:
-    """Store a memory chunk in the Lumena palace.
+    """Store a memory chunk in the Lummenna palace.
 
     Args:
         content: Text to persist.
@@ -328,7 +328,7 @@ async def lumena_store(
             source_type=source_type,  # type: ignore[arg-type]
         )
     except ValidationError as exc:
-        return _format_validation_error("lumena_store", exc)
+        return _format_validation_error("lummenna_store", exc)
     try:
         state = _state(ctx)
         embedding = (
@@ -345,11 +345,11 @@ async def lumena_store(
         )
         return f"Stored chunk_id={chunk_id} in room '{args.room}'."
     except Exception as exc:
-        return _tool_error("lumena_store", exc)
+        return _tool_error("lummenna_store", exc)
 
 
 @mcp.tool()
-async def lumena_assemble(query: str, top_k: int = 5, ctx: Context = None) -> str:
+async def lummenna_assemble(query: str, top_k: int = 5, ctx: Context = None) -> str:
     """Retrieve memories and assemble a ready-to-use context string.
 
     Args:
@@ -359,7 +359,7 @@ async def lumena_assemble(query: str, top_k: int = 5, ctx: Context = None) -> st
     try:
         args = AssembleInput(query=query, top_k=top_k)
     except ValidationError as exc:
-        return _format_validation_error("lumena_assemble", exc)
+        return _format_validation_error("lummenna_assemble", exc)
     try:
         state = _state(ctx)
         turn = state.conversation.retrieve_and_assemble(args.query, top_k=args.top_k)
@@ -368,11 +368,11 @@ async def lumena_assemble(query: str, top_k: int = 5, ctx: Context = None) -> st
             f"{turn.assembled_context}"
         )
     except Exception as exc:
-        return _tool_error("lumena_assemble", exc)
+        return _tool_error("lummenna_assemble", exc)
 
 
 @mcp.tool()
-async def lumena_turn(
+async def lummenna_turn(
     user_msg: str,
     assistant_msg: str,
     room: str = "conversations",
@@ -388,7 +388,7 @@ async def lumena_turn(
     try:
         args = TurnInput(user_msg=user_msg, assistant_msg=assistant_msg, room=room)
     except ValidationError as exc:
-        return _format_validation_error("lumena_turn", exc)
+        return _format_validation_error("lummenna_turn", exc)
     try:
         state = _state(ctx)
         turn = state.conversation.retrieve_and_assemble(args.user_msg, top_k=5)
@@ -403,11 +403,11 @@ async def lumena_turn(
             f"assistant_chunk_id={assistant_id} in room '{args.room}'."
         )
     except Exception as exc:
-        return _tool_error("lumena_turn", exc)
+        return _tool_error("lummenna_turn", exc)
 
 
 @mcp.tool()
-async def lumena_feedback(
+async def lummenna_feedback(
     chunk_id: int,
     was_useful: bool,
     feedback_type: str = "explicit",
@@ -429,7 +429,7 @@ async def lumena_feedback(
             feedback_type=feedback_type,  # type: ignore[arg-type]
         )
     except ValidationError as exc:
-        return _format_validation_error("lumena_feedback", exc)
+        return _format_validation_error("lummenna_feedback", exc)
     try:
         state = _state(ctx)
         state.conversation.log_explicit_feedback(
@@ -439,11 +439,11 @@ async def lumena_feedback(
         )
         return f"Feedback logged for chunk_id={args.chunk_id} (useful={args.was_useful})."
     except Exception as exc:
-        return _tool_error("lumena_feedback", exc)
+        return _tool_error("lummenna_feedback", exc)
 
 
 @mcp.tool()
-async def lumena_status(ctx: Context = None) -> str:
+async def lummenna_status(ctx: Context = None) -> str:
     """Show current palace status: room count, active chunks, TFC state."""
     try:
         state = _state(ctx)
@@ -453,7 +453,7 @@ async def lumena_status(ctx: Context = None) -> str:
         ).fetchone()[0]
         env = state.tfc.to_env()
         return (
-            f"Lumena Status\n"
+            f"Lummenna Status\n"
             f"  Device: {state.config.device}\n"
             f"  Rooms: {room_count}\n"
             f"  Active chunks: {chunk_count}\n"
@@ -461,16 +461,16 @@ async def lumena_status(ctx: Context = None) -> str:
             f"  TFC → e={env['e']:.2f} a={env['a']:.2f} tau={env['tau']:.1f} r={env['r']}\n"
             f"  Embedding model available: {state.embedding_model_available}\n"
             f"\nDashboard: http://localhost:{state.config.api_port}/dashboard\n"
-            f"Run `lummenna serve` or `lumena_dashboard` for real-time effectiveness metrics."
+            f"Run `lummenna serve` or `lummenna_dashboard` for real-time effectiveness metrics."
         )
     except Exception as exc:
-        return _tool_error("lumena_status", exc)
+        return _tool_error("lummenna_status", exc)
 
 
 @mcp.tool()
-async def lumena_dashboard(ctx: Context = None) -> str:
+async def lummenna_dashboard(ctx: Context = None) -> str:
     """Display a real-time effectiveness dashboard: system health, locally measured benchmark results (when present), and memory lifecycle state.
-    Call this when the user asks about Lumena's effectiveness, performance, or wants to see the dashboard.
+    Call this when the user asks about Lummenna's effectiveness, performance, or wants to see the dashboard.
     Metrics come from committed benchmark artifacts; anything not yet measured is shown as N/A.
     """
     try:
@@ -486,7 +486,7 @@ async def lumena_dashboard(ctx: Context = None) -> str:
 
         return (
             f"╔══════════════════════════════════════════════╗\n"
-            f"║     Lumena Effectiveness Dashboard v1.0.0    ║\n"
+            f"║     Lummenna Effectiveness Dashboard v1.0.0    ║\n"
             f"╠══════════════════════════════════════════════╣\n"
             f"║ System Health                               ║\n"
             f"╠══════════════════════════════════════════════╣\n"
@@ -552,7 +552,7 @@ async def lumena_dashboard(ctx: Context = None) -> str:
             f"Run `lummenna serve` to start the full API + dashboard."
         )
     except Exception as exc:
-        return _tool_error("lumena_dashboard", exc)
+        return _tool_error("lummenna_dashboard", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -581,7 +581,7 @@ def _load_retrieval_benchmarks() -> dict:
     return load_retrieval_benchmarks()
 
 
-def _dashboard_metrics(state: LumenaAppState) -> dict:
+def _dashboard_metrics(state: LummennaAppState) -> dict:
     """Build dashboard metrics dict used by resources and tools."""
 
     conn = state.conn
@@ -649,7 +649,7 @@ def _dashboard_metrics(state: LumenaAppState) -> dict:
             "degradation_stage": degradation_stage,
         },
         "design_properties": {
-            "bm25": "Lumena uses SQLite FTS5; standard BM25",
+            "bm25": "Lummenna uses SQLite FTS5; standard BM25",
             "dense": "Cosine similarity via sqlite-vec or brute-force",
             "hybrid": "RRF fusion; no external-system comparison has been run",
             "edge": "Designed for edge devices; RAM footprint not yet benchmarked (perf suite has no results)",
@@ -660,7 +660,7 @@ def _dashboard_metrics(state: LumenaAppState) -> dict:
 
 @mcp.resource("dashboard://lummenna/effectiveness")
 async def dashboard_effectiveness(ctx: Context = None) -> str:
-    """Lumena memory store effectiveness overview.
+    """Lummenna memory store effectiveness overview.
     Shows real-time system health, retrieval metrics (if benchmarks available), TFC state, and business impact.
     """
     try:
@@ -672,7 +672,7 @@ async def dashboard_effectiveness(ctx: Context = None) -> str:
 
 @mcp.resource("dashboard://lummenna/capabilities")
 async def dashboard_capabilities(ctx: Context = None) -> str:
-    """Lumena capability highlights (qualitative design properties).
+    """Lummenna capability highlights (qualitative design properties).
     Includes locally measured retrieval metrics when benchmark artifacts exist;
     contains no comparisons to external systems.
     """

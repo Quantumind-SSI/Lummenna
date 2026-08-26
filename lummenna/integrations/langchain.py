@@ -1,16 +1,16 @@
-"""LangChain integration for Lumena memory.
+"""LangChain integration for Lummenna memory.
 
-Provides ``LumenaChatMemory`` — implements ``langchain.memory.BaseChatMemory``
-for native LangChain agent compatibility, and ``LumenaStore`` for
+Provides ``LummennaChatMemory`` — implements ``langchain.memory.BaseChatMemory``
+for native LangChain agent compatibility, and ``LummennaStore`` for
 ``langchain_core.stores.BaseStore`` compatibility.
 
 Usage::
 
     from langchain.agents import create_react_agent
     from langchain.memory import ConversationBufferMemory
-    from lummenna.integrations.langchain import LumenaChatMemory
+    from lummenna.integrations.langchain import LummennaChatMemory
 
-    memory = LumenaChatMemory(room="support")
+    memory = LummennaChatMemory(room="support")
     agent = create_react_agent(llm, tools, prompt, memory=memory)
 """
 
@@ -20,14 +20,14 @@ import json
 from collections.abc import Iterator, Sequence
 from typing import Any
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.conversation import ConversationMemory
 from lummenna.logging import get_console_logger
 
 logger = get_console_logger(__name__)
 
 # ---------------------------------------------------------------------------
-# LumenaChatMemory — native LangChain memory
+# LummennaChatMemory — native LangChain memory
 # ---------------------------------------------------------------------------
 
 try:
@@ -37,11 +37,11 @@ except Exception:
 
 # Typed as ``Any`` so mypy accepts it as a valid (dynamic) base class whether or
 # not LangChain is installed in the analysis environment.
-_LumenaChatMemoryBase: Any = BaseChatMemory if BaseChatMemory is not None else object
+_LummennaChatMemoryBase: Any = BaseChatMemory if BaseChatMemory is not None else object
 
 
-class LumenaChatMemory(_LumenaChatMemoryBase):
-    """Lumena-backed memory adapter for LangChain agents.
+class LummennaChatMemory(_LummennaChatMemoryBase):
+    """Lummenna-backed memory adapter for LangChain agents.
 
     When ``langchain`` is installed (``pip install lummenna[langchain]``),
     this class extends ``langchain.memory.BaseChatMemory`` for native
@@ -49,7 +49,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
     standalone mode that still exposes the same API surface.
 
     Args:
-        config: :class:`LumenaConfig`.  Created automatically if omitted.
+        config: :class:`LummennaConfig`.  Created automatically if omitted.
         user_id: Multi-tenancy identifier.
         room: Room name for turn storage.
         system_prompt_override: Optional static system prompt injected into
@@ -62,7 +62,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
 
     def __init__(
         self,
-        config: LumenaConfig | None = None,
+        config: LummennaConfig | None = None,
         user_id: str = "default",
         room: str = "conversations",
         system_prompt_override: str | None = None,
@@ -79,7 +79,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
                 output_key=output_key,
             )
 
-        self.config = config or LumenaConfig()
+        self.config = config or LummennaConfig()
         self.user_id = user_id
         self.room = room
         self.system_prompt_override = system_prompt_override
@@ -113,7 +113,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
         """Load memory context for the current input.
 
         Called by LangChain agents before the LLM call.  Returns the
-        assembled Lumena context under the ``"lumen_context"`` key.
+        assembled Lummenna context under the ``"lumen_context"`` key.
         """
         query = inputs.get(self.input_key, "")
         if not query:
@@ -122,7 +122,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
         return {"lumen_context": self._last_context}
 
     def save_context(self, inputs: dict[str, Any], outputs: dict[str, str]) -> None:
-        """Save conversational context to Lumena.
+        """Save conversational context to Lummenna.
 
         Called by LangChain agents after the LLM call.
         """
@@ -206,7 +206,7 @@ class LumenaChatMemory(_LumenaChatMemoryBase):
 
 
 # ---------------------------------------------------------------------------
-# LumenaStore — langchain_core.stores.BaseStore implementation
+# LummennaStore — langchain_core.stores.BaseStore implementation
 # ---------------------------------------------------------------------------
 
 try:
@@ -216,21 +216,21 @@ except Exception:  # pragma: no cover
 
 if BaseStore is not None:
 
-    class LumenaStore(BaseStore[str, bytes]):
-        """Lumena-backed key-value store for LangChain ``store=`` compatibility.
+    class LummennaStore(BaseStore[str, bytes]):
+        """Lummenna-backed key-value store for LangChain ``store=`` compatibility.
 
         Keys are expected in the form ``"user_id|namespace|key"``.
-        Values are raw bytes stored as Lumena memories in the room named by
+        Values are raw bytes stored as Lummenna memories in the room named by
         *namespace*.
         """
 
         def __init__(
             self,
-            config: LumenaConfig | None = None,
+            config: LummennaConfig | None = None,
             default_namespace: str = "store",
             embedder: Any = None,
         ) -> None:
-            self.config = config or LumenaConfig()
+            self.config = config or LummennaConfig()
             self.default_namespace = default_namespace
             self._embedder = embedder
             self._memory: ConversationMemory | None = None

@@ -1,5 +1,5 @@
 """
-Unified Benchmark Orchestrator for Lumena.
+Unified Benchmark Orchestrator for Lummenna.
 
 Runs ALL benchmark suites sequentially and generates a unified Markdown
 report at benchmarks/results/report.md.
@@ -80,7 +80,7 @@ def run_suite(name: str) -> dict[str, Any]:
 
 def generate_report(suite_results: list[dict[str, Any]]) -> Path:
     lines = [
-        "# Lumena Benchmark Suite Report",
+        "# Lummenna Benchmark Suite Report",
         "",
         f"**Date:** {__import__('datetime').datetime.now().isoformat()}",
         "",

@@ -5,7 +5,7 @@
       "command": "python",
       "args": ["-m", "lummenna.integrations.mcp_server"],
       "env": {
-        "LUMENA_DEVICE": "generic"
+        "LUMMENNA_DEVICE": "generic"
       }
     }
   ]

@@ -1,9 +1,9 @@
-Lumena — Dual License
+Lummenna — Dual License
 =====================
 
 Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 
-Lumena is offered under a DUAL-LICENSE model. You may use, copy, modify,
+Lummenna is offered under a DUAL-LICENSE model. You may use, copy, modify,
 and distribute the Community Edition of this software under the terms of
 EITHER of the following, at your option:
 
@@ -11,16 +11,16 @@ EITHER of the following, at your option:
      text of which appears below and in LICENSES/AGPL-3.0.txt; OR
 
   2. A commercial license from QuantumindSSI, which removes the AGPL-3.0
-     copyleft/network-use obligations and unlocks the Lumena Pro Edition
+     copyleft/network-use obligations and unlocks the Lummenna Pro Edition
      (see COMMERCIAL-LICENSE.md and https://github.com/QuantmindSSI/lummenna).
 
 Notes:
-  - Versions of Lumena released on or before v1.0.0 were licensed under the
+  - Versions of Lummenna released on or before v1.0.0 were licensed under the
     Apache License 2.0. That grant on those released versions is irrevocable;
     a copy of the Apache License 2.0 is retained at LICENSES/Apache-2.0.txt.
   - From the first release following this notice, the Community Edition is
     licensed under AGPL-3.0-or-later (with the commercial option above).
-  - The "Lumena Pro" / commercial-only modules are NOT licensed under
+  - The "Lummenna Pro" / commercial-only modules are NOT licensed under
     AGPL-3.0 and require a valid commercial license from QuantumindSSI.
   - For commercial licensing inquiries: licensing@quantumindssi.com
 

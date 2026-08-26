@@ -1,10 +1,10 @@
-# Goose (Block) + Lumena Integration
+# Goose (Block) + Lummenna Integration
 
 [Goose](https://github.com/block/goose) is an open-source AI agent from Block (formerly Square) that supports **MCP servers** natively.
 
 ## Configuration
 
-Add Lumena to your Goose configuration:
+Add Lummenna to your Goose configuration:
 
 ```bash
 goose configure
@@ -12,7 +12,7 @@ goose configure
 # Name: lummenna
 # Command: python -m lummenna.integrations.mcp_server
 # Environment variables:
-#   LUMENA_DEVICE=generic
+#   LUMMENNA_DEVICE=generic
 ```
 
 Or edit `~/.config/goose/config.yaml` directly:
@@ -26,14 +26,14 @@ extensions:
       - -m
       - lummenna.integrations.mcp_server
     env:
-      LUMENA_DEVICE: generic
-      LUMENA_STORE_PATH: "${HOME}/.lumena/store"
-      LUMENA_MODEL_PATH: "${HOME}/.lumena/models"
+      LUMMENNA_DEVICE: generic
+      LUMMENNA_STORE_PATH: "${HOME}/.lummenna/store"
+      LUMMENNA_MODEL_PATH: "${HOME}/.lummenna/models"
 ```
 
 ## Usage
 
-Start Goose with Lumena enabled:
+Start Goose with Lummenna enabled:
 
 ```bash
 goose session
@@ -48,13 +48,13 @@ Inside the session:
 > What is the status of my memory palace?
 ```
 
-Goose will automatically route these to the Lumena MCP tools.
+Goose will automatically route these to the Lummenna MCP tools.
 
-## Advanced: Goose + Lumena in CI/CD
+## Advanced: Goose + Lummenna in CI/CD
 
-Use Goose with Lumena for persistent CI/CD agents:
+Use Goose with Lummenna for persistent CI/CD agents:
 
 ```bash
-export LUMENA_API_KEY=your-key
-goose session --instructions "Always search Lumena before making architectural decisions."
+export LUMMENNA_API_KEY=your-key
+goose session --instructions "Always search Lummenna before making architectural decisions."
 ```
