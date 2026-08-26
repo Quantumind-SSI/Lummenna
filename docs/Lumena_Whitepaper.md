@@ -163,7 +163,7 @@ The FastAPI server provides a hardened REST surface:
 `LumenaChatMemory` provides a LangChain-compatible memory adapter for conversational agents. The Python SDK (`ConversationMemory`) supports direct programmatic use:
 
 ```python
-from lumena.conversation import ConversationMemory
+from lummenna.conversation import ConversationMemory
 memory = ConversationMemory(config=config, conn=conn)
 context = memory.retrieve_and_assemble("What UI settings does the user like?")
 ```
@@ -252,7 +252,7 @@ The honest claim is not that Lumena surpasses every vector database on every ret
 
 The complete source code (~9K lines of Python across 65 modules), documentation, eleven benchmark suites, domain corpus, and integrations are available at:
 
-> **https://github.com/QuantumindSSI/lumena**
+> **https://github.com/QuantmindSSI/lummenna**
 
 Dual-licensed: AGPL-3.0-or-later (Community Edition) or a commercial license
 from QuantumindSSI (Pro Edition). Versions up to and including v1.0.0 were

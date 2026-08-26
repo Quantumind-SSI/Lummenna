@@ -1,4 +1,4 @@
-"""Tests for lumena.integrations.mcp_server."""
+"""Tests for lummenna.integrations.mcp_server."""
 
 import asyncio
 
@@ -9,7 +9,7 @@ pytestmark = pytest.mark.skipif(
     reason="mcp package not installed",
 )
 
-from lumena.integrations.mcp_server import _preview, app_lifespan, mcp  # noqa: E402
+from lummenna.integrations.mcp_server import _preview, app_lifespan, mcp  # noqa: E402
 
 
 class TestMCPServer:

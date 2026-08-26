@@ -16,7 +16,7 @@
 > "Lumena gives your coding agent a persistent memory palace — not a vector dump, not a context hack. Memories decay, consolidate, and survive across sessions on your own hardware."
 
 ### 1.4 Version
-**v1.0.0** — Confirmed in `lumena/api/server.py` app title, MCP server dashboard text, `CHANGELOG.md`, and `pyproject.toml`.
+**v1.0.0** — Confirmed in `lummenna/api/server.py` app title, MCP server dashboard text, `CHANGELOG.md`, and `pyproject.toml`.
 
 ### 1.5 License
 Dual-licensed: AGPL-3.0-or-later (Community Edition) or a commercial license
@@ -25,10 +25,10 @@ Versions up to and including v1.0.0 were released under Apache 2.0 (irrevocable
 for those releases).
 
 ### 1.6 Repository
-`https://github.com/QuantumindSSI/lumena` (confirmed in pyproject.toml URLs, integrations configs, and docs).
+`https://github.com/QuantmindSSI/lummenna` (confirmed in pyproject.toml URLs, integrations configs, and docs).
 
 ### 1.7 Python Package Name
-`lumena` (pyproject.toml, all `import lumena.*` statements, CLI entry point).
+`lummenna` (pyproject.toml, all `import lummenna.*` statements, CLI entry point).
 
 ---
 
@@ -43,7 +43,7 @@ The long-term memory store — "palace" — consisting of rooms, loci (sub-locat
 The short-term working window — handles context assembly, embedding, token budget enforcement, and prompt injection for the LLM agent.
 
 ### Twin-Force Controller (TFC)
-A unified state machine that balances mnemonic conservation vs. contextual exploration. Defined in `lumena/controller.py`:
+A unified state machine that balances mnemonic conservation vs. contextual exploration. Defined in `lummenna/controller.py`:
 
 | Parameter | Meaning | Default | Range |
 |-----------|---------|---------|-------|
@@ -67,7 +67,7 @@ A unified state machine that balances mnemonic conservation vs. contextual explo
 - **Loci**: Sub-locations within rooms, analogous to loci in the method-of-loci mnemonic technique.
 - **Chunks**: Individual memory units with content, embedding vector, V(m) score, provenance chain, and bi-temporal validity.
 
-### 3.2 Retrieval Pipeline (from `lumena/search.py` and `lumena/fusion.py`)
+### 3.2 Retrieval Pipeline (from `lummenna/search.py` and `lummenna/fusion.py`)
 A multi-stage pipeline:
 1. **Intent Classification** — Rule-based + optional logistic regression (factual / exploratory / relational / temporal)
 2. **BM25 Lexical Search** — Via SQLite FTS5 (porter stemmer, unicode61 tokenizer)
@@ -91,7 +91,7 @@ Every chunk has:
 - `parent_provenance` — causal chain linking
 - **Merge-on-read**: `get_effective_fact()` respects supression chains and optional time-travel via `as_of_transaction`.
 
-### 3.5 V(m) — Value Model (from `lumena/force/mnemonic/value_model.py`)
+### 3.5 V(m) — Value Model (from `lummenna/force/mnemonic/value_model.py`)
 Seven-factor scalar score for each chunk:
 1. **Recency** — Time since creation (exponential decay)
 2. **Access frequency** — raw `access_count`
@@ -104,7 +104,7 @@ Seven-factor scalar score for each chunk:
 Weights are learned from user feedback via linear regression (5+ feedback events required).
 
 ### 3.6 Context Assembly
-Jinja2 template in `lumena/force/contextual/assembly.py`:
+Jinja2 template in `lummenna/force/contextual/assembly.py`:
 ```
 {system prompt}
 {palace minimap (room chain)}
@@ -124,11 +124,11 @@ Token budget enforcement:
 ### 3.7 Feedback Loop
 - `feedback_log` table tracks explicit (`lumena_feedback`), implicit (via `lumena_turn`), and repair feedback
 - V(m) weights are retrained when feedback count reaches 5
-- Search Repair Loop (`lumena/repair.py`) self-heals: empty results widen `a`, budget exceeded degrades `r`, low confidence widens `a`
+- Search Repair Loop (`lummenna/repair.py`) self-heals: empty results widen `a`, budget exceeded degrades `r`, low confidence widens `a`
 
 ---
 
-## 4. Data Schema (from `lumena/data/schema.sql`)
+## 4. Data Schema (from `lummenna/data/schema.sql`)
 
 14 tables (after migrations 0002 and 0003):
 
@@ -163,7 +163,7 @@ Three modes (`database_encryption_mode`):
 - **`fernet`** — Field-level encryption of `chunk.content` via Fernet (symmetric AES-128-CBC with HMAC)
 - **`none`** — Plaintext SQLite (default; production not recommended)
 
-### 5.3 P2P Beam Protocol Security (`lumena/p2p/beam.py`)
+### 5.3 P2P Beam Protocol Security (`lummenna/p2p/beam.py`)
 - **Encryption**: AES-256-GCM via `P2PCrypto`
 - **Integrity/Authenticity**: HMAC-SHA256 with 30-second replay window
 - **TTL**: Frames older than `ttl_hours` are dropped at reception
@@ -172,7 +172,7 @@ Three modes (`database_encryption_mode`):
 - Length-prefixed framed protocol
 - TTL enforced at both send and receive
 
-### 5.4 API Security (`lumena/api/server.py`)
+### 5.4 API Security (`lummenna/api/server.py`)
 - **Auth**: API-key middleware via `LUMENA_API_KEY`; all endpoints except `/health` and `/dashboard` require key
 - **Rate Limiting**: Token-bucket rate limiter (default 60 req/min)
 - **Size Limits**: Configurable `LUMENA_REQUEST_MAX_SIZE_BYTES` (default 1 MB)
@@ -182,7 +182,7 @@ Three modes (`database_encryption_mode`):
 - **PII Detection**: Optional `pii_detection_enabled` with modes: `block`, `redact`, `hash`
 - **Audit Logging**: Every API call logged to `audit_log` table
 
-### 5.5 SQLCipher Support (`lumena/data/schema.py` + `test_sqlcipher.py`)
+### 5.5 SQLCipher Support (`lummenna/data/schema.py` + `test_sqlcipher.py`)
 - Passphrase derivation via PBKDF2-HMAC-SHA256 from `LUMENA_ENCRYPTION_KEY`
 - SALT file stored alongside database for deterministic derivation across restarts
 - Test coverage exists but is marked as skipped pending v0.3.0 feature flag
@@ -190,7 +190,7 @@ Three modes (`database_encryption_mode`):
 
 ---
 
-## 6. Device Profiles (from `lumena/config.py`)
+## 6. Device Profiles (from `lummenna/config.py`)
 
 | Device | Context Budget | Memory Limit | Vector Index |
 |--------|---------------|--------------|--------------|
@@ -207,7 +207,7 @@ Three modes (`database_encryption_mode`):
 - Default: **BGE-small-en-v1.5** (384-dim, ONNX-exported)
 - Size: ~33 MB (INT8 quantized via Optimum)
 - Runtime: ONNX Runtime (CPUExecutionProvider)
-- Model provisioning: `lumena model download bge-small-en-v1.5` (Python API or optimum-cli)
+- Model provisioning: `lummenna model download bge-small-en-v1.5` (Python API or optimum-cli)
 - Fallback: `MockEmbedder` for testing — deterministic pseudo-random vectors (hash-based)
 
 ### 7.2 Local LLM Support (Experimental)
@@ -229,7 +229,7 @@ Progressive quantization chain for memory lifecycles:
 - **FP32** → **FP16** → **INT8** → **BINARY** → **RELEASED**
 - Triggered by L3 budget eviction
 - After BINARY resolution, chunk is released (valid_to set)
-- Quantizer functions implemented via `lumena/sovereign/optical.py`
+- Quantizer functions implemented via `lummenna/sovereign/optical.py`
 
 ---
 
@@ -255,12 +255,12 @@ Progressive quantization chain for memory lifecycles:
 | Cline | MCP server | `integrations/cline/cline_mcp_settings.json` |
 | Continue | MCP server | `integrations/continue/config.json` |
 | Zed | Context server + slash commands | `integrations/zed/README.md` |
-| Devin | Custom tool YAML + HTTP API | `integrations/devin/lumena-tool.yaml` |
+| Devin | Custom tool YAML + HTTP API | `integrations/devin/lummenna-tool.yaml` |
 | Aider | Custom slash commands + HTTP | `integrations/aider/README.md` |
 
 ### 8.3 MCP Server Tools (7 tools, 2 resources)
 
-**Tools** (from `lumena/integrations/mcp_server.py`):
+**Tools** (from `lummenna/integrations/mcp_server.py`):
 1. `lumena_search` — Semantic + lexical hybrid search
 2. `lumena_store` — Persist a memory with room/locus
 3. `lumena_assemble` — Retrieve and assemble context in one call
@@ -270,8 +270,8 @@ Progressive quantization chain for memory lifecycles:
 7. `lumena_dashboard` — Formatted text dashboard with benchmarks, TFC, topology, business impact
 
 **Resources**:
-- `dashboard://lumena/effectiveness` — Full effectiveness metrics JSON
-- `dashboard://lumena/sota` — SOTA comparison and capability highlights
+- `dashboard://lummenna/effectiveness` — Full effectiveness metrics JSON
+- `dashboard://lummenna/sota` — SOTA comparison and capability highlights
 
 ### 8.4 LangChain & LangGraph Integrations
 - `LumenaChatMemory` — LangChain BaseChatMemory with retrieve, save, feedback, and V(m) learning
@@ -318,7 +318,7 @@ Run via `python -m benchmarks.run_all`:
 |--------|-------|
 | Data Sovereignty | 100% (fully on-device) |
 | API Cost per Query | $0.00 (no external API calls) |
-| GDPR Native RTBF | YES (compliance forgetting via `lumena compliance audit`) |
+| GDPR Native RTBF | YES (compliance forgetting via `lummenna compliance audit`) |
 | Edge Deployable | YES (RPi5, Jetson Orin, Orange Pi) |
 | Feedback Satisfaction | Self-reported from `/v1/feedback` endpoint |
 
@@ -326,7 +326,7 @@ Run via `python -m benchmarks.run_all`:
 
 ## 11. Error Codes & Hierarchy
 
-Defined in `lumena/brand/errors.py` — all exceptions inherit from `LumenaError`:
+Defined in `lummenna/brand/errors.py` — all exceptions inherit from `LumenaError`:
 
 | Code | Exception | Category |
 |------|-----------|----------|
@@ -346,27 +346,27 @@ Defined in `lumena/brand/errors.py` — all exceptions inherit from `LumenaError
 
 ---
 
-## 12. CLI Interface (from `lumena/cli/main.py` — 412 lines, Typer + Rich)
+## 12. CLI Interface (from `lummenna/cli/main.py` — 412 lines, Typer + Rich)
 
 ```
-lumena init                Initialize palace and optionally download embedding model
-lumena serve               Start FastAPI server + dashboard
-lumena memory store        Store a memory via CLI
-lumena memory retrieve     Retrieve memories via CLI
-lumena palace rooms        List/CRUD rooms
-lumena palace loci         List/CRUD loci
-lumena tfc show            Display TFC state (e, a, tau, r)
-lumena tfc set --e 0.7     Modify TFC parameters
-lumena compliance audit    Run GDPR/CCPA compliance audit
-lumena daemon              Start sleep-phase consolidation daemon
-lumena p2p share           Share memories via Beam P2P protocol
-lumena model list          List available/downloaded embedding models
-lumena model download      Download and ONNX-export a model
+lummenna init                Initialize palace and optionally download embedding model
+lummenna serve               Start FastAPI server + dashboard
+lummenna memory store        Store a memory via CLI
+lummenna memory retrieve     Retrieve memories via CLI
+lummenna palace rooms        List/CRUD rooms
+lummenna palace loci         List/CRUD loci
+lummenna tfc show            Display TFC state (e, a, tau, r)
+lummenna tfc set --e 0.7     Modify TFC parameters
+lummenna compliance audit    Run GDPR/CCPA compliance audit
+lummenna daemon              Start sleep-phase consolidation daemon
+lummenna p2p share           Share memories via Beam P2P protocol
+lummenna model list          List available/downloaded embedding models
+lummenna model download      Download and ONNX-export a model
 ```
 
 ---
 
-## 13. API Endpoints (from `lumena/api/server.py` — 750 lines)
+## 13. API Endpoints (from `lummenna/api/server.py` — 750 lines)
 
 ### Public (no auth required)
 | Method | Path | Purpose |
@@ -393,7 +393,7 @@ lumena model download      Download and ONNX-export a model
 
 ---
 
-## 14. Dashboard (from `lumena/api/dashboard.html` — 629 lines)
+## 14. Dashboard (from `lummenna/api/dashboard.html` — 629 lines)
 
 Self-hosted HTML dashboard served at `/dashboard` with:
 - **System Health KPIs**: Active memories, rooms, loci, retention rate, embedder status
@@ -424,7 +424,7 @@ Self-hosted HTML dashboard served at `/dashboard` with:
 
 7. **Full Benchmark Suite**: 11 benchmark suites (retrieval, cross-system, BEIR, ablation, navigation, forgetting, optical, TFC sensitivity, performance, stress, E2E), all wrapped by `python -m benchmarks.run_all`. Eight suites have committed results; performance, stress, and cross-system are harnesses awaiting runs.
 
-8. **GDPR-Native Right to Be Forgotten**: `lumena compliance forget <chunk_id> --reason "..."` performs audited, provenance-purging erasure; `lumena compliance audit` shows the trail.
+8. **GDPR-Native Right to Be Forgotten**: `lummenna compliance forget <chunk_id> --reason "..."` performs audited, provenance-purging erasure; `lummenna compliance audit` shows the trail.
 
 9. **Encryption-at-Rest Options**: Three tiers — SQLCipher (page-level AES-256), Fernet (field-level AES-128), and plaintext.
 
@@ -436,7 +436,7 @@ Self-hosted HTML dashboard served at `/dashboard` with:
 
 | Metric | Count |
 |--------|-------|
-| Python source files (lumena/) | 60 |
+| Python source files (lummenna/) | 60 |
 | Test files (tests/) | 41 |
 | Benchmark suites (benchmarks/) | 11 |
 | Integrations (integrations/) | 10 platforms, 16 config files |

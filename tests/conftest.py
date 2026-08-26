@@ -9,8 +9,8 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import init_db
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import init_db
 
 
 @pytest.fixture

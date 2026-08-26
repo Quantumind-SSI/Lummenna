@@ -1,4 +1,4 @@
-"""Tests for the offline code guardrail scanner (lumena.dev.guardrails).
+"""Tests for the offline code guardrail scanner (lummenna.dev.guardrails).
 
 The guardrail is the deterministic core of the "ground all LLM-generated code"
 discipline: no network, no LLM, reproducible in CI. These tests pin its
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from lumena.dev.guardrails import (
+from lummenna.dev.guardrails import (
     GuardrailIssue,
     GuardrailReport,
     Severity,
@@ -296,10 +296,10 @@ def test_lumena_package_passes_guardrails():
     """The shipped library must itself pass the HIGH-severity gate."""
     import pathlib
 
-    root = pathlib.Path(__file__).resolve().parent.parent / "lumena"
+    root = pathlib.Path(__file__).resolve().parent.parent / "lummenna"
     py_files = sorted(root.rglob("*.py"))
     report = scan_paths(py_files)
     blocking = report.blocking()
-    assert not blocking, "lumena/ has blocking guardrail issues:\n" + "\n".join(
+    assert not blocking, "lummenna/ has blocking guardrail issues:\n" + "\n".join(
         b.render() for b in blocking
     )

@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.data.backup import backup_database
-from lumena.data.schema import get_connection
+from lummenna.config import LumenaConfig
+from lummenna.data.backup import backup_database
+from lummenna.data.schema import get_connection
 
 
 @pytest.fixture

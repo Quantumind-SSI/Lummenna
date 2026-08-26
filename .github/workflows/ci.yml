@@ -33,10 +33,10 @@ jobs:
           pip install ruff==0.3.0
 
       - name: Ruff check
-        run: ruff check lumena/ tests/
+        run: ruff check lummenna/ tests/
 
       - name: Ruff format check
-        run: ruff format --check lumena/ tests/
+        run: ruff format --check lummenna/ tests/
 
   typecheck:
     name: Type Check
@@ -58,14 +58,14 @@ jobs:
           pip install -e ".[dev]"
 
       - name: MyPy type check
-        run: mypy lumena/ --ignore-missing-imports
+        run: mypy lummenna/ --ignore-missing-imports
 
       # Ignored advisories — kept in lockstep with security.yml (the canonical
       # vuln-scan policy). Revisit when optimum-onnx supports transformers 5.x.
       #
       # transformers 4.57.x — PYSEC-2025-217, PYSEC-2026-2288/2289/2290: all
       #   require loading untrusted checkpoints/configs from the Hub. Lumena
-      #   only loads models pinned to immutable commit SHAs (lumena/cli/models.py
+      #   only loads models pinned to immutable commit SHAs (lummenna/cli/models.py
       #   KNOWN_MODELS) or local dirs it exported itself, behind a sovereign-mode
       #   network block by default. Upgrading to fixed 5.x is blocked:
       #   optimum-onnx (0.1.0) requires transformers<4.58.
@@ -120,7 +120,7 @@ jobs:
           fi
           echo "Scanning changed Python files:"
           echo "$CHANGED"
-          echo "$CHANGED" | python -m lumena.dev --stdin
+          echo "$CHANGED" | python -m lummenna.dev --stdin
 
   test:
     name: Test
@@ -147,7 +147,7 @@ jobs:
           pip install -e ".[dev,langchain]"
 
       - name: Test with coverage
-        run: pytest -q --tb=short --cov=lumena --cov-report=term-missing --cov-report=json --cov-report=xml --cov-fail-under=50
+        run: pytest -q --tb=short --cov=lummenna --cov-report=term-missing --cov-report=json --cov-report=xml --cov-fail-under=50
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'

@@ -8,23 +8,23 @@ single-writer, single-replica workload.
 ## Provision
 
 ```bash
-az group create -n rg-lumena -l westeurope
-az deployment group create -g rg-lumena -f infra/azure/main.bicep \
-  -p namePrefix=lumena nodeVmSize=Standard_D4s_v5 nodeCount=2
+az group create -n rg-lummenna -l westeurope
+az deployment group create -g rg-lummenna -f infra/azure/main.bicep \
+  -p namePrefix=lummenna nodeVmSize=Standard_D4s_v5 nodeCount=2
 
 # Capture outputs
-ACR=$(az deployment group show -g rg-lumena -n main --query properties.outputs.acrLoginServer.value -o tsv)
-AKS=$(az deployment group show -g rg-lumena -n main --query properties.outputs.aksClusterName.value -o tsv)
-AI_CONN=$(az deployment group show -g rg-lumena -n main --query properties.outputs.appInsightsConnectionString.value -o tsv)
-az aks get-credentials -g rg-lumena -n "$AKS"
+ACR=$(az deployment group show -g rg-lummenna -n main --query properties.outputs.acrLoginServer.value -o tsv)
+AKS=$(az deployment group show -g rg-lummenna -n main --query properties.outputs.aksClusterName.value -o tsv)
+AI_CONN=$(az deployment group show -g rg-lummenna -n main --query properties.outputs.appInsightsConnectionString.value -o tsv)
+az aks get-credentials -g rg-lummenna -n "$AKS"
 ```
 
 ## Build & push the image
 
 ```bash
 az acr login -n "${ACR%%.*}"
-docker build -t "$ACR/lumena:1.0.0" .
-docker push "$ACR/lumena:1.0.0"
+docker build -t "$ACR/lummenna:1.0.0" .
+docker push "$ACR/lummenna:1.0.0"
 ```
 
 (Or let the `docker-publish` GitHub Actions workflow push to GHCR/ACR on tags.)
@@ -32,14 +32,14 @@ docker push "$ACR/lumena:1.0.0"
 ## Deploy the chart
 
 ```bash
-kubectl create namespace lumena
-kubectl -n lumena create secret generic lumena-auth \
+kubectl create namespace lummenna
+kubectl -n lummenna create secret generic lummenna-auth \
   --from-literal=api-key="$(openssl rand -hex 32)"
 
-helm upgrade --install lumena charts/lumena -n lumena \
-  --set image.repository="$ACR/lumena" \
+helm upgrade --install lummenna charts/lummenna -n lummenna \
+  --set image.repository="$ACR/lummenna" \
   --set image.tag=1.0.0 \
-  --set auth.existingSecret=lumena-auth \
+  --set auth.existingSecret=lummenna-auth \
   --set model.url="https://<your-blob>/models/bge-small-en-v1.5-r5c38ec7.tar.gz" \
   --set model.sha256="<sha256 of the tarball>"
 ```
@@ -50,37 +50,37 @@ Lumena refuses to export telemetry while `LUMENA_SOVEREIGN=true` — this is a
 deliberate fail-loud gate, not a default integration.
 
 ```bash
-kubectl -n lumena create secret generic lumena-appinsights \
+kubectl -n lummenna create secret generic lummenna-appinsights \
   --from-literal=connection-string="$AI_CONN"
 
-helm upgrade lumena charts/lumena -n lumena --reuse-values \
+helm upgrade lummenna charts/lummenna -n lummenna --reuse-values \
   --set azureMonitor.enabled=true \
-  --set azureMonitor.existingSecret=lumena-appinsights \
+  --set azureMonitor.existingSecret=lummenna-appinsights \
   --set config.sovereign="false"
 ```
 
-The image must include the azure extra (`pip install "lumena[azure]"` in a
+The image must include the azure extra (`pip install "lummenna[azure]"` in a
 derived image) — startup fails with an actionable error otherwise.
 
 ## Metrics scraping
 
 Pods carry `prometheus.io/*` annotations for `/metrics/prometheus`. With
 Azure Monitor managed Prometheus, enable pod-annotation scraping in the
-`ama-metrics-settings-configmap` (`podannotationnamespaceregex: "lumena"`).
+`ama-metrics-settings-configmap` (`podannotationnamespaceregex: "lummenna"`).
 
 ## GitHub Actions OIDC (no stored cloud credentials)
 
 ```bash
-APP_ID=$(az ad app create --display-name lumena-deployer --query appId -o tsv)
+APP_ID=$(az ad app create --display-name lummenna-deployer --query appId -o tsv)
 az ad sp create --id "$APP_ID"
 az role assignment create --assignee "$APP_ID" --role "Azure Kubernetes Service Cluster User Role" \
-  --scope $(az aks show -g rg-lumena -n "$AKS" --query id -o tsv)
+  --scope $(az aks show -g rg-lummenna -n "$AKS" --query id -o tsv)
 az role assignment create --assignee "$APP_ID" --role AcrPush \
   --scope $(az acr show -n "${ACR%%.*}" --query id -o tsv)
 az ad app federated-credential create --id "$APP_ID" --parameters '{
   "name": "gh-main",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:QuantumindSSI/lumena:ref:refs/heads/main",
+  "subject": "repo:QuantumindSSI/lummenna:ref:refs/heads/main",
   "audiences": ["api://AzureADTokenExchange"]
 }'
 ```
@@ -112,11 +112,11 @@ The GitHub Actions workflows form an end-to-end Azure pipeline:
 
 | Variable | Used by | Example |
 |---|---|---|
-| `AZURE_RESOURCE_GROUP` | infra | `rg-lumena` |
+| `AZURE_RESOURCE_GROUP` | infra | `rg-lummenna` |
 | `AZURE_LOCATION` | infra | `westeurope` |
 | `ACR_LOGIN_SERVER` | image, deploy | `lumenaacr1234.azurecr.io` |
-| `AKS_RESOURCE_GROUP` | deploy | `rg-lumena` |
-| `AKS_CLUSTER_NAME` | deploy | `lumena-aks` |
+| `AKS_RESOURCE_GROUP` | deploy | `rg-lummenna` |
+| `AKS_CLUSTER_NAME` | deploy | `lummenna-aks` |
 
 ### Two registries, one artifact
 
@@ -129,19 +129,19 @@ kubelet identity already holds `AcrPull` (granted in `main.bicep`).
 
 `deploy-aks.yml` is progressive:
 
-- A tag push (`v1.2.3`) **auto-deploys to staging** (namespace `lumena-staging`).
+- A tag push (`v1.2.3`) **auto-deploys to staging** (namespace `lummenna-staging`).
 - A manual run deploys a chosen tag to **staging or production** (namespace
-  `lumena`).
+  `lummenna`).
 
 Production runs in the GitHub **`production` Environment**. Configure it with a
 **required reviewer** (Settings → Environments → production) so promotion is a
 human decision, not a merge side effect. Create a `staging` Environment too
-(no gate). Both namespaces need their own `lumena-auth` secret:
+(no gate). Both namespaces need their own `lummenna-auth` secret:
 
 ```bash
-for ns in lumena-staging lumena; do
+for ns in lummenna-staging lummenna; do
   kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f -
-  kubectl -n "$ns" create secret generic lumena-auth \
+  kubectl -n "$ns" create secret generic lummenna-auth \
     --from-literal=api-key="$(openssl rand -hex 32)" \
     --dry-run=client -o yaml | kubectl apply -f -
 done

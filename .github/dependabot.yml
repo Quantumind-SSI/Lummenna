@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: pip
-    # pyproject.toml lives at the repo root, not in a /lumena subdirectory.
+    # pyproject.toml lives at the repo root, not in a /lummenna subdirectory.
     directory: /
     schedule:
       interval: weekly

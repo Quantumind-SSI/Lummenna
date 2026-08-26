@@ -26,17 +26,17 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
-    import lumena  # noqa: F401
+    import lummenna  # noqa: F401
 except ImportError as exc:
-    print(f"[ERROR] Cannot import lumena: {exc}")
+    print(f"[ERROR] Cannot import lummenna: {exc}")
     sys.exit(1)
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
-from lumena.force.mnemonic.forgetting_l2_interference import check_locus_interference
-from lumena.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
-from lumena.force.mnemonic.store import store_memory
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+from lummenna.force.mnemonic.forgetting_l2_interference import check_locus_interference
+from lummenna.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+from lummenna.force.mnemonic.store import store_memory
 
 # Real embedder for meaningful interference metrics
 _EMBEDDER = None
@@ -117,8 +117,8 @@ def run_benchmark() -> dict[str, Any]:
         })
         return weakened
 
-    import lumena.force.mnemonic.forgetting_l2_interference as interference_module
-    import lumena.force.mnemonic.store as store_module
+    import lummenna.force.mnemonic.forgetting_l2_interference as interference_module
+    import lummenna.force.mnemonic.store as store_module
 
     # Monkey-patch the module-level function used by store._trigger_interference_check
     interference_module.check_locus_interference = _instrumented_interference

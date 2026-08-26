@@ -7,7 +7,7 @@ key or a root CA key.
 
 - **Tooling:** `scripts/issue_license.py` (`keygen` and `issue` subcommands).
 - **Verification:** the matching **public** key is embedded in
-  `lumena/licensing.py` as `_QUANTUMINDSSI_PUBLIC_KEY_B64` and used for fully
+  `lummenna/licensing.py` as `_QUANTUMINDSSI_PUBLIC_KEY_B64` and used for fully
   offline verification (no phone-home).
 - **The private key is NEVER committed to this repository** and never appears in
   logs, CI, issues, or chat.
@@ -45,7 +45,7 @@ so you cannot silently clobber a live signing key.
 
 ## 3. Embed the public key
 
-Paste the printed public key into `lumena/licensing.py`:
+Paste the printed public key into `lummenna/licensing.py`:
 
 ```python
 _QUANTUMINDSSI_PUBLIC_KEY_B64: str = "<public key from keygen>"
@@ -113,7 +113,7 @@ python scripts/issue_license.py --subject "Acme" --features compliance --expires
 Rotate on a fixed schedule and immediately on any suspected compromise.
 
 1. Generate a **new** keypair on the offline machine (`keygen`, §2).
-2. Embed the new public key in `lumena/licensing.py` and cut a release. From that
+2. Embed the new public key in `lummenna/licensing.py` and cut a release. From that
    release on, **only** licenses signed by the new key verify.
 3. **Re-issue** current customers' licenses with the new key (same subject,
    features, seats, expiry), and distribute them.
@@ -131,7 +131,7 @@ Rotate on a fixed schedule and immediately on any suspected compromise.
 
 Revocation is offline (there is no phone-home):
 
-1. Add the license `id` to `REVOKED_LICENSE_IDS` in `lumena/licensing.py`, with a
+1. Add the license `id` to `REVOKED_LICENSE_IDS` in `lummenna/licensing.py`, with a
    comment noting the date and reason.
 2. Cut a release. From that release on, the revoked key resolves to Community
    even though its signature is still valid.

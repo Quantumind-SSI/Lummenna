@@ -2,7 +2,7 @@
 
 **Release Date:** 7 August 2026  
 **Version:** v1.0.0  
-**Repository:** https://github.com/QuantumindSSI/lumena  
+**Repository:** https://github.com/QuantmindSSI/lummenna  
 **License (at release):** Apache 2.0  
 
 > **Note:** This is the historical v1.0.0 announcement. Lumena is now
@@ -50,7 +50,7 @@ Your agents remember. Your data never leaves your machine.
 ### New Datasets & Tooling
 - **Domain Corpus** — 111 curated fact chunks across 8 rooms (ML, NLP, cybersecurity, distributed systems, healthcare AI, quantum computing, open source, climate tech) with a one-command seed script.
 - **Centralized logging** — structlog-first, replacing every silent `except: pass` in the codebase.
-- **PGP key** for `security@lumena.ai` published in `SECURITY.md`.
+- **PGP key** for `security@lummenna.ai` published in `SECURITY.md`.
 
 ### Critical Fixes
 - USearch backend now gracefully falls back to brute-force when unavailable.
@@ -103,11 +103,11 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 ## 6. Quick Start
 
 ```bash
-git clone https://github.com/QuantumindSSI/lumena.git
-cd lumena
+git clone https://github.com/QuantmindSSI/lummenna.git
+cd lummenna
 pip install -e ".[dev]"
-lumena init --device generic
-lumena serve
+lummenna init --device generic
+lummenna serve
 # Dashboard → http://localhost:8848/dashboard
 # API docs  → http://localhost:8848/docs
 ```
@@ -137,9 +137,9 @@ lumena serve
 >
 > If you believe AI agents should remember without sacrificing sovereignty, give Lumena a try.
 >
-> 👉 https://github.com/QuantumindSSI/lumena
+> 👉 https://github.com/QuantmindSSI/lummenna
 > 📖 Whitepaper: `docs/Lumena_Whitepaper.md`
-> 💬 Matrix: `#lumena:matrix.org`
+> 💬 Matrix: `#lummenna:matrix.org`
 >
 > #AI #LLM #OpenSource #AgenticAI #Memory #LocalFirst #Privacy #LangChain #LangGraph #MCP #Release
 
@@ -154,7 +154,7 @@ lumena serve
 >
 > Thread ↓
 >  
-> https://github.com/QuantumindSSI/lumena
+> https://github.com/QuantmindSSI/lummenna
 
 **Tweet 2 — The Problem**
 > Most AI agents are stateless. The few that “remember” rely on cloud vector DBs, managed APIs, or opaque SaaS pipelines.
@@ -179,14 +179,14 @@ lumena serve
 **Tweet 5 — CTA**
 > Try it in 4 commands:
 > ```bash
-> git clone https://github.com/QuantumindSSI/lumena.git
-> cd lumena && pip install -e ".[dev]"
-> lumena init --device generic && lumena serve
+> git clone https://github.com/QuantmindSSI/lummenna.git
+> cd lummenna && pip install -e ".[dev]"
+> lummenna init --device generic && lummenna serve
 > ```
 >
 > Dashboard opens at localhost:8848.
 >
-> Star the repo, open an issue, or join `#lumena:matrix.org`.
+> Star the repo, open an issue, or join `#lummenna:matrix.org`.
 >
 > #LocalFirst #AgenticAI #OpenSource
 
@@ -195,13 +195,13 @@ lumena serve
 ### Short-form Blurbs (Twitter / Mastodon / Bluesky)
 
 **Blurbs 1 — Technical**
-> Lumena v1.0.0 is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 294 tests. Apache 2.0. → github.com/QuantumindSSI/lumena
+> Lumena v1.0.0 is out: a local-first memory palace for LLM agents. BM25 + dense + graph retrieval, three-layer forgetting, and native LangChain / LangGraph / MCP integrations. Zero cloud dependencies. 294 tests. Apache 2.0. → github.com/QuantmindSSI/lummenna
 
 **Blurbs 2 — Values-driven**
-> We built Lumena because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Production-ready today. Check it out → github.com/QuantumindSSI/lumena
+> We built Lumena because AI agents deserve memory without surveillance. Local embeddings, single-file SQLite, sovereign data. Production-ready today. Check it out → github.com/QuantmindSSI/lummenna
 
 **Blurbs 3 — One-liner**
-> Lumena: local-first memory for sovereign AI agents. Now in v1.0.0. github.com/QuantumindSSI/lumena
+> Lumena: local-first memory for sovereign AI agents. Now in v1.0.0. github.com/QuantmindSSI/lummenna
 
 ---
 
@@ -218,11 +218,11 @@ lumena serve
 
 ## 9. Contacts & Resources
 
-- **Repository:** https://github.com/QuantumindSSI/lumena
-- **Issue Tracker:** https://github.com/QuantumindSSI/lumena/issues
-- **Discussions:** https://github.com/QuantumindSSI/lumena/discussions
-- **Security:** https://github.com/QuantumindSSI/lumena/security/advisories
-- **Matrix:** `#lumena:matrix.org`
+- **Repository:** https://github.com/QuantmindSSI/lummenna
+- **Issue Tracker:** https://github.com/QuantmindSSI/lummenna/issues
+- **Discussions:** https://github.com/QuantmindSSI/lummenna/discussions
+- **Security:** https://github.com/QuantmindSSI/lummenna/security/advisories
+- **Matrix:** `#lummenna:matrix.org`
 - **License:** Apache 2.0
 
 ---

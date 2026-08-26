@@ -19,9 +19,9 @@ import json
 
 import pytest
 
-from lumena import licensing
-from lumena.brand.errors import LicenseRequiredError
-from lumena.config import LumenaConfig
+from lummenna import licensing
+from lummenna.brand.errors import LicenseRequiredError
+from lummenna.config import LumenaConfig
 
 
 def _b64url(data: bytes) -> str:
@@ -154,7 +154,7 @@ def test_adversarial_payload_raises_license_invalid(signing_keypair, bad):
     never an uncaught ValueError/TypeError. This is what lets the engine
     fail-closed to Community instead of crashing the caller.
     """
-    from lumena.brand.errors import LicenseInvalidError
+    from lummenna.brand.errors import LicenseInvalidError
 
     payload = {
         "sub": "t",
@@ -239,7 +239,7 @@ def test_string_features_treated_as_single_feature(signing_keypair):
 
 def test_coerce_helpers_unit():
     """Direct unit coverage of the coercion helpers."""
-    from lumena.brand.errors import LicenseInvalidError
+    from lummenna.brand.errors import LicenseInvalidError
 
     assert licensing._coerce_features(None) == frozenset()
     assert licensing._coerce_features("x") == frozenset({"x"})
@@ -279,7 +279,7 @@ def test_revoked_license_id_resolves_to_community(signing_keypair, monkeypatch):
 
 
 def test_revocation_raises_specific_error_on_parse(signing_keypair, monkeypatch):
-    from lumena.brand.errors import LicenseInvalidError
+    from lummenna.brand.errors import LicenseInvalidError
 
     key = _mint(signing_keypair, features=["*"], license_id="revoked-xyz")
     monkeypatch.setattr(licensing, "REVOKED_LICENSE_IDS", frozenset({"revoked-xyz"}))
@@ -319,7 +319,7 @@ def test_encryption_at_rest_gate_blocks_community(tmp_path):
         database_encryption_mode="sqlcipher",
         encryption_key="x" * 16,
     )
-    from lumena.data.schema import get_connection
+    from lummenna.data.schema import get_connection
 
     with pytest.raises(LicenseRequiredError):
         get_connection(cfg)
@@ -331,7 +331,7 @@ def test_encryption_none_works_in_community(tmp_path):
         store_path=str(tmp_path / ".lumena"),
         database_encryption_mode="none",
     )
-    from lumena.data.schema import get_connection
+    from lummenna.data.schema import get_connection
 
     conn = get_connection(cfg)  # must NOT raise
     conn.close()
@@ -341,7 +341,7 @@ def test_compliance_rtbf_gate_blocks_community():
     import sqlite3
 
     licensing.clear_license_cache()
-    from lumena.compliance.safety_forgetting import safety_forget_chunk
+    from lummenna.compliance.safety_forgetting import safety_forget_chunk
 
     with pytest.raises(LicenseRequiredError):
         safety_forget_chunk(sqlite3.connect(":memory:"), 1, "test")
@@ -350,7 +350,7 @@ def test_compliance_rtbf_gate_blocks_community():
 def test_advanced_p2p_rotate_key_gate_blocks_community():
     licensing.clear_license_cache()
     cfg = LumenaConfig(p2p_encryption_key="k" * 32)
-    from lumena.p2p.beam import BeamNode
+    from lummenna.p2p.beam import BeamNode
 
     node = BeamNode(cfg)
     with pytest.raises(LicenseRequiredError):
@@ -360,7 +360,7 @@ def test_advanced_p2p_rotate_key_gate_blocks_community():
 def test_advanced_p2p_rotate_key_allowed_with_pro(signing_keypair):
     key = _mint(signing_keypair, features=["*"])
     cfg = LumenaConfig(license_key=key, p2p_encryption_key="k" * 32)
-    from lumena.p2p.beam import BeamNode
+    from lummenna.p2p.beam import BeamNode
 
     node = BeamNode(cfg)
     node.rotate_key("n" * 32)  # must NOT raise
@@ -402,7 +402,7 @@ def test_every_enforceable_pro_feature_is_actually_gated():
     non_code_entitlements = {"priority_support", "lts"}
     code_features = set(licensing.PRO_FEATURES) - non_code_entitlements
 
-    root = pathlib.Path(__file__).resolve().parent.parent / "lumena"
+    root = pathlib.Path(__file__).resolve().parent.parent / "lummenna"
     sources = "\n".join(
         p.read_text(encoding="utf-8") for p in root.rglob("*.py") if p.name != "licensing.py"
     )
@@ -423,8 +423,8 @@ def _tenant_cfg(tmp_path, license_key=None):
 
 def test_multi_tenant_write_blocks_community(tmp_path):
     licensing.clear_license_cache()
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     cfg = _tenant_cfg(tmp_path)
     conn = get_connection(cfg)
@@ -439,8 +439,8 @@ def test_multi_tenant_write_blocks_community(tmp_path):
 
 def test_default_tenant_write_is_free(tmp_path):
     licensing.clear_license_cache()
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import store_memory
 
     cfg = _tenant_cfg(tmp_path)
     conn = get_connection(cfg)
@@ -453,8 +453,8 @@ def test_default_tenant_write_is_free(tmp_path):
 
 def test_multi_tenant_write_allowed_with_pro(tmp_path, signing_keypair):
     key = _mint(signing_keypair, features=["*"])
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     cfg = _tenant_cfg(tmp_path, license_key=key)
     conn = get_connection(cfg)
@@ -469,8 +469,8 @@ def test_multi_tenant_write_allowed_with_pro(tmp_path, signing_keypair):
 
 def test_multi_tenant_read_filter_blocks_community(tmp_path):
     licensing.clear_license_cache()
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported
 
     cfg = _tenant_cfg(tmp_path)
     conn = get_connection(cfg)
@@ -492,8 +492,8 @@ def test_multi_tenant_read_filter_blocks_community(tmp_path):
 
 def test_seats_unlimited_when_zero(tmp_path, signing_keypair):
     """A licence without a seats field (seats == 0) is uncapped."""
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     key = _mint(signing_keypair, features=["*"])  # no seats -> 0 -> unlimited
     cfg = _tenant_cfg(tmp_path, license_key=key)
@@ -523,9 +523,9 @@ def _mint_with_seats(priv, seats: int) -> str:
 
 
 def test_seat_limit_blocks_new_tenant_over_cap(tmp_path, signing_keypair):
-    from lumena.brand.errors import SeatLimitError
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.brand.errors import SeatLimitError
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     key = _mint_with_seats(signing_keypair, 2)
     cfg = _tenant_cfg(tmp_path, license_key=key)
@@ -545,8 +545,8 @@ def test_seat_limit_blocks_new_tenant_over_cap(tmp_path, signing_keypair):
 
 
 def test_seat_limit_allows_reuse_of_existing_tenant(tmp_path, signing_keypair):
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     key = _mint_with_seats(signing_keypair, 1)
     cfg = _tenant_cfg(tmp_path, license_key=key)
@@ -563,8 +563,8 @@ def test_seat_limit_allows_reuse_of_existing_tenant(tmp_path, signing_keypair):
 
 
 def test_default_tenant_never_counts_against_seats(tmp_path, signing_keypair):
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     key = _mint_with_seats(signing_keypair, 1)
     cfg = _tenant_cfg(tmp_path, license_key=key)
@@ -588,8 +588,8 @@ def test_two_tenants_can_share_room_name(tmp_path, signing_keypair):
     tenant-scoped rebuild, both may use the same room name.
     """
     key = _mint(signing_keypair, features=["*"])
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     cfg = _tenant_cfg(tmp_path, license_key=key)
     conn = get_connection(cfg)
@@ -610,8 +610,8 @@ def test_two_tenants_can_share_room_name(tmp_path, signing_keypair):
 
 def test_migration_0004_makes_room_unique_tenant_scoped(tmp_path):
     """The room UNIQUE index must be (name, tenant_id), not global (name)."""
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.store import _tenant_id_supported
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.store import _tenant_id_supported
 
     cfg = _tenant_cfg(tmp_path)
     conn = get_connection(cfg)
@@ -641,10 +641,10 @@ def test_fusion_query_isolates_tenants(tmp_path, signing_keypair):
     *before* content is materialised/decrypted.
     """
     key = _mint(signing_keypair, features=["*"])
-    from lumena.data.schema import get_connection
-    from lumena.force.mnemonic.retrieval_lexical import LexicalHit
-    from lumena.force.mnemonic.store import _tenant_id_supported, store_memory
-    from lumena.fusion import fuse_and_rerank
+    from lummenna.data.schema import get_connection
+    from lummenna.force.mnemonic.retrieval_lexical import LexicalHit
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
+    from lummenna.fusion import fuse_and_rerank
 
     cfg = _tenant_cfg(tmp_path, license_key=key)
     conn = get_connection(cfg)
@@ -683,8 +683,8 @@ def test_fusion_default_tenant_unrestricted_on_legacy_schema(memory_db):
     """
     import hashlib
 
-    from lumena.force.mnemonic.retrieval_lexical import LexicalHit
-    from lumena.fusion import fuse_and_rerank
+    from lummenna.force.mnemonic.retrieval_lexical import LexicalHit
+    from lummenna.fusion import fuse_and_rerank
 
     cur = memory_db.execute(
         "INSERT INTO room(name, room_type, tenant_id) VALUES('r','domain','default')"
@@ -718,7 +718,7 @@ class _ChunkStub:
 
 def _SearchPipelineForTenant(conn, cfg):
     """Construct a SearchPipeline without triggering real embedder loading."""
-    from lumena.search import SearchPipeline
+    from lummenna.search import SearchPipeline
 
     pipeline = SearchPipeline.__new__(SearchPipeline)
     pipeline.conn = conn

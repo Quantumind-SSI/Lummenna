@@ -9,8 +9,8 @@ Add Lumena to your Goose configuration:
 ```bash
 goose configure
 # Select "Add Extension" → "Command-line Extension"
-# Name: lumena
-# Command: python -m lumena.integrations.mcp_server
+# Name: lummenna
+# Command: python -m lummenna.integrations.mcp_server
 # Environment variables:
 #   LUMENA_DEVICE=generic
 ```
@@ -19,12 +19,12 @@ Or edit `~/.config/goose/config.yaml` directly:
 
 ```yaml
 extensions:
-  lumena:
+  lummenna:
     type: stdio
     cmd: python
     args:
       - -m
-      - lumena.integrations.mcp_server
+      - lummenna.integrations.mcp_server
     env:
       LUMENA_DEVICE: generic
       LUMENA_STORE_PATH: "${HOME}/.lumena/store"

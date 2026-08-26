@@ -88,15 +88,15 @@ Lumena is **production-ready software**. It works end-to-end for storing, search
 
 ```bash
 pip install -e ".[dev]"
-lumena init --device generic
-lumena serve
+lummenna init --device generic
+lummenna serve
 # Dashboard at http://localhost:8848/dashboard
 ```
 
 ```python
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.store import store_memory
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.store import store_memory
 
 config = LumenaConfig()
 conn = get_connection(config)
@@ -116,4 +116,4 @@ See CONTRIBUTING.md for setup and guidelines. High-impact areas:
 
 ## Security
 
-Report vulnerabilities via [GitHub Security Advisories](https://github.com/QuantumindSSI/lumena/security/advisories/new).
+Report vulnerabilities via [GitHub Security Advisories](https://github.com/QuantmindSSI/lummenna/security/advisories/new).

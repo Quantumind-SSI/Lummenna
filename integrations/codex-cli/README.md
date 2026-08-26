@@ -11,7 +11,7 @@ Add to your `~/.codex/config.toml`:
 ```toml
 [mcp_servers.lumena]
 command = "python"
-args = ["-m", "lumena.integrations.mcp_server"]
+args = ["-m", "lummenna.integrations.mcp_server"]
 
 [mcp_servers.lumena.env]
 LUMENA_DEVICE = "generic"
@@ -22,7 +22,7 @@ LUMENA_MODEL_PATH = "/home/YOU/.lumena/models"
 Or use the CLI to add it (if your Codex version provides `codex mcp`):
 
 ```bash
-codex mcp add lumena -- python -m lumena.integrations.mcp_server
+codex mcp add lummenna -- python -m lummenna.integrations.mcp_server
 ```
 
 ## Usage

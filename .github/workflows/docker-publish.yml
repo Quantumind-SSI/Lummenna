@@ -1,7 +1,7 @@
 name: Docker Publish
 
 # Publishes the runtime image to two registries:
-#   * GHCR  — public distribution (docker pull ghcr.io/quantumindssi/lumena)
+#   * GHCR  — public distribution (docker pull ghcr.io/quantumindssi/lummenna)
 #   * ACR   — private pull source for AKS (deploy-aks.yml pulls from here)
 #
 # Both push identical semver + sha tags so a given release is bit-for-bit the
@@ -50,7 +50,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/lumena
+          images: ghcr.io/${{ github.repository_owner }}/lummenna
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -72,7 +72,7 @@ jobs:
       - name: Smoke test image
         run: |
           IMAGE=$(echo "${{ steps.meta.outputs.tags }}" | head -1)
-          docker run -d --name lumena-smoke -p 8848:8848 \
+          docker run -d --name lummenna-smoke -p 8848:8848 \
             -e LUMENA_ALLOW_MOCK_EMBEDDER=0 "$IMAGE"
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8848/health > /dev/null 2>&1; then break; fi
@@ -85,7 +85,7 @@ jobs:
             exit 1
           fi
           curl -fsS http://localhost:8848/metrics/prometheus | grep -q lumena_http_requests_total
-          docker rm -f lumena-smoke
+          docker rm -f lummenna-smoke
 
   build-push-acr:
     name: Build & Push Image (ACR)
@@ -127,7 +127,7 @@ jobs:
         run: |
           az acr build \
             --registry "${{ steps.tags.outputs.registry }}" \
-            --image "lumena:${{ steps.tags.outputs.version }}" \
-            --image "lumena:${{ steps.tags.outputs.sha_tag }}" \
+            --image "lummenna:${{ steps.tags.outputs.version }}" \
+            --image "lummenna:${{ steps.tags.outputs.sha_tag }}" \
             --file Dockerfile \
             .

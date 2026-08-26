@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from lumena.data.schema import init_db
-from lumena.force.mnemonic.retrieval_temporal import (
+from lummenna.data.schema import init_db
+from lummenna.force.mnemonic.retrieval_temporal import (
     temporal_point_query,
     walk_supersession_chain,
 )

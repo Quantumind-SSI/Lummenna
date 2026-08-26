@@ -36,18 +36,18 @@ except Exception:
     _HAS_PSUTIL = False
 
 try:
-    import lumena  # noqa: F401
+    import lummenna  # noqa: F401
 except ImportError as exc:
-    print(f"[ERROR] Cannot import lumena: {exc}")
+    print(f"[ERROR] Cannot import lummenna: {exc}")
     sys.exit(1)
 
 import contextlib
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.store import store_memory
-from lumena.search import SearchPipeline
-from lumena.sovereign.wear import WearAwareBatcher
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.search import SearchPipeline
+from lummenna.sovereign.wear import WearAwareBatcher
 
 SEED = 42
 EMBED_DIMS = 384
@@ -89,7 +89,7 @@ def _get_embedder():
         errors.append(f"sentence-transformers: {exc}")
 
     try:
-        from lumena.force.contextual.embed import LocalEmbedder
+        from lummenna.force.contextual.embed import LocalEmbedder
 
         model_dir = LumenaConfig().model_path / EMBEDDER_MODEL
         if model_dir.exists():

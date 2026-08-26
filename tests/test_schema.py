@@ -2,8 +2,8 @@ import sqlite3
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import ensure_schema, get_connection, init_db
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import ensure_schema, get_connection, init_db
 
 
 @pytest.fixture

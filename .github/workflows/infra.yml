@@ -30,7 +30,7 @@ on:
       name_prefix:
         description: "Resource name prefix (3-12 lowercase alphanumerics)"
         required: true
-        default: lumena
+        default: lummenna
       node_vm_size:
         description: "AKS node VM size"
         required: true
@@ -81,10 +81,10 @@ jobs:
         run: |
           az deployment group what-if \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "lumena-infra-${{ github.run_id }}" \
+            --name "lummenna-infra-${{ github.run_id }}" \
             --template-file infra/azure/main.bicep \
             --parameters \
-              namePrefix="${{ github.event.inputs.name_prefix || 'lumena' }}" \
+              namePrefix="${{ github.event.inputs.name_prefix || 'lummenna' }}" \
               nodeVmSize="${{ github.event.inputs.node_vm_size || 'Standard_D4s_v5' }}" \
               nodeCount="${{ github.event.inputs.node_count || '2' }}"
 
@@ -116,7 +116,7 @@ jobs:
         run: |
           az deployment group create \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "lumena-infra-${{ github.run_id }}" \
+            --name "lummenna-infra-${{ github.run_id }}" \
             --template-file infra/azure/main.bicep \
             --parameters \
               namePrefix="${{ github.event.inputs.name_prefix }}" \
@@ -126,7 +126,7 @@ jobs:
       - name: Capture outputs
         id: outputs
         run: |
-          DEP="lumena-infra-${{ github.run_id }}"
+          DEP="lummenna-infra-${{ github.run_id }}"
           RG="${{ vars.AZURE_RESOURCE_GROUP }}"
           ACR=$(az deployment group show -g "$RG" -n "$DEP" --query properties.outputs.acrLoginServer.value -o tsv)
           AKS=$(az deployment group show -g "$RG" -n "$DEP" --query properties.outputs.aksClusterName.value -o tsv)

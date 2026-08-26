@@ -8,7 +8,7 @@ Devin can execute shell commands. Use the Lumena REST API directly:
 
 ```bash
 # Start Lumena server in background (one-time)
-nohup lumena serve --host 0.0.0.0 --port 8848 > /tmp/lumena.log 2>&1 &
+nohup lummenna serve --host 0.0.0.0 --port 8848 > /tmp/lummenna.log 2>&1 &
 
 # Search memories
 curl -s -X POST http://localhost:8848/v1/search \
@@ -39,12 +39,12 @@ curl -s http://localhost:8848/v1/status | jq .
 Devin's sandbox base images are not publicly distributed, so you cannot bake Lumena into them. Instead, run Lumena as a sidecar container on the same network and point Devin's shell commands at it:
 
 ```bash
-docker run -d --name lumena \
+docker run -d --name lummenna \
   -p 8848:8848 \
-  -v lumena-store:/root/.lumena \
+  -v lummenna-store:/root/.lumena \
   -e LUMENA_API_HOST=0.0.0.0 \
   python:3.11-slim \
-  sh -c "pip install 'lumena @ git+https://github.com/QuantumindSSI/lumena' && lumena init --device generic && lumena serve --host 0.0.0.0 --port 8848"
+  sh -c "pip install 'lummenna @ git+https://github.com/QuantmindSSI/lummenna' && lummenna init --device generic && lummenna serve --host 0.0.0.0 --port 8848"
 ```
 
 Then use the Option 1 curl commands with `http://host.docker.internal:8848` (or the container's address on your Docker network).

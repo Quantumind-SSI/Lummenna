@@ -1,13 +1,13 @@
-"""Tests for lumena.api.server."""
+"""Tests for lummenna.api.server."""
 
 import pytest
 from fastapi.testclient import TestClient
 
-from lumena.api.server import app
-from lumena.config import LumenaConfig
-from lumena.conversation import ConversationMemory
-from lumena.data.schema import get_connection, init_db
-from lumena.force.contextual.embed import MockEmbedder
+from lummenna.api.server import app
+from lummenna.config import LumenaConfig
+from lummenna.conversation import ConversationMemory
+from lummenna.data.schema import get_connection, init_db
+from lummenna.force.contextual.embed import MockEmbedder
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def client(tmp_path, monkeypatch):
     embedder = MockEmbedder(dims=config.embedding_dims)
 
     # Pre-seed module state
-    from lumena.api import server as server_mod
+    from lummenna.api import server as server_mod
 
     server_mod._state = {
         "config": config,
@@ -41,7 +41,7 @@ def client(tmp_path, monkeypatch):
     }
 
     # Build pipeline after state is set
-    from lumena.search import SearchPipeline
+    from lummenna.search import SearchPipeline
 
     server_mod._state["pipeline"] = SearchPipeline(conn, config, embedder=embedder)
 
@@ -70,7 +70,7 @@ class TestAuthMiddleware:
 
     def test_protected_endpoint_rejects_invalid_key(self, client, monkeypatch):
         # Temporarily set an API key on the global config used by the middleware
-        from lumena.api import server as server_mod
+        from lummenna.api import server as server_mod
 
         original_key = server_mod._config.api_key
         server_mod._config.api_key = "supersecrettestkey"
@@ -89,7 +89,7 @@ class TestAuthMiddleware:
             server_mod._config.api_key = original_key
 
     def test_protected_endpoint_accepts_valid_key(self, client, monkeypatch):
-        from lumena.api import server as server_mod
+        from lummenna.api import server as server_mod
 
         original_key = server_mod._config.api_key
         server_mod._config.api_key = "supersecrettestkey"
@@ -106,7 +106,7 @@ class TestAuthMiddleware:
 
 class TestRateLimiting:
     def test_rate_limit_middleware_present(self, client):
-        from lumena.api import server as server_mod
+        from lummenna.api import server as server_mod
 
         assert hasattr(server_mod.app.state, "limiter")
         assert server_mod.app.state.limiter is not None
@@ -130,21 +130,21 @@ class TestRateLimiting:
         assert route.endpoint.__name__ == "search"
 
     def test_default_rate_limit_configured(self, client):
-        from lumena.api import server as server_mod
+        from lummenna.api import server as server_mod
 
         assert "minute" in server_mod._config.api_rate_limit
 
 
 class TestRequestSizeLimit:
     def test_request_too_large_rejected(self, client, monkeypatch):
-        from lumena.api import server as server_mod
+        from lummenna.api import server as server_mod
 
         original_size = server_mod._config.request_max_size_bytes
         server_mod._config.request_max_size_bytes = 100
         # Re-initialise size limit middleware with new config (FastAPI applies middleware on add)
         # Since we can't easily swap middleware at runtime, we test via direct assertion
         # that the middleware class checks the header correctly.
-        from lumena.api.server import _SizeLimitMiddleware
+        from lummenna.api.server import _SizeLimitMiddleware
 
         scope = {
             "type": "http",

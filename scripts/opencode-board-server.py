@@ -140,7 +140,7 @@ _HTML = """<!DOCTYPE html>
       const loci = palace.loci ?? sys.loci ?? '\u2014';
       const chunks = palace.active_chunks ?? sys.active_chunks ?? '\u2014';
       const retention = (palace.retention_rate_pct ?? sys.retention_rate_pct ?? '\u2014');
-      const embedder = sys.embedding_model ?? p(data, 'lumena.embedding_model', '\u2014');
+      const embedder = sys.embedding_model ?? p(data, 'lummenna.embedding_model', '\u2014');
       const embedReady = sys.embedding_model_available ?? false;
 
       let forgetHtml = '';
@@ -271,7 +271,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": str(e)}).encode())
 
     def log_message(self, format, *args):
-        pass  # Keep output clean
+        pass  # noqa: guardrail — no-op override to silence BaseHTTPRequestHandler access logging
 
 
 def main():

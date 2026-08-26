@@ -16,15 +16,15 @@ import json
 
 import pytest
 
-from lumena import licensing
-from lumena.audit import (
+from lummenna import licensing
+from lummenna.audit import (
     GENESIS_PREV_HASH,
     compute_entry_hash,
     log_audit_event,
     verify_audit_chain,
 )
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
 
 
 def _write(conn, i: int) -> None:
@@ -194,8 +194,8 @@ def pro_env(monkeypatch):
 
 
 def test_safety_forget_is_atomic_and_clears_hash(tmp_path, pro_env):
-    from lumena.compliance.safety_forgetting import safety_forget_chunk
-    from lumena.force.mnemonic.store import store_memory
+    from lummenna.compliance.safety_forgetting import safety_forget_chunk
+    from lummenna.force.mnemonic.store import store_memory
 
     cfg = LumenaConfig(store_path=str(tmp_path / ".lumena"), license_key=pro_env)
     conn = get_connection(cfg)

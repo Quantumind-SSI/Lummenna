@@ -1,10 +1,10 @@
-"""Tests for lumena.observability, /ready, /metrics/prometheus, telemetry gating."""
+"""Tests for lummenna.observability, /ready, /metrics/prometheus, telemetry gating."""
 
 import threading
 
 import pytest
 
-from lumena.observability import MetricsRegistry, normalize_route
+from lummenna.observability import MetricsRegistry, normalize_route
 
 
 class TestMetricsRegistry:
@@ -73,12 +73,12 @@ class TestServerEndpoints:
     def client(self, tmp_path):
         from fastapi.testclient import TestClient
 
-        from lumena.api import server as server_mod
-        from lumena.config import LumenaConfig
-        from lumena.conversation import ConversationMemory
-        from lumena.data.schema import get_connection, init_db
-        from lumena.force.contextual.embed import MockEmbedder
-        from lumena.search import SearchPipeline
+        from lummenna.api import server as server_mod
+        from lummenna.config import LumenaConfig
+        from lummenna.conversation import ConversationMemory
+        from lummenna.data.schema import get_connection, init_db
+        from lummenna.force.contextual.embed import MockEmbedder
+        from lummenna.search import SearchPipeline
 
         store = tmp_path / "store"
         store.mkdir()
@@ -150,8 +150,8 @@ class TestServerEndpoints:
 
 class TestTelemetryGating:
     def test_not_configured_returns_false(self, monkeypatch, tmp_path):
-        from lumena.config import LumenaConfig
-        from lumena.telemetry import configure_azure_monitor_if_enabled
+        from lummenna.config import LumenaConfig
+        from lummenna.telemetry import configure_azure_monitor_if_enabled
 
         monkeypatch.delenv("APPLICATIONINSIGHTS_CONNECTION_STRING", raising=False)
         config = LumenaConfig(store_path=tmp_path / "s", sovereign=True)
@@ -159,9 +159,9 @@ class TestTelemetryGating:
 
     def test_sovereign_mode_blocks_export(self, monkeypatch, tmp_path):
         """Telemetry export while sovereign must raise, never silently leak."""
-        from lumena.brand.errors import SovereignViolationError
-        from lumena.config import LumenaConfig
-        from lumena.telemetry import configure_azure_monitor_if_enabled
+        from lummenna.brand.errors import SovereignViolationError
+        from lummenna.config import LumenaConfig
+        from lummenna.telemetry import configure_azure_monitor_if_enabled
 
         monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000")
         config = LumenaConfig(store_path=tmp_path / "s", sovereign=True)
@@ -172,8 +172,8 @@ class TestTelemetryGating:
         """Configured telemetry with missing package must abort startup."""
         import builtins
 
-        from lumena.config import LumenaConfig
-        from lumena.telemetry import configure_azure_monitor_if_enabled
+        from lummenna.config import LumenaConfig
+        from lummenna.telemetry import configure_azure_monitor_if_enabled
 
         monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000")
         config = LumenaConfig(store_path=tmp_path / "s", sovereign=False)
@@ -186,15 +186,15 @@ class TestTelemetryGating:
             return real_import(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", fake_import)
-        with pytest.raises(RuntimeError, match="lumena\\[azure\\]"):
+        with pytest.raises(RuntimeError, match="lummenna\\[azure\\]"):
             configure_azure_monitor_if_enabled(config)
 
 
 class TestBusyTimeout:
     def test_busy_timeout_pragma_set(self, tmp_path):
         """Every connection must carry a busy_timeout against writer contention."""
-        from lumena.config import LumenaConfig
-        from lumena.data.schema import get_connection
+        from lummenna.config import LumenaConfig
+        from lummenna.data.schema import get_connection
 
         config = LumenaConfig(store_path=tmp_path / "store", vector_index="sqlite-vec")
         conn = get_connection(config)
@@ -208,7 +208,7 @@ class TestBusyTimeout:
 class TestAuthFailureBound:
     def test_auth_failures_dict_is_bounded(self):
         """Scanning floods must not grow the tracker without bound."""
-        from lumena.api import server as server_mod
+        from lummenna.api import server as server_mod
 
         server_mod._auth_failures.clear()
         for i in range(server_mod._AUTH_FAILURES_MAX + 500):

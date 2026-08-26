@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "lumena"
+name = "lummenna"
 version = "1.0.0"
 description = "Twin-force memory and context framework for sovereign AI agents"
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-urls = { Repository = "https://github.com/QuantumindSSI/lumena" }
+urls = { Repository = "https://github.com/QuantmindSSI/lummenna" }
 dependencies = [
     # Force A: Mnemonic
     "sqlite-vec>=0.1.0",
@@ -82,12 +82,12 @@ mcp = [
     "mcp>=1.0,<3.0",
 ]
 # Heavy ONNX EXPORT toolchain (optimum pulls torch/CUDA, ~2GB). Only needed to
-# run `lumena model download/export`. Consumers who use a prebuilt ONNX model
+# run `lummenna model download/export`. Consumers who use a prebuilt ONNX model
 # bundle never need this — keeping the base install lean (<300MB target).
 export = [
     "optimum[onnxruntime]>=1.17",
 ]
-# spaCy-powered onboarding wizard (`lumena illuminate`). Optional; the wizard
+# spaCy-powered onboarding wizard (`lummenna illuminate`). Optional; the wizard
 # degrades gracefully when spaCy is absent.
 wizard = [
     "spacy>=3.7",
@@ -99,7 +99,7 @@ localllm = [
 # Convenience: the full local-first stack (export toolchain + wizard + local LLM
 # + MCP). Equivalent to the previous fat default install.
 full = [
-    "lumena[mcp,export,wizard,localllm]",
+    "lummenna[mcp,export,wizard,localllm]",
 ]
 azure = [
     "azure-monitor-opentelemetry>=1.6",
@@ -115,7 +115,7 @@ benchmarks = [
 ]
 
 [project.scripts]
-lumena = "lumena.cli.main:app"
+lummenna = "lummenna.cli.main:app"
 
 [tool.ruff]
 target-version = "py310"
@@ -149,7 +149,7 @@ testpaths = ["tests"]
 addopts = "-q --tb=short"
 
 [tool.coverage.paths]
-source = ["lumena"]
+source = ["lummenna"]
 
 [tool.coverage.report]
 fail_under = 50

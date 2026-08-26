@@ -2,10 +2,10 @@ import sqlite3
 
 import pytest
 
-from lumena._init import initialize_palace
-from lumena.config import LumenaConfig
-from lumena.conversation import ConversationMemory
-from lumena.search import SearchPipeline
+from lummenna._init import initialize_palace
+from lummenna.config import LumenaConfig
+from lummenna.conversation import ConversationMemory
+from lummenna.search import SearchPipeline
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def test_initialize_palace_raises_without_model_by_default(tmp_path):
     Regression test: initialize_palace used to silently substitute
     hash-based mock embeddings, making semantic search meaningless.
     """
-    from lumena.brand.errors import ModelNotAvailableError
+    from lummenna.brand.errors import ModelNotAvailableError
 
     config = LumenaConfig(
         device="generic",

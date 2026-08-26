@@ -106,8 +106,8 @@ Open a GitHub Discussion first for major features. For small enhancements, an is
 #### Development Setup
 
 ```bash
-git clone https://github.com/QuantumindSSI/lumena.git
-cd lumena
+git clone https://github.com/QuantmindSSI/lummenna.git
+cd lummenna
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -115,7 +115,7 @@ pip install -e ".[dev]"
 
 #### Code Standards
 
-- **Lint:** `ruff check lumena/` must pass
+- **Lint:** `ruff check lummenna/` must pass
 - **Tests:** `pytest tests/` must pass with >50% coverage (target: >70%)
 - **Types:** Add type hints for new public APIs
 - **Docstrings:** Google-style for all public modules/classes/functions
@@ -148,7 +148,7 @@ refactor: simplify TFC state machine transitions
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes with tests
-4. Run `ruff check lumena/` and `pytest tests/`
+4. Run `ruff check lummenna/` and `pytest tests/`
 5. Update `CHANGELOG.md` under `[Unreleased]`
 6. Open a PR with a clear description and reference any related issues
 7. Address review feedback
@@ -170,9 +170,9 @@ Every change should respect the duality:
 
 Rooms are top-level categories in the palace. To add one:
 
-1. Define in `lumena/data/schema.sql` (if schema change needed)
-2. Add retrieval path in `lumena/force/mnemonic/retrieval_*.py`
-3. Register in `lumena/search.py` pipeline
+1. Define in `lummenna/data/schema.sql` (if schema change needed)
+2. Add retrieval path in `lummenna/force/mnemonic/retrieval_*.py`
+3. Register in `lummenna/search.py` pipeline
 4. Add test in `tests/test_retrieval_*.py`
 5. Document in `docs/palace.md`
 
@@ -180,8 +180,8 @@ Rooms are top-level categories in the palace. To add one:
 
 The forgetting stack is L1-L4. If you need L5:
 
-1. Create `lumena/force/mnemonic/forgetting_l5_*.py`
-2. Hook into `lumena/sleep.py` consolidation scheduler
+1. Create `lummenna/force/mnemonic/forgetting_l5_*.py`
+2. Hook into `lummenna/sleep.py` consolidation scheduler
 3. Add compliance audit logging
 4. Write test in `tests/test_forgetting_*.py`
 
@@ -210,7 +210,7 @@ When documenting:
 ```python
 def test_consolidation_creates_summary_chunk(db_conn, mock_embedder):
     """Consolidation should produce a summary chunk with V(m) > 0.5."""
-    from lumena.force.mnemonic.consolidation import consolidate_room
+    from lummenna.force.mnemonic.consolidation import consolidate_room
 
     result = consolidate_room(db_conn, room_name="test_room")
     assert result > 0
@@ -246,9 +246,9 @@ Contributors are recognized as **Luminary** members. Significant contributions r
 
 ## Questions?
 
-- GitHub Discussions: https://github.com/QuantumindSSI/lumena/discussions
-- Matrix: #lumena:matrix.org
-- Security: security@lumena.ai
+- GitHub Discussions: https://github.com/QuantmindSSI/lummenna/discussions
+- Matrix: #lummenna:matrix.org
+- Security: security@lummenna.ai
 
 ---
 

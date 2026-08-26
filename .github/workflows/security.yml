@@ -78,7 +78,7 @@ jobs:
       # transformers 4.57.x — PYSEC-2025-217, PYSEC-2026-2288, PYSEC-2026-2289,
       #   PYSEC-2026-2290: all require loading untrusted checkpoints/configs
       #   from the Hub. Lumena only loads models pinned to immutable commit
-      #   SHAs (see lumena/cli/models.py KNOWN_MODELS) or local directories it
+      #   SHAs (see lummenna/cli/models.py KNOWN_MODELS) or local directories it
       #   exported itself, behind a sovereign-mode network block by default.
       #   Upgrading to the fixed 5.x line is blocked: optimum-onnx (latest
       #   0.1.0) requires transformers<4.58, and it provides the ONNX export
@@ -124,17 +124,17 @@ jobs:
         run: python -m pip install bandit[toml]
 
       - name: Run bandit
-        run: bandit -r lumena/ -f json -o bandit-report.json -ll || true
+        run: bandit -r lummenna/ -f json -o bandit-report.json -ll || true
 
       - name: Bandit summary
-        run: bandit -r lumena/ -ll
+        run: bandit -r lummenna/ -ll
 
       - name: Upload bandit results
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-report
-          path: lumena/bandit-report.json
+          path: lummenna/bandit-report.json
           retention-days: 30
 
   license-check:
@@ -167,5 +167,5 @@ jobs:
         if: always()
         with:
           name: license-report
-          path: lumena/licenses.json
+          path: lummenna/licenses.json
           retention-days: 30

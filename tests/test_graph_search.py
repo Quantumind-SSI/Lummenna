@@ -4,11 +4,11 @@ import hashlib
 
 import numpy as np
 
-from lumena.force.mnemonic.retrieval_dense import DenseHit
-from lumena.force.mnemonic.retrieval_graph import GraphChannel, GraphHit
-from lumena.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
-from lumena.fusion import fuse_and_rerank
-from lumena.search import SearchPipeline
+from lummenna.force.mnemonic.retrieval_dense import DenseHit
+from lummenna.force.mnemonic.retrieval_graph import GraphChannel, GraphHit
+from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
+from lummenna.fusion import fuse_and_rerank
+from lummenna.search import SearchPipeline
 
 
 def _setup_db(conn):
@@ -104,11 +104,11 @@ def test_search_pipeline_with_graph_boosts_results(
     _setup_db(memory_db)
 
     monkeypatch.setattr(
-        "lumena.search.LexicalChannel.search",
+        "lummenna.search.LexicalChannel.search",
         lambda self, query, k=20: [LexicalHit(chunk_id=1, rank=1.0, match_info=b"")],
     )
     monkeypatch.setattr(
-        "lumena.search.VectorChannel.search",
+        "lummenna.search.VectorChannel.search",
         lambda self, vec, k=20: [DenseHit(chunk_id=1, score=1.0, vector=np.array([]))],
     )
 

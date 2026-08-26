@@ -2,11 +2,11 @@
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection, init_db
-from lumena.force.contextual.embed import MockEmbedder
-from lumena.force.mnemonic.store import store_memory
-from lumena.search import SearchPipeline
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection, init_db
+from lummenna.force.contextual.embed import MockEmbedder
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.search import SearchPipeline
 
 
 @pytest.fixture
@@ -87,8 +87,8 @@ def test_fernet_mode_without_key_raises(tmp_path):
     """mode='fernet' with no key must fail loudly, never silently store plaintext."""
     import pytest
 
-    from lumena.config import LumenaConfig
-    from lumena.data.schema import get_encryption
+    from lummenna.config import LumenaConfig
+    from lummenna.data.schema import get_encryption
 
     config = LumenaConfig(
         store_path=tmp_path / "store",

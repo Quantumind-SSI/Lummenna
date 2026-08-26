@@ -1,8 +1,8 @@
 services:
-  lumena:
+  lummenna:
     build: .
-    image: lumena:latest
-    container_name: lumena-api
+    image: lummenna:latest
+    container_name: lummenna-api
     restart: unless-stopped
     ports:
       - "${LUMENA_API_PORT:-8848}:8848"

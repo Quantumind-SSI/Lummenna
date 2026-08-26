@@ -43,10 +43,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.store import store_memory
-from lumena.search import SearchPipeline
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.search import SearchPipeline
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -102,7 +102,7 @@ def _get_embedder():
         errors.append(f"sentence-transformers: {exc}")
 
     try:
-        from lumena.force.contextual.embed import LocalEmbedder
+        from lummenna.force.contextual.embed import LocalEmbedder
 
         config = LumenaConfig()
         model_dir = config.model_path / "all-MiniLM-L6-v2"
@@ -118,7 +118,7 @@ def _get_embedder():
     raise RuntimeError(
         "No real embedder available. Refusing to run the E2E benchmark with "
         "mock embeddings (the results would be meaningless). Install "
-        "sentence-transformers or run 'lumena model download all-MiniLM-L6-v2'. "
+        "sentence-transformers or run 'lummenna model download all-MiniLM-L6-v2'. "
         f"Errors: {'; '.join(errors)}"
     )
 

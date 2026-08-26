@@ -8,9 +8,9 @@ import sys
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import init_db
-from lumena.p2p.beam import BeamNode, decode_frame, encode_frame
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import init_db
+from lummenna.p2p.beam import BeamNode, decode_frame, encode_frame
 
 
 @pytest.fixture
@@ -99,7 +99,7 @@ def test_share_room_packet(memory_db, beam_config, monkeypatch):
         "INSERT INTO chunk(locus_id, room_id, content, content_hash, vm_score) "
         "VALUES (NULL, 1, 'shared memory', 'hash123', 0.7)"
     )
-    monkeypatch.setattr("lumena.p2p.beam.get_connection", lambda cfg: memory_db)
+    monkeypatch.setattr("lummenna.p2p.beam.get_connection", lambda cfg: memory_db)
 
     node = BeamNode(beam_config)
     node.peers = {"peer1": ("192.168.1.2", 8847)}
@@ -142,7 +142,9 @@ class _NoCloseConnection:
 
 
 def test_receive_stores_memory(memory_db, beam_config, monkeypatch):
-    monkeypatch.setattr("lumena.p2p.beam.get_connection", lambda cfg: _NoCloseConnection(memory_db))
+    monkeypatch.setattr(
+        "lummenna.p2p.beam.get_connection", lambda cfg: _NoCloseConnection(memory_db)
+    )
 
     node = BeamNode(beam_config)
 
@@ -199,15 +201,15 @@ def test_zeroconf_missing():
         if key.startswith("zeroconf"):
             real_modules[key] = sys.modules.pop(key)
 
-    if "lumena.p2p.beam" in sys.modules:
-        del sys.modules["lumena.p2p.beam"]
+    if "lummenna.p2p.beam" in sys.modules:
+        del sys.modules["lummenna.p2p.beam"]
 
     broken = type(sys)("zeroconf")
     sys.modules["zeroconf"] = broken
 
     try:
-        import lumena.p2p.beam as beam_module
-        from lumena.config import LumenaConfig
+        import lummenna.p2p.beam as beam_module
+        from lummenna.config import LumenaConfig
 
         _ = beam_module.BeamNode(LumenaConfig())
         pytest.fail("Expected RuntimeError on missing zeroconf")
@@ -221,8 +223,8 @@ def test_zeroconf_missing():
             sys.modules[key] = mod
         # The beam module imported above cached the broken zeroconf state;
         # evict it so later tests re-import a healthy module.
-        if "lumena.p2p.beam" in sys.modules:
-            del sys.modules["lumena.p2p.beam"]
+        if "lummenna.p2p.beam" in sys.modules:
+            del sys.modules["lummenna.p2p.beam"]
 
 
 def test_ttl_valid_packet_is_stored(memory_db, beam_config, monkeypatch):
@@ -234,8 +236,8 @@ def test_ttl_valid_packet_is_stored(memory_db, beam_config, monkeypatch):
     from datetime import datetime, timezone
 
     # Resolve the CURRENT module object (test_zeroconf_missing reloads
-    # lumena.p2p.beam, so the top-level BeamNode import may be stale).
-    import lumena.p2p.beam as beam_mod
+    # lummenna.p2p.beam, so the top-level BeamNode import may be stale).
+    import lummenna.p2p.beam as beam_mod
 
     monkeypatch.setattr(beam_mod, "get_connection", lambda cfg: _NoCloseConnection(memory_db))
     node = beam_mod.BeamNode(beam_config)
@@ -265,7 +267,7 @@ def test_ttl_expired_packet_is_dropped(memory_db, beam_config, monkeypatch):
     """A packet older than its TTL must be rejected."""
     from datetime import datetime, timedelta, timezone
 
-    import lumena.p2p.beam as beam_mod
+    import lummenna.p2p.beam as beam_mod
 
     monkeypatch.setattr(beam_mod, "get_connection", lambda cfg: _NoCloseConnection(memory_db))
     node = beam_mod.BeamNode(beam_config)

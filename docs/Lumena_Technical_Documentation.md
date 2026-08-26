@@ -32,7 +32,7 @@ Lumena is a local-first, self-contained memory and context framework for AI agen
 ### Not Yet Implemented
 
 - Transport encryption for P2P beam
-- `lumena.api.backup` CLI command
+- `lummenna.api.backup` CLI command
 - Per-user adaptive decay (schema column exists, not wired)
 
 ---
@@ -56,29 +56,29 @@ User Input → IntentRouter → Parallel Retrieval (BM25 + Dense + Graph)
 
 | Layer | Module | Purpose |
 |---|---|---|
-| Storage | `lumena/data/schema.py` | SQLite schema, connection management, permissions |
-| Retrieval | `lumena/search.py` | Orchestrates BM25, dense, graph channels |
-| Retrieval | `lumena/force/mnemonic/retrieval_lexical.py` | FTS5 full-text search |
-| Retrieval | `lumena/force/mnemonic/retrieval_dense.py` | Vector similarity with sqlite-vec or usearch |
-| Retrieval | `lumena/force/mnemonic/retrieval_graph.py` | NetworkX-based graph traversal |
-| Fusion | `lumena/fusion.py` | RRF fusion with V(m), FRQAD/cosine, recency boost |
-| Memory | `lumena/force/mnemonic/store.py` | Chunk insertion with PII scanning, dedup, provenance |
-| Memory | `lumena/force/mnemonic/consolidation.py` | Background consolidation with dedup merging |
-| Forgetting | `lumena/force/mnemonic/forgetting_l1_decay.py` | Ebbinghaus exponential decay |
-| Forgetting | `lumena/force/mnemonic/forgetting_l2_interference.py` | Similarity-based interference weakening |
-| Forgetting | `lumena/force/mnemonic/forgetting_l3_budget.py` | Budget-curated eviction |
-| Context | `lumena/force/contextual/assembly.py` | Context assembly with token budget |
-| Context | `lumena/force/contextual/embed.py` | ONNX embedding with real/mock fallback |
-| Context | `lumena/force/contextual/token_budget.py` | Token counting |
-| Controller | `lumena/controller.py` | Twin-Force Controller (mnemonic bias α / attention temperature τ) |
-| Repair | `lumena/repair.py` | Self-healing retrieval with TFC-driven re-query |
-| Compliance | `lumena/compliance/safety_forgetting.py` | PII detection, safety-triggered deletion |
-| Audit | `lumena/audit.py` | SQLite audit event logging |
-| Scheduler | `lumena/sleep.py` | Background consolidation, decay, eviction, curiosity |
-| P2P | `lumena/p2p/beam.py` | LAN-scoped plaintext memory sharing |
-| API | `lumena/api/server.py` | FastAPI REST API with auth, rate limiting |
-| CLI | `lumena/cli/main.py` | Typer CLI for init, store, retrieve, status, daemon |
-| Integrations | `lumena/integrations/` | MCP server, LangChain, LangGraph adapters |
+| Storage | `lummenna/data/schema.py` | SQLite schema, connection management, permissions |
+| Retrieval | `lummenna/search.py` | Orchestrates BM25, dense, graph channels |
+| Retrieval | `lummenna/force/mnemonic/retrieval_lexical.py` | FTS5 full-text search |
+| Retrieval | `lummenna/force/mnemonic/retrieval_dense.py` | Vector similarity with sqlite-vec or usearch |
+| Retrieval | `lummenna/force/mnemonic/retrieval_graph.py` | NetworkX-based graph traversal |
+| Fusion | `lummenna/fusion.py` | RRF fusion with V(m), FRQAD/cosine, recency boost |
+| Memory | `lummenna/force/mnemonic/store.py` | Chunk insertion with PII scanning, dedup, provenance |
+| Memory | `lummenna/force/mnemonic/consolidation.py` | Background consolidation with dedup merging |
+| Forgetting | `lummenna/force/mnemonic/forgetting_l1_decay.py` | Ebbinghaus exponential decay |
+| Forgetting | `lummenna/force/mnemonic/forgetting_l2_interference.py` | Similarity-based interference weakening |
+| Forgetting | `lummenna/force/mnemonic/forgetting_l3_budget.py` | Budget-curated eviction |
+| Context | `lummenna/force/contextual/assembly.py` | Context assembly with token budget |
+| Context | `lummenna/force/contextual/embed.py` | ONNX embedding with real/mock fallback |
+| Context | `lummenna/force/contextual/token_budget.py` | Token counting |
+| Controller | `lummenna/controller.py` | Twin-Force Controller (mnemonic bias α / attention temperature τ) |
+| Repair | `lummenna/repair.py` | Self-healing retrieval with TFC-driven re-query |
+| Compliance | `lummenna/compliance/safety_forgetting.py` | PII detection, safety-triggered deletion |
+| Audit | `lummenna/audit.py` | SQLite audit event logging |
+| Scheduler | `lummenna/sleep.py` | Background consolidation, decay, eviction, curiosity |
+| P2P | `lummenna/p2p/beam.py` | LAN-scoped plaintext memory sharing |
+| API | `lummenna/api/server.py` | FastAPI REST API with auth, rate limiting |
+| CLI | `lummenna/cli/main.py` | Typer CLI for init, store, retrieve, status, daemon |
+| Integrations | `lummenna/integrations/` | MCP server, LangChain, LangGraph adapters |
 
 ---
 
@@ -158,7 +158,7 @@ When retrieval yields no results, the repair module:
 - Batched writes via `WearAwareBatcher` for SD/eMMC endurance
 
 ### L4: Safety Forgetting (Manual)
-- Triggered via API endpoint or `lumena compliance audit`
+- Triggered via API endpoint or `lummenna compliance audit`
 - Permanently deletes chunks with provenance-chain clearance
 - Writes audit events before mutation
 
@@ -215,33 +215,33 @@ When `LUMENA_API_KEY` is set, all endpoints require `X-API-Key` header. Comparis
 ## 8. CLI Reference
 
 ```bash
-lumena init [--device generic|rpi5|jetson-orin|orange-pi] [--download-model]
-lumena serve [--host 0.0.0.0] [--port 8848]
-lumena status
+lummenna init [--device generic|rpi5|jetson-orin|orange-pi] [--download-model]
+lummenna serve [--host 0.0.0.0] [--port 8848]
+lummenna status
 
 # Memory operations
-lumena memory store "content text" --room decisions [--locus topic]
-lumena memory retrieve "search query" [--top-k 5]
+lummenna memory store "content text" --room decisions [--locus topic]
+lummenna memory retrieve "search query" [--top-k 5]
 
 # Palace operations
-lumena palace rooms
-lumena palace stats [--room name]
+lummenna palace rooms
+lummenna palace stats [--room name]
 
 # Compliance
-lumena compliance audit [--n 10]
+lummenna compliance audit [--n 10]
 
 # Daemon (background scheduler)
-lumena daemon start
-lumena daemon status
-lumena daemon run-once
+lummenna daemon start
+lummenna daemon status
+lummenna daemon run-once
 
 # P2P sharing (requires LUMENA_SOVEREIGN=false)
-lumena p2p share --room name [--ttl 24]
+lummenna p2p share --room name [--ttl 24]
 
 # Model management
-lumena model list
-lumena model download bge-small-en-v1.5
-lumena model export bge-small-en-v1.5
+lummenna model list
+lummenna model download bge-small-en-v1.5
+lummenna model export bge-small-en-v1.5
 ```
 
 ---
@@ -251,7 +251,7 @@ lumena model export bge-small-en-v1.5
 ### MCP Server
 
 ```bash
-python -m lumena.integrations.mcp_server
+python -m lummenna.integrations.mcp_server
 ```
 
 Exposes 7 tools via stdio: `lumena_search`, `lumena_store`, `lumena_assemble`, `lumena_turn`, `lumena_feedback`, `lumena_status`, `lumena_dashboard`.
@@ -259,15 +259,15 @@ Exposes 7 tools via stdio: `lumena_search`, `lumena_store`, `lumena_assemble`, `
 ### LangChain
 
 ```python
-from lumena.integrations.langchain import LumenaChatMemory
-# Requires: pip install "lumena[langchain]"
+from lummenna.integrations.langchain import LumenaChatMemory
+# Requires: pip install "lummenna[langchain]"
 ```
 
 ### LangGraph
 
 ```python
-from lumena.integrations.langgraph import LumenaCheckpointSaver
-# Requires: pip install "lumena[langgraph]"
+from lummenna.integrations.langgraph import LumenaCheckpointSaver
+# Requires: pip install "lummenna[langgraph]"
 ```
 
 ---
@@ -291,7 +291,7 @@ Eleven benchmark suites in `benchmarks/`. All run from the repo root and refuse 
 | Cross-system (vs Chroma/FAISS) | Harness ready; no results yet | `python -m benchmarks.cross_system.run` |
 | All suites | Wrapper (all 11) | `python -m benchmarks.run_all` |
 
-Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are explicitly loaded. Install benchmark dependencies with `pip install "lumena[benchmarks]"`.
+Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are explicitly loaded. Install benchmark dependencies with `pip install "lummenna[benchmarks]"`.
 
 ---
 
@@ -305,7 +305,7 @@ Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are expli
 - **API auth:** Optional `X-API-Key` header with constant-time comparison (off until `LUMENA_API_KEY` is set)
 - **Encryption-at-rest (opt-in):** SQLCipher full-DB or Fernet field-level via `LUMENA_DATABASE_ENCRYPTION_MODE`; default `none` — use OS-level disk encryption if not enabled
 
-Report vulnerabilities via [GitHub Security Advisories](https://github.com/QuantumindSSI/lumena/security/advisories/new).
+Report vulnerabilities via [GitHub Security Advisories](https://github.com/QuantmindSSI/lummenna/security/advisories/new).
 
 ---
 
@@ -315,14 +315,14 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN (replay-nonce cache is in-memory only)
 3. **Benchmark results are subset-scale** — synthetic retrieval corpus is deliberately easy; BEIR results cover 500-doc/20-query subsets; perf and stress now have committed results (x86_64 VM), while cross-system has no committed results. Full-corpus BEIR leaderboard submission remains pending.
 4. **`vector_mean` / `last_entry_at` / `locus_count` unpopulated** — these schema columns are reserved but no code path writes them yet (loci have no maintained centroid). `learn_weights_from_feedback` (V(m) weight learning) and `backup_database` ARE wired — invoked from `conversation.py`/`langchain.py` and the sleep scheduler respectively.
-5. **Dual scheduler risk** — running both `lumena serve` and `lumena daemon start` creates duplicate schedulers
+5. **Dual scheduler risk** — running both `lummenna serve` and `lummenna daemon start` creates duplicate schedulers
 
 ---
 
 ## 13. Project Structure
 
 ```
-lumena/
+lummenna/
 ├── config.py              # Pydantic-settings configuration
 ├── controller.py          # Twin-Force state controller
 ├── search.py              # Search pipeline orchestration

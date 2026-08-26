@@ -1,4 +1,4 @@
-from lumena.force.mnemonic.value_model import (
+from lummenna.force.mnemonic.value_model import (
     DEFAULT_WEIGHTS,
     FACTOR_KEYS,
     compute_vm,
@@ -78,7 +78,7 @@ def test_extract_factors_no_goals_defaults():
 def test_learn_weights_from_feedback_insufficient_data():
     import sqlite3
 
-    from lumena.data.schema import init_db
+    from lummenna.data.schema import init_db
 
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row

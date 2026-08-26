@@ -24,10 +24,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.retrieval_dense import VectorChannel
-from lumena.force.mnemonic.store import store_memory
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.retrieval_dense import VectorChannel
+from lummenna.force.mnemonic.store import store_memory
 
 SEEDS = [42, 123]
 CORPUS_SIZES = [1_000, 5_000, 10_000]
@@ -270,7 +270,7 @@ def run():
             print(f"  Seed {seed}: {len(docs)} docs, {len(queries)} queries")
 
             for name, fn in [
-                ("lumena", _bench_lumena),
+                ("lummenna", _bench_lumena),
                 ("chroma", _bench_chroma),
                 ("faiss", _bench_faiss),
             ]:

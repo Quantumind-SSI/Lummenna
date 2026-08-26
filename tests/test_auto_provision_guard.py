@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from lumena.brand.errors import ModelNotAvailableError
-from lumena.config import LumenaConfig
-from lumena.force.contextual.embed import MockEmbedder
+from lummenna.brand.errors import ModelNotAvailableError
+from lummenna.config import LumenaConfig
+from lummenna.force.contextual.embed import MockEmbedder
 
 
 def _config(tmp_path, **overrides):
@@ -20,7 +20,7 @@ def _config(tmp_path, **overrides):
 def test_guard_disabled_by_default_raises(tmp_path, monkeypatch):
     """Without auto_provision_model, a missing model still fails loudly."""
     monkeypatch.delenv("LUMENA_ALLOW_MOCK_EMBEDDER", raising=False)
-    from lumena import _init
+    from lummenna import _init
 
     cfg = _config(tmp_path, auto_provision_model=False, allow_mock_embedder=False)
     with pytest.raises(ModelNotAvailableError):
@@ -29,7 +29,7 @@ def test_guard_disabled_by_default_raises(tmp_path, monkeypatch):
 
 def test_guard_provisions_then_loads(tmp_path, monkeypatch):
     """When opted in, the guard calls provision then loads the (now present) model."""
-    from lumena import _init
+    from lummenna import _init
 
     calls = {"provision": 0, "embed": 0}
 
@@ -52,7 +52,7 @@ def test_guard_provisions_then_loads(tmp_path, monkeypatch):
         calls["embed"] += 1
         return MockEmbedder(dims=config.embedding_dims)
 
-    monkeypatch.setattr("lumena.cli.models.provision_embedding_model", fake_provision)
+    monkeypatch.setattr("lummenna.cli.models.provision_embedding_model", fake_provision)
     monkeypatch.setattr(_init, "get_embedder", fake_get_embedder)
 
     cfg = _config(tmp_path, auto_provision_model=True, allow_mock_embedder=False)
@@ -68,7 +68,7 @@ def test_guard_provisions_then_loads(tmp_path, monkeypatch):
 
 def test_guard_falls_back_when_provision_fails(tmp_path, monkeypatch):
     """If provisioning fails, the guard falls through to the normal error path."""
-    from lumena import _init
+    from lummenna import _init
 
     def fake_provision(model_name, dest, config=None):
         raise RuntimeError("no network")
@@ -76,7 +76,7 @@ def test_guard_falls_back_when_provision_fails(tmp_path, monkeypatch):
     def always_missing(config, allow_mock=False):
         raise ModelNotAvailableError("missing model")
 
-    monkeypatch.setattr("lumena.cli.models.provision_embedding_model", fake_provision)
+    monkeypatch.setattr("lummenna.cli.models.provision_embedding_model", fake_provision)
     monkeypatch.setattr(_init, "get_embedder", always_missing)
 
     cfg = _config(tmp_path, auto_provision_model=True, allow_mock_embedder=False)

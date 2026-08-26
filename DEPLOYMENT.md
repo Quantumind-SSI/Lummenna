@@ -46,15 +46,15 @@ sudo systemctl disable dphys-swapfile
 
 ```bash
 # Create a dedicated virtual environment
-python3 -m venv ~/.venvs/lumena
-source ~/.venvs/lumena/bin/activate
+python3 -m venv ~/.venvs/lummenna
+source ~/.venvs/lummenna/bin/activate
 
 # Install Lumena from PyPI (when published)
-pip install lumena
+pip install lummenna
 
 # Or install from source
-git clone https://github.com/QuantumindSSI/lumena.git
-cd lumena
+git clone https://github.com/QuantmindSSI/lummenna.git
+cd lummenna
 pip install -e ".[dev]"
 ```
 
@@ -62,7 +62,7 @@ pip install -e ".[dev]"
 
 ```bash
 # For Raspberry Pi 5 (low-RAM, flash-wear conscious)
-pip install lumena \
+pip install lummenna \
   --no-binary :all: \
   --prefer-binary onnxruntime
 
@@ -77,17 +77,17 @@ pip install llama-cpp-python
 
 ```bash
 # Build
-docker build -t lumena:latest .
+docker build -t lummenna:latest .
 
 # Run (production)
 docker run -d \
-  --name lumena \
+  --name lummenna \
   -p 8848:8848 \
   -v ~/.lumena:/root/.lumena \
   -e LUMENA_DEVICE=generic \
   -e LUMENA_LOG_LEVEL=info \
   --restart unless-stopped \
-  lumena:latest
+  lummenna:latest
 
 # Or use docker-compose
 docker compose up -d
@@ -97,7 +97,7 @@ docker compose up -d
 ```yaml
 version: "3.8"
 services:
-  lumena:
+  lummenna:
     build: .
     ports:
       - "8848:8848"
@@ -211,7 +211,7 @@ curl http://localhost:8848/metrics/prometheus
 ### 4.2 CLI Status
 
 ```bash
-lumena status
+lummenna status
 
 # Output:
 # Lumena Status
@@ -242,7 +242,7 @@ This is **sovereignty-gated and fail-loud**:
 - Set `APPLICATIONINSIGHTS_CONNECTION_STRING` (standard Azure convention).
 - Set `LUMENA_SOVEREIGN=false` — export while sovereign mode is on raises
   `SovereignViolationError` at startup instead of silently leaking traces.
-- Install the extra: `pip install "lumena[azure]"`. If the connection string
+- Install the extra: `pip install "lummenna[azure]"`. If the connection string
   is set but the package is missing, startup fails with an actionable error —
   Lumena never runs without telemetry the operator configured.
 
@@ -257,7 +257,7 @@ does not violate the sovereign boundary.
 
 ## 4b. Kubernetes / AKS Deployment
 
-A Helm chart ships at `charts/lumena/` and Azure IaC at `infra/azure/`
+A Helm chart ships at `charts/lummenna/` and Azure IaC at `infra/azure/`
 (Bicep: AKS + ACR + Log Analytics + Application Insights). Full walkthrough:
 `infra/azure/README.md`. CI/CD: `.github/workflows/docker-publish.yml`
 (image build/push + smoke test) and `.github/workflows/deploy-aks.yml`
@@ -274,12 +274,12 @@ A Helm chart ships at `charts/lumena/` and Azure IaC at `infra/azure/`
 
 ```bash
 # Quickstart (after infra/azure provisioning)
-kubectl create namespace lumena
-kubectl -n lumena create secret generic lumena-auth \
+kubectl create namespace lummenna
+kubectl -n lummenna create secret generic lummenna-auth \
   --from-literal=api-key="$(openssl rand -hex 32)"
-helm upgrade --install lumena charts/lumena -n lumena \
-  --set image.repository="$ACR/lumena" --set image.tag=1.0.0 \
-  --set auth.existingSecret=lumena-auth \
+helm upgrade --install lummenna charts/lummenna -n lummenna \
+  --set image.repository="$ACR/lummenna" --set image.tag=1.0.0 \
+  --set auth.existingSecret=lummenna-auth \
   --set model.url="https://<blob>/models/bge-small-en-v1.5-r5c38ec7.tar.gz" \
   --set model.sha256="<tarball sha256>"
 ```
@@ -288,7 +288,7 @@ helm upgrade --install lumena charts/lumena -n lumena \
 (`model.onnx` + tokenizer files) as a tar.gz, upload to versioned/immutable
 storage, pin `model.url` + `model.sha256` in values. Rolling a new model =
 new artifact + new pin + `helm upgrade`; rollback = re-pin the old artifact.
-The revision-pinned `lumena model download` CLI (KNOWN_MODELS with commit
+The revision-pinned `lummenna model download` CLI (KNOWN_MODELS with commit
 SHAs) covers non-Kubernetes hosts.
 
 **Backups on AKS:** snapshot the `store` PVC (Azure Disk snapshots) on a
@@ -358,7 +358,7 @@ chmod 600 ~/.lumena/store/lumena.db
 
 ### 5.4 Systemd Service (Linux)
 
-Create `/etc/systemd/system/lumena.service`:
+Create `/etc/systemd/system/lummenna.service`:
 
 ```ini
 [Unit]
@@ -367,15 +367,15 @@ After=network.target
 
 [Service]
 Type=simple
-User=lumena
-Group=lumena
-WorkingDirectory=/home/lumena
+User=lummenna
+Group=lummenna
+WorkingDirectory=/home/lummenna
 Environment="LUMENA_DEVICE=generic"
 Environment="LUMENA_LOG_LEVEL=info"
 Environment="LUMENA_SOVEREIGN=true"
 Environment="LUMENA_API_KEY=your-api-key-here"
-Environment="PATH=/home/lumena/.venvs/lumena/bin"
-ExecStart=/home/lumena/.venvs/lumena/bin/uvicorn lumena.api.server:app --host 0.0.0.0 --port 8848
+Environment="PATH=/home/lummenna/.venvs/lummenna/bin"
+ExecStart=/home/lummenna/.venvs/lummenna/bin/uvicorn lummenna.api.server:app --host 0.0.0.0 --port 8848
 Restart=always
 RestartSec=5
 MemoryMax=900M
@@ -383,18 +383,18 @@ CPUQuota=80%
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/home/lumena/.lumena
+ReadWritePaths=/home/lummenna/.lumena
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-sudo useradd -r -s /bin/false lumena
-sudo mkdir -p /home/lumena/.lumena
-sudo chown -R lumena:lumena /home/lumena/.lumena
+sudo useradd -r -s /bin/false lummenna
+sudo mkdir -p /home/lummenna/.lumena
+sudo chown -R lummenna:lummenna /home/lummenna/.lumena
 sudo systemctl daemon-reload
-sudo systemctl enable --now lumena
+sudo systemctl enable --now lummenna
 ```
 
 ### 5.5 Reverse Proxy (Nginx)
@@ -402,10 +402,10 @@ sudo systemctl enable --now lumena
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name lumena.local;
+    server_name lummenna.local;
 
-    ssl_certificate /etc/ssl/certs/lumena.crt;
-    ssl_certificate_key /etc/ssl/private/lumena.key;
+    ssl_certificate /etc/ssl/certs/lummenna.crt;
+    ssl_certificate_key /etc/ssl/private/lummenna.key;
 
     location / {
         proxy_pass http://127.0.0.1:8848;
@@ -441,9 +441,9 @@ server {
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/lumena-backup.sh
+# /usr/local/bin/lummenna-backup.sh
 
-BACKUP_DIR="/backup/lumena/$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="/backup/lummenna/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Checkpoint WAL before backup
@@ -460,7 +460,7 @@ tar czf "${BACKUP_DIR}.tar.gz" -C "$(dirname "$BACKUP_DIR")" "$(basename "$BACKU
 rm -rf "$BACKUP_DIR"
 
 # Retention: keep last 14 days
-find /backup/lumena -name "*.tar.gz" -mtime +14 -delete
+find /backup/lummenna -name "*.tar.gz" -mtime +14 -delete
 ```
 
 ---
@@ -503,21 +503,21 @@ Key metrics to alert on:
 
 ```bash
 # 1. Backup
-lumena-backup.sh
+lummenna-backup.sh
 
 # 2. Stop service
-sudo systemctl stop lumena
+sudo systemctl stop lummenna
 
 # 3. Upgrade
-source ~/.venvs/lumena/bin/activate
-pip install --upgrade lumena
+source ~/.venvs/lummenna/bin/activate
+pip install --upgrade lummenna
 
 # 4. Migrations run automatically on DB connect; nothing to do manually
 # 5. Restart
-sudo systemctl start lumena
+sudo systemctl start lummenna
 
 # 6. Verify
-lumena status
+lummenna status
 curl http://localhost:8848/health
 ```
 
@@ -525,11 +525,11 @@ curl http://localhost:8848/health
 
 ```bash
 # Restore from backup
-sudo systemctl stop lumena
+sudo systemctl stop lummenna
 sqlite3 ~/.lumena/store/lumena.db ".restore '${BACKUP_DIR}/lumena.db'"
 # Reinstall previous version
-pip install lumena==$PREVIOUS_VERSION
-sudo systemctl start lumena
+pip install lummenna==$PREVIOUS_VERSION
+sudo systemctl start lummenna
 ```
 
 ---
@@ -542,7 +542,7 @@ sudo systemctl start lumena
 |---|---|---|
 | `sqlite3.OperationalError: database is locked` | WAL checkpoint stuck | `PRAGMA wal_checkpoint(TRUNCATE);` |
 | High RAM usage | USearch index loaded into RAM | Switch to `vector_index = "sqlite-vec"` |
-| Slow retrieval | No FTS5 index | Ensure schema is initialized with `lumena init` |
+| Slow retrieval | No FTS5 index | Ensure schema is initialized with `lummenna init` |
 | `SovereignViolation` error | External API blocked | Set `LUMENA_SOVEREIGN=false` or use offline embedder |
 | SD card wear | Too many random writes | Enable WAL + `synchronous=NORMAL` |
 
@@ -550,13 +550,13 @@ sudo systemctl start lumena
 
 ```bash
 # Full system report
-lumena status
+lummenna status
 
 # Check database integrity
 sqlite3 ~/.lumena/store/lumena.db "PRAGMA integrity_check;"
 
 # View recent audit events (last N entries)
-lumena compliance audit --n 10
+lummenna compliance audit --n 10
 
 # Test retrieval latency via the API
 curl -X POST http://localhost:8848/v1/search \
@@ -568,11 +568,11 @@ curl -X POST http://localhost:8848/v1/search \
 
 ## 10. Support & Community
 
-- **Documentation:** https://github.com/QuantumindSSI/lumena/tree/main/docs
-- **Issues:** https://github.com/QuantumindSSI/lumena/issues
-- **Discussions:** https://github.com/QuantumindSSI/lumena/discussions
-- **Security:** security@lumena.ai
-- **Matrix:** #lumena:matrix.org
+- **Documentation:** https://github.com/QuantmindSSI/lummenna/tree/main/docs
+- **Issues:** https://github.com/QuantmindSSI/lummenna/issues
+- **Discussions:** https://github.com/QuantmindSSI/lummenna/discussions
+- **Security:** security@lummenna.ai
+- **Matrix:** #lummenna:matrix.org
 
 ---
 

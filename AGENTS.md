@@ -4,7 +4,7 @@ This file governs **every** contribution to Lumena made by an AI agent or a
 human. It is loaded automatically by coding agents at the start of each session.
 Its two supreme rules — **No Vaporware** and **No False Claims** — are not
 guidance; they are enforced in CI by the offline guardrail gate
-(`python -m lumena.dev`, see `lumena/dev/guardrails.py`) and are non-negotiable.
+(`python -m lummenna.dev`, see `lummenna/dev/guardrails.py`) and are non-negotiable.
 
 ---
 
@@ -57,7 +57,7 @@ stub or a "done" claim.
 
 - Future features live in `ROADMAP.md`, clearly marked as **not yet available**,
   each with concrete, enterprise-grade acceptance criteria.
-- Planned Pro features live in `PLANNED_PRO_FEATURES` in `lumena/licensing.py`,
+- Planned Pro features live in `PLANNED_PRO_FEATURES` in `lummenna/licensing.py`,
   **separate** from the enforceable `PRO_FEATURES` registry. Nothing in
   `PRO_FEATURES` may be undelivered; nothing in `PLANNED_PRO_FEATURES` may be
   advertised as currently available.
@@ -77,10 +77,10 @@ Run it locally before committing:
 
 ```bash
 # scan specific files
-python -m lumena.dev path/to/file.py
+python -m lummenna.dev path/to/file.py
 
 # scan everything changed vs main
-git diff --name-only origin/main...HEAD -- '*.py' | python -m lumena.dev --stdin
+git diff --name-only origin/main...HEAD -- '*.py' | python -m lummenna.dev --stdin
 ```
 
 A passing guardrail scan is **necessary but not sufficient**. Before delivering
@@ -92,7 +92,7 @@ and call resolves; and it solves the actual problem at the stated scale.
 
 A change is done only when **all** of the following hold:
 
-1. `python -m lumena.dev` passes on every changed `.py` file (no HIGH/BLOCKER).
+1. `python -m lummenna.dev` passes on every changed `.py` file (no HIGH/BLOCKER).
 2. `ruff check` and `mypy` are clean on changed files.
 3. Non-trivial code ships with tests covering happy path, boundaries, and error
    paths, and the suite is green.

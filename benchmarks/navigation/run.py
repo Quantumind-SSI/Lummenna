@@ -30,13 +30,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lumena.config import LumenaConfig
-from lumena.data.schema import get_connection
-from lumena.force.mnemonic.retrieval_dense import DenseHit, VectorChannel
-from lumena.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
-from lumena.force.mnemonic.store import store_memory
-from lumena.fusion import fuse_and_rerank
-from lumena.intent import IntentRouter
+from lummenna.config import LumenaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.retrieval_dense import DenseHit, VectorChannel
+from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel, LexicalHit
+from lummenna.force.mnemonic.store import store_memory
+from lummenna.fusion import fuse_and_rerank
+from lummenna.intent import IntentRouter
 
 # ---------------------------------------------------------------------------
 # Configuration

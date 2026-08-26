@@ -96,7 +96,7 @@ docs/internal/
 .opencode/
 ios/
 tmp/
-lumena/benchmarks/*/results/
+lummenna/benchmarks/*/results/
 
 # Local Lumena runtime store + provisioned models (per-machine, never committed)
 .lumena/

@@ -3,12 +3,12 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lumena.data.schema import init_db
-from lumena.force.mnemonic.forgetting_l2_interference import (
+from lummenna.data.schema import init_db
+from lummenna.force.mnemonic.forgetting_l2_interference import (
     INTERFERENCE_THRESHOLD,
     check_locus_interference,
 )
-from lumena.force.mnemonic.retrieval_dense import SqliteVecBackend
+from lummenna.force.mnemonic.retrieval_dense import SqliteVecBackend
 
 
 @pytest.fixture

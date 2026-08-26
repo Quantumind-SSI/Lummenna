@@ -1,11 +1,11 @@
-"""Tests for lumena.conversation."""
+"""Tests for lummenna.conversation."""
 
 import pytest
 
-from lumena.config import LumenaConfig
-from lumena.conversation import ConversationMemory, TurnResult
-from lumena.data.schema import get_connection
-from lumena.force.contextual.embed import MockEmbedder
+from lummenna.config import LumenaConfig
+from lummenna.conversation import ConversationMemory, TurnResult
+from lummenna.data.schema import get_connection
+from lummenna.force.contextual.embed import MockEmbedder
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ class TestConversationMemory:
         cm = ConversationMemory(config=fresh_config, conn=memory_db, embedder=embedder)
 
         # Seed a memory
-        from lumena.force.mnemonic.store import store_memory
+        from lummenna.force.mnemonic.store import store_memory
 
         emb = embedder.encode_single("seed memory")
         sid = store_memory(
@@ -63,7 +63,7 @@ class TestConversationMemory:
         )
 
         # Stub a RetrievedChunk
-        from lumena.fusion import RetrievedChunk
+        from lummenna.fusion import RetrievedChunk
 
         stub = RetrievedChunk(
             chunk_id=sid,
@@ -90,7 +90,7 @@ class TestConversationMemory:
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
         cm = ConversationMemory(config=fresh_config, conn=memory_db, embedder=embedder)
         # Seed a chunk so FK constraint is satisfied
-        from lumena.force.mnemonic.store import store_memory
+        from lummenna.force.mnemonic.store import store_memory
 
         emb = embedder.encode_single("feedback target")
         cid = store_memory(
