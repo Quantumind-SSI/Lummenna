@@ -1,4 +1,4 @@
-# Lumena — Technical Documentation
+# Lummenna — Technical Documentation
 
 **Version:** v1.0.0
 **License:** AGPL-3.0-or-later (Community) / Commercial (Pro) — see `LICENSE`
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Lumena is a local-first, self-contained memory and context framework for AI agents. It provides persistent storage, hybrid retrieval, and managed memory lifecycle for LLM-powered applications. All operations run entirely on-device — no cloud dependencies, no external APIs, no telemetry.
+Lummenna is a local-first, self-contained memory and context framework for AI agents. It provides persistent storage, hybrid retrieval, and managed memory lifecycle for LLM-powered applications. All operations run entirely on-device — no cloud dependencies, no external APIs, no telemetry.
 
 ### Core Capabilities
 
@@ -23,8 +23,8 @@ Lumena is a local-first, self-contained memory and context framework for AI agen
 | Conversation tracking | Working | Turn storage, implicit feedback, context assembly |
 | REST API | Working | FastAPI with auth (header key comparison), rate limiting, CORS |
 | MCP server | Working | 7 tools: search, store, assemble, turn, feedback, status, dashboard |
-| LangChain adapter | Working | LumenaChatMemory (requires `langchain` package) |
-| LangGraph adapter | Working | LumenaCheckpointSaver (requires `langgraph` package) |
+| LangChain adapter | Working | LummennaChatMemory (requires `langchain` package) |
+| LangGraph adapter | Working | LummennaCheckpointSaver (requires `langgraph` package) |
 | Dashboard | Working | Real-time palace topology, TFC state, memory health (http://localhost:8848/dashboard) |
 | P2P sharing | Working (LAN) | Beam protocol with AES-256-GCM + HMAC-SHA256; blocked by default (sovereign mode) |
 | Encryption-at-rest | Partially implemented | SQLCipher schema support implemented; tests skipped pending v0.3.0. Use OS-level encryption as stopgap. |
@@ -166,7 +166,7 @@ When retrieval yields no results, the repair module:
 
 ## 6. Configuration
 
-All configuration via environment variables (`LUMENA_` prefix), TOML file (`~/.lumena/config.toml`), or programmatic `LumenaConfig()`.
+All configuration via environment variables (`LUMMENNA_` prefix), TOML file (`~/.lummenna/config.toml`), or programmatic `LummennaConfig()`.
 
 ### Key Settings
 
@@ -183,9 +183,9 @@ All configuration via environment variables (`LUMENA_` prefix), TOML file (`~/.l
 | `sovereign` | `true` | Block external network calls, P2P, model downloads |
 | `pii_detection_enabled` | `true` | Scan stored content for PII |
 | `pii_redaction_mode` | `redact` | PII handling: block, redact, or hash |
-| `store_path` | `~/.lumena/store` | Database storage path |
-| `model_path` | `~/.lumena/models` | Embedding model cache |
-| `api_host` / `api_port` | `127.0.0.1` / `8848` | API server binding (loopback by default; set `LUMENA_API_HOST=0.0.0.0` to expose on the LAN, e.g. in Docker) |
+| `store_path` | `~/.lummenna/store` | Database storage path |
+| `model_path` | `~/.lummenna/models` | Embedding model cache |
+| `api_host` / `api_port` | `127.0.0.1` / `8848` | API server binding (loopback by default; set `LUMMENNA_API_HOST=0.0.0.0` to expose on the LAN, e.g. in Docker) |
 | `api_key` | None (disabled) | Optional API authentication |
 | `api_rate_limit` | `60/minute` | Rate limiting |
 
@@ -208,7 +208,7 @@ All configuration via environment variables (`LUMENA_` prefix), TOML file (`~/.l
 
 ### Authentication
 
-When `LUMENA_API_KEY` is set, all endpoints require `X-API-Key` header. Comparison uses constant-time string comparison.
+When `LUMMENNA_API_KEY` is set, all endpoints require `X-API-Key` header. Comparison uses constant-time string comparison.
 
 ---
 
@@ -235,7 +235,7 @@ lummenna daemon start
 lummenna daemon status
 lummenna daemon run-once
 
-# P2P sharing (requires LUMENA_SOVEREIGN=false)
+# P2P sharing (requires LUMMENNA_SOVEREIGN=false)
 lummenna p2p share --room name [--ttl 24]
 
 # Model management
@@ -254,19 +254,19 @@ lummenna model export bge-small-en-v1.5
 python -m lummenna.integrations.mcp_server
 ```
 
-Exposes 7 tools via stdio: `lumena_search`, `lumena_store`, `lumena_assemble`, `lumena_turn`, `lumena_feedback`, `lumena_status`, `lumena_dashboard`.
+Exposes 7 tools via stdio: `lummenna_search`, `lummenna_store`, `lummenna_assemble`, `lummenna_turn`, `lummenna_feedback`, `lummenna_status`, `lummenna_dashboard`.
 
 ### LangChain
 
 ```python
-from lummenna.integrations.langchain import LumenaChatMemory
+from lummenna.integrations.langchain import LummennaChatMemory
 # Requires: pip install "lummenna[langchain]"
 ```
 
 ### LangGraph
 
 ```python
-from lummenna.integrations.langgraph import LumenaCheckpointSaver
+from lummenna.integrations.langgraph import LummennaCheckpointSaver
 # Requires: pip install "lummenna[langgraph]"
 ```
 
@@ -297,13 +297,13 @@ Benchmarks use synthetic corpora unless real datasets (MS MARCO, BEIR) are expli
 
 ## 11. Security Model
 
-- **Sovereign by default:** All external network calls blocked unless `LUMENA_SOVEREIGN=false`
+- **Sovereign by default:** All external network calls blocked unless `LUMMENNA_SOVEREIGN=false`
 - **Local embeddings:** ONNX Runtime, no external embedding API calls
 - **PII scanning:** Regex-based at storage time with block/redact/hash strategies
 - **Audit trail:** All operations logged to SQLite `audit_log` table
-- **File permissions:** `~/.lumena` enforced to 700 (dirs) / 600 (files) on startup
-- **API auth:** Optional `X-API-Key` header with constant-time comparison (off until `LUMENA_API_KEY` is set)
-- **Encryption-at-rest (opt-in):** SQLCipher full-DB or Fernet field-level via `LUMENA_DATABASE_ENCRYPTION_MODE`; default `none` — use OS-level disk encryption if not enabled
+- **File permissions:** `~/.lummenna` enforced to 700 (dirs) / 600 (files) on startup
+- **API auth:** Optional `X-API-Key` header with constant-time comparison (off until `LUMMENNA_API_KEY` is set)
+- **Encryption-at-rest (opt-in):** SQLCipher full-DB or Fernet field-level via `LUMMENNA_DATABASE_ENCRYPTION_MODE`; default `none` — use OS-level disk encryption if not enabled
 
 Report vulnerabilities via [GitHub Security Advisories](https://github.com/QuantmindSSI/lummenna/security/advisories/new).
 
@@ -311,7 +311,7 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 
 ## 12. Known Limitations
 
-1. **Encryption-at-rest is opt-in** — SQLCipher and Fernet modes are implemented and tested but disabled by default (`LUMENA_DATABASE_ENCRYPTION_MODE=none`). In Fernet mode, the FTS5 lexical index still contains plaintext tokens (see SECURITY.md).
+1. **Encryption-at-rest is opt-in** — SQLCipher and Fernet modes are implemented and tested but disabled by default (`LUMMENNA_DATABASE_ENCRYPTION_MODE=none`). In Fernet mode, the FTS5 lexical index still contains plaintext tokens (see SECURITY.md).
 2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN (replay-nonce cache is in-memory only)
 3. **Benchmark results are subset-scale** — synthetic retrieval corpus is deliberately easy; BEIR results cover 500-doc/20-query subsets; perf and stress now have committed results (x86_64 VM), while cross-system has no committed results. Full-corpus BEIR leaderboard submission remains pending.
 4. **`vector_mean` / `last_entry_at` / `locus_count` unpopulated** — these schema columns are reserved but no code path writes them yet (loci have no maintained centroid). `learn_weights_from_feedback` (V(m) weight learning) and `backup_database` ARE wired — invoked from `conversation.py`/`langchain.py` and the sleep scheduler respectively.

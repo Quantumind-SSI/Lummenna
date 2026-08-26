@@ -2,7 +2,7 @@
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.contextual.embed import MockEmbedder
 from lummenna.force.mnemonic.store import store_memory
@@ -17,7 +17,7 @@ def encrypted_client(tmp_path, monkeypatch):
     store.mkdir()
     models.mkdir()
 
-    config = LumenaConfig(
+    config = LummennaConfig(
         store_path=store,
         model_path=models,
         vector_index="sqlite-vec",
@@ -87,13 +87,13 @@ def test_fernet_mode_without_key_raises(tmp_path):
     """mode='fernet' with no key must fail loudly, never silently store plaintext."""
     import pytest
 
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
     from lummenna.data.schema import get_encryption
 
-    config = LumenaConfig(
+    config = LummennaConfig(
         store_path=tmp_path / "store",
         database_encryption_mode="fernet",
         encryption_key=None,
     )
-    with pytest.raises(RuntimeError, match="LUMENA_ENCRYPTION_KEY"):
+    with pytest.raises(RuntimeError, match="LUMMENNA_ENCRYPTION_KEY"):
         get_encryption(config)

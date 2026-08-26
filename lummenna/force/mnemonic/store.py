@@ -36,9 +36,9 @@ def _get_vector_channel(conn: sqlite3.Connection, config=None):
     from lummenna.force.mnemonic.retrieval_dense import VectorChannel
 
     if config is None:
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
 
-        config = LumenaConfig()
+        config = LummennaConfig()
     return VectorChannel(config, conn)
 
 
@@ -71,9 +71,9 @@ def store_memory(
 
     # Pre-store safety scan — apply configured PII strategy at the write path
     if config is None:
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
 
-        config = LumenaConfig()
+        config = LummennaConfig()
 
     # Ground the embedding-dimensionality claim (whitepaper 3.1: 384-dim vectors)
     # against the configured model dims (default 384). A mismatched vector would

@@ -1,4 +1,4 @@
-# Lumena Helm chart values.
+# Lummenna Helm chart values.
 #
 # HONEST CONSTRAINTS (read before tuning):
 # - replicaCount is 1 and must stay 1: SQLite is single-writer, single-file.
@@ -57,12 +57,12 @@ config:
   allowedOrigins: "http://localhost:8848"
   contextBudget: "2048"
   memoryLimitMb: "512"
-  # Sovereign mode blocks all outbound calls from Lumena itself (model
+  # Sovereign mode blocks all outbound calls from Lummenna itself (model
   # downloads, P2P, telemetry export). Keep "true" unless you enable
   # Azure Monitor export below.
   sovereign: "true"
   extraEnv: []
-  # - name: LUMENA_PII_REDACTION_MODE
+  # - name: LUMMENNA_PII_REDACTION_MODE
   #   value: redact
 
 # API key auth. Provide an existing Secret with key `api-key`, or set
@@ -75,7 +75,7 @@ auth:
 
 # Azure Monitor / Application Insights export (OpenTelemetry).
 # Requires the image to include the `azure` extra AND config.sovereign=false;
-# Lumena refuses to export telemetry in sovereign mode (fail-loud).
+# Lummenna refuses to export telemetry in sovereign mode (fail-loud).
 azureMonitor:
   enabled: false
   existingSecret: ""    # Secret with key `connection-string`

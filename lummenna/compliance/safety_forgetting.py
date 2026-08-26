@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 # NOTE: Advanced compliance features (RTBF, audit trails, custom PII governance)
-# in this module are gated as Lumena Pro (see COMMERCIAL-LICENSE.md, P1).
+# in this module are gated as Lummenna Pro (see COMMERCIAL-LICENSE.md, P1).
 """A11: Safety-Triggered Forgetting (L4) & Compliance.
 
 Input wire: Regex / spaCy NER patterns, user command channel
@@ -126,9 +126,9 @@ def safety_forget_chunk(conn: sqlite3.Connection, chunk_id: int, reason: str) ->
     is called programmatically (not just via the CLI).
     """
     from lummenna.audit import log_audit_event
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
 
-    LumenaConfig().assert_licensed("compliance")
+    LummennaConfig().assert_licensed("compliance")
 
     # Atomicity: the audit record and the erasure must commit together. Writing
     # the audit event with commit=False and wrapping everything in a single
@@ -216,10 +216,10 @@ def get_recent_audit_events(n: int = 10) -> list[dict]:
     an empty list on failure would falsely imply "no events", which is itself a
     compliance hazard.
     """
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
     from lummenna.data.schema import get_connection
 
-    conn = get_connection(LumenaConfig())
+    conn = get_connection(LummennaConfig())
     try:
         rows = conn.execute(
             """SELECT audit_id, event_type, actor, resource_type, resource_id,

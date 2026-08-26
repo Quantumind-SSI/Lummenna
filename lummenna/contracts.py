@@ -1,8 +1,8 @@
 """Canonical claim contracts.
 
 This module is the single source of truth for the *documented* invariants of
-Lumena — the concrete, enumerable, bounded claims made in the whitepaper
-(``docs/Lumena_Whitepaper.md``) and ``README.md``. Every literal set and every
+Lummenna — the concrete, enumerable, bounded claims made in the whitepaper
+(``docs/Lummenna_Whitepaper.md``) and ``README.md``. Every literal set and every
 numeric range asserted in prose is defined here once, as a Pydantic-validatable
 type, and imported by the algorithmic modules that must honour it.
 

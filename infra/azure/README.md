@@ -1,8 +1,8 @@
-# Lumena on Azure — Infrastructure as Code
+# Lummenna on Azure — Infrastructure as Code
 
-Bicep template provisioning the minimal honest footprint for running Lumena
+Bicep template provisioning the minimal honest footprint for running Lummenna
 on AKS: the cluster, a container registry, and the observability pair
-(Log Analytics + Application Insights). No HA theater — Lumena is a
+(Log Analytics + Application Insights). No HA theater — Lummenna is a
 single-writer, single-replica workload.
 
 ## Provision
@@ -46,7 +46,7 @@ helm upgrade --install lummenna charts/lummenna -n lummenna \
 
 ## Enable Application Insights export (optional, leaves sovereign mode)
 
-Lumena refuses to export telemetry while `LUMENA_SOVEREIGN=true` — this is a
+Lummenna refuses to export telemetry while `LUMMENNA_SOVEREIGN=true` — this is a
 deliberate fail-loud gate, not a default integration.
 
 ```bash

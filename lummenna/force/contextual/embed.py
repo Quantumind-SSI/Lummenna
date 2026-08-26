@@ -137,7 +137,7 @@ def get_embedder(config, allow_mock: bool = False) -> LocalEmbedder | MockEmbedd
     """Return a production :class:`LocalEmbedder` for the configured model.
 
     Args:
-        config: :class:`LumenaConfig` instance.
+        config: :class:`LummennaConfig` instance.
         allow_mock: If ``True``, fall back to :class:`MockEmbedder` when the
             real model is unavailable. Defaults to ``False`` so that production
             callers fail loudly.

@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import init_db
 from lummenna.force.mnemonic.event_buffer import Event, EventMemoryBuffer
 
@@ -32,7 +32,7 @@ def test_schema_init():
 
 def test_config_defaults():
     """D1: Config must instantiate with sensible defaults."""
-    cfg = LumenaConfig()
+    cfg = LummennaConfig()
     assert cfg.device == "generic"
     assert cfg.embedding_dims == 384
     assert cfg.vector_index == "sqlite-vec"

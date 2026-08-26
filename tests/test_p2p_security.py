@@ -6,17 +6,17 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.p2p.beam import BeamNode, decode_frame, encode_frame
 from lummenna.security.crypto import P2PSign
 
 
 @pytest.fixture
 def secure_config(tmp_path):
-    return LumenaConfig(
+    return LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumena"),
+        store_path=str(tmp_path / ".lummenna"),
         beam_port=9998,
         sovereign=False,
         p2p_encryption_key="test-p2p-key-9876",
@@ -85,10 +85,10 @@ class TestP2PSigning:
 
 class TestHardenedBeamProtocol:
     def test_plaintext_fallback_rejected(self, tmp_path):
-        config = LumenaConfig(
+        config = LummennaConfig(
             device="generic",
             vector_index="sqlite-vec",
-            store_path=str(tmp_path / ".lumena"),
+            store_path=str(tmp_path / ".lummenna"),
             beam_port=9997,
             sovereign=False,
             p2p_encryption_key=None,
@@ -97,11 +97,11 @@ class TestHardenedBeamProtocol:
             BeamNode(config)
 
     def test_insecure_override_allowed(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("LUMENA_P2P_INSECURE", "1")
-        config = LumenaConfig(
+        monkeypatch.setenv("LUMMENNA_P2P_INSECURE", "1")
+        config = LummennaConfig(
             device="generic",
             vector_index="sqlite-vec",
-            store_path=str(tmp_path / ".lumena"),
+            store_path=str(tmp_path / ".lummenna"),
             beam_port=9996,
             sovereign=False,
             p2p_encryption_key=None,

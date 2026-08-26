@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""AST current-state report for Lumena Pro features.
+"""AST current-state report for Lummenna Pro features.
 
-Statically parses (never imports/executes) the Lumena package to extract:
+Statically parses (never imports/executes) the Lummenna package to extract:
 
   * the ``PRO_FEATURES`` registry (built + enforceable),
   * the ``PLANNED_PRO_FEATURES`` registry (design-only),
@@ -184,7 +184,7 @@ class _Findings:
 def _render_header(report: Report) -> list[str]:
     return [
         "=" * 72,
-        "LUMENA PRO FEATURES — AST CURRENT-STATE REPORT",
+        "LUMMENNA PRO FEATURES — AST CURRENT-STATE REPORT",
         "(static parse; source never imported/executed)",
         "=" * 72,
         "",

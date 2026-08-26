@@ -72,7 +72,7 @@ def run_onboarding_wizard(
     if Prompt is None or Confirm is None:
         raise RuntimeError("Rich is required for the CLI wizard")
 
-    console.print("[bold #3D5A80]Welcome to Lumena. Let's build your memory palace.[/]")
+    console.print("[bold #3D5A80]Welcome to Lummenna. Let's build your memory palace.[/]")
 
     desc = Prompt.ask("Describe what you do in 2-3 sentences")
     doc = nlp(desc)

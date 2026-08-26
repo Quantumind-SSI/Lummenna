@@ -1,6 +1,6 @@
-# AGENTS.md — Engineering Constitution for Lumena
+# AGENTS.md — Engineering Constitution for Lummenna
 
-This file governs **every** contribution to Lumena made by an AI agent or a
+This file governs **every** contribution to Lummenna made by an AI agent or a
 human. It is loaded automatically by coding agents at the start of each session.
 Its two supreme rules — **No Vaporware** and **No False Claims** — are not
 guidance; they are enforced in CI by the offline guardrail gate
@@ -46,7 +46,7 @@ Never describe something as working, available, or complete when it is not.
 - **Docs, READMEs, and marketing** (including `COMMERCIAL-LICENSE.md`) must only
   advertise capabilities that **exist in the code today**.
 - **Commercial / Pro features** must be enforced by
-  `LumenaConfig.assert_licensed(<feature>)` before they are listed as available.
+  `LummennaConfig.assert_licensed(<feature>)` before they are listed as available.
   A feature that is declared but ungated is either a revenue leak (give it a
   gate) or not real (move it to the roadmap).
 

@@ -1,1 +1,1 @@
-"""Lumena benchmarks."""
+"""Lummenna benchmarks."""

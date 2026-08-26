@@ -22,7 +22,7 @@ from lummenna.sovereign.local_llm import LocalLLM
 from lummenna.sovereign.wear import WearAwareBatcher
 
 if TYPE_CHECKING:
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
     from lummenna.force.mnemonic.event_buffer import EventMemoryBuffer
 
 from lummenna.logging import get_console_logger
@@ -114,7 +114,7 @@ def _get_recent_fact_bullets(conn: sqlite3.Connection, room_id: int, days: int =
 
 
 def run_consolidation_pass(
-    config: LumenaConfig,
+    config: LummennaConfig,
     event_buffer: EventMemoryBuffer | None = None,
     embedder: Any | None = None,
     batcher: WearAwareBatcher | None = None,
@@ -122,7 +122,7 @@ def run_consolidation_pass(
     """Run one full consolidation pass: drain events, dedup, generate narratives.
 
     Args:
-        config: LumenaConfig instance.
+        config: LummennaConfig instance.
         event_buffer: Optional EventMemoryBuffer to drain. If None, event-tier
             draining is skipped.
         embedder: Optional embedder with ``encode_single(text)``. If None, the

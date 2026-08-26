@@ -1,4 +1,4 @@
-# Lumena Contributor License Agreements (CLA)
+# Lummenna Contributor License Agreements (CLA)
 
 This directory holds records of signed Contributor License Agreements for
 contributors whose contributions require an explicit CLA on file, per
@@ -6,7 +6,7 @@ contributors whose contributions require an explicit CLA on file, per
 
 ## Why this exists
 
-Lumena is dual-licensed (AGPL-3.0 Community + QuantumindSSI commercial Pro).
+Lummenna is dual-licensed (AGPL-3.0 Community + QuantumindSSI commercial Pro).
 For QuantumindSSI to lawfully offer contributed code under the commercial
 license, every **external** contributor must grant the sublicensing/relicensing
 rights described in the CLA. Code authored by QuantumindSSI itself (including
@@ -21,7 +21,7 @@ under its own dev aliases) needs no CLA — QuantumindSSI is the copyright holde
 
 ## Resolution — no third-party CLA needed
 
-QuantumindSSI is the sole author of Lumena. The `Oluwaferanmi` git identity is a
+QuantumindSSI is the sole author of Lummenna. The `Oluwaferanmi` git identity is a
 **QuantumindSSI-owned alias** (a local development identity on a QuantumindSSI
 machine), not a separate contributor. This is recorded in the ownership
 attestation:

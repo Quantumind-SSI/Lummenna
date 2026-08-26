@@ -6,7 +6,7 @@ Secret sauce: Net-value-per-byte eviction
 
 NOTE: Trigger uses chunk-count estimation rather than raw process RSS,
 because RSS includes Python heap, embedding models, and ONNX runtime
-overhead that are irrelevant to Lumena's data footprint.
+overhead that are irrelevant to Lummenna's data footprint.
 """
 
 import contextlib

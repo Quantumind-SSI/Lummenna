@@ -1,12 +1,12 @@
-# Lumena: Technical Summary
+# Lummenna: Technical Summary
 
 **Version:** v1.0.0 | **Type:** Local-first agentic memory framework | **License:** AGPL-3.0-or-later (Community) / Commercial (Pro)
 
 ---
 
-## What Lumena Does
+## What Lummenna Does
 
-Lumena provides a persistent, searchable memory store for LLM agents. It organizes information in a spatial metaphor (rooms, loci, chunks), retrieves via multi-channel hybrid search (BM25 + vector + graph), and manages memory lifecycle through controlled forgetting (decay, interference, eviction).
+Lummenna provides a persistent, searchable memory store for LLM agents. It organizes information in a spatial metaphor (rooms, loci, chunks), retrieves via multi-channel hybrid search (BM25 + vector + graph), and manages memory lifecycle through controlled forgetting (decay, interference, eviction).
 
 ### Proven
 
@@ -61,7 +61,7 @@ Background → Consolidation → L1 Decay → L2 Interference → L3 Eviction �
 
 ## State of Development
 
-Lumena is **production-ready software**. It works end-to-end for storing, searching, and assembling agent memories. All capability claims have been verified against the current codebase.
+Lummenna is **production-ready software**. It works end-to-end for storing, searching, and assembling agent memories. All capability claims have been verified against the current codebase.
 
 ### Works End-to-End
 
@@ -94,11 +94,11 @@ lummenna serve
 ```
 
 ```python
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
 
-config = LumenaConfig()
+config = LummennaConfig()
 conn = get_connection(config)
 store_memory(conn, content="The user prefers dark mode", room_name="preferences", config=config)
 ```

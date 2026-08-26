@@ -1,6 +1,6 @@
 # Ownership Attestation — "Oluwaferanmi" git identity is a QuantumindSSI alias
 
-**Project:** Lumena
+**Project:** Lummenna
 **Copyright holder / attesting party:** QuantumindSSI (`admin@quantumindssi.com`)
 **Attestation version:** 1.0
 **Date:** 2026-08-16
@@ -9,7 +9,7 @@
 
 ## 1. Statement
 
-QuantumindSSI, the sole author and copyright holder of Lumena, attests that the
+QuantumindSSI, the sole author and copyright holder of Lummenna, attests that the
 git author/committer identity:
 
 > `Oluwaferanmi <oluwaferanmi@Oluwaferanmis-MacBook-Air.local>`

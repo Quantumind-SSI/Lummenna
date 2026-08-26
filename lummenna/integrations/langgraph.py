@@ -1,17 +1,17 @@
-"""LangGraph integration for Lumena.
+"""LangGraph integration for Lummenna.
 
-Provides ``LumenaCheckpointSaver`` — implements LangGraph's
-``BaseCheckpointSaver`` protocol so Lumena can persist graph state
-sovereignly, and ``LumenaGraphStore`` for cross-thread long-term memory.
+Provides ``LummennaCheckpointSaver`` — implements LangGraph's
+``BaseCheckpointSaver`` protocol so Lummenna can persist graph state
+sovereignly, and ``LummennaGraphStore`` for cross-thread long-term memory.
 
 Usage::
 
     from langgraph.graph import StateGraph
-    from lummenna.integrations.langgraph import LumenaCheckpointSaver
+    from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
     graph = StateGraph(...)
     ...
-    checkpointer = LumenaCheckpointSaver()
+    checkpointer = LummennaCheckpointSaver()
     app = graph.compile(checkpointer=checkpointer)
     app.invoke({"input": "hello"}, config={"configurable": {"thread_id": "t1"}})
 """
@@ -25,7 +25,7 @@ from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from typing import Any
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.logging import get_console_logger
 
@@ -72,14 +72,14 @@ CheckpointTupleFactory: Any = _checkpoint_tuple_factory
 # Base class for the checkpoint saver: the real ``BaseCheckpointSaver`` when
 # LangGraph is installed, otherwise ``object``. Typed as ``Any`` so mypy treats
 # it as a valid (dynamic) base class in both branches.
-_LumenaSaverBase: Any = BaseCheckpointSaver if BaseCheckpointSaver is not None else object
+_LummennaSaverBase: Any = BaseCheckpointSaver if BaseCheckpointSaver is not None else object
 
 
 # ---------------------------------------------------------------------------
-# LumenaCheckpointSaver
+# LummennaCheckpointSaver
 # ---------------------------------------------------------------------------
-class LumenaCheckpointSaver(_LumenaSaverBase):
-    """Lumena-backed checkpoint saver for LangGraph.
+class LummennaCheckpointSaver(_LummennaSaverBase):
+    """Lummenna-backed checkpoint saver for LangGraph.
 
     Stores LangGraph checkpoints as structured memories in the SQLite palace.
     Each ``thread_id`` gets its own locus inside a dedicated ``langgraph`` room,
@@ -96,10 +96,10 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
 
     def __init__(
         self,
-        config: LumenaConfig | None = None,
+        config: LummennaConfig | None = None,
         room: str = ROOM_NAME,
     ) -> None:
-        self.config = config or LumenaConfig()
+        self.config = config or LummennaConfig()
         self.room = room
         self._conn: Any = None
         self._room_id: int | None = None
@@ -460,31 +460,31 @@ class LumenaCheckpointSaver(_LumenaSaverBase):
 
 
 # ---------------------------------------------------------------------------
-# LumenaGraphStore — cross-thread long-term memory for LangGraph
+# LummennaGraphStore — cross-thread long-term memory for LangGraph
 # ---------------------------------------------------------------------------
 try:
     from langgraph.store.base import BaseStore as LangGraphBaseStore
 except Exception:
     LangGraphBaseStore = None  # type: ignore[assignment,misc]
 
-_LumenaGraphStoreBase: Any = LangGraphBaseStore if LangGraphBaseStore is not None else object
+_LummennaGraphStoreBase: Any = LangGraphBaseStore if LangGraphBaseStore is not None else object
 
 
-class LumenaGraphStore(_LumenaGraphStoreBase):
-    """Lumena-backed store for LangGraph cross-thread memory.
+class LummennaGraphStore(_LummennaGraphStoreBase):
+    """Lummenna-backed store for LangGraph cross-thread memory.
 
     LangGraph's ``Store`` API lets graphs read and write long-term facts
-    that persist across conversation threads.  LumenaGraphStore maps each
+    that persist across conversation threads.  LummennaGraphStore maps each
     ``namespace`` to a room and each ``key`` to a chunked memory.
     """
 
     def __init__(
         self,
-        config: LumenaConfig | None = None,
+        config: LummennaConfig | None = None,
         default_namespace: str = "memories",
         embedder: Any = None,
     ) -> None:
-        self.config = config or LumenaConfig()
+        self.config = config or LummennaConfig()
         self.default_namespace = default_namespace
         self._embedder = embedder
         self._conn: Any = None
@@ -520,7 +520,7 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
         """Fetch the latest value for *key* in *namespace*.
 
         ``refresh_ttl`` is accepted for BaseStore signature compatibility and
-        ignored — Lumena manages lifecycle via V(m) decay, not per-item TTLs.
+        ignored — Lummenna manages lifecycle via V(m) decay, not per-item TTLs.
 
         Note: this convenience method returns a plain dict. Callers using the
         LangGraph ``BaseStore`` contract (``batch``/``abatch``/``aget``)
@@ -560,16 +560,16 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
 
         ``index`` and ``ttl`` are accepted for BaseStore signature
         compatibility. Custom index fields are not supported (the whole value
-        is embedded); per-item TTLs are not supported (Lumena uses V(m) decay
+        is embedded); per-item TTLs are not supported (Lummenna uses V(m) decay
         and L3 eviction). Both are logged if provided rather than silently
         ignored.
         """
         from lummenna.force.mnemonic.store import store_memory
 
         if index is not None:
-            logger.debug("lumena_graph_store_index_unsupported", index=str(index))
+            logger.debug("lummenna_graph_store_index_unsupported", index=str(index))
         if ttl is not None:
-            logger.debug("lumena_graph_store_ttl_unsupported", ttl=str(ttl))
+            logger.debug("lummenna_graph_store_ttl_unsupported", ttl=str(ttl))
 
         room = self._namespace_to_room(namespace)
         content = json.dumps({"key": key, "value": value}, default=str)
@@ -611,7 +611,7 @@ class LumenaGraphStore(_LumenaGraphStoreBase):
     ) -> list[dict[str, Any]]:
         """Search within a namespace.
 
-        With *query*, runs Lumena's semantic pipeline; without it, returns
+        With *query*, runs Lummenna's semantic pipeline; without it, returns
         the most recent items in the namespace. ``filter`` does exact-match
         filtering on top-level keys of the stored value dict. ``refresh_ttl``
         is accepted for BaseStore signature compatibility and ignored.

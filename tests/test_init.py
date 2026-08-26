@@ -3,17 +3,17 @@ import sqlite3
 import pytest
 
 from lummenna._init import initialize_palace
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.conversation import ConversationMemory
 from lummenna.search import SearchPipeline
 
 
 @pytest.fixture
 def temp_config(tmp_path):
-    return LumenaConfig(
+    return LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumena"),
+        store_path=str(tmp_path / ".lummenna"),
         # No real ONNX model exists in tmp_path; tests opt into the explicit
         # mock escape hatch. Production default (False) raises instead.
         allow_mock_embedder=True,
@@ -28,10 +28,10 @@ def test_initialize_palace_raises_without_model_by_default(tmp_path):
     """
     from lummenna.brand.errors import ModelNotAvailableError
 
-    config = LumenaConfig(
+    config = LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumena"),
+        store_path=str(tmp_path / ".lummenna"),
         model_path=str(tmp_path / "models"),
         allow_mock_embedder=False,
     )

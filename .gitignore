@@ -63,7 +63,7 @@ coverage.json
 # Jupyter
 .ipynb_checkpoints
 
-# Lumena-specific artifacts
+# Lummenna-specific artifacts
 *.log
 *.db
 *.db-wal
@@ -98,5 +98,5 @@ ios/
 tmp/
 lummenna/benchmarks/*/results/
 
-# Local Lumena runtime store + provisioned models (per-machine, never committed)
-.lumena/
+# Local Lummenna runtime store + provisioned models (per-machine, never committed)
+.lummenna/

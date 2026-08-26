@@ -1,19 +1,19 @@
-# Lumena Brand Bible — v1.0.0
+# Lummenna Brand Bible — v1.0.0
 
-*Sourced exclusively from the Lumena codebase, documentation, test suite, benchmarks, and configuration as of August 2025.*
+*Sourced exclusively from the Lummenna codebase, documentation, test suite, benchmarks, and configuration as of August 2025.*
 
 ---
 
 ## 1. Product Identity
 
 ### 1.1 Name
-**Lumena** — A sovereign, on-device agentic memory framework for AI coding assistants.
+**Lummenna** — A sovereign, on-device agentic memory framework for AI coding assistants.
 
 ### 1.2 Tagline
 *No defined tagline in the codebase.* The whitepaper describes it as "a structured memory palace with heuristic forgetting, operating entirely on-device."
 
 ### 1.3 Pitch (from docs/RELEASE_ANNOUNCEMENT_v1.0.0.md)
-> "Lumena gives your coding agent a persistent memory palace — not a vector dump, not a context hack. Memories decay, consolidate, and survive across sessions on your own hardware."
+> "Lummenna gives your coding agent a persistent memory palace — not a vector dump, not a context hack. Memories decay, consolidate, and survive across sessions on your own hardware."
 
 ### 1.4 Version
 **v1.0.0** — Confirmed in `lummenna/api/server.py` app title, MCP server dashboard text, `CHANGELOG.md`, and `pyproject.toml`.
@@ -34,7 +34,7 @@ for those releases).
 
 ## 2. Architecture — The Twin-Force Model
 
-Lumena is built on a **dual-force architecture**:
+Lummenna is built on a **dual-force architecture**:
 
 ### Force A: Mnemonic (Memory Palace)
 The long-term memory store — "palace" — consisting of rooms, loci (sub-locations), and chunks (individual memories). This force handles storage, retrieval, forgetting, provenance tracking, and value scoring.
@@ -122,7 +122,7 @@ Token budget enforcement:
 4. Fail-fast with `BudgetExceededError` if nothing fits
 
 ### 3.7 Feedback Loop
-- `feedback_log` table tracks explicit (`lumena_feedback`), implicit (via `lumena_turn`), and repair feedback
+- `feedback_log` table tracks explicit (`lummenna_feedback`), implicit (via `lummenna_turn`), and repair feedback
 - V(m) weights are retrained when feedback count reaches 5
 - Search Repair Loop (`lummenna/repair.py`) self-heals: empty results widen `a`, budget exceeded degrades `r`, low confidence widens `a`
 
@@ -159,7 +159,7 @@ Token budget enforcement:
 
 ### 5.2 Encryption
 Three modes (`database_encryption_mode`):
-- **`sqlcipher`** — Page-level AES-256 encryption via SQLCipher (requires `sqlcipher3` package, `LUMENA_ENCRYPTION_KEY`)
+- **`sqlcipher`** — Page-level AES-256 encryption via SQLCipher (requires `sqlcipher3` package, `LUMMENNA_ENCRYPTION_KEY`)
 - **`fernet`** — Field-level encryption of `chunk.content` via Fernet (symmetric AES-128-CBC with HMAC)
 - **`none`** — Plaintext SQLite (default; production not recommended)
 
@@ -167,26 +167,26 @@ Three modes (`database_encryption_mode`):
 - **Encryption**: AES-256-GCM via `P2PCrypto`
 - **Integrity/Authenticity**: HMAC-SHA256 with 30-second replay window
 - **TTL**: Frames older than `ttl_hours` are dropped at reception
-- **Plaintext fallback**: REMOVED. Beam without encryption key raises an error unless `LUMENA_P2P_INSECURE=1` is set.
+- **Plaintext fallback**: REMOVED. Beam without encryption key raises an error unless `LUMMENNA_P2P_INSECURE=1` is set.
 - Discovery via Zeroconf/mDNS (LAN only)
 - Length-prefixed framed protocol
 - TTL enforced at both send and receive
 
 ### 5.4 API Security (`lummenna/api/server.py`)
-- **Auth**: API-key middleware via `LUMENA_API_KEY`; all endpoints except `/health` and `/dashboard` require key
+- **Auth**: API-key middleware via `LUMMENNA_API_KEY`; all endpoints except `/health` and `/dashboard` require key
 - **Rate Limiting**: Token-bucket rate limiter (default 60 req/min)
-- **Size Limits**: Configurable `LUMENA_REQUEST_MAX_SIZE_BYTES` (default 1 MB)
-- **CORS Lockdown**: Configurable `LUMENA_ALLOWED_ORIGINS`
+- **Size Limits**: Configurable `LUMMENNA_REQUEST_MAX_SIZE_BYTES` (default 1 MB)
+- **CORS Lockdown**: Configurable `LUMMENNA_ALLOWED_ORIGINS`
 - **Security Headers**: HSTS, CSP for dashboard, X-Content-Type-Options, X-Frame-Options
 - **Brute-Force Protection**: Failed auth attempts tracked per-IP with exponential backoff
 - **PII Detection**: Optional `pii_detection_enabled` with modes: `block`, `redact`, `hash`
 - **Audit Logging**: Every API call logged to `audit_log` table
 
 ### 5.5 SQLCipher Support (`lummenna/data/schema.py` + `test_sqlcipher.py`)
-- Passphrase derivation via PBKDF2-HMAC-SHA256 from `LUMENA_ENCRYPTION_KEY`
+- Passphrase derivation via PBKDF2-HMAC-SHA256 from `LUMMENNA_ENCRYPTION_KEY`
 - SALT file stored alongside database for deterministic derivation across restarts
 - Test coverage exists but is marked as skipped pending v0.3.0 feature flag
-- Permissions enforced: `~/.lumena/` tree is 700 (dirs) and 600 (files)
+- Permissions enforced: `~/.lummenna/` tree is 700 (dirs) and 600 (files)
 
 ---
 
@@ -218,7 +218,7 @@ Three modes (`database_encryption_mode`):
 - Lifecycle: load/unload with context manager to manage RAM
 
 ### 7.3 On-Disk Footprint
-- SQLite WAL-mode database (`~/.lumena/store/lumena.db`)
+- SQLite WAL-mode database (`~/.lummenna/store/lummenna.db`)
 - FTS5 index with porter stemmer
 - vec_fallback blob storage (384 floats × 4 bytes = 1536 bytes per vector)
 - No external network dependency (fully sovereign)
@@ -261,23 +261,23 @@ Progressive quantization chain for memory lifecycles:
 ### 8.3 MCP Server Tools (7 tools, 2 resources)
 
 **Tools** (from `lummenna/integrations/mcp_server.py`):
-1. `lumena_search` — Semantic + lexical hybrid search
-2. `lumena_store` — Persist a memory with room/locus
-3. `lumena_assemble` — Retrieve and assemble context in one call
-4. `lumena_turn` — Log conversation turn with implicit feedback
-5. `lumena_feedback` — Log explicit feedback on retrieved memory
-6. `lumena_status` — Palace health: rooms, chunks, TFC state, embedder status
-7. `lumena_dashboard` — Formatted text dashboard with benchmarks, TFC, topology, business impact
+1. `lummenna_search` — Semantic + lexical hybrid search
+2. `lummenna_store` — Persist a memory with room/locus
+3. `lummenna_assemble` — Retrieve and assemble context in one call
+4. `lummenna_turn` — Log conversation turn with implicit feedback
+5. `lummenna_feedback` — Log explicit feedback on retrieved memory
+6. `lummenna_status` — Palace health: rooms, chunks, TFC state, embedder status
+7. `lummenna_dashboard` — Formatted text dashboard with benchmarks, TFC, topology, business impact
 
 **Resources**:
 - `dashboard://lummenna/effectiveness` — Full effectiveness metrics JSON
 - `dashboard://lummenna/sota` — SOTA comparison and capability highlights
 
 ### 8.4 LangChain & LangGraph Integrations
-- `LumenaChatMemory` — LangChain BaseChatMemory with retrieve, save, feedback, and V(m) learning
-- `LumenaStore` — LangChain BaseStore with mset/mget/mdelete
-- `LumenaCheckpointSaver` — LangGraph checkpoint saver for agent state persistence
-- `LumenaGraphStore` — LangGraph graph store with put/get/delete/search/list_namespaces
+- `LummennaChatMemory` — LangChain BaseChatMemory with retrieve, save, feedback, and V(m) learning
+- `LummennaStore` — LangChain BaseStore with mset/mget/mdelete
+- `LummennaCheckpointSaver` — LangGraph checkpoint saver for agent state persistence
+- `LummennaGraphStore` — LangGraph graph store with put/get/delete/search/list_namespaces
 
 ---
 
@@ -289,7 +289,7 @@ Run via `python -m benchmarks.run_all`:
 | Suite | What It Measures | Status |
 |-------|-----------------|--------|
 | **Retrieval** | BM25/Dense/Hybrid Recall@10, nDCG@10, p50/p95/p99 latency on MS MARCO v1.1 + synthetic | ✅ Implemented |
-| **Cross-System** | Lumena vs Chroma vs FAISS head-to-head (same corpus/embedder) | ✅ Implemented |
+| **Cross-System** | Lummenna vs Chroma vs FAISS head-to-head (same corpus/embedder) | ✅ Implemented |
 | **BEIR** | NFCorpus, SciFact, FiQA, ArguAna, SCIDOCS cross-dataset | ✅ Implemented |
 | **Ablation** | FULL/NO_TFC/NO_VM/NO_GRAPH/BM25_ONLY/DENSE_ONLY on domain corpus (111 chunks, 8 rooms, 20 queries) | ✅ Implemented |
 | **Navigation** | Global vs Oracle Room vs Routed Room efficiency (2400 passages, 8 rooms) | ✅ Implemented |
@@ -326,11 +326,11 @@ Run via `python -m benchmarks.run_all`:
 
 ## 11. Error Codes & Hierarchy
 
-Defined in `lummenna/brand/errors.py` — all exceptions inherit from `LumenaError`:
+Defined in `lummenna/brand/errors.py` — all exceptions inherit from `LummennaError`:
 
 | Code | Exception | Category |
 |------|-----------|----------|
-| `LME-0000` | `LumenaError` | Base |
+| `LME-0000` | `LummennaError` | Base |
 | `LME-1001` | `RoomNotFoundError` | Palace: room missing |
 | `LME-1002` | `LocusConflictError` | Palace: locus name collision |
 | `LME-1003` | `ConsolidationFailedError` | Palace: sleep consolidation failure |
@@ -455,4 +455,4 @@ Self-hosted HTML dashboard served at `/dashboard` with:
 
 ---
 
-*This brand bible is generated from source-code inspection of the Lumena repository as of August 2025. Every claim is backed by a specific file, class, function, test, benchmark, or configuration entry in the codebase.*
+*This brand bible is generated from source-code inspection of the Lummenna repository as of August 2025. Every claim is backed by a specific file, class, function, test, benchmark, or configuration entry in the codebase.*

@@ -1,10 +1,10 @@
-# Lumena Integration Guide
+# Lummenna Integration Guide
 
-This document describes how to integrate **Lumena** (twin-force memory and context framework) into agentic coding platforms:
+This document describes how to integrate **Lummenna** (twin-force memory and context framework) into agentic coding platforms:
 
 - [OpenCode](#opencode)
 
-Each platform communicates with Lumena through one of three interfaces:
+Each platform communicates with Lummenna through one of three interfaces:
 
 | Interface | Best For | Platforms |
 |-----------|----------|-----------|
@@ -57,8 +57,8 @@ Create `.opencode/opencode.json` in your project root:
       "command": ["python", "-m", "lummenna.integrations.mcp_server"],
       "enabled": true,
       "env": {
-        "LUMENA_DEVICE": "generic",
-        "LUMENA_API_KEY": ""
+        "LUMMENNA_DEVICE": "generic",
+        "LUMMENNA_API_KEY": ""
       }
     }
   }
@@ -67,17 +67,17 @@ Create `.opencode/opencode.json` in your project root:
 
 **What the agent can now do (7 tools):**
 
-- `lumena_search` — semantic + lexical hybrid search across the memory palace
-- `lumena_store` — persist a code insight, decision, or snippet
-- `lumena_assemble` — retrieve and assemble context in one call
-- `lumena_turn` — log a full conversation turn with implicit feedback
-- `lumena_feedback` — log explicit feedback on a retrieved memory
-- `lumena_status` — show palace health (rooms, active chunks, TFC state)
-- `lumena_dashboard` — effectiveness dashboard (health, locally measured benchmarks, lifecycle state)
+- `lummenna_search` — semantic + lexical hybrid search across the memory palace
+- `lummenna_store` — persist a code insight, decision, or snippet
+- `lummenna_assemble` — retrieve and assemble context in one call
+- `lummenna_turn` — log a full conversation turn with implicit feedback
+- `lummenna_feedback` — log explicit feedback on a retrieved memory
+- `lummenna_status` — show palace health (rooms, active chunks, TFC state)
+- `lummenna_dashboard` — effectiveness dashboard (health, locally measured benchmarks, lifecycle state)
 
 ### Option B: HTTP API (remote / Docker deployments)
 
-The MCP server is **stdio-only** — Lumena does not currently expose an MCP endpoint over HTTP. For remote hosts or Docker, use the REST API directly:
+The MCP server is **stdio-only** — Lummenna does not currently expose an MCP endpoint over HTTP. For remote hosts or Docker, use the REST API directly:
 
 ```bash
 # On the remote host
@@ -86,15 +86,15 @@ lummenna serve --host 0.0.0.0 --port 8848
 # From the client
 curl -X POST http://REMOTE_HOST:8848/v1/search \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $LUMENA_API_KEY" \
+  -H "X-API-Key: $LUMMENNA_API_KEY" \
   -d '{"query": "cache layer decision", "top_k": 5}'
 ```
 
-Set `LUMENA_API_KEY` on the server before exposing it to any network (see `SECURITY.md`).
+Set `LUMMENNA_API_KEY` on the server before exposing it to any network (see `SECURITY.md`).
 
-### Option C: OpenCode Skill for Lumena Workflows
+### Option C: OpenCode Skill for Lummenna Workflows
 
-Skills teach the agent *when* and *how* to use Lumena. Create:
+Skills teach the agent *when* and *how* to use Lummenna. Create:
 
 ```
 .opencode/skills/lummenna/SKILL.md
@@ -106,12 +106,12 @@ name: lummenna
 description: >
   Use when the user asks to remember, recall, persist, or search across
   project decisions, code snippets, architecture notes, or conversation
-  history stored in the Lumena memory palace. Trigger keywords:
+  history stored in the Lummenna memory palace. Trigger keywords:
   "remember", "recall", "what did we decide", "search my notes",
-  "persist", "store this", "Lumena".
+  "persist", "store this", "Lummenna".
 ---
 
-# Lumena Memory Skill
+# Lummenna Memory Skill
 
 ## When to use
 - The user wants to save a decision, pattern, or insight for later retrieval.
@@ -119,10 +119,10 @@ description: >
 - You need to assemble relevant prior context before making a code change.
 
 ## Workflow
-1. If the user asks to retrieve: call `lumena_search` or `lumena_assemble`.
-2. If the user shares an insight to persist: call `lumena_store` with an appropriate `room` (e.g., `architecture`, `decisions`, `snippets`).
-3. After a successful turn (user request + your response): call `lumena_turn` to store both messages and log implicit feedback.
-4. If the user says a retrieved memory was wrong or unhelpful: call `lumena_feedback` with `was_useful: false`.
+1. If the user asks to retrieve: call `lummenna_search` or `lummenna_assemble`.
+2. If the user shares an insight to persist: call `lummenna_store` with an appropriate `room` (e.g., `architecture`, `decisions`, `snippets`).
+3. After a successful turn (user request + your response): call `lummenna_turn` to store both messages and log implicit feedback.
+4. If the user says a retrieved memory was wrong or unhelpful: call `lummenna_feedback` with `was_useful: false`.
 
 ## Room naming conventions
 | Room | Purpose |
@@ -136,7 +136,7 @@ description: >
 
 ## Example
 User: "Remember that we decided to use SQLite for the cache layer."
-→ Call `lumena_store` with `room="decisions"`, `content="Use SQLite for cache layer because..."`
+→ Call `lummenna_store` with `room="decisions"`, `content="Use SQLite for cache layer because..."`
 ```
 
 ### Option D: Custom OpenCode Agent
@@ -147,10 +147,10 @@ For dedicated memory management, define a subagent:
 {
   "agent": {
     "lummenna-librarian": {
-      "description": "Specialist for storing, retrieving, and curating Lumena memories.",
+      "description": "Specialist for storing, retrieving, and curating Lummenna memories.",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
-      "prompt": "You are the Lumena Librarian. You have access to lumena_search, lumena_store, lumena_assemble, lumena_turn, and lumena_feedback. Your job is to help the user manage their long-term memory palace. Always use the correct room names."
+      "prompt": "You are the Lummenna Librarian. You have access to lummenna_search, lummenna_store, lummenna_assemble, lummenna_turn, and lummenna_feedback. Your job is to help the user manage their long-term memory palace. Always use the correct room names."
     }
   }
 }
@@ -160,7 +160,7 @@ For dedicated memory management, define a subagent:
 
 ## Platform Compatibility
 
-Lumena's MCP server (stdio) and HTTP API are supported by any platform that speaks MCP or JSON/REST, including
+Lummenna's MCP server (stdio) and HTTP API are supported by any platform that speaks MCP or JSON/REST, including
 OpenCode, Claude Desktop, and any custom agent using the Python SDK. The OpenCode section above provides
 configuration examples; the same `python -m lummenna.integrations.mcp_server` command works for any MCP-compatible
 platform.
@@ -169,10 +169,10 @@ platform.
 
 ## Security & Privacy Notes
 
-1. **Sovereign mode**: By default Lumena stores everything locally in SQLite (`~/.lumena/store/lumena.db`). No cloud leakage.
-2. **API Key**: Set `LUMENA_API_KEY` and provide it via headers / env vars for multi-user environments.
+1. **Sovereign mode**: By default Lummenna stores everything locally in SQLite (`~/.lummenna/store/lummenna.db`). No cloud leakage.
+2. **API Key**: Set `LUMMENNA_API_KEY` and provide it via headers / env vars for multi-user environments.
 3. **P2P sharing**: `lummenna p2p share` is opt-in; memories do not leave the device unless explicitly shared.
-4. **Forgetting**: Lumena supports compliance-driven deletion: `lummenna compliance forget <chunk_id> --reason "..."` permanently forgets a chunk (audit event, FTS removal, provenance purge, content redaction), and `lummenna compliance audit` shows the audit trail. Use these to honour GDPR/CCPA deletion requests.
+4. **Forgetting**: Lummenna supports compliance-driven deletion: `lummenna compliance forget <chunk_id> --reason "..."` permanently forgets a chunk (audit event, FTS removal, provenance purge, content redaction), and `lummenna compliance audit` shows the audit trail. Use these to honour GDPR/CCPA deletion requests.
 
 ---
 
@@ -183,14 +183,14 @@ platform.
 | `Database not initialised` | Run `lummenna init --device generic` |
 | `embedder_fallback` warning | Download embedding model: `lummenna init --download-model` |
 | MCP server not found | Ensure `lummenna` package is in the Python environment used by the platform |
-| 413 Request too large | Increase `LUMENA_REQUEST_MAX_SIZE_BYTES` (default 1 MB) |
-| CORS errors in browser | Set `LUMENA_ALLOWED_ORIGINS` to your domain |
+| 413 Request too large | Increase `LUMMENNA_REQUEST_MAX_SIZE_BYTES` (default 1 MB) |
+| CORS errors in browser | Set `LUMMENNA_ALLOWED_ORIGINS` to your domain |
 
 ---
 
 ## Next Steps
 
-1. Start the Lumena server: `lummenna serve`
+1. Start the Lummenna server: `lummenna serve`
 2. Configure your platform's MCP / tool registry with the endpoints above.
 3. Seed initial memories: `lummenna illuminate` (interactive onboarding wizard).
 4. Iterate on room taxonomy for your team.

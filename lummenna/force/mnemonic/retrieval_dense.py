@@ -245,9 +245,9 @@ class VectorChannel:
     """Runtime switchable backend; config decides, not the caller."""
 
     def __init__(self, config, conn: sqlite3.Connection):
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
 
-        cfg: LumenaConfig = config
+        cfg: LummennaConfig = config
         if cfg.vector_index == "sqlite-vec":
             self.backend: VectorBackend = SqliteVecBackend(conn, cfg.embedding_dims)
         elif cfg.vector_index == "usearch":

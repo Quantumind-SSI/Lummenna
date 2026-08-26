@@ -1,4 +1,4 @@
-# Lumena: A Sovereign Agentic Memory Framework
+# Lummenna: A Sovereign Agentic Memory Framework
 
 **Local-first memory and context architecture for autonomous AI agents**
 
@@ -11,9 +11,9 @@
 
 ## Abstract
 
-Lumena is an open-source, local-first memory framework that gives large language model (LLM) agents persistent, structured, and lifecycle-aware memory without cloud dependencies. Unlike conventional vector databases that treat memory as a flat collection of vectors, Lumena organizes information as a *memory palace* — a structured topology of rooms, loci, and corridors governed by a heuristic *Twin-Force Controller* that balances mnemonic conservation against contextual attention.
+Lummenna is an open-source, local-first memory framework that gives large language model (LLM) agents persistent, structured, and lifecycle-aware memory without cloud dependencies. Unlike conventional vector databases that treat memory as a flat collection of vectors, Lummenna organizes information as a *memory palace* — a structured topology of rooms, loci, and corridors governed by a heuristic *Twin-Force Controller* that balances mnemonic conservation against contextual attention.
 
-The system operates entirely on-device via ONNX Runtime and SQLite, eliminating external API costs and preserving data sovereignty. Lumena provides native integrations for LangGraph, LangChain, MCP-compatible agents (OpenCode, Claude Desktop), and a production-hardened FastAPI REST server. At v1.0.0, topology-constrained search prunes ~80% of the corpus per query with ≥99.7% recall retention (routed ≥100% at all measured k; oracle worst case 99.69% at k=5) and a modest ~1.08× mean-latency improvement over flat global search (navigation benchmark; earlier 1.32–1.50× figures came from a biased mean-of-ratios statistic and have been retracted). Lumena ships with eleven benchmark suites spanning retrieval quality, forgetting behavior, navigation efficiency, and stress testing — ten with committed result artifacts, one (cross-system) with a harness awaiting runs. The ~1.08× navigation mean-latency figure is hardware-dependent and did not reproduce on all machines (a re-run on a commodity x86_64 VM measured ~0.9×, i.e. routing overhead exceeding the pruning benefit at that baseline); the pruning (~80%) and recall-retention (≥99.7%) results are stable across runs.
+The system operates entirely on-device via ONNX Runtime and SQLite, eliminating external API costs and preserving data sovereignty. Lummenna provides native integrations for LangGraph, LangChain, MCP-compatible agents (OpenCode, Claude Desktop), and a production-hardened FastAPI REST server. At v1.0.0, topology-constrained search prunes ~80% of the corpus per query with ≥99.7% recall retention (routed ≥100% at all measured k; oracle worst case 99.69% at k=5) and a modest ~1.08× mean-latency improvement over flat global search (navigation benchmark; earlier 1.32–1.50× figures came from a biased mean-of-ratios statistic and have been retracted). Lummenna ships with eleven benchmark suites spanning retrieval quality, forgetting behavior, navigation efficiency, and stress testing — ten with committed result artifacts, one (cross-system) with a harness awaiting runs. The ~1.08× navigation mean-latency figure is hardware-dependent and did not reproduce on all machines (a re-run on a commodity x86_64 VM measured ~0.9×, i.e. routing overhead exceeding the pruning benefit at that baseline); the pruning (~80%) and recall-retention (≥99.7%) results are stable across runs.
 
 ---
 
@@ -30,13 +30,13 @@ Retrieval-Augmented Generation (RAG) partially addresses this by fetching extern
 
 The three dominant patterns in 2026 — pure vector stores (Chroma, FAISS, Qdrant), cloud-hosted agent memory services (MemGPT/Letta, Zep, Mem0), and RAG orchestrators (LlamaIndex, LangChain) — share these limitations to varying degrees.
 
-Lumena was designed to close these gaps.
+Lummenna was designed to close these gaps.
 
 ---
 
-## 2. What Lumena Is
+## 2. What Lummenna Is
 
-Lumena is a **production-grade, open-source agentic memory framework** with the following defining properties:
+Lummenna is a **production-grade, open-source agentic memory framework** with the following defining properties:
 
 | Property | What It Means |
 |---|---|
@@ -46,7 +46,7 @@ Lumena is a **production-grade, open-source agentic memory framework** with the 
 | **Integrable** | Native adapters for LangGraph, LangChain, MCP, and FastAPI REST plug into existing agent stacks without lock-in. |
 | **Lightweight** | Single-file SQLite database; embedding model is a 33 MB INT8 ONNX export. RAM/storage footprints have not yet been benchmarked (perf suite pending). |
 
-At its core, Lumena is not merely a vector database with extra features. It is a **complete memory substrate** for agents: storage, retrieval, ranking, forgetting, consolidation, and cross-agent sharing — all in one system.
+At its core, Lummenna is not merely a vector database with extra features. It is a **complete memory substrate** for agents: storage, retrieval, ranking, forgetting, consolidation, and cross-agent sharing — all in one system.
 
 ---
 
@@ -54,7 +54,7 @@ At its core, Lumena is not merely a vector database with extra features. It is a
 
 ### 3.1 The Memory Palace
 
-Lumena structures memory as a graph with three entity types:
+Lummenna structures memory as a graph with three entity types:
 
 - **Rooms** (8–50 per palace): Top-level categories such as `decisions`, `architecture`, `preferences`, or `healthcare_ai`. Each room has a domain type (`domain`, `project`, `person`, `ephemeral`).
 - **Loci** (4–20 per room): Sub-locations acting as semantic clusters. The schema reserves a `vector_mean` column for a cached centroid, but it is not yet populated by any code path (loci currently group chunks without a maintained centroid).
@@ -117,42 +117,42 @@ This is not a bug or an afterthought. Forgetting is a first-class design princip
 
 ## 4. Integrations and Ecosystem
 
-Lumena is designed to plug into existing agent stacks, not replace them.
+Lummenna is designed to plug into existing agent stacks, not replace them.
 
 ### 4.1 LangGraph
 
-`LumenaCheckpointSaver` implements LangGraph's `BaseCheckpointSaver` protocol, enabling sovereign graph-agent state persistence without external checkpoint services. Each `thread_id` receives its own locus inside a dedicated `langgraph` room. `LumenaGraphStore` provides cross-thread long-term memory, allowing agents to reference facts learned in one thread while executing another.
+`LummennaCheckpointSaver` implements LangGraph's `BaseCheckpointSaver` protocol, enabling sovereign graph-agent state persistence without external checkpoint services. Each `thread_id` receives its own locus inside a dedicated `langgraph` room. `LummennaGraphStore` provides cross-thread long-term memory, allowing agents to reference facts learned in one thread while executing another.
 
 ### 4.2 Model Context Protocol (MCP)
 
 The MCP server exposes seven operations to OpenCode, Claude Desktop, and GitHub Copilot via stdio transport:
 
-- `lumena_search` — hybrid semantic + lexical search
-- `lumena_store` — persist a memory with room/locus/source-type
-- `lumena_assemble` — retrieve and assemble context in one call
-- `lumena_turn` — store a conversation turn and log implicit feedback
-- `lumena_feedback` — rate a retrieved memory's usefulness
-- `lumena_status` — palace overview with room/chunk counts and TFC state
-- `lumena_dashboard` — real-time effectiveness dashboard
+- `lummenna_search` — hybrid semantic + lexical search
+- `lummenna_store` — persist a memory with room/locus/source-type
+- `lummenna_assemble` — retrieve and assemble context in one call
+- `lummenna_turn` — store a conversation turn and log implicit feedback
+- `lummenna_feedback` — rate a retrieved memory's usefulness
+- `lummenna_status` — palace overview with room/chunk counts and TFC state
+- `lummenna_dashboard` — real-time effectiveness dashboard
 
-This enables any MCP-compatible agent to read from and write to the user's local Lumena palace without custom API clients.
+This enables any MCP-compatible agent to read from and write to the user's local Lummenna palace without custom API clients.
 
 ### 4.3 Beam P2P Sharing
 
-Beam is a household-local memory sharing protocol for trusted LAN environments. Multiple Lumena instances (e.g., a Raspberry Pi agent and a laptop agent) can share memories with:
+Beam is a household-local memory sharing protocol for trusted LAN environments. Multiple Lummenna instances (e.g., a Raspberry Pi agent and a laptop agent) can share memories with:
 
 - Mandatory AES-256-GCM encryption
 - HMAC-SHA256 integrity signing with 30-second replay protection
-- Zeroconf service discovery (`_lumena-beam._tcp`)
+- Zeroconf service discovery (`_lummenna-beam._tcp`)
 - Automatic permission decay on shared memories
 
-Plaintext transport requires an explicit `LUMENA_P2P_INSECURE=1` flag and is intended for testing only.
+Plaintext transport requires an explicit `LUMMENNA_P2P_INSECURE=1` flag and is intended for testing only.
 
 ### 4.4 Production API Server
 
 The FastAPI server provides a hardened REST surface:
 
-- API-key authentication via `LUMENA_API_KEY`
+- API-key authentication via `LUMMENNA_API_KEY`
 - Rate limiting via slowapi
 - CORS middleware with configurable origins
 - Request-size limits, request-ID propagation, and a global unhandled-exception handler
@@ -160,7 +160,7 @@ The FastAPI server provides a hardened REST surface:
 
 ### 4.5 LangChain and Python SDK
 
-`LumenaChatMemory` provides a LangChain-compatible memory adapter for conversational agents. The Python SDK (`ConversationMemory`) supports direct programmatic use:
+`LummennaChatMemory` provides a LangChain-compatible memory adapter for conversational agents. The Python SDK (`ConversationMemory`) supports direct programmatic use:
 
 ```python
 from lummenna.conversation import ConversationMemory
@@ -172,7 +172,7 @@ context = memory.retrieve_and_assemble("What UI settings does the user like?")
 
 ## 5. Benchmarks at a Glance
 
-Lumena ships with eleven benchmark suites. Ten have results committed to the repository as reproducible JSON artifacts (including performance and stress, run on a commodity x86_64 VM); only the cross-system suite is a harness whose results are not yet committed.
+Lummenna ships with eleven benchmark suites. Ten have results committed to the repository as reproducible JSON artifacts (including performance and stress, run on a commodity x86_64 VM); only the cross-system suite is a harness whose results are not yet committed.
 
 | Suite | What It Measures | Key Result |
 |---|---|---|
@@ -192,9 +192,9 @@ Lumena ships with eleven benchmark suites. Ten have results committed to the rep
 
 ## 6. Use Cases
 
-Lumena is designed for scenarios where memory must be persistent, private, and structured:
+Lummenna is designed for scenarios where memory must be persistent, private, and structured:
 
-| Scenario | How Lumena Helps |
+| Scenario | How Lummenna Helps |
 |---|---|
 | **Personal AI Assistant** | Remembers preferences, facts, and conversation history across sessions without cloud dependence. |
 | **Air-Gapped Enterprise Systems** | Provides RAG-style retrieval in environments with no external network access. |
@@ -207,12 +207,12 @@ Lumena is designed for scenarios where memory must be persistent, private, and s
 
 ## 7. Security and Sovereignty
 
-Lumena is sovereign-by-default:
+Lummenna is sovereign-by-default:
 
-- `LUMENA_SOVEREIGN=true` (default) blocks all external network calls, P2P sharing, and model downloads.
+- `LUMMENNA_SOVEREIGN=true` (default) blocks all external network calls, P2P sharing, and model downloads.
 - Embeddings run locally via ONNX Runtime (`bge-small-en-v1.5`, 384 dimensions, <100 MB download).
 - PII scanning runs at the write path with configurable block/redact/hash strategies.
-- File permissions are enforced (`~/.lumena` at `700` / `600`).
+- File permissions are enforced (`~/.lummenna` at `700` / `600`).
 - Audit logging records all operations to the SQLite `audit_log` table.
 
 **Known limitation:** Encryption-at-rest is not yet field-validated. SQLCipher schema support exists; use OS-level disk encryption (LUKS, FileVault, BitLocker) as a stopgap. Production-hardened P2P for adversarial WAN environments is deferred to v0.3.0.
@@ -221,7 +221,7 @@ Lumena is sovereign-by-default:
 
 ## 8. Development Status and Roadmap
 
-Lumena is **stable software** — API-stable, actively developed, and suitable for production, evaluation, development, and trusted-LAN deployments.
+Lummenna is **stable software** — API-stable, actively developed, and suitable for production, evaluation, development, and trusted-LAN deployments.
 
 ### What Works Today
 
@@ -246,9 +246,9 @@ Lumena is **stable software** — API-stable, actively developed, and suitable f
 
 ## 9. Conclusion
 
-Lumena advances agentic memory from research concept to production-ready usability. Its core contribution is architectural: a structured memory palace with heuristic forgetting, operating entirely on-device, natively integrated into LangGraph, LangChain, MCP, and FastAPI ecosystems.
+Lummenna advances agentic memory from research concept to production-ready usability. Its core contribution is architectural: a structured memory palace with heuristic forgetting, operating entirely on-device, natively integrated into LangGraph, LangChain, MCP, and FastAPI ecosystems.
 
-The honest claim is not that Lumena surpasses every vector database on every retrieval metric. The honest claim is that **no existing system combines structured topology, lifecycle management, learned value ranking, and sovereign deployment in a single integrable framework** — and that Lumena demonstrates this combination is feasible, usable, and directionally performant.
+The honest claim is not that Lummenna surpasses every vector database on every retrieval metric. The honest claim is that **no existing system combines structured topology, lifecycle management, learned value ranking, and sovereign deployment in a single integrable framework** — and that Lummenna demonstrates this combination is feasible, usable, and directionally performant.
 
 The complete source code (~9K lines of Python across 65 modules), documentation, eleven benchmark suites, domain corpus, and integrations are available at:
 

@@ -11,38 +11,38 @@ class TestMetricsRegistry:
     def test_counter_increment_and_render(self):
         reg = MetricsRegistry()
         reg.inc(
-            "lumena_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"}
+            "lummenna_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"}
         )
         reg.inc(
-            "lumena_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"}
+            "lummenna_http_requests_total", {"route": "/health", "method": "GET", "status": "2xx"}
         )
         out = reg.render()
-        assert "# TYPE lumena_http_requests_total counter" in out
-        assert 'lumena_http_requests_total{method="GET",route="/health",status="2xx"} 2' in out
+        assert "# TYPE lummenna_http_requests_total counter" in out
+        assert 'lummenna_http_requests_total{method="GET",route="/health",status="2xx"} 2' in out
 
     def test_histogram_buckets_cumulative(self):
         reg = MetricsRegistry(buckets=(0.1, 1.0))
-        reg.observe("lumena_http_request_duration_seconds", 0.05)
-        reg.observe("lumena_http_request_duration_seconds", 0.5)
-        reg.observe("lumena_http_request_duration_seconds", 5.0)
+        reg.observe("lummenna_http_request_duration_seconds", 0.05)
+        reg.observe("lummenna_http_request_duration_seconds", 0.5)
+        reg.observe("lummenna_http_request_duration_seconds", 5.0)
         out = reg.render()
         assert 'le="0.1"} 1' in out
         assert 'le="1.0"} 2' in out
         assert 'le="+Inf"} 3' in out
-        assert "lumena_http_request_duration_seconds_count 3" in out
+        assert "lummenna_http_request_duration_seconds_count 3" in out
 
     def test_gauges_none_omitted(self):
         """Unmeasured values must be omitted, never rendered as zero."""
         reg = MetricsRegistry()
-        out = reg.render(gauges={"lumena_measured": 7, "lumena_unmeasured": None})
-        assert "lumena_measured 7" in out
-        assert "lumena_unmeasured" not in out
+        out = reg.render(gauges={"lummenna_measured": 7, "lummenna_unmeasured": None})
+        assert "lummenna_measured 7" in out
+        assert "lummenna_unmeasured" not in out
 
     def test_label_cardinality_bounded(self):
         """New label sets past the cap are dropped; memory stays bounded."""
         reg = MetricsRegistry()
         for i in range(600):
-            reg.inc("lumena_http_requests_total", {"route": f"r{i}"})
+            reg.inc("lummenna_http_requests_total", {"route": f"r{i}"})
         assert len(reg._counters) <= 512
 
     def test_thread_safety_no_lost_updates(self):
@@ -74,7 +74,7 @@ class TestServerEndpoints:
         from fastapi.testclient import TestClient
 
         from lummenna.api import server as server_mod
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
         from lummenna.conversation import ConversationMemory
         from lummenna.data.schema import get_connection, init_db
         from lummenna.force.contextual.embed import MockEmbedder
@@ -82,7 +82,7 @@ class TestServerEndpoints:
 
         store = tmp_path / "store"
         store.mkdir()
-        config = LumenaConfig(
+        config = LummennaConfig(
             store_path=store,
             model_path=tmp_path / "models",
             vector_index="sqlite-vec",
@@ -131,11 +131,11 @@ class TestServerEndpoints:
         assert resp.status_code == 200
         assert resp.headers["content-type"].startswith("text/plain")
         body = resp.text
-        assert "lumena_http_requests_total" in body
-        assert "lumena_http_request_duration_seconds_bucket" in body
-        assert "lumena_uptime_seconds" in body
-        assert "lumena_active_chunks" in body
-        assert "lumena_embedding_model_available 0" in body
+        assert "lummenna_http_requests_total" in body
+        assert "lummenna_http_request_duration_seconds_bucket" in body
+        assert "lummenna_uptime_seconds" in body
+        assert "lummenna_active_chunks" in body
+        assert "lummenna_embedding_model_available 0" in body
 
     def test_prometheus_is_public_even_with_api_key(self, client):
         c, server_mod = client
@@ -150,21 +150,21 @@ class TestServerEndpoints:
 
 class TestTelemetryGating:
     def test_not_configured_returns_false(self, monkeypatch, tmp_path):
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
         from lummenna.telemetry import configure_azure_monitor_if_enabled
 
         monkeypatch.delenv("APPLICATIONINSIGHTS_CONNECTION_STRING", raising=False)
-        config = LumenaConfig(store_path=tmp_path / "s", sovereign=True)
+        config = LummennaConfig(store_path=tmp_path / "s", sovereign=True)
         assert configure_azure_monitor_if_enabled(config) is False
 
     def test_sovereign_mode_blocks_export(self, monkeypatch, tmp_path):
         """Telemetry export while sovereign must raise, never silently leak."""
         from lummenna.brand.errors import SovereignViolationError
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
         from lummenna.telemetry import configure_azure_monitor_if_enabled
 
         monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000")
-        config = LumenaConfig(store_path=tmp_path / "s", sovereign=True)
+        config = LummennaConfig(store_path=tmp_path / "s", sovereign=True)
         with pytest.raises(SovereignViolationError):
             configure_azure_monitor_if_enabled(config)
 
@@ -172,11 +172,11 @@ class TestTelemetryGating:
         """Configured telemetry with missing package must abort startup."""
         import builtins
 
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
         from lummenna.telemetry import configure_azure_monitor_if_enabled
 
         monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=00000000")
-        config = LumenaConfig(store_path=tmp_path / "s", sovereign=False)
+        config = LummennaConfig(store_path=tmp_path / "s", sovereign=False)
 
         real_import = builtins.__import__
 
@@ -193,10 +193,10 @@ class TestTelemetryGating:
 class TestBusyTimeout:
     def test_busy_timeout_pragma_set(self, tmp_path):
         """Every connection must carry a busy_timeout against writer contention."""
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
         from lummenna.data.schema import get_connection
 
-        config = LumenaConfig(store_path=tmp_path / "store", vector_index="sqlite-vec")
+        config = LummennaConfig(store_path=tmp_path / "store", vector_index="sqlite-vec")
         conn = get_connection(config)
         try:
             timeout = conn.execute("PRAGMA busy_timeout").fetchone()[0]

@@ -292,7 +292,7 @@ def test_marker_noqa_suppresses():
     assert "no-vaporware-marker" not in _rules(r)
 
 
-def test_lumena_package_passes_guardrails():
+def test_lummenna_package_passes_guardrails():
     """The shipped library must itself pass the HIGH-severity gate."""
     import pathlib
 

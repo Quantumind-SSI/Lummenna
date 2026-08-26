@@ -144,7 +144,7 @@ def test_cli_backward_compatible_issue_without_subcommand(tmp_path, monkeypatch)
         check=True,
     )
     key = result.stdout.strip()
-    assert key.startswith("LUMENA-")
+    assert key.startswith("LUMMENNA-")
 
     monkeypatch.setattr(licensing, "_QUANTUMINDSSI_PUBLIC_KEY_B64", pub_b64)
     licensing.clear_license_cache()

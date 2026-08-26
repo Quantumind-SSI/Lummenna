@@ -24,7 +24,7 @@ import time
 import tracemalloc
 from pathlib import Path
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.contextual.embed import MockEmbedder
 from lummenna.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
@@ -62,7 +62,7 @@ def _get_real_embedder(dims: int):
     try:
         from lummenna.force.contextual.embed import LocalEmbedder
 
-        model_dir = LumenaConfig().model_path / EMBEDDER_MODEL
+        model_dir = LummennaConfig().model_path / EMBEDDER_MODEL
         if model_dir.exists():
             print(f"[INFO] Stress benchmark using local ONNX embedder: {model_dir}")
             return LocalEmbedder(model_dir, dims=dims)
@@ -78,8 +78,8 @@ def _get_real_embedder(dims: int):
     )
 
 
-def _make_config(store_path: Path) -> LumenaConfig:
-    return LumenaConfig(
+def _make_config(store_path: Path) -> LummennaConfig:
+    return LummennaConfig(
         store_path=store_path,
         model_path=store_path / "models",
         vector_index="sqlite-vec",
@@ -89,7 +89,7 @@ def _make_config(store_path: Path) -> LumenaConfig:
     )
 
 
-def _ingest_chunks(conn: sqlite3.Connection, config: LumenaConfig, embedder, count: int):
+def _ingest_chunks(conn: sqlite3.Connection, config: LummennaConfig, embedder, count: int):
     t0 = time.perf_counter()
     for i in range(count):
         content = f"stress_test_chunk_{i:06d} " + "word " * 20
@@ -108,7 +108,7 @@ def _ingest_chunks(conn: sqlite3.Connection, config: LumenaConfig, embedder, cou
     return total
 
 
-def _query_throughput(conn: sqlite3.Connection, config: LumenaConfig, embedder, queries: int, workers: int):
+def _query_throughput(conn: sqlite3.Connection, config: LummennaConfig, embedder, queries: int, workers: int):
     queries_list = [f"stress_test_chunk_{i % 100:03d}" for i in range(queries)]
 
     def _run(q: str) -> float:
@@ -134,7 +134,7 @@ def _query_throughput(conn: sqlite3.Connection, config: LumenaConfig, embedder, 
     return total, p50, p99
 
 
-def _trigger_l3_eviction(conn: sqlite3.Connection, config: LumenaConfig):
+def _trigger_l3_eviction(conn: sqlite3.Connection, config: LummennaConfig):
     """Trigger L3 eviction by lowering the memory limit so chunk count exceeds 85%% threshold."""
     # After ingestion we know the chunk count. Compute a limit that forces eviction.
     row = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()
@@ -157,7 +157,7 @@ def _trigger_l3_eviction(conn: sqlite3.Connection, config: LumenaConfig):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Lumena stress benchmark")
+    parser = argparse.ArgumentParser(description="Lummenna stress benchmark")
     parser.add_argument("--chunks", type=int, default=100_000, help="Number of chunks to ingest")
     parser.add_argument("--queries", type=int, default=1_000, help="Number of query requests")
     parser.add_argument("--workers", type=int, default=4, help="Concurrent query workers")

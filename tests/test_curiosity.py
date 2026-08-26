@@ -10,7 +10,7 @@ from lummenna.data.schema import init_db
 
 @pytest.fixture
 def memory_db():
-    """In-memory SQLite connection with Lumena schema."""
+    """In-memory SQLite connection with Lummenna schema."""
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
     init_db(conn)

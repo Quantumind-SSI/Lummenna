@@ -1,5 +1,5 @@
 """
-BEIR cross-dataset evaluation for Lumena.
+BEIR cross-dataset evaluation for Lummenna.
 
 Runs retrieval benchmarks across BEIR subsets, computing standard IR metrics
 with bootstrap confidence intervals.
@@ -34,7 +34,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.retrieval_dense import VectorChannel
 from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel
@@ -191,7 +191,7 @@ def _load_beir_dataset(name: str, path: str, max_passages: int | None = None, ma
 
 
 # ---------------------------------------------------------------------------
-# BM25 baseline (rank-bm25, independent of Lumena)
+# BM25 baseline (rank-bm25, independent of Lummenna)
 # ---------------------------------------------------------------------------
 
 def _bm25_baseline(passages, queries, query_relevant_pids, k=50):
@@ -296,9 +296,9 @@ def _bootstrap_ci(values, n_bootstrap=N_BOOTSTRAP):
 
 def run_single(seed, docs, query_texts, query_relevant_pids, dataset_name, embedder_model):
     np.random.seed(seed)
-    tmpdir = tempfile.mkdtemp(prefix=f"lumena_beir_{dataset_name}_{seed}_")
-    config = LumenaConfig(
-        store_path=Path(tmpdir) / ".lumena" / "store",
+    tmpdir = tempfile.mkdtemp(prefix=f"lummenna_beir_{dataset_name}_{seed}_")
+    config = LummennaConfig(
+        store_path=Path(tmpdir) / ".lummenna" / "store",
         embedding_dims=EMBED_DIMS,
         vector_index="sqlite-vec",
     )
@@ -510,7 +510,7 @@ def _append_config_table(lines, name, metrics_data):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Lumena BEIR benchmark harness")
+    parser = argparse.ArgumentParser(description="Lummenna BEIR benchmark harness")
     parser.add_argument("--max-passages", type=int, default=None, help="Cap corpus size per dataset (default: full)")
     parser.add_argument("--max-queries", type=int, default=None, help="Cap query count per dataset (default: full)")
     parser.add_argument("--output", type=str, default=None, help="Override output JSON path")

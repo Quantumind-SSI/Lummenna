@@ -6,13 +6,13 @@ Secret sauce: Unified error identity across CLI, logs, and API
 """
 
 
-class LumenaError(Exception):
-    """Base for all Lumena exceptions."""
+class LummennaError(Exception):
+    """Base for all Lummenna exceptions."""
 
     code = "LME-0000"
 
 
-class PalaceError(LumenaError):
+class PalaceError(LummennaError):
     """Errors within the memory palace (Force A)."""
 
     pass
@@ -51,7 +51,7 @@ class ConsolidationFailedError(PalaceError):
         super().__init__(msg)
 
 
-class ContextError(LumenaError):
+class ContextError(LummennaError):
     """Errors within the context window (Force B)."""
 
     pass
@@ -87,7 +87,7 @@ class AssemblyTimeoutError(ContextError):
         super().__init__(msg)
 
 
-class TFCError(LumenaError):
+class TFCError(LummennaError):
     """Twin-Force Controller state error."""
 
     code = "LLM-3001"
@@ -117,7 +117,7 @@ class ValueModelUncalibratedError(TFCError):
         )
 
 
-class SovereignViolationError(LumenaError):
+class SovereignViolationError(LummennaError):
     """Attempted external API call when sovereign mode is enabled."""
 
     code = "LLM-3003"
@@ -126,7 +126,7 @@ class SovereignViolationError(LumenaError):
         super().__init__(f"Sovereign boundary: external API call blocked ({attempted_call}).")
 
 
-class ModelNotAvailableError(LumenaError):
+class ModelNotAvailableError(LummennaError):
     """Required ONNX embedding model is missing or cannot be loaded."""
 
     code = "LME-2001"
@@ -138,7 +138,7 @@ class ModelNotAvailableError(LumenaError):
         )
 
 
-class FeedbackLogError(LumenaError):
+class FeedbackLogError(LummennaError):
     """Could not write or read feedback log."""
 
     code = "LME-2002"
@@ -150,7 +150,7 @@ class FeedbackLogError(LumenaError):
         super().__init__(msg)
 
 
-class LicenseError(LumenaError):
+class LicenseError(LummennaError):
     """Base for licensing / entitlement errors."""
 
     code = "LLC-4000"
@@ -163,8 +163,8 @@ class LicenseRequiredError(LicenseError):
 
     def __init__(self, feature: str) -> None:
         super().__init__(
-            f"'{feature}' is a Lumena Pro feature and requires a commercial license. "
-            "Set LUMENA_LICENSE_KEY (or license_key in config), or contact "
+            f"'{feature}' is a Lummenna Pro feature and requires a commercial license. "
+            "Set LUMMENNA_LICENSE_KEY (or license_key in config), or contact "
             "licensing@quantumindssi.com. See COMMERCIAL-LICENSE.md."
         )
         self.feature = feature
@@ -176,7 +176,7 @@ class LicenseInvalidError(LicenseError):
     code = "LLC-4002"
 
     def __init__(self, reason: str = "") -> None:
-        msg = "The supplied Lumena license key is invalid or expired."
+        msg = "The supplied Lummenna license key is invalid or expired."
         if reason:
             msg += f" ({reason})"
         msg += " Contact licensing@quantumindssi.com."
@@ -191,7 +191,7 @@ class SeatLimitError(LicenseError):
 
     def __init__(self, seats: int, current: int) -> None:
         super().__init__(
-            f"This Lumena Pro license permits {seats} tenant seat(s); "
+            f"This Lummenna Pro license permits {seats} tenant seat(s); "
             f"{current} are already in use, so a new tenant cannot be created. "
             "Reduce active tenants or upgrade your seat count — contact "
             "licensing@quantumindssi.com. See COMMERCIAL-LICENSE.md."

@@ -1,4 +1,4 @@
-"""Real Integration Tests for Lumena Core."""
+"""Real Integration Tests for Lummenna Core."""
 
 import os
 import sqlite3
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from lummenna.compliance.safety_forgetting import safety_scan_chunk
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TFCState, TwinForceController
 from lummenna.data.schema import init_db
 from lummenna.force.contextual.assembly import assemble_context
@@ -31,18 +31,18 @@ def memory_db():
 
 @pytest.fixture
 def test_config():
-    return LumenaConfig(
+    return LummennaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumena-test",
+        store_path="/tmp/.lummenna-test",
     )
 
 
 def test_config_loads_from_env():
-    os.environ["LUMENA_DEVICE"] = "rpi5"
-    cfg = LumenaConfig()
+    os.environ["LUMMENNA_DEVICE"] = "rpi5"
+    cfg = LummennaConfig()
     assert cfg.device == "rpi5"
-    del os.environ["LUMENA_DEVICE"]
+    del os.environ["LUMMENNA_DEVICE"]
 
 
 def test_schema_creates_all_tables(memory_db):

@@ -142,8 +142,8 @@ class MetricsRegistry:
             lines.append(f"{name}_sum{self._fmt_labels(labels)} {total_sum:.6f}")
             lines.append(f"{name}_count{self._fmt_labels(labels)} {total_count}")
 
-        lines.append("# TYPE lumena_uptime_seconds gauge")
-        lines.append(f"lumena_uptime_seconds {time.time() - self._started_at:.1f}")
+        lines.append("# TYPE lummenna_uptime_seconds gauge")
+        lines.append(f"lummenna_uptime_seconds {time.time() - self._started_at:.1f}")
 
         for gname, gvalue in sorted((gauges or {}).items()):
             if gvalue is None:

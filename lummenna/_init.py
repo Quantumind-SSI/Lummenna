@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from lummenna.brand.errors import ModelNotAvailableError
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.conversation import ConversationMemory
 from lummenna.data.schema import ensure_schema, get_connection
@@ -14,7 +14,7 @@ from lummenna.search import SearchPipeline
 logger = get_console_logger(__name__)
 
 
-def initialize_palace(config: LumenaConfig) -> dict:
+def initialize_palace(config: LummennaConfig) -> dict:
     """Initialize the memory palace: schema, embedder, pipeline, conversation.
 
     Returns a dictionary with keys: conn, embedder, pipeline, conversation,
@@ -50,20 +50,22 @@ def initialize_palace(config: LumenaConfig) -> dict:
             conn.close()
             raise ModelNotAvailableError(
                 f"{exc}. Download it with 'lummenna model download "
-                f"{config.embedding_model}', or set LUMENA_ALLOW_MOCK_EMBEDDER=1 "
+                f"{config.embedding_model}', or set LUMMENNA_ALLOW_MOCK_EMBEDDER=1 "
                 f"(testing only — semantic search will be meaningless)."
             ) from exc
         logger.warning(
             "embedder_mock_substituted",
             reason=str(exc),
-            warning="LUMENA_ALLOW_MOCK_EMBEDDER=1 — semantic search is meaningless",
+            warning="LUMMENNA_ALLOW_MOCK_EMBEDDER=1 — semantic search is meaningless",
         )
         embedder = MockEmbedder(dims=config.embedding_dims)
 
     return _assemble_palace(conn, config, embedder, embedding_model_available)
 
 
-def _assemble_palace(conn, config: LumenaConfig, embedder, embedding_model_available: bool) -> dict:
+def _assemble_palace(
+    conn, config: LummennaConfig, embedder, embedding_model_available: bool
+) -> dict:
     """Build the pipeline/conversation/TFC around a ready connection + embedder."""
     pipeline = SearchPipeline(conn, config, embedder=embedder)
     conversation = ConversationMemory(config=config, conn=conn, embedder=embedder)
@@ -79,7 +81,7 @@ def _assemble_palace(conn, config: LumenaConfig, embedder, embedding_model_avail
     }
 
 
-def _auto_provision_and_load(config: LumenaConfig, conn, original_exc: Exception):
+def _auto_provision_and_load(config: LummennaConfig, conn, original_exc: Exception):
     """Attempt a one-time model download+export, then load the embedder.
 
     Returns the loaded embedder on success, or ``None`` if provisioning failed
@@ -93,7 +95,7 @@ def _auto_provision_and_load(config: LumenaConfig, conn, original_exc: Exception
         "embedder_auto_provision_start",
         model=config.embedding_model,
         reason=str(original_exc),
-        note="LUMENA_AUTO_PROVISION_MODEL=1 — one-time network fetch; sovereign thereafter",
+        note="LUMMENNA_AUTO_PROVISION_MODEL=1 — one-time network fetch; sovereign thereafter",
     )
     try:
         config.model_path.mkdir(parents=True, exist_ok=True)

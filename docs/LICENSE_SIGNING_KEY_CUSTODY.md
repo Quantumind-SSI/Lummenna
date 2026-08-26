@@ -1,8 +1,8 @@
-# Lumena Pro License Signing-Key Custody Runbook
+# Lummenna Pro License Signing-Key Custody Runbook
 
-This runbook governs the **Ed25519 signing key** that mints Lumena Pro license
+This runbook governs the **Ed25519 signing key** that mints Lummenna Pro license
 keys. That key is the root of trust for all commercial entitlements: anyone who
-holds it can issue licenses that Lumena will accept. Treat it like a code-signing
+holds it can issue licenses that Lummenna will accept. Treat it like a code-signing
 key or a root CA key.
 
 - **Tooling:** `scripts/issue_license.py` (`keygen` and `issue` subcommands).
@@ -79,7 +79,7 @@ loudly rather than shipping an unusable license.
 ## 5. Issue (mint) a license
 
 Provide the private key via `--private-key-file` or the
-`LUMENA_SIGNING_PRIVATE_KEY_B64` environment variable.
+`LUMMENNA_SIGNING_PRIVATE_KEY_B64` environment variable.
 
 ```bash
 python scripts/issue_license.py issue \

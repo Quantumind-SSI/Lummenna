@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 # NOTE: Advanced P2P — currently the live encryption/signing key-rotation
-# capability (BeamNode.rotate_key) — is gated as Lumena Pro (see
+# capability (BeamNode.rotate_key) — is gated as Lummenna Pro (see
 # COMMERCIAL-LICENSE.md, P6). Basic single-key LAN sharing (constructing a
 # BeamNode and running start()/share_room()) is Community.
 #
@@ -23,7 +23,7 @@ SECURITY POSTURE:
   - Topology: flat mDNS peer discovery with direct 1-hop TCP delivery (no mesh).
   - Plaintext fallback: REMOVED. Enabling Beam without a p2p_encryption_key
     raises a SecurityError. To override (e.g. for local testing), set
-    LUMENA_P2P_INSECURE=1 in the environment.
+    LUMMENNA_P2P_INSECURE=1 in the environment.
 """
 
 import asyncio
@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Any
 
 import msgspec
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
 from lummenna.security.crypto import P2PCrypto, P2PSign
@@ -113,14 +113,14 @@ async def decode_frame(
 class BeamNode:
     """Hardened household P2P memory sharing node."""
 
-    def __init__(self, config: LumenaConfig):
+    def __init__(self, config: LummennaConfig):
         if not availability["zeroconf"]:
             raise RuntimeError(
                 "zeroconf is required for the P2P beam protocol but is not installed. "
                 "Install it with: pip install 'zeroconf>=0.132'"
             )
         self.config = config
-        self.service_type = "_lumena-beam._tcp.local."
+        self.service_type = "_lummenna-beam._tcp.local."
         self.peers: dict[str, tuple[str, int]] = {}
         self.device_name = getattr(config, "device_name", socket.gethostname())
         self.local_ip = getattr(config, "local_ip", _get_default_ip())
@@ -131,15 +131,15 @@ class BeamNode:
 
         p2p_key = getattr(config, "p2p_encryption_key", None)
         if not p2p_key:
-            if os.environ.get("LUMENA_P2P_INSECURE") == "1":
+            if os.environ.get("LUMMENNA_P2P_INSECURE") == "1":
                 logger.critical(
-                    "beam_running_in_plaintext_insecure_mode — LUMENA_P2P_INSECURE=1 is set. "
+                    "beam_running_in_plaintext_insecure_mode — LUMMENNA_P2P_INSECURE=1 is set. "
                     "This is NOT safe for production."
                 )
             else:
                 raise RuntimeError(
                     "Beam P2P requires a p2p_encryption_key. "
-                    "Set LUMENA_P2P_ENCRYPTION_KEY or export LUMENA_P2P_INSECURE=1 to override (not recommended)."
+                    "Set LUMMENNA_P2P_ENCRYPTION_KEY or export LUMMENNA_P2P_INSECURE=1 to override (not recommended)."
                 )
         self._crypto = P2PCrypto(p2p_key)
         self._signer = P2PSign(p2p_key)
