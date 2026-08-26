@@ -1,4 +1,4 @@
-"""FastAPI server exposing Lumena memory operations.
+"""FastAPI server exposing Lummenna memory operations.
 
 Endpoints:
   GET  /health           — liveness probe
@@ -34,7 +34,7 @@ from slowapi.util import get_remote_address
 
 from lummenna._init import initialize_palace
 from lummenna.audit import log_audit_event
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.conversation import ConversationMemory
 from lummenna.fusion import RetrievedChunk
@@ -48,14 +48,14 @@ logger = get_console_logger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-_config = LumenaConfig()
+_config = LummennaConfig()
 _config.store_path.mkdir(parents=True, exist_ok=True)
 _config.model_path.mkdir(parents=True, exist_ok=True)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[_config.api_rate_limit])
 
 app = FastAPI(
-    title="Lumena Memory API",
+    title="Lummenna Memory API",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -186,8 +186,8 @@ async def _metrics_middleware(request: Request, call_next):
             "method": request.method,
             "status": status[0] + "xx" if status else "5xx",
         }
-        _metrics.inc("lumena_http_requests_total", labels)
-        _metrics.observe("lumena_http_request_duration_seconds", elapsed, labels)
+        _metrics.inc("lummenna_http_requests_total", labels)
+        _metrics.observe("lummenna_http_request_duration_seconds", elapsed, labels)
 
 
 app.middleware("http")(_metrics_middleware)
@@ -337,7 +337,7 @@ class TurnResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _get_config() -> LumenaConfig:
+def _get_config() -> LummennaConfig:
     return _state.get("config", _config)  # type: ignore[no-any-return]
 
 
@@ -469,23 +469,25 @@ async def metrics_prometheus() -> Response:
     never rendered as zero.
     """
     gauges: dict[str, float | int | None] = {
-        "lumena_process_peak_rss_mb": _process_peak_rss_mb(),
+        "lummenna_process_peak_rss_mb": _process_peak_rss_mb(),
     }
     conn = _get_conn()
     if conn is not None:
         try:
-            gauges["lumena_active_chunks"] = conn.execute(
+            gauges["lummenna_active_chunks"] = conn.execute(
                 "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL"
             ).fetchone()[0]
-            gauges["lumena_rooms"] = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
-            gauges["lumena_forgotten_chunks"] = conn.execute(
+            gauges["lummenna_rooms"] = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
+            gauges["lummenna_forgotten_chunks"] = conn.execute(
                 "SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL"
             ).fetchone()[0]
         except Exception as exc:
             logger.warning("prometheus_gauges_failed", error=str(exc))
     with contextlib.suppress(OSError):
-        gauges["lumena_db_size_bytes"] = _config.db_path.stat().st_size
-    gauges["lumena_embedding_model_available"] = int(_state.get("embedding_model_available", False))
+        gauges["lummenna_db_size_bytes"] = _config.db_path.stat().st_size
+    gauges["lummenna_embedding_model_available"] = int(
+        _state.get("embedding_model_available", False)
+    )
     body = _metrics.render(gauges)
     return Response(content=body, media_type="text/plain; version=0.0.4; charset=utf-8")
 
@@ -707,7 +709,7 @@ _DASHBOARD_HTML_PATH = Path(__file__).with_name("dashboard.html")
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard() -> str:
-    """Serve the Lumena effectiveness dashboard."""
+    """Serve the Lummenna effectiveness dashboard."""
     if _DASHBOARD_HTML_PATH.exists():
         return _DASHBOARD_HTML_PATH.read_text(encoding="utf-8")
     raise HTTPException(status_code=404, detail="Dashboard HTML not found")
@@ -821,7 +823,7 @@ async def metrics() -> dict:
     config = _get_config()
 
     return {
-        "lumena_version": "1.0.0",
+        "lummenna_version": "1.0.0",
         "system": {
             "device": config.device,
             "embedding_model": config.embedding_model,
@@ -877,7 +879,7 @@ def main() -> None:
     """CLI entrypoint for production server."""
     import uvicorn
 
-    cfg = LumenaConfig()
+    cfg = LummennaConfig()
     uvicorn.run(
         "lummenna.api.server:app",
         host=cfg.api_host,

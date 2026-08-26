@@ -1,6 +1,6 @@
 """User-centric scenario integration tests.
 
-These tests simulate realistic user journeys through the Lumena memory
+These tests simulate realistic user journeys through the Lummenna memory
 framework, exercising the CLI-adjacent programmatic API end-to-end.
 """
 
@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from lummenna.compliance.safety_forgetting import safety_forget_chunk, safety_scan_chunk
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TFCState, TwinForceController
 from lummenna.curiosity import curiosity_probe
 from lummenna.data.schema import get_connection
@@ -29,7 +29,7 @@ from lummenna.sovereign.optical import quantize_vector
 @pytest.fixture
 def fresh_config(tmp_path: Path):
     """A config pointing to a temporary store for scenario tests."""
-    return LumenaConfig(
+    return LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
         store_path=str(tmp_path / "store"),
@@ -43,7 +43,7 @@ def pro_license(monkeypatch):
     """Grant a valid Pro license for tests exercising Pro-gated features.
 
     Generates an ephemeral Ed25519 keypair, embeds the public half, mints a
-    signed wildcard key, and exposes it via LUMENA_LICENSE_KEY so gates that
+    signed wildcard key, and exposes it via LUMMENNA_LICENSE_KEY so gates that
     read the environment (e.g. RTBF defense-in-depth) resolve to Pro.
     """
     import base64
@@ -71,15 +71,15 @@ def pro_license(monkeypatch):
         "id": "test",
     }
     payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
-    key = f"LUMENA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
-    monkeypatch.setenv("LUMENA_LICENSE_KEY", key)
+    key = f"LUMMENNA-{_b64url(payload_bytes)}.{_b64url(priv.sign(payload_bytes))}"
+    monkeypatch.setenv("LUMMENNA_LICENSE_KEY", key)
     licensing.clear_license_cache()
     yield key
     licensing.clear_license_cache()
 
 
 @pytest.fixture
-def fresh_conn(fresh_config: LumenaConfig):
+def fresh_conn(fresh_config: LummennaConfig):
     """Yield a freshly initialised DB connection."""
     conn = get_connection(fresh_config)
     yield conn
@@ -87,7 +87,7 @@ def fresh_conn(fresh_config: LumenaConfig):
 
 
 @pytest.fixture
-def embedder(fresh_config: LumenaConfig):
+def embedder(fresh_config: LummennaConfig):
     return FallbackEmbedder(dims=fresh_config.embedding_dims)
 
 
@@ -98,7 +98,7 @@ class TestUserStoryDailyLogging:
         memories = [
             ("Buy oat milk and sourdough", " errands ", "grocery"),
             ("Call dentist to reschedule", "health", "appointments"),
-            ("Lumena FRQAD kernel needs ARM NEON SIMD", "work", "projects"),
+            ("Lummenna FRQAD kernel needs ARM NEON SIMD", "work", "projects"),
         ]
         for content, room, locus in memories:
             emb = embedder.encode_single(content)

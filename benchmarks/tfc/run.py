@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.retrieval_dense import VectorChannel
@@ -74,8 +74,8 @@ def _compute_recall(retrieved_lists: list[list[int]], query_relevant: list[dict[
 
 
 def run_single_config(e: float, a: float, tau: float, r: int, texts: list[str], embeddings: np.ndarray, query_embs: list[np.ndarray], query_relevant: list[dict[int, float]]):
-    config = LumenaConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
-    tmpdir = tempfile.mkdtemp(prefix="lumena_tfc_")
+    config = LummennaConfig(embedding_dims=EMBED_DIMS, vector_index="sqlite-vec")
+    tmpdir = tempfile.mkdtemp(prefix="lummenna_tfc_")
     config.store_path = Path(tmpdir) / "store"
 
     conn = get_connection(config)

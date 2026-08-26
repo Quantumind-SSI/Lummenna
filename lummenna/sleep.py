@@ -10,7 +10,7 @@ from typing import Any
 
 import psutil
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.force.mnemonic.consolidation import run_consolidation_pass
 from lummenna.logging import get_console_logger
 
@@ -24,7 +24,7 @@ _UNSET: Any = object()
 class SleepScheduler:
     """Background scheduler that runs consolidation during idle periods."""
 
-    def __init__(self, config: LumenaConfig):
+    def __init__(self, config: LummennaConfig):
         try:
             from apscheduler.schedulers.background import BackgroundScheduler
             from apscheduler.triggers.cron import CronTrigger

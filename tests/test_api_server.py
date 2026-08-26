@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lummenna.api.server import app
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.conversation import ConversationMemory
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.contextual.embed import MockEmbedder
@@ -18,7 +18,7 @@ def client(tmp_path, monkeypatch):
     store.mkdir()
     models.mkdir()
 
-    config = LumenaConfig(
+    config = LummennaConfig(
         store_path=store,
         model_path=models,
         vector_index="sqlite-vec",
@@ -272,7 +272,7 @@ class TestDashboard:
         resp = client.get("/dashboard")
         assert resp.status_code == 200
         assert "text/html" in resp.headers.get("content-type", "")
-        assert "Lumena Memory Palace" in resp.text
+        assert "Lummenna Memory Palace" in resp.text
 
     def test_dashboard_data(self, client):
         # Seed a room
@@ -298,7 +298,7 @@ class TestDashboard:
         resp = client.get("/metrics")
         assert resp.status_code == 200
         body = resp.json()
-        assert body["lumena_version"] == "1.0.0"
+        assert body["lummenna_version"] == "1.0.0"
         assert "system" in body
         assert "palace" in body
         assert "business" in body

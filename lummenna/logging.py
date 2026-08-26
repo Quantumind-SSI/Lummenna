@@ -1,4 +1,4 @@
-"""Shared logger acquisition for Lumena.
+"""Shared logger acquisition for Lummenna.
 
 Provides ``get_console_logger`` that tries structlog but falls back
 to stdlib ``logging`` so no module ever silently loses log output.

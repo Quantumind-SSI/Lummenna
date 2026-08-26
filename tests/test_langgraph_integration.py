@@ -2,13 +2,13 @@
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.force.contextual.embed import MockEmbedder
 
 
 @pytest.fixture
 def fresh_config(tmp_path):
-    cfg = LumenaConfig(
+    cfg = LummennaConfig(
         store_path=tmp_path / "store",
         model_path=tmp_path / "models",
         vector_index="sqlite-vec",
@@ -22,11 +22,11 @@ def fresh_config(tmp_path):
     return cfg
 
 
-class TestLumenaCheckpointSaver:
+class TestLummennaCheckpointSaver:
     def test_put_and_get(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t1"}}
 
         checkpoint = {
@@ -49,9 +49,9 @@ class TestLumenaCheckpointSaver:
         assert tup.metadata["step"] == 0
 
     def test_list_checkpoints(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t2"}}
 
         for i in range(3):
@@ -75,9 +75,9 @@ class TestLumenaCheckpointSaver:
         assert cps[2].checkpoint["id"] == "cp-0"
 
     def test_thread_isolation(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
 
         for tid in ("tA", "tB"):
             cfg = {"configurable": {"thread_id": tid}}
@@ -99,9 +99,9 @@ class TestLumenaCheckpointSaver:
         assert tup_b.checkpoint["id"] == "cp-tB"
 
     def test_put_writes(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "t3"}}
         # Positional order must match BaseCheckpointSaver.put_writes(config,
         # writes, task_id, task_path) — LangGraph invokes it positionally.
@@ -115,18 +115,18 @@ class TestLumenaCheckpointSaver:
         assert rows[0] == 2
 
     def test_get_tuple_missing(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         result = saver.get_tuple({"configurable": {"thread_id": "missing"}})
         assert result is None
 
 
-class TestLumenaGraphStore:
+class TestLummennaGraphStore:
     def test_put_and_get(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaGraphStore
+        from lummenna.integrations.langgraph import LummennaGraphStore
 
-        store = LumenaGraphStore(config=fresh_config)
+        store = LummennaGraphStore(config=fresh_config)
         store.put(("users", "alice"), "goal", {"text": "learn french"})
 
         item = store.get(("users", "alice"), "goal")
@@ -135,9 +135,9 @@ class TestLumenaGraphStore:
         assert "learn french" in item["value"]
 
     def test_delete(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaGraphStore
+        from lummenna.integrations.langgraph import LummennaGraphStore
 
-        store = LumenaGraphStore(config=fresh_config)
+        store = LummennaGraphStore(config=fresh_config)
         store.put(("tmp",), "k1", "v1")
         store.delete(("tmp",), "k1")
 
@@ -146,9 +146,9 @@ class TestLumenaGraphStore:
 
     def test_search(self, fresh_config):
         embedder = MockEmbedder(dims=fresh_config.embedding_dims)
-        from lummenna.integrations.langgraph import LumenaGraphStore
+        from lummenna.integrations.langgraph import LummennaGraphStore
 
-        store = LumenaGraphStore(config=fresh_config, embedder=embedder)
+        store = LummennaGraphStore(config=fresh_config, embedder=embedder)
         store.put(("docs",), "doc1", "machine learning is fascinating")
         store.put(("docs",), "doc2", "cloud computing scales well")
 
@@ -159,9 +159,9 @@ class TestLumenaGraphStore:
         assert "doc1" in keys
 
     def test_list_namespaces(self, fresh_config):
-        from lummenna.integrations.langgraph import LumenaGraphStore
+        from lummenna.integrations.langgraph import LummennaGraphStore
 
-        store = LumenaGraphStore(config=fresh_config, default_namespace="ns")
+        store = LummennaGraphStore(config=fresh_config, default_namespace="ns")
         store.put(("ns", "a"), "k1", "v1")
         store.put(("ns", "b"), "k2", "v2")
 
@@ -180,24 +180,24 @@ class TestCheckpointSaverInterfaceCompat:
         """
         import inspect
 
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        params = list(inspect.signature(LumenaCheckpointSaver.put_writes).parameters)
+        params = list(inspect.signature(LummennaCheckpointSaver.put_writes).parameters)
         assert params[1] == "config", "first positional arg must be config"
         assert params[2] == "writes", "second positional arg must be writes"
         assert "task_id" in params
         assert "task_path" in params
 
-        aparams = list(inspect.signature(LumenaCheckpointSaver.aput_writes).parameters)
+        aparams = list(inspect.signature(LummennaCheckpointSaver.aput_writes).parameters)
         assert aparams[1] == "config"
         assert aparams[2] == "writes"
         assert "task_id" in aparams
 
     def test_put_writes_positional_invocation(self, fresh_config):
         """Invoke put_writes exactly as LangGraph does (positionally)."""
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         config = {"configurable": {"thread_id": "sig-test"}}
         saver.put_writes(config, [("ch", "v")], "task-42", "path/0")
         rows = saver.conn.execute(
@@ -214,9 +214,9 @@ class TestPendingWritesRoundTrip:
         CheckpointTuple.pending_writes was always [], breaking LangGraph's
         resume-from-interrupt semantics.
         """
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         cfg = {"configurable": {"thread_id": "rw"}}
         cp = {"id": "cp-1", "ts": "2026-01-01T00:00:00", "channel_values": {}}
         meta = {"source": "put", "step": 0, "writes": {}, "parents": {}}
@@ -230,9 +230,9 @@ class TestPendingWritesRoundTrip:
 
     def test_list_before_cursor(self, fresh_config):
         """list(before=...) must exclude the cursor checkpoint and newer ones."""
-        from lummenna.integrations.langgraph import LumenaCheckpointSaver
+        from lummenna.integrations.langgraph import LummennaCheckpointSaver
 
-        saver = LumenaCheckpointSaver(config=fresh_config)
+        saver = LummennaCheckpointSaver(config=fresh_config)
         cfg = {"configurable": {"thread_id": "lb"}}
         cursor_cfg = None
         for i in range(3):

@@ -1,1 +1,1 @@
-"""Lumena brand layer: errors, logging formats, and identity."""
+"""Lummenna brand layer: errors, logging formats, and identity."""

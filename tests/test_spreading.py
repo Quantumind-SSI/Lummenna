@@ -110,7 +110,7 @@ def test_spreading_stage_wired_into_search_pipeline(tmp_path, monkeypatch):
     """
     pytest.importorskip("networkx")
     import lummenna.search as search_mod
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
     from lummenna.data.schema import get_connection, init_db
     from lummenna.force.contextual.embed import MockEmbedder
     from lummenna.force.mnemonic.retrieval_graph import GraphChannel
@@ -119,7 +119,7 @@ def test_spreading_stage_wired_into_search_pipeline(tmp_path, monkeypatch):
 
     assert GraphHit is not None
 
-    config = LumenaConfig(
+    config = LummennaConfig(
         store_path=tmp_path / "store",
         vector_index="sqlite-vec",
         device="generic",

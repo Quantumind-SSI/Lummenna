@@ -4,17 +4,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.sleep import SleepScheduler
 
 
 @pytest.fixture
 def scheduler(tmp_path):
     """Return a SleepScheduler with a default test config."""
-    config = LumenaConfig(
+    config = LummennaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path=str(tmp_path / ".lumena-test"),
+        store_path=str(tmp_path / ".lummenna-test"),
         consolidation_cpu_percent=10.0,
         consolidation_battery_threshold=50,
     )
@@ -127,10 +127,10 @@ def test_scheduler_has_expected_jobs(scheduler):
 
 def test_opportunistic_uses_configurable_cpu_threshold():
     """_opportunistic_check should respect config.consolidation_cpu_percent."""
-    config = LumenaConfig(
+    config = LummennaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumena-test",
+        store_path="/tmp/.lummenna-test",
         consolidation_cpu_percent=20.0,
     )
     scheduler = SleepScheduler(config=config)
@@ -144,10 +144,10 @@ def test_opportunistic_uses_configurable_cpu_threshold():
 
 def test_should_run_uses_configurable_battery_threshold():
     """_should_run should respect config.consolidation_battery_threshold."""
-    config = LumenaConfig(
+    config = LummennaConfig(
         vector_index="sqlite-vec",
         device="generic",
-        store_path="/tmp/.lumena-test",
+        store_path="/tmp/.lummenna-test",
         consolidation_battery_threshold=30,
     )
     scheduler = SleepScheduler(config=config)

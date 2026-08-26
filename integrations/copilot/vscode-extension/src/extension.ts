@@ -2,15 +2,15 @@ import * as vscode from 'vscode';
 
 /**
  * Minimal VS Code extension that registers a Copilot Chat participant
- * for Lumena memory. Requires VS Code 1.90+ with chat participant API.
+ * for Lummenna memory. Requires VS Code 1.90+ with chat participant API.
  */
 export function activate(context: vscode.ExtensionContext) {
   const participant = vscode.chat.createChatParticipant(
-    'copilot.lumena',
+    'copilot.lummenna',
     async (request, _context, response, _token) => {
       const query = request.prompt;
 
-      // Assemble context from Lumena
+      // Assemble context from Lummenna
       try {
         const res = await fetch('http://localhost:8848/assemble', {
           method: 'POST',
@@ -18,18 +18,18 @@ export function activate(context: vscode.ExtensionContext) {
           body: JSON.stringify({ query, top_k: 5 }),
         });
         if (!res.ok) {
-          response.markdown(`Lumena server error: ${res.statusText}. Is \\"lummenna serve\\" running?`);
+          response.markdown(`Lummenna server error: ${res.statusText}. Is \\"lummenna serve\\" running?`);
           return;
         }
         const data = await res.json();
         if (data.assembled_context) {
-          response.markdown(`**Lumena context retrieved:**\\n\\n${data.assembled_context}`);
+          response.markdown(`**Lummenna context retrieved:**\\n\\n${data.assembled_context}`);
         } else {
-          response.markdown('No relevant memories found in the Lumena palace.');
+          response.markdown('No relevant memories found in the Lummenna palace.');
         }
       } catch (err) {
         response.markdown(
-          `Failed to reach Lumena server at localhost:8848. ` +
+          `Failed to reach Lummenna server at localhost:8848. ` +
           `Please start it with: \`lummenna serve\``
         );
       }
@@ -37,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   participant.iconPath = new vscode.ThemeIcon('database');
-  participant.description = 'Lumena Memory Palace';
+  participant.description = 'Lummenna Memory Palace';
 
   context.subscriptions.push(participant);
 }

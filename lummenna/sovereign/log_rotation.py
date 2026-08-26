@@ -20,8 +20,8 @@ logger = get_console_logger(__name__)
 
 
 def get_log_dir() -> Path:
-    """Return the canonical Lumena log directory."""
-    return Path.home() / ".lumena" / "logs"
+    """Return the canonical Lummenna log directory."""
+    return Path.home() / ".lummenna" / "logs"
 
 
 def total_log_size_mb() -> float:

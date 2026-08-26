@@ -17,7 +17,7 @@ from rich.table import Table
 from lummenna.brand.errors import LicenseRequiredError, ModelNotAvailableError
 from lummenna.cli.models import model_app
 from lummenna.compliance.safety_forgetting import get_recent_audit_events
-from lummenna.config import DeviceProfile, LumenaConfig
+from lummenna.config import DeviceProfile, LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.data.schema import ensure_schema, get_connection
 from lummenna.force.contextual.embed import get_embedder
@@ -43,13 +43,13 @@ app.add_typer(daemon_app)
 app.add_typer(p2p_app)
 
 
-def _assert_pro_or_exit(feature: str, config: "LumenaConfig | None" = None) -> None:
+def _assert_pro_or_exit(feature: str, config: "LummennaConfig | None" = None) -> None:
     """Gate a Pro-only CLI command, exiting cleanly (no traceback) if unlicensed.
 
-    Mirrors ``LumenaConfig.assert_licensed`` but renders a friendly Rich message
+    Mirrors ``LummennaConfig.assert_licensed`` but renders a friendly Rich message
     and a non-zero exit code instead of surfacing a stack trace to the user.
     """
-    cfg = config if config is not None else LumenaConfig()
+    cfg = config if config is not None else LummennaConfig()
     try:
         cfg.assert_licensed(feature)
     except LicenseRequiredError as exc:
@@ -62,7 +62,7 @@ def _validate_device(device: str) -> DeviceProfile:
 
     Returns the value narrowed to the ``DeviceProfile`` literal, or exits with a
     clear error listing the valid choices. This keeps the CLI boundary
-    type-correct (LumenaConfig.device is a Literal) and rejects typos loudly
+    type-correct (LummennaConfig.device is a Literal) and rejects typos loudly
     rather than silently falling back to the generic profile.
     """
     valid = get_args(DeviceProfile)
@@ -89,11 +89,11 @@ def serve(
     """Start the FastAPI memory server."""
     import uvicorn
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     host = host or config.api_host
     port = port or config.api_port
     log_level = log_level or config.log_level
-    console.print(f"[bold green]Starting Lumena API server on {host}:{port}[/bold green]")
+    console.print(f"[bold green]Starting Lummenna API server on {host}:{port}[/bold green]")
     uvicorn.run("lummenna.api.server:app", host=host, port=port, log_level=log_level, reload=reload)
 
 
@@ -102,7 +102,7 @@ console = Console()
 _state_tfc = TwinForceController()
 
 
-def _ensure_conn(config: LumenaConfig):
+def _ensure_conn(config: LummennaConfig):
     return get_connection(config)
 
 
@@ -113,9 +113,9 @@ def init(
         False, "--download-model", help="Attempt to download the default embedding model"
     ),
 ):
-    """Initialize Lumena palace for the given device profile."""
+    """Initialize Lummenna palace for the given device profile."""
     device_literal = _validate_device(device)
-    config = LumenaConfig(device=device_literal)
+    config = LummennaConfig(device=device_literal)
     config.store_path.mkdir(parents=True, exist_ok=True)
     config.model_path.mkdir(parents=True, exist_ok=True)
     conn = get_connection(config)
@@ -126,7 +126,7 @@ def init(
         f'device = "{device}"\ncontext_budget = {config.context_budget}\n'
         f'memory_limit_mb = {config.memory_limit_mb}\nvector_index = "{config.vector_index}"\n'
     )
-    console.print(f"[bold green]Lumena initialised for device: {device}[/bold green]")
+    console.print(f"[bold green]Lummenna initialised for device: {device}[/bold green]")
     console.print(f"Store path: {config.store_path}")
     console.print(f"DB path: {config.db_path}")
 
@@ -144,7 +144,7 @@ def init(
                 console.print(f"[yellow]Model download failed: {exc}[/yellow]")
                 console.print(
                     "[yellow]You can export an ONNX model manually with:[/yellow]\n"
-                    "  optimum-cli export onnx --model BAAI/bge-small-en-v1.5 ~/.lumena/models/bge-small-en-v1.5"
+                    "  optimum-cli export onnx --model BAAI/bge-small-en-v1.5 ~/.lummenna/models/bge-small-en-v1.5"
                 )
         else:
             console.print(f"[green]Model already exists at {model_dir}[/green]")
@@ -153,7 +153,7 @@ def init(
 @app.command(name="illuminate")
 def illuminate():
     """Run the Palace Construction onboarding wizard."""
-    config = LumenaConfig()
+    config = LummennaConfig()
     conn = _ensure_conn(config)
     run_onboarding_wizard(conn)
 
@@ -161,11 +161,11 @@ def illuminate():
 @app.command()
 def status():
     """Show current palace and TFC status."""
-    config = LumenaConfig()
+    config = LummennaConfig()
     conn = _ensure_conn(config)
     room_count = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
     chunk_count = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
-    console.print("[bold]Lumena Status[/bold]")
+    console.print("[bold]Lummenna Status[/bold]")
     console.print(f"Device: {config.device}")
     console.print(f"Rooms: {room_count}")
     console.print(f"Active chunks: {chunk_count}")
@@ -186,7 +186,7 @@ def memory_store(
     ),
 ):
     """Store a memory through the full pipeline."""
-    config = LumenaConfig()
+    config = LummennaConfig()
     conn = _ensure_conn(config)
     try:
         embedder = get_embedder(config, allow_mock=allow_mock)
@@ -211,7 +211,7 @@ def memory_retrieve(
     ),
 ):
     """Run search pipeline and print top results."""
-    config = LumenaConfig()
+    config = LummennaConfig()
     conn = _ensure_conn(config)
     try:
         embedder = get_embedder(config, allow_mock=allow_mock)
@@ -240,7 +240,7 @@ def memory_retrieve(
 @palace_app.command(name="rooms")
 def palace_rooms():
     """List all rooms."""
-    config = LumenaConfig()
+    config = LummennaConfig()
     conn = _ensure_conn(config)
     rows = conn.execute("SELECT room_id, name, room_type FROM room ORDER BY name").fetchall()
     table = Table(title="Palace Rooms")
@@ -255,7 +255,7 @@ def palace_rooms():
 @palace_app.command(name="loci")
 def palace_loci(room: str = typer.Argument(..., help="Room name")):
     """List loci in a room."""
-    config = LumenaConfig()
+    config = LummennaConfig()
     conn = _ensure_conn(config)
     row = conn.execute("SELECT room_id FROM room WHERE name = ?", (room,)).fetchone()
     if not row:
@@ -359,7 +359,7 @@ def compliance_forget(
     """
     from lummenna.compliance.safety_forgetting import safety_forget_chunk
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     # Pro gate: right-to-be-forgotten (RTBF) is a commercial compliance feature.
     _assert_pro_or_exit("compliance", config)
     conn = get_connection(config)
@@ -389,11 +389,11 @@ def daemon_start():
 
     from lummenna.sleep import SleepScheduler
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     scheduler = SleepScheduler(config)
     scheduler.start()
 
-    pid_file = Path.home() / ".lumena" / "lumena_daemon.pid"
+    pid_file = Path.home() / ".lummenna" / "lummenna_daemon.pid"
     pid_file.parent.mkdir(parents=True, exist_ok=True)
     pid_file.write_text(str(os.getpid()))
 
@@ -417,7 +417,7 @@ def daemon_run_once():
     """Run a single consolidation pass immediately."""
     from lummenna.sleep import SleepScheduler
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     scheduler = SleepScheduler(config)
     scheduler.run_now()
     console.print("[bold green]Consolidation pass completed.[/bold green]")
@@ -425,10 +425,10 @@ def daemon_run_once():
 
 @daemon_app.command(name="status")
 def daemon_status():
-    """Check if a Lumena daemon is running (checks PID file)."""
+    """Check if a Lummenna daemon is running (checks PID file)."""
     from pathlib import Path
 
-    pid_file = Path.home() / ".lumena" / "lumena_daemon.pid"
+    pid_file = Path.home() / ".lummenna" / "lummenna_daemon.pid"
     if pid_file.exists():
         try:
             pid = int(pid_file.read_text().strip())
@@ -452,10 +452,10 @@ def p2p_share(
     room: str = typer.Option(..., "--room", "-r"),
     ttl: int = typer.Option(24, "--ttl"),
 ):
-    """Share a room to discovered peers (requires LUMENA_SOVEREIGN=false)."""
+    """Share a room to discovered peers (requires LUMMENNA_SOVEREIGN=false)."""
     from lummenna.p2p.beam import BeamNode
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     node = BeamNode(config)
 
     async def _share():
@@ -477,7 +477,7 @@ def p2p_discover(
     """Discover peers on the local network."""
     from lummenna.p2p.beam import BeamNode
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     node = BeamNode(config)
 
     async def _discover():

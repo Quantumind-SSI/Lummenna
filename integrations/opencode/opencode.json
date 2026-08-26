@@ -6,10 +6,10 @@
       "command": ["python3", "-m", "lummenna.integrations.mcp_server"],
       "enabled": true,
       "environment": {
-        "LUMENA_DEVICE": "generic",
-        "LUMENA_STORE_PATH": "./.lumena/store",
-        "LUMENA_MODEL_PATH": "./.lumena/models",
-        "LUMENA_AUTO_PROVISION_MODEL": "1"
+        "LUMMENNA_DEVICE": "generic",
+        "LUMMENNA_STORE_PATH": "./.lummenna/store",
+        "LUMMENNA_MODEL_PATH": "./.lummenna/models",
+        "LUMMENNA_AUTO_PROVISION_MODEL": "1"
       }
     }
   }

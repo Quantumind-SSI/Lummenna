@@ -3,7 +3,7 @@ import sqlite3
 import numpy as np
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import init_db
 from lummenna.force.mnemonic.store import store_memory
 
@@ -19,10 +19,10 @@ def db_conn():
 
 @pytest.fixture
 def config():
-    return LumenaConfig(
+    return LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path="/tmp/.lumena-test-store",
+        store_path="/tmp/.lummenna-test-store",
     )
 
 

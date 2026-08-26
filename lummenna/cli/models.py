@@ -161,10 +161,10 @@ def model_list() -> None:
 def model_download(
     model_name: str = typer.Argument(..., help="Model alias or repo ID"),
 ) -> None:
-    """Download and export the embedding model ONNX file to the default Lumena model path."""
-    from lummenna.config import LumenaConfig
+    """Download and export the embedding model ONNX file to the default Lummenna model path."""
+    from lummenna.config import LummennaConfig
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     dest = config.model_path
     dest.mkdir(parents=True, exist_ok=True)
 
@@ -183,9 +183,9 @@ def model_export(
     output: Path | None = typer.Option(None, "--output", "-o", help="Output directory"),  # noqa: B008
 ) -> None:
     """Export a HuggingFace model to ONNX using optimum-cli."""
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
 
-    config = LumenaConfig()
+    config = LummennaConfig()
     if output is None:
         output = config.model_path / repo_id.split("/")[-1]
 

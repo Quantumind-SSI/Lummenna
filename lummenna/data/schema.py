@@ -37,7 +37,7 @@ _MODIFIER_SECONDS = {
 def _unixepoch_shim(*args: object) -> int:
     """Pure-Python fallback for SQLite's unixepoch() (added in 3.38.0).
 
-    Mirrors the subset of behaviour used by Lumena:
+    Mirrors the subset of behaviour used by Lummenna:
       * unixepoch()                     -> current unix time (UTC seconds)
       * unixepoch('now')                -> current unix time
       * unixepoch('now', '-7 days')     -> now shifted by the modifier
@@ -102,7 +102,7 @@ except Exception:
 
 
 def _enforce_permissions(root_path: Path) -> None:
-    """Ensure ~/.lumena tree is 700 (dirs) and 600 (files). Fail-fast on error."""
+    """Ensure ~/.lummenna tree is 700 (dirs) and 600 (files). Fail-fast on error."""
     if not root_path.exists():
         return
     try:
@@ -134,18 +134,18 @@ def init_db(conn: sqlite3.Connection) -> None:
 
 
 def get_connection(config) -> sqlite3.Connection:
-    """Return a SQLite connection initialised with the Lumena schema and optimised pragmas.
+    """Return a SQLite connection initialised with the Lummenna schema and optimised pragmas.
 
     Supports three encryption modes:
       - sqlcipher : Transparent page-level AES-256 encryption via SQLCipher.
       - fernet    : Field-level encryption for chunk.content only (fallback).
       - none      : Plaintext SQLite (not recommended for production).
     """
-    from lummenna.config import LumenaConfig
+    from lummenna.config import LummennaConfig
 
-    cfg: LumenaConfig = config
+    cfg: LummennaConfig = config
     cfg.store_path.mkdir(parents=True, exist_ok=True)
-    db_path = cfg.store_path / "lumena.db"
+    db_path = cfg.store_path / "lummenna.db"
 
     mode = getattr(cfg, "database_encryption_mode", "none")
 
@@ -165,7 +165,7 @@ def get_connection(config) -> sqlite3.Connection:
         passphrase = cfg.encryption_key or ""
         if not passphrase:
             raise RuntimeError(
-                "database_encryption_mode='sqlcipher' requires LUMENA_ENCRYPTION_KEY to be set."
+                "database_encryption_mode='sqlcipher' requires LUMMENNA_ENCRYPTION_KEY to be set."
             )
         # Derive a high-entropy hex passphrase from the user's key
         from lummenna.security.crypto import derive_sqlcipher_passphrase
@@ -229,7 +229,7 @@ def get_encryption(config):
         return FernetEncryption(None)
     if mode == "fernet" and not has_key:
         raise RuntimeError(
-            "database_encryption_mode='fernet' requires LUMENA_ENCRYPTION_KEY "
+            "database_encryption_mode='fernet' requires LUMMENNA_ENCRYPTION_KEY "
             "to be set. Refusing to silently store plaintext."
         )
     if has_key:

@@ -1,9 +1,9 @@
-# Lumena Commercial License (Pro Edition)
+# Lummenna Commercial License (Pro Edition)
 
 **Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.**
 
-This document describes the **commercial license** option for Lumena. It is one
-half of Lumena's dual-license model (the other being AGPL-3.0-or-later for the
+This document describes the **commercial license** option for Lummenna. It is one
+half of Lummenna's dual-license model (the other being AGPL-3.0-or-later for the
 Community Edition; see `LICENSE`).
 
 > This is a plain-language summary and license-intent document. The binding
@@ -16,15 +16,15 @@ Community Edition; see `LICENSE`).
 ## 1. Why a commercial license?
 
 The Community Edition is licensed under **AGPL-3.0-or-later**. AGPL requires that
-if you run a modified version of Lumena as a network service, you make the
+if you run a modified version of Lummenna as a network service, you make the
 complete corresponding source code available to the users of that service.
 
 A **commercial license** from QuantumindSSI:
 
 1. **Removes the AGPL copyleft / network-use obligation** — you may embed and
-   deploy Lumena in closed-source and SaaS products without disclosing your
+   deploy Lummenna in closed-source and SaaS products without disclosing your
    source.
-2. **Unlocks the Lumena Pro Edition** — the commercial-only capabilities that
+2. **Unlocks the Lummenna Pro Edition** — the commercial-only capabilities that
    are **not** part of the AGPL Community Edition (see §3).
 3. **Includes commercial terms** — warranty, indemnification, support, and SLA
    options per your agreement.
@@ -35,7 +35,7 @@ A **commercial license** from QuantumindSSI:
 
 You need a commercial license if any of the following apply:
 
-- You want to use Lumena in a **proprietary / closed-source** product or a
+- You want to use Lummenna in a **proprietary / closed-source** product or a
   **hosted/SaaS** service without complying with AGPL-3.0's source-disclosure
   requirement.
 - You want to use any **Pro Edition** feature (§3).
@@ -55,7 +55,7 @@ and are **not** covered by the AGPL Community grant.
 ### 3.1 Available now
 
 These capabilities are **built, shipping, and license-enforced today** (each is
-gated by Lumena's entitlement engine, `lummenna.licensing.PRO_FEATURES`).
+gated by Lummenna's entitlement engine, `lummenna.licensing.PRO_FEATURES`).
 
 | Ref | Pro capability |
 |-----|----------------|
@@ -89,7 +89,7 @@ capabilities.
 | P6+ | Advanced P2P hardening: multi-node mesh routing & persistent (durable) replay-nonce store | Not yet available |
 
 Access to Pro features is enabled by a valid **license key** issued by
-QuantumindSSI and validated by Lumena's entitlement engine
+QuantumindSSI and validated by Lummenna's entitlement engine
 (`lummenna.licensing`). A license key never unlocks a roadmap (§3.2) feature,
 because those capabilities do not exist in the software yet.
 
@@ -99,7 +99,7 @@ because those capabilities do not exist in the software yet.
 
 Subject to a signed commercial agreement and payment of applicable fees,
 QuantumindSSI grants the licensee a non-exclusive, non-transferable license to
-use the Lumena Pro Edition within the scope (seats, tenants, nodes, or
+use the Lummenna Pro Edition within the scope (seats, tenants, nodes, or
 deployments) defined in the order form, for the license term.
 
 **Seats** are enforced by the entitlement engine as the maximum number of

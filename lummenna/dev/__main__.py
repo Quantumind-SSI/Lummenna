@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-QuantumindSSI-Commercial
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
-"""CLI for the Lumena code guardrail gate.
+"""CLI for the Lummenna code guardrail gate.
 
 Usage::
 
@@ -26,7 +26,9 @@ from lummenna.dev.guardrails import DEFAULT_FAIL_AT, Severity, scan_paths
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="lummenna.dev", description="Lumena code guardrail gate.")
+    parser = argparse.ArgumentParser(
+        prog="lummenna.dev", description="Lummenna code guardrail gate."
+    )
     parser.add_argument("paths", nargs="*", help="Python files to scan.")
     parser.add_argument(
         "--stdin", action="store_true", help="Read newline-separated paths from stdin."

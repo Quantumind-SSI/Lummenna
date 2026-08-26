@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# Build a prebuilt Lumena embedding-model bundle.
+# Build a prebuilt Lummenna embedding-model bundle.
 #
 # Producers run this ONCE (with the export toolchain installed) to create a
 # self-contained tarball that consumers/CI/Helm can download without ever
@@ -35,7 +35,7 @@ python3 -c "import optimum.onnxruntime" 2>/dev/null \
 mkdir -p "$OUT_DIR"
 
 info "Exporting '$ALIAS' to ONNX (this is the heavy step; builder-only)"
-LUMENA_SOVEREIGN=false LUMENA_MODEL_PATH="$WORK_MODELS" \
+LUMMENNA_SOVEREIGN=false LUMMENNA_MODEL_PATH="$WORK_MODELS" \
   python3 -m lummenna.cli.main model download "$ALIAS" \
   || die "Model export failed"
 
@@ -57,7 +57,7 @@ ok "Bundle built: $BUNDLE ($SIZE)"
 ok "SHA256: $SHA"
 echo ""
 echo "Consumers (lean install, no toolchain):"
-echo "  LUMENA_PREBUILT_MODEL_URL=https://<host>/$ALIAS.tar.gz ./install/install.sh"
+echo "  LUMMENNA_PREBUILT_MODEL_URL=https://<host>/$ALIAS.tar.gz ./install/install.sh"
 echo ""
 echo "Helm (charts/lummenna/values.yaml):"
 echo "  model:"

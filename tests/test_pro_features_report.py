@@ -142,8 +142,8 @@ class TestVerdict:
 
 
 class TestRealRepo:
-    def test_lumena_repo_is_honest(self):
-        """The actual Lumena repo must pass: every PRO feature gated, no leaks."""
+    def test_lummenna_repo_is_honest(self):
+        """The actual Lummenna repo must pass: every PRO feature gated, no leaks."""
         root = Path(__file__).resolve().parents[1]
         if not (root / "lummenna" / "licensing.py").exists():
             pytest.skip("licensing module not present")

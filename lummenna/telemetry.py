@@ -2,12 +2,12 @@
 
 Sovereignty contract
 --------------------
-Lumena is sovereign-by-default: it never exports data off the host unless
+Lummenna is sovereign-by-default: it never exports data off the host unless
 explicitly configured. Azure Monitor export therefore requires BOTH:
 
 1. ``APPLICATIONINSIGHTS_CONNECTION_STRING`` set in the environment (the
    standard Azure convention), AND
-2. ``LUMENA_SOVEREIGN=false`` — enabling export while sovereign mode is on
+2. ``LUMMENNA_SOVEREIGN=false`` — enabling export while sovereign mode is on
    raises ``SovereignViolationError`` instead of silently leaking traces.
 
 Failure honesty: if the connection string is set but the
@@ -17,7 +17,7 @@ operator asked for. Install with ``pip install "lummenna[azure]"``.
 
 What is exported when enabled: FastAPI request spans and the structlog
 messages routed through stdlib logging. Memory CONTENT is never attached
-to spans by Lumena's instrumentation.
+to spans by Lummenna's instrumentation.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ def configure_azure_monitor_if_enabled(config, app=None) -> bool:
     """Configure Azure Monitor OpenTelemetry export if explicitly requested.
 
     Args:
-        config: LumenaConfig — used to enforce the sovereign boundary.
+        config: LummennaConfig — used to enforce the sovereign boundary.
         app: Optional FastAPI app to instrument with request spans.
 
     Returns:

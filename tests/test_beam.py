@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import init_db
 from lummenna.p2p.beam import BeamNode, decode_frame, encode_frame
 
@@ -24,10 +24,10 @@ def memory_db():
 
 @pytest.fixture
 def beam_config(tmp_path):
-    return LumenaConfig(
+    return LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumena"),
+        store_path=str(tmp_path / ".lummenna"),
         beam_port=9999,
         sovereign=False,
         p2p_encryption_key="test-beam-key-1234",
@@ -82,15 +82,19 @@ def test_discovery_mock(beam_config):
         def get_service_info(self, type_, name):
             return MockInfo()
 
-    node.add_service(MockZc(), "_lumena-beam._tcp.local.", "device1._lumena-beam._tcp.local.")
-    assert "device1._lumena-beam._tcp.local." in node.peers
-    assert node.peers["device1._lumena-beam._tcp.local."] == ("192.168.1.5", 8847)
+    node.add_service(MockZc(), "_lummenna-beam._tcp.local.", "device1._lummenna-beam._tcp.local.")
+    assert "device1._lummenna-beam._tcp.local." in node.peers
+    assert node.peers["device1._lummenna-beam._tcp.local."] == ("192.168.1.5", 8847)
 
-    node.update_service(MockZc(), "_lumena-beam._tcp.local.", "device1._lumena-beam._tcp.local.")
-    assert node.peers["device1._lumena-beam._tcp.local."] == ("192.168.1.5", 8847)
+    node.update_service(
+        MockZc(), "_lummenna-beam._tcp.local.", "device1._lummenna-beam._tcp.local."
+    )
+    assert node.peers["device1._lummenna-beam._tcp.local."] == ("192.168.1.5", 8847)
 
-    node.remove_service(MockZc(), "_lumena-beam._tcp.local.", "device1._lumena-beam._tcp.local.")
-    assert "device1._lumena-beam._tcp.local." not in node.peers
+    node.remove_service(
+        MockZc(), "_lummenna-beam._tcp.local.", "device1._lummenna-beam._tcp.local."
+    )
+    assert "device1._lummenna-beam._tcp.local." not in node.peers
 
 
 def test_share_room_packet(memory_db, beam_config, monkeypatch):
@@ -209,9 +213,9 @@ def test_zeroconf_missing():
 
     try:
         import lummenna.p2p.beam as beam_module
-        from lummenna.config import LumenaConfig
+        from lummenna.config import LummennaConfig
 
-        _ = beam_module.BeamNode(LumenaConfig())
+        _ = beam_module.BeamNode(LummennaConfig())
         pytest.fail("Expected RuntimeError on missing zeroconf")
     except RuntimeError as exc:
         assert "zeroconf is required" in str(exc)

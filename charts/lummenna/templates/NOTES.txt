@@ -1,4 +1,4 @@
-Lumena {{ .Chart.AppVersion }} deployed as a single-replica StatefulSet.
+Lummenna {{ .Chart.AppVersion }} deployed as a single-replica StatefulSet.
 
 1. Wait for readiness (the pod is NotReady until the embedding model is
    provisioned into the models volume):

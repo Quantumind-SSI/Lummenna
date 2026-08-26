@@ -2,7 +2,7 @@
 # Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 """Deterministic, offline code guardrails for LLM-generated (and human) Python.
 
-This is the *static core* of Lumena's "ground all generated code" discipline: it
+This is the *static core* of Lummenna's "ground all generated code" discipline: it
 runs with no network and no LLM, so it can gate CI reproducibly. An optional
 LLM/pydantic-ai reviewer (``scripts/pydantic_ai_mcp.py``) layers a semantic pass
 on top, but the checks here are the enforceable baseline.
@@ -30,7 +30,7 @@ Checks
 
 No-Vaporware / No-False-Claims discipline
 -----------------------------------------
-The stub and marker rules exist to enforce Lumena's engineering constitution
+The stub and marker rules exist to enforce Lummenna's engineering constitution
 (see ``AGENTS.md``): every function that ships must be fully implemented, and
 nothing may be described as working when it is not. Unbuilt capabilities belong
 in ``ROADMAP.md`` as explicitly-labelled future work — never as a stubbed body

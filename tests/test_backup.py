@@ -3,17 +3,17 @@ from pathlib import Path
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.backup import backup_database
 from lummenna.data.schema import get_connection
 
 
 @pytest.fixture
 def db_conn(tmp_path):
-    config = LumenaConfig(
+    config = LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumena"),
+        store_path=str(tmp_path / ".lummenna"),
     )
     conn = get_connection(config)
     conn.execute("INSERT INTO room(name, room_type) VALUES ('backup_test', 'domain')")

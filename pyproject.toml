@@ -36,7 +36,7 @@ dependencies = [
     "scikit-learn>=1.4",
     "jinja2>=3.1",
     "structlog>=24.1",
-    # Lumena: Unification
+    # Lummenna: Unification
     "pydantic>=2.0",
     "pydantic-settings>=2.2",
     "typer>=0.12",

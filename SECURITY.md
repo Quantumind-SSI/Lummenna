@@ -11,7 +11,7 @@
 
 ## Reporting a Vulnerability
 
-Lumena takes security seriously. If you discover a vulnerability, please report it via the GitHub Security Advisory page or email.
+Lummenna takes security seriously. If you discover a vulnerability, please report it via the GitHub Security Advisory page or email.
 
 **Report via:** https://github.com/QuantmindSSI/lummenna/security/advisories/new
 
@@ -55,8 +55,8 @@ WQYWQOYpjP4A
 
 ### Sovereign-by-Default
 
-- Lumena **never** sends data to external APIs unless explicitly configured
-- `LUMENA_SOVEREIGN=true` (default) blocks P2P sharing, model downloads from HuggingFace, and clamps API CORS to localhost origins
+- Lummenna **never** sends data to external APIs unless explicitly configured
+- `LUMMENNA_SOVEREIGN=true` (default) blocks P2P sharing, model downloads from HuggingFace, and clamps API CORS to localhost origins
 - Embedding models run locally via ONNX Runtime
 
 ### Forgetting as Security
@@ -68,24 +68,24 @@ WQYWQOYpjP4A
 ### Storage Security
 
 - SQLite WAL mode with configurable sync levels
-- File permissions enforced: `~/.lumena` should be `700`
+- File permissions enforced: `~/.lummenna` should be `700`
 - Audit logs are stored in the SQLite `audit_log` table with structured entries
 
 ## Encryption at Rest
 
-Encryption at rest is **implemented but opt-in** (`LUMENA_DATABASE_ENCRYPTION_MODE`, default `none`):
+Encryption at rest is **implemented but opt-in** (`LUMMENNA_DATABASE_ENCRYPTION_MODE`, default `none`):
 
-- **`sqlcipher`** — full-database encryption via SQLCipher, with PBKDF2 passphrase derivation. Requires the `sqlcipher3` package and `LUMENA_ENCRYPTION_KEY`.
-- **`fernet`** — field-level encryption of chunk content via `cryptography.Fernet`. Requires `LUMENA_ENCRYPTION_KEY` (startup fails without it). **Caveat:** the FTS5 lexical index is built from plaintext so BM25 search keeps working — token-level plaintext therefore remains in the `chunk_fts` index on disk. If that is unacceptable for your threat model, use `sqlcipher` mode, which encrypts every page including the FTS index.
+- **`sqlcipher`** — full-database encryption via SQLCipher, with PBKDF2 passphrase derivation. Requires the `sqlcipher3` package and `LUMMENNA_ENCRYPTION_KEY`.
+- **`fernet`** — field-level encryption of chunk content via `cryptography.Fernet`. Requires `LUMMENNA_ENCRYPTION_KEY` (startup fails without it). **Caveat:** the FTS5 lexical index is built from plaintext so BM25 search keeps working — token-level plaintext therefore remains in the `chunk_fts` index on disk. If that is unacceptable for your threat model, use `sqlcipher` mode, which encrypts every page including the FTS index.
 - **`none`** (default) — plaintext SQLite. Use OS-level disk encryption (FileVault, BitLocker, LUKS) if you cannot enable one of the modes above.
 
 ## P2P Transport Security
 
-Beam P2P sharing is **encrypted and authenticated by default**: every frame is AES-256-GCM encrypted and HMAC-SHA256 signed, with a timestamp window plus nonce cache for replay protection. A Beam listener refuses to start without `LUMENA_P2P_ENCRYPTION_KEY` unless `LUMENA_P2P_INSECURE=1` is explicitly set (not recommended). Caveats: the replay-nonce cache is in-memory only (resets on restart), and key distribution between peers is manual.
+Beam P2P sharing is **encrypted and authenticated by default**: every frame is AES-256-GCM encrypted and HMAC-SHA256 signed, with a timestamp window plus nonce cache for replay protection. A Beam listener refuses to start without `LUMMENNA_P2P_ENCRYPTION_KEY` unless `LUMMENNA_P2P_INSECURE=1` is explicitly set (not recommended). Caveats: the replay-nonce cache is in-memory only (resets on restart), and key distribution between peers is manual.
 
 ## License Signing Key
 
-Lumena Pro entitlements are authorised by an **Ed25519 signing key**; only the
+Lummenna Pro entitlements are authorised by an **Ed25519 signing key**; only the
 matching public key is embedded in the shipped code (`lummenna/licensing.py`), and
 verification is fully offline. The private signing key is the root of trust for
 all commercial licenses and is **never committed to this repository**. Its
@@ -96,9 +96,9 @@ Tooling lives in `scripts/issue_license.py` (`keygen` and `issue` subcommands).
 ## Known Limitations
 
 1. **Encryption at rest is off by default** — see above; plaintext SQLite unless a mode is configured.
-2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMENA_API_KEY` is unset. Set it before exposing the server to any network. Additionally, `/health`, `/dashboard`, `/metrics`, and `/v1/dashboard-data` are intentionally public (no API key required) and expose room names, chunk counts, and feedback statistics; do not expose the server to untrusted networks if that metadata is sensitive.
+2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMMENNA_API_KEY` is unset. Set it before exposing the server to any network. Additionally, `/health`, `/dashboard`, `/metrics`, and `/v1/dashboard-data` are intentionally public (no API key required) and expose room names, chunk counts, and feedback statistics; do not expose the server to untrusted networks if that metadata is sensitive.
 3. **Rate limiting covers write/search endpoints only** — the five POST endpoints are rate-limited; GET endpoints are not.
-4. **Sovereign mode blocks P2P and downloads** — When `LUMENA_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lumena processes from making network calls.
+4. **Sovereign mode blocks P2P and downloads** — When `LUMMENNA_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lummenna processes from making network calls.
 5. **P2P replay protection is process-local** — the seen-nonce set is not persisted across restarts; the 30-second timestamp window still applies.
 
 ## Dependency Security
@@ -123,4 +123,4 @@ Key dependencies and their security posture:
 ---
 
 *Last updated: 2026-08-05*  
-*Maintainer: Lumena Security Team*
+*Maintainer: Lummenna Security Team*

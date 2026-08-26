@@ -2,16 +2,16 @@ import sqlite3
 
 import pytest
 
-from lummenna.config import LumenaConfig
+from lummenna.config import LummennaConfig
 from lummenna.data.schema import ensure_schema, get_connection, init_db
 
 
 @pytest.fixture
 def temp_config(tmp_path):
-    return LumenaConfig(
+    return LummennaConfig(
         device="generic",
         vector_index="sqlite-vec",
-        store_path=str(tmp_path / ".lumena"),
+        store_path=str(tmp_path / ".lummenna"),
     )
 
 
@@ -30,7 +30,7 @@ def test_get_connection_sets_row_factory(temp_config):
 
 def test_get_connection_db_file_exists(temp_config):
     conn = get_connection(temp_config)
-    db_path = temp_config.store_path / "lumena.db"
+    db_path = temp_config.store_path / "lummenna.db"
     assert db_path.exists()
     conn.close()
 

@@ -1,5 +1,5 @@
 {{- if gt (int .Values.replicaCount) 1 }}
-{{- fail "Lumena is single-writer SQLite: replicaCount must be 1. Each extra replica would hold an independent, divergent memory palace. See values.yaml header." }}
+{{- fail "Lummenna is single-writer SQLite: replicaCount must be 1. Each extra replica would hold an independent, divergent memory palace. See values.yaml header." }}
 {{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
@@ -79,32 +79,32 @@ spec:
             - name: http
               containerPort: 8848
           env:
-            - name: LUMENA_API_HOST
+            - name: LUMMENNA_API_HOST
               value: "0.0.0.0"
-            - name: LUMENA_API_PORT
+            - name: LUMMENNA_API_PORT
               value: "8848"
-            - name: LUMENA_STORE_PATH
+            - name: LUMMENNA_STORE_PATH
               value: /data/store
-            - name: LUMENA_MODEL_PATH
+            - name: LUMMENNA_MODEL_PATH
               value: /data/models
-            - name: LUMENA_EMBEDDING_MODEL
+            - name: LUMMENNA_EMBEDDING_MODEL
               value: {{ .Values.model.name | quote }}
-            - name: LUMENA_DEVICE
+            - name: LUMMENNA_DEVICE
               value: {{ .Values.config.device | quote }}
-            - name: LUMENA_LOG_LEVEL
+            - name: LUMMENNA_LOG_LEVEL
               value: {{ .Values.config.logLevel | quote }}
-            - name: LUMENA_API_RATE_LIMIT
+            - name: LUMMENNA_API_RATE_LIMIT
               value: {{ .Values.config.rateLimit | quote }}
-            - name: LUMENA_ALLOWED_ORIGINS
+            - name: LUMMENNA_ALLOWED_ORIGINS
               value: {{ .Values.config.allowedOrigins | quote }}
-            - name: LUMENA_CONTEXT_BUDGET
+            - name: LUMMENNA_CONTEXT_BUDGET
               value: {{ .Values.config.contextBudget | quote }}
-            - name: LUMENA_MEMORY_LIMIT_MB
+            - name: LUMMENNA_MEMORY_LIMIT_MB
               value: {{ .Values.config.memoryLimitMb | quote }}
-            - name: LUMENA_SOVEREIGN
+            - name: LUMMENNA_SOVEREIGN
               value: {{ .Values.config.sovereign | quote }}
             {{- if or .Values.auth.existingSecret .Values.auth.createSecret.enabled }}
-            - name: LUMENA_API_KEY
+            - name: LUMMENNA_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "lummenna.apiKeySecretName" . }}
@@ -112,7 +112,7 @@ spec:
             {{- end }}
             {{- if .Values.azureMonitor.enabled }}
             {{- if eq .Values.config.sovereign "true" }}
-            {{- fail "azureMonitor.enabled requires config.sovereign=\"false\": Lumena refuses telemetry export in sovereign mode" }}
+            {{- fail "azureMonitor.enabled requires config.sovereign=\"false\": Lummenna refuses telemetry export in sovereign mode" }}
             {{- end }}
             - name: APPLICATIONINSIGHTS_CONNECTION_STRING
               valueFrom:

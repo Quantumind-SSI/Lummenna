@@ -1,6 +1,6 @@
-# Contributing to Lumena
+# Contributing to Lummenna
 
-Thank you for considering contributing to Lumena. Every contribution — code, documentation, design, testing, or community support — helps local AI agents develop minds of their own.
+Thank you for considering contributing to Lummenna. Every contribution — code, documentation, design, testing, or community support — helps local AI agents develop minds of their own.
 
 ---
 
@@ -17,9 +17,9 @@ This project adheres to a standard of respect, inclusivity, and intellectual hon
 
 ## Contributor License Agreement (CLA)
 
-**Lumena is dual-licensed** — the Community Edition under **AGPL-3.0-or-later**,
+**Lummenna is dual-licensed** — the Community Edition under **AGPL-3.0-or-later**,
 and a **commercial Pro Edition** under a proprietary license from QuantumindSSI.
-To keep this model legally sound, **every contributor must agree to the Lumena
+To keep this model legally sound, **every contributor must agree to the Lummenna
 Contributor License Agreement (CLA) before their contribution can be merged.**
 
 By submitting a contribution (pull request, patch, or any other form) you
@@ -33,15 +33,15 @@ represent and agree that:
    sublicense and relicense** — to use, reproduce, modify, distribute, and
    commercially exploit your contribution, **under both the AGPL-3.0 Community
    license and the QuantumindSSI commercial license**, in current and future
-   versions of Lumena.
+   versions of Lummenna.
 3. **You retain copyright** in your contribution; this CLA is a license grant,
    not an ownership transfer, but it gives QuantumindSSI everything required to
-   dual-license Lumena.
+   dual-license Lummenna.
 4. **No obligation.** QuantumindSSI is not obligated to use or include your
    contribution.
 
 **How to sign:** For your first contribution, add your name to `AUTHORS` and
-include the line `I agree to the Lumena CLA (see CONTRIBUTING.md).` in your pull
+include the line `I agree to the Lummenna CLA (see CONTRIBUTING.md).` in your pull
 request description. For significant contributions, a signed CLA may be
 requested and stored under `docs/cla/`.
 
@@ -85,17 +85,17 @@ When reporting, include:
 
 ```markdown
 **Device:** (e.g., Raspberry Pi 5 4GB, x86_64 desktop)
-**Lumena version:** (e.g., 0.1.0)
+**Lummenna version:** (e.g., 0.1.0)
 **Python version:** (e.g., 3.12.3)
 **What happened:**
 **What you expected:**
 **Steps to reproduce:**
-**Relevant logs:** (with `[LUMENA:*]` prefix lines)
+**Relevant logs:** (with `[LUMMENNA:*]` prefix lines)
 ```
 
 ### 2. Suggesting Features
 
-Feature requests should align with Lumena's core philosophy:
+Feature requests should align with Lummenna's core philosophy:
 
 > Sovereign-first. Edge-native. Biologically-grounded. Palace-structured.
 
@@ -164,7 +164,7 @@ Every change should respect the duality:
 
 - **Memory (Force A)** = substantive, concrete, archival
 - **Context (Force B)** = active, verbal, ephemeral
-- **Lumena (Unification)** = light, balance, the intersection
+- **Lummenna (Unification)** = light, balance, the intersection
 
 ### Adding a New Room
 
@@ -196,7 +196,7 @@ Docs live in:
 - Inline docstrings — API reference
 
 When documenting:
-- Use the Lumena lexicon (Memory Palace, Context Window, Dimming, Consolidation, etc.)
+- Use the Lummenna lexicon (Memory Palace, Context Window, Dimming, Consolidation, etc.)
 - Provide working code examples
 - Include expected output where helpful
 - Keep line length <= 100 characters

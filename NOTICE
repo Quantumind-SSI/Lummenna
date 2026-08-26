@@ -1,11 +1,11 @@
-Lumena
+Lummenna
 Copyright (c) 2025-2026 QuantumindSSI. All rights reserved.
 
 This product is developed and owned by QuantumindSSI.
 
 LICENSING
 ---------
-Lumena is offered under a dual-license model:
+Lummenna is offered under a dual-license model:
 
   * Community Edition — GNU Affero General Public License v3.0 or later
     (AGPL-3.0-or-later). See LICENSE and LICENSES/AGPL-3.0.txt.
@@ -16,7 +16,7 @@ Lumena is offered under a dual-license model:
 
 HISTORICAL NOTICE
 -----------------
-Lumena versions up to and including v1.0.0 were released under the
+Lummenna versions up to and including v1.0.0 were released under the
 Apache License, Version 2.0. That grant, as applied to those released
 versions, is irrevocable. A copy of the Apache License 2.0 is retained
 at LICENSES/Apache-2.0.txt for reference. Subsequent releases are
@@ -29,4 +29,4 @@ under its own terms (see the respective project distributions). Notable
 runtime dependencies include: onnxruntime, transformers (tokenizer),
 sqlite-vec, usearch, networkx, numpy, fastapi, uvicorn, pydantic,
 cryptography, and typer. Their inclusion does not alter the licensing of
-Lumena's own source code.
+Lummenna's own source code.
