@@ -198,3 +198,78 @@ class SeatLimitError(LicenseError):
         )
         self.seats = seats
         self.current = current
+
+
+class BackupError(LummennaError):
+    """Base for off-device database replication errors (lummenna.ops.backup)."""
+
+    code = "LME-5000"
+
+
+class BackupNotConfiguredError(BackupError):
+    """Backup was requested but the configuration is incomplete."""
+
+    code = "LME-5001"
+
+    def __init__(self, missing: str) -> None:
+        super().__init__(
+            f"Off-device backup is enabled but '{missing}' is not set. "
+            "Set LUMMENNA_BACKUP_ACCOUNT to the storage account name and ensure "
+            "the workload has a managed identity with the Storage Blob Data "
+            "Contributor role on that account."
+        )
+        self.missing = missing
+
+
+class BackupDependencyMissingError(BackupError):
+    """The optional Azure SDK extra is not installed."""
+
+    code = "LME-5002"
+
+    def __init__(self, package: str) -> None:
+        super().__init__(
+            f"Off-device backup requires '{package}', which is not installed. "
+            "Install the optional extra: pip install 'lummenna[azure]'."
+        )
+        self.package = package
+
+
+class BackupUploadError(BackupError):
+    """A snapshot was produced but could not be replicated off-device."""
+
+    code = "LME-5003"
+
+    def __init__(self, blob_name: str, detail: str = "") -> None:
+        msg = f"Backup snapshot '{blob_name}' could not be uploaded."
+        if detail:
+            msg += f" ({detail})"
+        super().__init__(msg)
+        self.blob_name = blob_name
+        self.detail = detail
+
+
+class BackupRestoreError(BackupError):
+    """A restore was attempted and failed, leaving the store untouched."""
+
+    code = "LME-5004"
+
+    def __init__(self, detail: str = "") -> None:
+        msg = "Restore from off-device backup failed; the local store was left unchanged."
+        if detail:
+            msg += f" ({detail})"
+        super().__init__(msg)
+        self.detail = detail
+
+
+class BackupIntegrityError(BackupError):
+    """A downloaded snapshot failed verification and was discarded."""
+
+    code = "LME-5005"
+
+    def __init__(self, blob_name: str, detail: str = "") -> None:
+        msg = f"Backup snapshot '{blob_name}' failed integrity verification and was discarded."
+        if detail:
+            msg += f" ({detail})"
+        super().__init__(msg)
+        self.blob_name = blob_name
+        self.detail = detail

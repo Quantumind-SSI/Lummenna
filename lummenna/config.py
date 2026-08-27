@@ -104,6 +104,23 @@ class LummennaConfig(BaseSettings):
     database_encryption_mode: Literal["sqlcipher", "fernet", "none"] = "none"
     p2p_encryption_key: str | None = None
 
+    # Off-device database replication (lummenna.ops.backup). This exists for
+    # hosted deployments whose local disk is ephemeral; it ships a consistent
+    # snapshot of the SQLite store to Azure Blob Storage on a timer and restores
+    # it on a cold start. It is an outbound network call by definition, so it is
+    # gated on assert_sovereign() and can never run while sovereign is true.
+    # Leaving this off (the default) is the correct choice for local installs.
+    backup_enabled: bool = False
+    # Storage account NAME, not a connection string and not a key. Auth is
+    # workload identity (DefaultAzureCredential); no secret is ever configured.
+    backup_account: str | None = None
+    backup_container: str = "db-backups"
+    # Snapshot cadence. The floor is enforced in ops.backup rather than here so
+    # that a hand-edited config.toml cannot schedule a hot loop against blob.
+    backup_interval_seconds: int = 3600
+    # Number of snapshots retained; older blobs are pruned after each upload.
+    backup_retention: int = 24
+
     # Licensing / entitlement (dual-license Pro edition). A signed license key
     # (LUMMENNA_LICENSE_KEY) unlocks Pro features; absent/invalid → Community.
     # Validation is fully offline (no phone-home) to preserve sovereignty.

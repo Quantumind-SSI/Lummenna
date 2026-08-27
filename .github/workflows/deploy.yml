@@ -1,0 +1,405 @@
+name: Deploy
+
+# Single deployment plane for lummenna.com.
+#
+# Everything that reaches Azure goes through this file. That is the point: the
+# incident that produced it involved four concurrent hosting paths, one of them
+# a Cloudflare Tunnel to a laptop, and an image pushed by hand from a
+# workstation that then drifted four days behind the repository.
+#
+# Ordering is load-bearing, not stylistic. The container image and the Bicep
+# template are NOT independently deployable:
+#
+#   * LummennaConfig declares env_prefix='LUMMENNA_' (lummenna/config.py).
+#   * The image deployed by hand on 2026-08-18 predates commit f51d6a4
+#     (2026-08-22) which introduced that prefix, and expects 'LUMENA_'.
+#   * Applying the template alone leaves every variable unread. api_key then
+#     falls back to None, and because server.py guards authentication with
+#     `if _config.api_key and ...`, an unread key disables auth rather than
+#     failing closed.
+#
+# So build-and-push always runs before apply, in the same run, from the same
+# commit. The verify job then proves authentication is actually on by asserting
+# that an unauthenticated request is REJECTED. That assertion is the regression
+# test for the failure described above; do not weaken it to a health check.
+#
+# Repository configuration:
+#   secrets:   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+#              LUMMENNA_API_KEY
+#   variables: AZURE_RESOURCE_GROUP, AZURE_LOCATION, ACR_NAME
+#
+# The federated identity needs Contributor plus Role Based Access Control
+# Administrator on the resource group, because the template creates its own
+# role assignments and Contributor cannot, and AcrPush on the registry, because
+# the registry has the admin user disabled.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lummenna/**"
+      - "infra/azure/**"
+      - "website/**"
+      - "Dockerfile"
+      - "pyproject.toml"
+      - ".github/workflows/deploy.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "lummenna/**"
+      - "infra/azure/**"
+      - "website/**"
+      - "Dockerfile"
+      - "pyproject.toml"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type APPLY to deploy. Anything else runs a what-if preview only."
+        required: true
+        default: "what-if"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  # Two deployments against one resource group will interleave revisions and
+  # role assignments. Queue rather than cancel: a half-applied template is
+  # worse than a slow one.
+  group: deploy-${{ vars.AZURE_RESOURCE_GROUP }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_REPOSITORY: lumena
+
+jobs:
+  # --------------------------------------------------------------------
+  # Static gates. Each check here corresponds to a defect that actually
+  # shipped, so each one is a regression test rather than a style rule.
+  # --------------------------------------------------------------------
+  guard:
+    name: Guards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Required configuration is present
+        run: |
+          missing=0
+          for name in AZURE_RESOURCE_GROUP AZURE_LOCATION ACR_NAME; do
+            case "$name" in
+              AZURE_RESOURCE_GROUP) value="${{ vars.AZURE_RESOURCE_GROUP }}" ;;
+              AZURE_LOCATION)       value="${{ vars.AZURE_LOCATION }}" ;;
+              ACR_NAME)             value="${{ vars.ACR_NAME }}" ;;
+            esac
+            if [ -z "$value" ]; then
+              echo "::error::repository variable $name is not set"
+              missing=1
+            fi
+          done
+          if [ -z "$API_KEY" ]; then
+            echo "::error::repository secret LUMMENNA_API_KEY is not set"
+            missing=1
+          fi
+          exit $missing
+        env:
+          # Through the environment, never the command line: argv is visible
+          # in the runner's process list even though logs are masked.
+          API_KEY: ${{ secrets.LUMMENNA_API_KEY }}
+
+      - name: Environment prefix must be LUMMENNA_, never LUMENA_
+        run: |
+          # The single-M spelling is silently ignored by pydantic-settings,
+          # which turns a missing api_key into disabled authentication.
+          if grep -nE "name: *'LUMENA_" infra/azure/main.bicep; then
+            echo "::error::Bicep uses the single-M prefix LUMENA_. LummennaConfig reads LUMMENNA_ (double M); single-M names are ignored and api_key falls back to None, which disables API authentication."
+            exit 1
+          fi
+          count=$(grep -cE "name: *'LUMMENNA_" infra/azure/main.bicep)
+          echo "Verified $count LUMMENNA_-prefixed variables."
+          test "$count" -ge 8
+
+      - name: Bicep compiles with zero warnings
+        run: |
+          az bicep build --file infra/azure/main.bicep --stdout > /dev/null 2> bicep.err
+          if [ -s bicep.err ]; then
+            echo "::error::Bicep emitted warnings; warnings are failures."
+            cat bicep.err
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,azure]"
+
+      - name: Vaporware guardrail
+        run: |
+          # Feed explicit file paths. The module takes files, not directories:
+          # passing a directory scans nothing and still reports passed=True,
+          # which is a guard that lies. Assert a plausible file count so that
+          # a future change to the invocation cannot silently disarm it.
+          count=$(git ls-files '*.py' | wc -l | tr -d ' ')
+          if [ "$count" -lt 100 ]; then
+            echo "::error::only $count Python files found; guardrail invocation is probably broken"
+            exit 1
+          fi
+          git ls-files '*.py' | python -m lummenna.dev --stdin
+
+      - name: Lint and types
+        run: |
+          ruff check lummenna/ tests/
+          ruff format --check lummenna/ tests/
+          mypy lummenna/ops/
+
+      - name: Tests
+        run: pytest -q
+
+  # --------------------------------------------------------------------
+  # Build and push. Tagged with the commit SHA: never 'latest', so a
+  # rollback is a redeploy of a known immutable tag.
+  # --------------------------------------------------------------------
+  build:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    needs: guard
+    outputs:
+      image: ${{ steps.tag.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compute immutable tag
+        id: tag
+        run: |
+          REGISTRY="${{ vars.ACR_NAME }}.azurecr.io"
+          echo "image=${REGISTRY}/${IMAGE_REPOSITORY}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "registry=${REGISTRY}" >> "$GITHUB_OUTPUT"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Registry login
+        run: az acr login --name "${{ vars.ACR_NAME }}"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          # Pull requests build to prove the Dockerfile still works, but must
+          # never publish an artifact that a deploy could later select.
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.tag.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Confirm the tag exists in the registry
+        if: github.event_name != 'pull_request'
+        run: |
+          az acr repository show-tags \
+            --name "${{ vars.ACR_NAME }}" \
+            --repository "${IMAGE_REPOSITORY}" \
+            --query "[?@=='${GITHUB_SHA}']" -o tsv | grep -q "${GITHUB_SHA}"
+
+  # --------------------------------------------------------------------
+  # Apply. Pull requests preview only; they can never provision.
+  # --------------------------------------------------------------------
+  deploy:
+    name: Deploy infrastructure
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    outputs:
+      api_fqdn: ${{ steps.outputs.outputs.api_fqdn }}
+      site_hostname: ${{ steps.outputs.outputs.site_hostname }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group
+        run: |
+          az group create \
+            --name "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --location "${{ vars.AZURE_LOCATION }}" \
+            --only-show-errors > /dev/null
+
+      - name: What-if preview
+        run: |
+          az deployment group what-if \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "lummenna-${{ github.run_id }}" \
+            --template-file infra/azure/main.bicep \
+            --parameters \
+              containerImage="${{ needs.build.outputs.image }}" \
+              apiKey="$API_KEY"
+        env:
+          API_KEY: ${{ secrets.LUMMENNA_API_KEY }}
+
+      - name: Apply
+        id: apply
+        # The ref check is deliberately duplicated here rather than relying on
+        # the `push: branches: [main]` filter above. Trigger filters and apply
+        # gates get edited by different people for different reasons, and
+        # widening the trigger to test a branch must never arm a real apply.
+        # This condition is true for main only, whatever the trigger allows.
+        if: >-
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'push' ||
+           (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'APPLY'))
+        run: |
+          az deployment group create \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "lummenna-${{ github.run_id }}" \
+            --template-file infra/azure/main.bicep \
+            --parameters \
+              containerImage="${{ needs.build.outputs.image }}" \
+              apiKey="$API_KEY" \
+            --only-show-errors > /dev/null
+        env:
+          API_KEY: ${{ secrets.LUMMENNA_API_KEY }}
+
+      - name: Capture outputs
+        id: outputs
+        if: steps.apply.outcome == 'success'
+        run: |
+          RG="${{ vars.AZURE_RESOURCE_GROUP }}"
+          DEP="lummenna-${{ github.run_id }}"
+          API=$(az deployment group show -g "$RG" -n "$DEP" --query properties.outputs.apiFqdn.value -o tsv)
+          SITE=$(az deployment group show -g "$RG" -n "$DEP" --query properties.outputs.siteDefaultHostname.value -o tsv)
+          echo "api_fqdn=$API"       >> "$GITHUB_OUTPUT"
+          echo "site_hostname=$SITE" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Deployed"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image | \`${{ needs.build.outputs.image }}\` |"
+            echo "| API | https://$API |"
+            echo "| Site | https://$SITE |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # --------------------------------------------------------------------
+  # Prove the deployment is actually correct, not merely running.
+  # --------------------------------------------------------------------
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: needs.deploy.outputs.api_fqdn != ''
+    steps:
+      - name: Wait for the new revision to serve
+        run: |
+          FQDN="${{ needs.deploy.outputs.api_fqdn }}"
+          for attempt in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$FQDN/health" || true)
+            if [ "$code" = "200" ]; then
+              echo "Healthy after ${attempt} attempt(s)."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::/health did not return 200 within 300s"
+          exit 1
+
+      - name: Authentication must be enforced
+        run: |
+          # This is the regression test for the env-prefix defect. If the
+          # prefix is ever wrong again, api_key resolves to None, the guard in
+          # server.py goes falsy, and this endpoint answers 200 to an
+          # anonymous caller. A 401 is the ONLY acceptable result.
+          FQDN="${{ needs.deploy.outputs.api_fqdn }}"
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$FQDN/v1/memories")
+          if [ "$code" != "401" ]; then
+            echo "::error::Unauthenticated request returned $code, expected 401. API authentication is NOT enforced; the LUMMENNA_ environment prefix is probably not being read."
+            exit 1
+          fi
+          echo "Anonymous request correctly rejected with 401."
+
+      - name: Authenticated request must succeed
+        run: |
+          FQDN="${{ needs.deploy.outputs.api_fqdn }}"
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+            -H "X-API-Key: $API_KEY" \
+            "https://$FQDN/v1/memories")
+          if [ "$code" != "200" ]; then
+            echo "::error::Authenticated request returned $code, expected 200. The configured key does not match the running key."
+            exit 1
+          fi
+          echo "Authenticated request accepted."
+        env:
+          API_KEY: ${{ secrets.LUMMENNA_API_KEY }}
+
+  # --------------------------------------------------------------------
+  # Static site. The deployment token is read from Azure at run time using
+  # the same OIDC identity, so no site token is stored in GitHub. The
+  # previous standalone token was orphaned and has been revoked.
+  # --------------------------------------------------------------------
+  site:
+    name: Deploy site
+    runs-on: ubuntu-latest
+    needs: [deploy, verify]
+    if: needs.deploy.outputs.site_hostname != ''
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install SWA CLI
+        run: npm install -g @azure/static-web-apps-cli
+
+      - name: Deploy website/
+        run: |
+          RG="${{ vars.AZURE_RESOURCE_GROUP }}"
+          NAME=$(az staticwebapp list -g "$RG" --query "[0].name" -o tsv)
+          if [ -z "$NAME" ]; then
+            echo "::error::No Static Web App found in $RG"
+            exit 1
+          fi
+          TOKEN=$(az staticwebapp secrets list -g "$RG" -n "$NAME" \
+            --query "properties.apiKey" -o tsv)
+          swa deploy ./website \
+            --deployment-token "$TOKEN" \
+            --env production \
+            --no-use-keychain
+
+      - name: Confirm security headers survived the deploy
+        run: |
+          # website/_headers carries the CSP and HSTS policy. A deploy that
+          # drops it degrades the site silently, so assert rather than assume.
+          HOST="${{ needs.deploy.outputs.site_hostname }}"
+          sleep 15
+          missing=0
+          for header in strict-transport-security content-security-policy x-content-type-options x-frame-options referrer-policy; do
+            if ! curl -sI --max-time 20 "https://$HOST/" | grep -qi "^$header:"; then
+              echo "::error::missing response header: $header"
+              missing=1
+            fi
+          done
+          exit $missing

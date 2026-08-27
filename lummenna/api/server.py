@@ -358,6 +358,42 @@ def _get_conversation_memory() -> ConversationMemory | None:
 # ---------------------------------------------------------------------------
 
 
+def _restore_store_if_configured() -> None:
+    """Adopt the newest off-device snapshot when the local store is empty.
+
+    Must run BEFORE initialize_palace, which opens the database: restoring
+    underneath a live connection would corrupt it.
+
+    A failure here is deliberately fatal. If a snapshot exists but cannot be
+    restored, continuing would start the API on an empty store, the backup
+    scheduler would then replicate that empty store, and retention pruning
+    would eventually delete the last good snapshot. A refused startup is
+    recoverable; that cascade is not.
+    """
+    if not _config.backup_enabled:
+        return
+
+    from lummenna.ops.backup import restore_if_missing
+
+    restored = restore_if_missing(_config)
+    logger.info("store_restore_checked", restored=restored)
+
+
+def _start_backup_scheduler() -> None:
+    """Start periodic off-device replication when it is enabled and legal."""
+    if not _config.backup_enabled:
+        return
+
+    from lummenna.ops.backup import scheduler_if_enabled
+
+    scheduler = scheduler_if_enabled(_config)
+    if scheduler is None:
+        return
+    scheduler.start()
+    _state["backup_scheduler"] = scheduler
+    logger.info("backup_scheduler_started", interval_seconds=scheduler.interval)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if _state.get("conn") is not None:
@@ -370,7 +406,12 @@ async def lifespan(app: FastAPI):
 
     configure_azure_monitor_if_enabled(_config, app)
 
+    # Strictly before initialize_palace: see the docstring for why a failure
+    # here must stop startup rather than fall through to an empty store.
+    _restore_store_if_configured()
+
     _state.update(initialize_palace(_config))
+    _start_backup_scheduler()
     # Start background forgetting scheduler so L1/L3 run without a separate daemon
     try:
         from lummenna.sleep import SleepScheduler
@@ -394,6 +435,12 @@ async def lifespan(app: FastAPI):
     yield
     if "scheduler" in _state:
         _state["scheduler"].stop()
+    if "backup_scheduler" in _state:
+        # Take a final snapshot on the way out so an orderly shutdown, which
+        # is what a normal revision swap looks like, does not lose the writes
+        # made since the last interval fired.
+        _state["backup_scheduler"].run_cycle()
+        _state["backup_scheduler"].stop()
     _state.get("conn", sqlite3).close()
     logger.info("server_stopped")
 

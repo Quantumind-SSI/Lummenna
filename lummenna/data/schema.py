@@ -188,7 +188,27 @@ def get_connection(config) -> sqlite3.Connection:
         pass  # keep driver default row factory
     else:
         conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode = WAL")
+    # PRAGMA journal_mode is a query, not a command: SQLite returns the mode that
+    # is actually in force. When the VFS cannot provide the shared-memory
+    # primitives the wal-index needs -- which is the case on every network
+    # filesystem, including SMB/CIFS such as Azure Files -- the pragma is a
+    # silent no-op that leaves the database in rollback-journal mode.
+    # See https://sqlite.org/wal.html sections 2.2 and 3.
+    #
+    # Accepting that silently would make the process lie about its own
+    # durability model: wear.WriteQueue issues PRAGMA wal_checkpoint after every
+    # flush, and that checkpoint degrades to a no-op outside WAL. Fail loudly
+    # instead, naming the probable cause, so a store placed on network storage
+    # is caught at startup rather than diagnosed after data is lost.
+    applied_mode = conn.execute("PRAGMA journal_mode = WAL").fetchone()[0]
+    if str(applied_mode).lower() != "wal":
+        raise RuntimeError(
+            f"SQLite refused WAL mode for {db_path}; it is running in "
+            f"'{applied_mode}' instead. WAL requires shared memory and does not "
+            "work over a network filesystem (SMB/CIFS/NFS), so this usually means "
+            "the store path is on a network mount. Point LUMENA_STORE_PATH at "
+            "local disk or a block device."
+        )
     conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA temp_store = MEMORY")

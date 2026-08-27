@@ -104,6 +104,10 @@ full = [
 azure = [
     "azure-monitor-opentelemetry>=1.6",
     "opentelemetry-instrumentation-fastapi>=0.48b0",
+    # Off-device store replication (lummenna.ops.backup). Auth is workload
+    # identity only; no account key or connection string is ever read.
+    "azure-storage-blob>=12.19",
+    "azure-identity>=1.16",
 ]
 benchmarks = [
     "datasets>=2.0",
