@@ -9,6 +9,20 @@ All notable changes to Lummenna will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- `BeamNode.rotate_key` no longer discards the P2P replay-nonce set. It rebuilt
+  the signer from scratch, which silently cleared every recorded nonce and
+  reopened the replay window for frames still inside it. The signer is now
+  rekeyed in place (`P2PSign.rekey`), which is sound because a nonce is derived
+  from the frame's HMAC and is therefore already bound to the key that produced
+  it — nonces recorded under the old key cannot collide with new-key nonces.
+- Replay-nonce eviction is now expiry-ordered. The previous cap rebuilt the set
+  from `set(list(...)[-5000:])`; `set` iteration order is hash-dependent, so it
+  could discard freshly-recorded nonces while retaining already-expired ones.
+  Nonces are now retired once their frame falls outside the replay window — past
+  that point the timestamp check rejects the frame regardless — and the ceiling
+  only binds under flood, evicting nearest-expiry first.
+
 ## [1.0.0] — 2026-08-07
 
 ### Overview

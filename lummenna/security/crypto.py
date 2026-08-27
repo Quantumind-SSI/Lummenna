@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import heapq
 import os
 import struct
 import time
@@ -125,21 +126,66 @@ class P2PCrypto:
         return bytes(self._aesgcm.decrypt(nonce, ct, None))
 
 
+#: Ceiling on the seen-nonce set. Expiry normally retires nonces long before this
+#: binds; it only matters under flood, when frames arrive faster than the replay
+#: window can retire them.
+MAX_SEEN_NONCES: int = 10_000
+
+
 class P2PSign:
     """HMAC-SHA256 frame signing with embedded timestamp and replay-window protection.
 
     Wire format (prepended to encrypted or plaintext payload):
         timestamp_be64 (8 bytes) || signature (32 bytes) || original_payload
+
+    A frame is accepted only if its timestamp is within ``replay_window_seconds``
+    of local time *and* its nonce has not been seen before. The nonce is derived
+    from the timestamp and signature, so it is bound to the signing key: frames
+    signed under different keys can never collide.
+
+    The seen-nonce set is process-local and is lost when the process exits.
     """
 
-    def __init__(self, key: str | None = None, replay_window_seconds: int = 30):
+    def __init__(
+        self,
+        key: str | None = None,
+        replay_window_seconds: int = 30,
+        max_seen_nonces: int = MAX_SEEN_NONCES,
+    ):
+        if replay_window_seconds < 1:
+            raise ValueError("replay_window_seconds must be >= 1")
+        if max_seen_nonces < 1:
+            raise ValueError("max_seen_nonces must be >= 1")
         self._key = hashlib.sha256(key.encode("utf-8")).digest() if key else None
         self._replay_window = replay_window_seconds
-        self._seen_nonces: set[bytes] = set()
+        self._max_seen_nonces = max_seen_nonces
+        self._seen_expiry: dict[bytes, int] = {}
+        # Min-heap of (expires_at, nonce), so retiring nonces in expiry order
+        # costs a pop rather than a sort of the whole set. It may hold entries
+        # for nonces already removed; those are skipped when popped.
+        self._seen_heap: list[tuple[int, bytes]] = []
 
     @property
     def enabled(self) -> bool:
         return self._key is not None
+
+    @property
+    def replay_window_seconds(self) -> int:
+        """Seconds of clock skew tolerated between a frame's timestamp and now."""
+        return self._replay_window
+
+    def rekey(self, key: str) -> None:
+        """Replace the signing key, keeping the seen-nonce set intact.
+
+        Rebuilding the signer instead would drop every recorded nonce and reopen
+        the replay window for frames still inside it. Carrying the set across is
+        sound because a nonce is derived from the frame's HMAC and is therefore
+        already bound to the key that produced it: nonces recorded under the old
+        key can never collide with nonces produced under the new one.
+        """
+        if not key:
+            raise ValueError("rekey requires a non-empty key")
+        self._key = hashlib.sha256(key.encode("utf-8")).digest()
 
     def sign(self, payload: bytes) -> bytes:
         """Return timestamp || HMAC || payload."""
@@ -172,11 +218,40 @@ class P2PSign:
         except Exception as exc:
             raise ValueError("Frame signature verification failed") from exc
 
+        # A nonce only needs to outlive the window in which its frame could still
+        # be accepted. Past ts + window the timestamp check above rejects the
+        # frame unconditionally, so retaining the nonce buys no extra protection.
         nonce = hashlib.sha256(ts_bytes + sig).digest()
-        if nonce in self._seen_nonces:
+        if not self._record_nonce(nonce, ts + self._replay_window):
             raise ValueError("Replay detected")
-        self._seen_nonces.add(nonce)
-        # Cap memory usage of replay set
-        if len(self._seen_nonces) > 10_000:
-            self._seen_nonces = set(list(self._seen_nonces)[-5_000:])
         return payload
+
+    def _record_nonce(self, nonce: bytes, expires_at: int) -> bool:
+        """Record *nonce* and report whether it was previously unseen."""
+        self._expire_nonces(int(time.time()))
+        if nonce in self._seen_expiry:
+            return False
+        self._seen_expiry[nonce] = expires_at
+        heapq.heappush(self._seen_heap, (expires_at, nonce))
+        # Only reachable when frames arrive faster than the window retires them.
+        # Evicting nearest-expiry first sacrifices the nonces with the least
+        # protective value left.
+        while len(self._seen_expiry) > self._max_seen_nonces and self._seen_heap:
+            self._drop_heap_head()
+        return True
+
+    def _expire_nonces(self, now: int) -> int:
+        """Drop every nonce whose frame can no longer pass the timestamp check."""
+        dropped = 0
+        while self._seen_heap and self._seen_heap[0][0] <= now:
+            dropped += self._drop_heap_head()
+        return dropped
+
+    def _drop_heap_head(self) -> int:
+        """Pop the nearest-expiry heap entry; return 1 if it retired a live nonce."""
+        expires_at, nonce = heapq.heappop(self._seen_heap)
+        # Skip entries whose nonce was already retired by another path.
+        if self._seen_expiry.get(nonce) == expires_at:
+            del self._seen_expiry[nonce]
+            return 1
+        return 0

@@ -8,8 +8,8 @@
 # NOT YET BUILT (roadmap, see ROADMAP.md, must not be advertised as available):
 #   * multi-node mesh routing — discovery + transport here are flat mDNS with
 #     direct 1-hop TCP sends; there is no multi-hop/relay/gossip topology.
-#   * persistent replay store — the replay-nonce set (P2PSign._seen_nonces) is
-#     in-memory only and resets on restart; it is not durable across restarts.
+#   * persistent replay store — the replay-nonce set held by P2PSign is in-memory
+#     only and resets on restart; it is not durable across restarts.
 """C10: P2P Memory Sharing (Beam Protocol).
 
 Household-only, LAN-scoped memory sharing with mandatory encryption,
@@ -18,7 +18,9 @@ HMAC signing, replay protection, and TTL enforcement.
 SECURITY POSTURE:
   - Encryption: AES-256-GCM (via P2PCrypto).
   - Integrity / Authenticity: HMAC-SHA256 with a 30-second replay window and an
-    in-memory replay-nonce set (per-process; not persisted across restarts).
+    in-memory replay-nonce set (per-process; not persisted across restarts). A
+    nonce is retained until its frame falls out of the replay window, past which
+    the timestamp check rejects the frame regardless.
   - TTL: packets older than their ttl_hours are dropped at reception.
   - Topology: flat mDNS peer discovery with direct 1-hop TCP delivery (no mesh).
   - Plaintext fallback: REMOVED. Enabling Beam without a p2p_encryption_key
@@ -188,12 +190,15 @@ class BeamNode:
 
         After rotation, frames are encrypted/signed with ``new_key``; peers must
         rotate to the same key to keep exchanging frames.
+
+        The signer is rekeyed in place rather than rebuilt, so the seen-nonce set
+        survives the rotation and rotation cannot be used to clear it.
         """
         self.config.assert_licensed("advanced_p2p")
         if not new_key:
             raise ValueError("rotate_key requires a non-empty new_key")
         self._crypto = P2PCrypto(new_key)
-        self._signer = P2PSign(new_key)
+        self._signer.rekey(new_key)
         self.config.p2p_encryption_key = new_key
         logger.info("beam_key_rotated device=%s", self.device_name)
 

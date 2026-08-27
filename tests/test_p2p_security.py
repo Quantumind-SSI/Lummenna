@@ -1,11 +1,14 @@
 """Tests for hardened Beam P2P protocol (signing, replay, TTL)."""
 
 import asyncio
+import base64
+import json
 import time
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from lummenna import licensing
 from lummenna.config import LummennaConfig
 from lummenna.p2p.beam import BeamNode, decode_frame, encode_frame
 from lummenna.security.crypto import P2PSign
@@ -21,6 +24,41 @@ def secure_config(tmp_path):
         sovereign=False,
         p2p_encryption_key="test-p2p-key-9876",
     )
+
+
+def _b64url(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+
+@pytest.fixture
+def signing_keypair(monkeypatch):
+    """Ephemeral keypair standing in for the embedded license-signing key."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    priv = Ed25519PrivateKey.generate()
+    pub_raw = priv.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
+    monkeypatch.setattr(licensing, "_QUANTUMINDSSI_PUBLIC_KEY_B64", _b64url(pub_raw))
+    licensing.clear_license_cache()
+    yield priv
+    licensing.clear_license_cache()
+
+
+def _mint_pro(priv) -> str:
+    payload = json.dumps(
+        {
+            "sub": "Test Corp",
+            "edition": "pro",
+            "features": ["*"],
+            "iss": "QuantumindSSI",
+            "id": "test-license",
+        },
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode()
+    return f"LUMMENNA-{_b64url(payload)}.{_b64url(priv.sign(payload))}"
 
 
 class _FakeReader:
@@ -81,6 +119,91 @@ class TestP2PSigning:
         time.sleep(2.1)
         with pytest.raises(ValueError, match="outside replay window"):
             signer.verify(signed)
+
+
+class TestReplayNonceRetention:
+    """Nonce retention and eviction must follow expiry, not insertion accident."""
+
+    def test_nonce_retained_for_exactly_the_replay_window(self):
+        signer = P2PSign("mykey", replay_window_seconds=45)
+        before = int(time.time())
+        signer.verify(signer.sign(b"payload"))
+        (expires_at, _nonce) = signer._seen_heap[0]
+        assert before + 45 <= expires_at <= int(time.time()) + 45
+
+    def test_expired_nonces_are_retired(self):
+        signer = P2PSign("mykey", replay_window_seconds=1)
+        signer.verify(signer.sign(b"payload"))
+        assert len(signer._seen_expiry) == 1
+        # Once the frame is outside the window its nonce can no longer change any
+        # verdict, so it is dropped rather than held forever.
+        assert signer._expire_nonces(int(time.time()) + 2) == 1
+        assert len(signer._seen_expiry) == 0
+
+    def test_eviction_keeps_the_longest_lived_nonces(self):
+        """Regression: the old cap sliced an unordered set, so it could discard
+        freshly-recorded nonces while retaining already-expired ones."""
+        signer = P2PSign("mykey", max_seen_nonces=2)
+        now = int(time.time())
+        assert signer._record_nonce(b"soonest", now + 10) is True
+        assert signer._record_nonce(b"middle", now + 20) is True
+        assert signer._record_nonce(b"latest", now + 30) is True
+        assert len(signer._seen_expiry) == 2
+        assert b"soonest" not in signer._seen_expiry
+        assert b"latest" in signer._seen_expiry
+
+    def test_ceiling_is_never_exceeded(self):
+        signer = P2PSign("mykey", max_seen_nonces=10)
+        now = int(time.time())
+        for i in range(100):
+            signer._record_nonce(f"n{i}".encode(), now + 30 + i)
+        assert len(signer._seen_expiry) <= 10
+
+    def test_non_positive_bounds_rejected(self):
+        with pytest.raises(ValueError, match="replay_window_seconds"):
+            P2PSign("mykey", replay_window_seconds=0)
+        with pytest.raises(ValueError, match="max_seen_nonces"):
+            P2PSign("mykey", max_seen_nonces=0)
+
+
+class TestRekeyPreservesReplayProtection:
+    """Rotating a key must not be usable to wipe the seen-nonce set."""
+
+    def test_rekey_keeps_recorded_nonces(self):
+        signer = P2PSign("old-key")
+        framed = signer.sign(b"payload")
+        signer.verify(framed)
+        signer.rekey("new-key")
+        assert len(signer._seen_expiry) == 1
+
+    def test_rekey_changes_the_signing_key(self):
+        signer = P2PSign("old-key")
+        stale = signer.sign(b"payload")
+        signer.rekey("new-key")
+        with pytest.raises(ValueError, match="signature verification failed"):
+            signer.verify(stale)
+
+    def test_rekey_rejects_an_empty_key(self):
+        with pytest.raises(ValueError, match="non-empty"):
+            P2PSign("old-key").rekey("")
+
+    def test_rotate_key_does_not_reopen_the_replay_window(self, secure_config, signing_keypair):
+        """Regression: rotate_key rebuilt the signer, dropping every nonce.
+
+        A frame accepted before the rotation stays rejected after it.
+        """
+        from lummenna.p2p.beam import BeamNode
+
+        secure_config.license_key = _mint_pro(signing_keypair)
+        node = BeamNode(secure_config)
+        framed = node._signer.sign(b"payload")
+        node._signer.verify(framed)
+
+        node.rotate_key("rotated-key-0001")
+
+        # The old frame no longer verifies under the new key, so drive the
+        # regression directly: its nonce must still be on record.
+        assert len(node._signer._seen_expiry) == 1
 
 
 class TestHardenedBeamProtocol:
