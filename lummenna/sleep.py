@@ -11,6 +11,7 @@ from typing import Any
 import psutil
 
 from lummenna.config import LummennaConfig
+from lummenna.data.locks import maintenance_guard
 from lummenna.force.mnemonic.consolidation import run_consolidation_pass
 from lummenna.logging import get_console_logger
 
@@ -90,44 +91,53 @@ class SleepScheduler:
             conn.close()
             return
 
-        try:
-            run_consolidation_pass(self.config, batcher=batcher)
-        except Exception as exc:
-            logger.error("sleep_consolidation_error", stage="consolidation", error=str(exc))
-            conn.close()
-            return
+        # Hold one lock across the whole window. Each pass also takes it (the
+        # lock is re-entrant within a process), but locking per pass alone
+        # would let another process slip a pass in between ours, so decay and
+        # eviction could still interleave across processes.
+        with maintenance_guard(conn, "sleep_cycle") as acquired:
+            if not acquired:
+                conn.close()
+                return
 
-        try:
-            from lummenna.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
+            try:
+                run_consolidation_pass(self.config, batcher=batcher)
+            except Exception as exc:
+                logger.error("sleep_consolidation_error", stage="consolidation", error=str(exc))
+                conn.close()
+                return
 
-            ebbinghaus_decay(conn, batcher=batcher)
-        except Exception as exc:
-            logger.error("sleep_consolidation_error", stage="l1_decay", error=str(exc))
-            conn.close()
-            return
+            try:
+                from lummenna.force.mnemonic.forgetting_l1_decay import ebbinghaus_decay
 
-        try:
-            from lummenna.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
+                ebbinghaus_decay(conn, batcher=batcher)
+            except Exception as exc:
+                logger.error("sleep_consolidation_error", stage="l1_decay", error=str(exc))
+                conn.close()
+                return
 
-            budget_curated_eviction(conn, self.config, batcher=batcher)
-        except Exception as exc:
-            logger.error("sleep_consolidation_error", stage="l3_eviction", error=str(exc))
-            conn.close()
-            return
+            try:
+                from lummenna.force.mnemonic.forgetting_l3_budget import budget_curated_eviction
 
-        try:
-            from lummenna.curiosity import curiosity_probe
+                budget_curated_eviction(conn, self.config, batcher=batcher)
+            except Exception as exc:
+                logger.error("sleep_consolidation_error", stage="l3_eviction", error=str(exc))
+                conn.close()
+                return
 
-            curiosity_probe(conn, limit=10)
-        except Exception as exc:
-            logger.error("sleep_consolidation_error", stage="curiosity", error=str(exc))
+            try:
+                from lummenna.curiosity import curiosity_probe
 
-        try:
-            if batcher and batcher.queue:
-                batcher.flush_sync(list(batcher.queue))
-                batcher.queue.clear()
-        except Exception as exc:
-            logger.error("sleep_consolidation_error", stage="flush", error=str(exc))
+                curiosity_probe(conn, limit=10)
+            except Exception as exc:
+                logger.error("sleep_consolidation_error", stage="curiosity", error=str(exc))
+
+            try:
+                if batcher and batcher.queue:
+                    batcher.flush_sync(list(batcher.queue))
+                    batcher.queue.clear()
+            except Exception as exc:
+                logger.error("sleep_consolidation_error", stage="flush", error=str(exc))
 
         # Backup and log rotation (wired orphaned modules)
         try:

@@ -96,10 +96,49 @@ def get_effective_fact(
     return dict(row) if row else None
 
 
-def supersede_chunk(conn: sqlite3.Connection, old_chunk_id: int, new_chunk_id: int) -> None:
-    """Logical update: old fact is deprecated, new fact carries the chain."""
-    conn.execute(
-        "UPDATE chunk SET valid_to = unixepoch(), superseded_by = ? WHERE chunk_id = ?",
+def supersede_chunk(conn: sqlite3.Connection, old_chunk_id: int, new_chunk_id: int) -> bool:
+    """Logical update: old fact is deprecated, new fact carries the chain.
+
+    This is a compare-and-swap. The row is only superseded while it is still
+    current, so a chunk that another writer already superseded is left alone.
+    An unconditional UPDATE here loses writes: two callers superseding the same
+    chunk would both succeed, the second overwriting ``superseded_by``, which
+    orphans the first successor from the provenance chain and silently breaks
+    ``get_effective_fact`` for that lineage.
+
+    Args:
+        conn: SQLite connection. The caller owns the transaction.
+        old_chunk_id: Chunk being deprecated. Must currently be valid.
+        new_chunk_id: Chunk that carries the fact forward.
+
+    Returns:
+        True if this call superseded the chunk. False if the chunk does not
+        exist or was already superseded, which callers should treat as "another
+        writer got there first", not as an error.
+
+    Raises:
+        ValueError: If a chunk is asked to supersede itself, which would make
+            the provenance chain cyclic and ``get_effective_fact`` non-terminating.
+    """
+    if old_chunk_id == new_chunk_id:
+        raise ValueError(
+            f"chunk {old_chunk_id} cannot supersede itself; "
+            "this would make the provenance chain cyclic"
+        )
+
+    cursor = conn.execute(
+        "UPDATE chunk SET valid_to = unixepoch(), superseded_by = ? "
+        "WHERE chunk_id = ? AND valid_to IS NULL",
         (new_chunk_id, old_chunk_id),
     )
+    if cursor.rowcount == 0:
+        logger.info(
+            "chunk_supersede_skipped",
+            old=old_chunk_id,
+            new=new_chunk_id,
+            reason="chunk is missing or already superseded",
+        )
+        return False
+
     logger.info("chunk_superseded", old=old_chunk_id, new=new_chunk_id)
+    return True

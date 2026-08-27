@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from lummenna.brand.errors import ModelNotAvailableError
+from lummenna.data.locks import maintenance_guard
 from lummenna.data.schema import get_connection
 from lummenna.force.contextual.embed import get_embedder
 from lummenna.force.mnemonic.provenance import supersede_chunk
@@ -138,95 +139,109 @@ def run_consolidation_pass(
     conn = batcher.conn if batcher else get_connection(config)
     should_close = batcher is None
     try:
-        if embedder is None:
-            try:
-                embedder = get_embedder(config, allow_mock=False)
-            except ModelNotAvailableError as exc:
-                logger.warning(
-                    "consolidation_no_embedder",
-                    reason=str(exc),
-                    effect="new chunks stored without embeddings (lexical-only)",
-                )
-                embedder = None
+        # Grouping reads every valid chunk, then supersedes the losers. A second
+        # process running the same pass would read the same groups and supersede
+        # rows that are already superseded, overwriting superseded_by and
+        # breaking the provenance chain. Skip rather than queue: this is
+        # idle-time housekeeping and the next cycle will pick it up.
+        with maintenance_guard(conn, "consolidation") as acquired:
+            if not acquired:
+                return 0
 
-        operations = 0
-
-        # 0. Drain event buffer into Preference tier
-        if event_buffer is not None:
-            events = event_buffer.drain_expired()
-            for event in events:
-                room_name = event.session_id or "events"
-                emb = embedder.encode_single(event.raw_text) if embedder else None
-                store_memory(
-                    conn,
-                    content=event.raw_text,
-                    room_name=room_name,
-                    source_type="consolidation",
-                    embedding=emb,
-                    config=config,
-                    batcher=batcher,
-                )
-
-        # 2. Dedup-based merge: group by semantic hash
-        groups = _group_similar_chunks(conn, threshold=0.95)
-        if batcher:
-            batch = []
-            for group in groups:
-                if len(group) <= 1:
-                    continue
-                winner = max(group, key=lambda c: c.vm_score)
-                for loser in group:
-                    if loser.chunk_id != winner.chunk_id:
-                        batch.append(
-                            (
-                                "UPDATE chunk SET valid_to = unixepoch(), superseded_by = ? WHERE chunk_id = ?",
-                                (winner.chunk_id, loser.chunk_id),
-                            )
-                        )
-                        operations += 1
-            if batch:
-                batcher.flush_sync(batch)
-        else:
-            for group in groups:
-                if len(group) <= 1:
-                    continue
-                winner = max(group, key=lambda c: c.vm_score)
-                for loser in group:
-                    if loser.chunk_id != winner.chunk_id:
-                        supersede_chunk(conn, loser.chunk_id, winner.chunk_id)
-                        operations += 1
-
-        # 5. Resynthesis: generate Profile Memory narrative per room
-        llm_available = LocalLLM.is_available()
-        if llm_available:
-            llm = LocalLLM(config)
-            for room_id, room_name in _get_rooms_with_new_activity(conn):
-                recent_facts = _get_recent_fact_bullets(conn, room_id, days=7)
-                if len(recent_facts) > 5:
-                    narrative = llm.summarize(
-                        recent_facts,
-                        instruction=(
-                            f"Summarize the user's recent activity in "
-                            f"'{room_name}' as 2-3 concise sentences."
-                        ),
+            if embedder is None:
+                try:
+                    embedder = get_embedder(config, allow_mock=False)
+                except ModelNotAvailableError as exc:
+                    logger.warning(
+                        "consolidation_no_embedder",
+                        reason=str(exc),
+                        effect="new chunks stored without embeddings (lexical-only)",
                     )
-                    emb = embedder.encode_single(narrative) if embedder else None
+                    embedder = None
+
+            operations = 0
+
+            # 0. Drain event buffer into Preference tier
+            if event_buffer is not None:
+                events = event_buffer.drain_expired()
+                for event in events:
+                    room_name = event.session_id or "events"
+                    emb = embedder.encode_single(event.raw_text) if embedder else None
                     store_memory(
                         conn,
-                        content=narrative,
+                        content=event.raw_text,
                         room_name=room_name,
                         source_type="consolidation",
                         embedding=emb,
                         config=config,
                         batcher=batcher,
                     )
-                    operations += 1
-        else:
-            logger.debug("consolidation_skip_narrative", reason="llm_unavailable")
 
-        if should_close:
-            conn.commit()
-        return operations
+            # 2. Dedup-based merge: group by semantic hash
+            groups = _group_similar_chunks(conn, threshold=0.95)
+            if batcher:
+                batch = []
+                for group in groups:
+                    if len(group) <= 1:
+                        continue
+                    winner = max(group, key=lambda c: c.vm_score)
+                    for loser in group:
+                        if loser.chunk_id != winner.chunk_id:
+                            # Same compare-and-swap as provenance.supersede_chunk:
+                            # the batched path must not clobber a chunk that
+                            # another writer superseded between our SELECT and
+                            # this flush.
+                            batch.append(
+                                (
+                                    "UPDATE chunk SET valid_to = unixepoch(), superseded_by = ? "
+                                    "WHERE chunk_id = ? AND valid_to IS NULL",
+                                    (winner.chunk_id, loser.chunk_id),
+                                )
+                            )
+                            operations += 1
+                if batch:
+                    batcher.flush_sync(batch)
+            else:
+                for group in groups:
+                    if len(group) <= 1:
+                        continue
+                    winner = max(group, key=lambda c: c.vm_score)
+                    for loser in group:
+                        if loser.chunk_id != winner.chunk_id:
+                            supersede_chunk(conn, loser.chunk_id, winner.chunk_id)
+                            operations += 1
+
+            # 5. Resynthesis: generate Profile Memory narrative per room
+            llm_available = LocalLLM.is_available()
+            if llm_available:
+                llm = LocalLLM(config)
+                for room_id, room_name in _get_rooms_with_new_activity(conn):
+                    recent_facts = _get_recent_fact_bullets(conn, room_id, days=7)
+                    if len(recent_facts) > 5:
+                        narrative = llm.summarize(
+                            recent_facts,
+                            instruction=(
+                                f"Summarize the user's recent activity in "
+                                f"'{room_name}' as 2-3 concise sentences."
+                            ),
+                        )
+                        emb = embedder.encode_single(narrative) if embedder else None
+                        store_memory(
+                            conn,
+                            content=narrative,
+                            room_name=room_name,
+                            source_type="consolidation",
+                            embedding=emb,
+                            config=config,
+                            batcher=batcher,
+                        )
+                        operations += 1
+            else:
+                logger.debug("consolidation_skip_narrative", reason="llm_unavailable")
+
+            if should_close:
+                conn.commit()
+            return operations
     finally:
         if should_close:
             conn.close()

@@ -13,6 +13,7 @@ import contextlib
 import sqlite3
 from typing import Literal, cast
 
+from lummenna.data.locks import maintenance_guard
 from lummenna.logging import get_console_logger
 from lummenna.sovereign.wear import WearAwareBatcher
 
@@ -49,90 +50,104 @@ def budget_curated_eviction(
         # 0 is legal: "evict down to an empty footprint". Negative is nonsensical.
         raise ValueError(f"target_ram_mb must be >= 0, got {target_ram_mb}")
 
-    # Chunk-count proxy for data-memory footprint (deterministic, testable, excludes interpreter overhead)
-    row = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()
-    active_chunks = row[0] if row else 0
-    estimated_mb = (active_chunks * _BYTES_PER_CHUNK_ESTIMATE) / (1024 * 1024)
+    # Eviction selects the lowest-value chunks, then steps each one down the
+    # resolution ladder. Two processes running this against the same pre-pass
+    # state select the same chunks and each apply one step, so a single pass
+    # worth of memory pressure degrades FP32 straight to INT8. The discarded
+    # precision cannot be recovered, so the selection and the degradation must
+    # happen inside one window.
+    with maintenance_guard(conn, "budget_curated_eviction") as acquired:
+        if not acquired:
+            return 0
 
-    if estimated_mb < target_ram_mb:
-        return 0
+        # Chunk-count proxy for data-memory footprint (deterministic, testable, excludes interpreter overhead)
+        row = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()
+        active_chunks = row[0] if row else 0
+        estimated_mb = (active_chunks * _BYTES_PER_CHUNK_ESTIMATE) / (1024 * 1024)
 
-    needed_eviction_mb = estimated_mb - (memory_limit_mb * 0.75)
-    bytes_per_chunk = _BYTES_PER_CHUNK_ESTIMATE
-    chunks_to_evict = max(1, int((needed_eviction_mb * 1024 * 1024) / bytes_per_chunk))
+        if estimated_mb < target_ram_mb:
+            return 0
 
-    rows = conn.execute(
-        """SELECT chunk_id, vm_score, resolution,
-                  (julianday('now') - julianday(datetime(created_at, 'unixepoch'))) AS age_days
-           FROM chunk
-           WHERE valid_to IS NULL AND optical_level < 2
-           ORDER BY (vm_score * (1.0 / (age_days + 1.0))) ASC
-           LIMIT ?""",
-        (chunks_to_evict,),
-    ).fetchall()
+        needed_eviction_mb = estimated_mb - (memory_limit_mb * 0.75)
+        bytes_per_chunk = _BYTES_PER_CHUNK_ESTIMATE
+        chunks_to_evict = max(1, int((needed_eviction_mb * 1024 * 1024) / bytes_per_chunk))
 
-    evicted = 0
-    if batcher:
-        tables = {
-            r[0]
-            for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-        }
-        has_vec_fallback = "vec_fallback" in tables
-        has_vec_chunks = "vec_chunks" in tables
-        for chunk_id, _vm, res, _age in rows:
-            new_res = _next_resolution(res)
-            if new_res == "RELEASED":
-                batcher.queue.append(
-                    (
+        rows = conn.execute(
+            """SELECT chunk_id, vm_score, resolution,
+                      (julianday('now') - julianday(datetime(created_at, 'unixepoch'))) AS age_days
+               FROM chunk
+               WHERE valid_to IS NULL AND optical_level < 2
+               ORDER BY (vm_score * (1.0 / (age_days + 1.0))) ASC
+               LIMIT ?""",
+            (chunks_to_evict,),
+        ).fetchall()
+
+        evicted = 0
+        if batcher:
+            tables = {
+                r[0]
+                for r in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                ).fetchall()
+            }
+            has_vec_fallback = "vec_fallback" in tables
+            has_vec_chunks = "vec_chunks" in tables
+            for chunk_id, _vm, res, _age in rows:
+                new_res = _next_resolution(res)
+                if new_res == "RELEASED":
+                    batcher.queue.append(
+                        (
+                            "UPDATE chunk SET optical_level = 2, valid_to = unixepoch() WHERE chunk_id = ?",
+                            (chunk_id,),
+                        )
+                    )
+                else:
+                    batcher.queue.append(
+                        (
+                            "UPDATE chunk SET resolution = ?, optical_level = 1 WHERE chunk_id = ?",
+                            (new_res, chunk_id),
+                        )
+                    )
+                if has_vec_fallback:
+                    batcher.queue.append(
+                        ("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,))
+                    )
+                if has_vec_chunks:
+                    batcher.queue.append(("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,)))
+                evicted += 1
+        else:
+            for chunk_id, _vm, res, _age in rows:
+                new_res = _next_resolution(res)
+                if new_res == "RELEASED":
+                    conn.execute(
                         "UPDATE chunk SET optical_level = 2, valid_to = unixepoch() WHERE chunk_id = ?",
                         (chunk_id,),
                     )
-                )
-            else:
-                batcher.queue.append(
-                    (
+                else:
+                    conn.execute(
                         "UPDATE chunk SET resolution = ?, optical_level = 1 WHERE chunk_id = ?",
                         (new_res, chunk_id),
                     )
-                )
-            if has_vec_fallback:
-                batcher.queue.append(("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)))
-            if has_vec_chunks:
-                batcher.queue.append(("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,)))
-            evicted += 1
-    else:
-        for chunk_id, _vm, res, _age in rows:
-            new_res = _next_resolution(res)
-            if new_res == "RELEASED":
-                conn.execute(
-                    "UPDATE chunk SET optical_level = 2, valid_to = unixepoch() WHERE chunk_id = ?",
-                    (chunk_id,),
-                )
-            else:
-                conn.execute(
-                    "UPDATE chunk SET resolution = ?, optical_level = 1 WHERE chunk_id = ?",
-                    (new_res, chunk_id),
-                )
-            # Remove from vector index as resolution degraded
-            try:
-                # Simple table-based removal via direct SQL so we don't need a global channel
-                conn.execute("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,))
-                with contextlib.suppress(Exception):
-                    conn.execute("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,))
-            except Exception as exc:
-                logger.debug("budget_evict_vec_delete", chunk_id=chunk_id, error=str(exc))
-            evicted += 1
+                # Remove from vector index as resolution degraded
+                try:
+                    # Simple table-based removal via direct SQL so we don't need a global channel
+                    conn.execute("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,))
+                    with contextlib.suppress(Exception):
+                        conn.execute("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,))
+                except Exception as exc:
+                    logger.debug("budget_evict_vec_delete", chunk_id=chunk_id, error=str(exc))
+                evicted += 1
 
-    if not batcher:
-        conn.commit()
-    logger.info(
-        "budget_eviction",
-        evicted=evicted,
-        estimated_mb=round(estimated_mb, 1),
-        active_chunks=active_chunks,
-        target_mb=target_ram_mb,
-    )
-    return evicted
+        if not batcher:
+            conn.commit()
+        logger.info(
+            "budget_eviction",
+            evicted=evicted,
+            estimated_mb=round(estimated_mb, 1),
+            active_chunks=active_chunks,
+            target_mb=target_ram_mb,
+        )
+        return evicted
 
 
 def _next_resolution(current: str) -> Resolution:

@@ -87,6 +87,21 @@ credentials/
 !.env.example
 !*.env.sample
 
+# License signing & Gumroad fulfillment artifacts (signing keys, encrypted
+# backups, customer PII registers, mail-merge outputs) — never commit
+*.b64
+*.age
+license-register*.csv
+fulfillment-*.csv
+docs/gumroad/dist/
+
+# Local memory-store data (personal agent-memory SQLite DBs and backups) —
+# never commit and never package; leaked once into the sdist via the tracked
+# data/ directory (untracked 2026-08-22).
+# Anchored to the repo root: an unanchored "data/" also matches the
+# lummenna/data/ source package, which silently hid new modules from git.
+/data/
+
 # Internal / local-only documentation and assets (not for public repo)
 # NOTE: AGENTS.md is intentionally TRACKED — it is the enforced engineering
 # constitution (No-Vaporware / No-False-Claims) that coding agents load every
