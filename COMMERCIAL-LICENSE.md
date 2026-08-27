@@ -62,7 +62,7 @@ gated by Lummenna's entitlement engine, `lummenna.licensing.PRO_FEATURES`).
 | P1 | Compliance: right-to-be-forgotten (RTBF) with atomic erasure, tamper-evident (hash-chained) audit trails, custom PII governance |
 | P2 | Encryption-at-rest: SQLCipher (AES-256, whole-database) or Fernet field-level encryption, with PBKDF2 passphrase-derived keys and a persisted per-store salt |
 | P4 | Real (storage-layer) multi-tenant isolation |
-| P6 | Advanced P2P: live encryption/signing key-rotation (`BeamNode.rotate_key`) over the encrypted, HMAC-signed, replay-protected LAN Beam transport |
+| P6 | Advanced P2P: live encryption/signing key-rotation (`BeamNode.rotate_key`) plus a durable, restart-surviving replay-nonce store (`LUMMENNA_P2P_REPLAY_STORE=persistent`), over the encrypted, HMAC-signed LAN Beam transport |
 | V5 | Priority support + SLA (commercial support commitment) |
 | V8 | Long-term support (LTS) releases (commercial release commitment) |
 
@@ -86,7 +86,7 @@ capabilities.
 | V4 | SSO / directory sync (OIDC, SAML, SCIM) | Not yet available |
 | V6 | Backup/restore orchestration & point-in-time recovery | Not yet available |
 | V7 | Horizontal read scaling & HA topology | Not yet available |
-| P6+ | Advanced P2P hardening: multi-node mesh routing & persistent (durable) replay-nonce store | Not yet available |
+| P6+ | Advanced P2P hardening: multi-node mesh routing & peer-negotiated key-rotation handshake | Not yet available |
 
 Access to Pro features is enabled by a valid **license key** issued by
 QuantumindSSI and validated by Lummenna's entitlement engine

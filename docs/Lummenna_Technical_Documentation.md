@@ -312,7 +312,7 @@ Report vulnerabilities via [GitHub Security Advisories](https://github.com/Quant
 ## 12. Known Limitations
 
 1. **Encryption-at-rest is opt-in** — SQLCipher and Fernet modes are implemented and tested but disabled by default (`LUMMENNA_DATABASE_ENCRYPTION_MODE=none`). In Fernet mode, the FTS5 lexical index still contains plaintext tokens (see SECURITY.md).
-2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN (replay-nonce cache is in-memory only)
+2. **P2P is LAN-only** — Beam transmits over TCP with AES-256-GCM encryption; not hardened for WAN (flat mDNS discovery, 1-hop delivery, no peer-negotiated key rotation). Replay nonces are process-local by default and are lost on restart; a durable, restart-surviving nonce store is available as Pro via `LUMMENNA_P2P_REPLAY_STORE=persistent`
 3. **Benchmark results are subset-scale** — synthetic retrieval corpus is deliberately easy; BEIR results cover 500-doc/20-query subsets; perf and stress now have committed results (x86_64 VM), while cross-system has no committed results. Full-corpus BEIR leaderboard submission remains pending.
 4. **`vector_mean` / `last_entry_at` / `locus_count` unpopulated** — these schema columns are reserved but no code path writes them yet (loci have no maintained centroid). `learn_weights_from_feedback` (V(m) weight learning) and `backup_database` ARE wired — invoked from `conversation.py`/`langchain.py` and the sleep scheduler respectively.
 5. **Dual scheduler risk** — running both `lummenna serve` and `lummenna daemon start` creates duplicate schedulers

@@ -168,7 +168,7 @@ Lummenna is **production-ready software**. It works end-to-end with API versioni
 | **LangGraph** | Working | LummennaCheckpointSaver (requires `langgraph` package). |
 | **Encryption-at-rest** | Implemented, opt-in | SQLCipher (full-DB) or Fernet (field-level) via `LUMMENNA_DATABASE_ENCRYPTION_MODE`. Default is `none` — enable it or use OS-level disk encryption. |
 | **BEIR benchmarks** | Partially evaluated | 500-doc/20-query subset results available. Full-corpus evaluation deferred to HPC. |
-| **P2P sharing** | Working | Beam protocol with AES-256-GCM encryption, HMAC-SHA256 signing, replay protection. Requires p2p key. |
+| **P2P sharing** | Working | Beam protocol with AES-256-GCM encryption, HMAC-SHA256 signing, replay protection. Requires p2p key. Replay nonces are process-local by default; durable (restart-surviving) nonces are Pro via `LUMMENNA_P2P_REPLAY_STORE=persistent`. |
 
 ---
 

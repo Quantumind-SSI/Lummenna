@@ -165,7 +165,8 @@ Three modes (`database_encryption_mode`):
 
 ### 5.3 P2P Beam Protocol Security (`lummenna/p2p/beam.py`)
 - **Encryption**: AES-256-GCM via `P2PCrypto`
-- **Integrity/Authenticity**: HMAC-SHA256 with 30-second replay window
+- **Integrity/Authenticity**: HMAC-SHA256 with a 30-second replay window (`LUMMENNA_P2P_REPLAY_WINDOW_SECONDS`) plus a seen-nonce set
+- **Replay-nonce durability**: process-local by default; durable across restarts with `LUMMENNA_P2P_REPLAY_STORE=persistent` (Pro, `advanced_p2p`). An unreachable nonce store rejects the frame rather than accepting it.
 - **TTL**: Frames older than `ttl_hours` are dropped at reception
 - **Plaintext fallback**: REMOVED. Beam without encryption key raises an error unless `LUMMENNA_P2P_INSECURE=1` is set.
 - Discovery via Zeroconf/mDNS (LAN only)

@@ -8,6 +8,10 @@ Provides:
   - Fernet field-level encryption (fallback when SQLCipher is unavailable).
   - SQLCipher passphrase derivation with persisted salt.
   - P2P transport encryption (AES-256-GCM) + HMAC-SHA256 frame signing.
+  - The replay-nonce store interface used by frame verification, plus the
+    process-local (in-memory) implementation. The durable SQLite-backed
+    implementation lives in ``lummenna.p2p.replay`` so that this module, which
+    ``lummenna.data.schema`` imports, never has to import the storage layer back.
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ import os
 import struct
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, hmac
@@ -27,6 +31,119 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 if TYPE_CHECKING:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+
+class ReplayStoreError(RuntimeError):
+    """A replay-nonce store could not answer a replay question.
+
+    Raised instead of returning a verdict when the backing store is unreachable
+    or refuses a write. Verification treats this as fatal for the frame: an
+    unanswerable replay check must reject, never accept, because accepting would
+    silently downgrade the transport to timestamp-window-only protection at the
+    exact moment the operator has least visibility.
+
+    Deliberately not a ``ValueError``: callers distinguish "this frame is bad"
+    (``ValueError``) from "this node cannot currently police replays"
+    (``ReplayStoreError``), because the two need different operational responses.
+    """
+
+
+class ReplayNonceStore(Protocol):
+    """A set of recently-seen frame nonces with a bounded retention horizon.
+
+    Implementations must make :meth:`record_if_unseen` atomic with respect to
+    concurrent callers: two callers presenting the same nonce must not both
+    receive ``True``, or a replayed frame is accepted by both.
+    """
+
+    def record_if_unseen(self, nonce: bytes, expires_at: int) -> bool:
+        """Record *nonce* and report whether it was previously unseen.
+
+        Args:
+            nonce: Opaque nonce bytes identifying one frame.
+            expires_at: Unix timestamp after which the nonce may be discarded,
+                because the frame carrying it can no longer be accepted anyway.
+
+        Returns:
+            True if the nonce was not present (the frame is fresh), False if it
+            was already recorded (the frame is a replay).
+
+        Raises:
+            ReplayStoreError: If the store cannot service the request.
+        """
+        ...
+
+    def prune(self, now: int) -> int:
+        """Drop every nonce whose ``expires_at`` is at or before *now*.
+
+        Returns:
+            The number of nonces dropped.
+
+        Raises:
+            ReplayStoreError: If the store cannot service the request.
+        """
+        ...
+
+
+#: Hard ceiling on the process-local nonce set. Retention is normally driven by
+#: expiry (see :class:`InMemoryNonceStore`), so this only binds when frames
+#: arrive faster than the replay window can retire them — i.e. under flood.
+DEFAULT_MAX_NONCES: int = 100_000
+
+
+class InMemoryNonceStore:
+    """Process-local replay-nonce store. Fast, and lost on restart.
+
+    This is the Community default and satisfies the threat model Beam is scoped
+    to: a trusted LAN where an attacker capturing a frame must replay it inside
+    the signing window. It does **not** survive a restart, so a frame captured
+    seconds before a crash can be replayed once after it, for the remainder of
+    its window. ``lummenna.p2p.replay.SqliteNonceStore`` closes that gap.
+
+    Eviction is expiry-first: nonces are retired once the frames that carry them
+    have aged out of the replay window, which is exactly when they stop being
+    useful to an attacker. Only if that leaves the set above ``max_entries`` are
+    live nonces dropped, nearest-expiry first.
+    """
+
+    def __init__(self, max_entries: int = DEFAULT_MAX_NONCES):
+        if max_entries < 1:
+            raise ValueError("max_entries must be >= 1")
+        self._max_entries = max_entries
+        self._expiry: dict[bytes, int] = {}
+        # Min-heap of (expires_at, nonce) used to find eviction candidates
+        # without sorting the whole set. It may hold stale entries for nonces
+        # already removed; those are skipped when popped.
+        self._heap: list[tuple[int, bytes]] = []
+
+    def __len__(self) -> int:
+        return len(self._expiry)
+
+    def record_if_unseen(self, nonce: bytes, expires_at: int) -> bool:
+        if nonce in self._expiry:
+            return False
+        self._expiry[nonce] = expires_at
+        heapq.heappush(self._heap, (expires_at, nonce))
+        self._enforce_capacity()
+        return True
+
+    def prune(self, now: int) -> int:
+        dropped = 0
+        while self._heap and self._heap[0][0] <= now:
+            _expires_at, nonce = heapq.heappop(self._heap)
+            # Skip heap entries whose nonce was already evicted, and entries
+            # that are stale duplicates of a still-live nonce.
+            if self._expiry.get(nonce) == _expires_at:
+                del self._expiry[nonce]
+                dropped += 1
+        return dropped
+
+    def _enforce_capacity(self) -> None:
+        """Drop nearest-expiry nonces until the set is back within its ceiling."""
+        while len(self._expiry) > self._max_entries and self._heap:
+            expires_at, nonce = heapq.heappop(self._heap)
+            if self._expiry.get(nonce) == expires_at:
+                del self._expiry[nonce]
 
 
 def derive_sqlcipher_passphrase(key: str, store_path: Path, iterations: int = 256_000) -> str:
@@ -126,44 +243,37 @@ class P2PCrypto:
         return bytes(self._aesgcm.decrypt(nonce, ct, None))
 
 
-#: Ceiling on the seen-nonce set. Expiry normally retires nonces long before this
-#: binds; it only matters under flood, when frames arrive faster than the replay
-#: window can retire them.
-MAX_SEEN_NONCES: int = 10_000
-
-
 class P2PSign:
     """HMAC-SHA256 frame signing with embedded timestamp and replay-window protection.
 
     Wire format (prepended to encrypted or plaintext payload):
         timestamp_be64 (8 bytes) || signature (32 bytes) || original_payload
 
-    A frame is accepted only if its timestamp is within ``replay_window_seconds``
-    of local time *and* its nonce has not been seen before. The nonce is derived
-    from the timestamp and signature, so it is bound to the signing key: frames
-    signed under different keys can never collide.
+    Replay protection has two independent layers. The timestamp must fall inside
+    ``replay_window_seconds`` of local time, and the frame's nonce must not have
+    been seen before. The nonce is derived from the timestamp and signature, so
+    it is bound to the signing key: frames signed under different keys can never
+    collide, which is why a single store is safe to share across a key rotation.
 
-    The seen-nonce set is process-local and is lost when the process exits.
+    Where "seen before" is remembered is the caller's choice. The default is a
+    process-local set (:class:`InMemoryNonceStore`); pass a durable store such as
+    ``lummenna.p2p.replay.SqliteNonceStore`` to carry replay protection across
+    restarts.
     """
 
     def __init__(
         self,
         key: str | None = None,
         replay_window_seconds: int = 30,
-        max_seen_nonces: int = MAX_SEEN_NONCES,
+        nonce_store: ReplayNonceStore | None = None,
     ):
         if replay_window_seconds < 1:
             raise ValueError("replay_window_seconds must be >= 1")
-        if max_seen_nonces < 1:
-            raise ValueError("max_seen_nonces must be >= 1")
         self._key = hashlib.sha256(key.encode("utf-8")).digest() if key else None
         self._replay_window = replay_window_seconds
-        self._max_seen_nonces = max_seen_nonces
-        self._seen_expiry: dict[bytes, int] = {}
-        # Min-heap of (expires_at, nonce), so retiring nonces in expiry order
-        # costs a pop rather than a sort of the whole set. It may hold entries
-        # for nonces already removed; those are skipped when popped.
-        self._seen_heap: list[tuple[int, bytes]] = []
+        self._nonce_store: ReplayNonceStore = (
+            nonce_store if nonce_store is not None else InMemoryNonceStore()
+        )
 
     @property
     def enabled(self) -> bool:
@@ -174,14 +284,19 @@ class P2PSign:
         """Seconds of clock skew tolerated between a frame's timestamp and now."""
         return self._replay_window
 
-    def rekey(self, key: str) -> None:
-        """Replace the signing key, keeping the seen-nonce set intact.
+    @property
+    def nonce_store(self) -> ReplayNonceStore:
+        """The store backing this signer's replay check."""
+        return self._nonce_store
 
-        Rebuilding the signer instead would drop every recorded nonce and reopen
-        the replay window for frames still inside it. Carrying the set across is
-        sound because a nonce is derived from the frame's HMAC and is therefore
-        already bound to the key that produced it: nonces recorded under the old
-        key can never collide with nonces produced under the new one.
+    def rekey(self, key: str) -> None:
+        """Replace the signing key, keeping the nonce store attached.
+
+        Rebuilding the signer instead would detach the store and reopen the
+        replay window for frames still inside it. Keeping it is sound because a
+        nonce is derived from the frame's HMAC and is therefore already bound to
+        the key that produced it: nonces recorded under the old key can never
+        collide with nonces produced under the new one.
         """
         if not key:
             raise ValueError("rekey requires a non-empty key")
@@ -199,7 +314,10 @@ class P2PSign:
     def verify(self, framed: bytes) -> bytes:
         """Verify HMAC and timestamp; return original payload.
 
-        Raises ValueError on tampering, expiry, or replay.
+        Raises:
+            ValueError: On a malformed, tampered, expired, or replayed frame.
+            ReplayStoreError: If the replay-nonce store cannot be consulted. The
+                frame is neither accepted nor recorded; the caller must drop it.
         """
         if self._key is None:
             raise RuntimeError("P2P signing not initialised with a key")
@@ -218,40 +336,11 @@ class P2PSign:
         except Exception as exc:
             raise ValueError("Frame signature verification failed") from exc
 
-        # A nonce only needs to outlive the window in which its frame could still
-        # be accepted. Past ts + window the timestamp check above rejects the
-        # frame unconditionally, so retaining the nonce buys no extra protection.
+        # The nonce only needs to outlive the window in which the frame carrying
+        # it could still be accepted. Past ts + window the timestamp check above
+        # rejects the frame unconditionally, so retaining the nonce beyond that
+        # point buys no additional protection.
         nonce = hashlib.sha256(ts_bytes + sig).digest()
-        if not self._record_nonce(nonce, ts + self._replay_window):
+        if not self._nonce_store.record_if_unseen(nonce, ts + self._replay_window):
             raise ValueError("Replay detected")
         return payload
-
-    def _record_nonce(self, nonce: bytes, expires_at: int) -> bool:
-        """Record *nonce* and report whether it was previously unseen."""
-        self._expire_nonces(int(time.time()))
-        if nonce in self._seen_expiry:
-            return False
-        self._seen_expiry[nonce] = expires_at
-        heapq.heappush(self._seen_heap, (expires_at, nonce))
-        # Only reachable when frames arrive faster than the window retires them.
-        # Evicting nearest-expiry first sacrifices the nonces with the least
-        # protective value left.
-        while len(self._seen_expiry) > self._max_seen_nonces and self._seen_heap:
-            self._drop_heap_head()
-        return True
-
-    def _expire_nonces(self, now: int) -> int:
-        """Drop every nonce whose frame can no longer pass the timestamp check."""
-        dropped = 0
-        while self._seen_heap and self._seen_heap[0][0] <= now:
-            dropped += self._drop_heap_head()
-        return dropped
-
-    def _drop_heap_head(self) -> int:
-        """Pop the nearest-expiry heap entry; return 1 if it retired a live nonce."""
-        expires_at, nonce = heapq.heappop(self._seen_heap)
-        # Skip entries whose nonce was already retired by another path.
-        if self._seen_expiry.get(nonce) == expires_at:
-            del self._seen_expiry[nonce]
-            return 1
-        return 0

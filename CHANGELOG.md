@@ -9,6 +9,38 @@ All notable changes to Lummenna will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Durable replay-nonce store for the Beam P2P transport** (Pro, `advanced_p2p`).
+  `LUMMENNA_P2P_REPLAY_STORE=persistent` keeps the set of already-accepted frame
+  nonces in the Lummenna database (`lummenna/p2p/replay.py`, schema migration
+  0006) instead of in process memory, so a restart no longer empties it. Until
+  now a frame captured shortly before a restart could be replayed once
+  afterwards, for whatever remained of its timestamp window. Uniqueness is
+  decided by a SQLite primary-key conflict rather than a read-then-write, so
+  concurrent deliveries of the same frame — including from separate processes —
+  cannot both be accepted.
+  - Retention is exact rather than heuristic: a nonce is kept until
+    `frame_timestamp + LUMMENNA_P2P_REPLAY_WINDOW_SECONDS`, past which the
+    timestamp check rejects the frame regardless. Expired rows are swept on an
+    amortised schedule, off the per-frame path.
+  - `LUMMENNA_P2P_REPLAY_MAX_ENTRIES` (default 100,000) caps the set under flood,
+    evicting nearest-expiry first and logging at WARNING.
+  - Fail-closed: if the store cannot be consulted, the frame is rejected and the
+    failure is logged at ERROR. Replay checking is never skipped.
+  - Community is unaffected and ungated: the default remains the process-local
+    store, whose restart limitation is documented in SECURITY.md.
+- `LUMMENNA_P2P_REPLAY_WINDOW_SECONDS` now makes the Beam replay window
+  configurable; it was previously fixed at 30 seconds and unreachable from config.
+
+### Changed
+- The replay-nonce set moved behind a `ReplayNonceStore` interface with two
+  implementations (`InMemoryNonceStore`, `SqliteNonceStore`). `P2PSign` takes a
+  `nonce_store` argument in place of `max_seen_nonces`, and its process-local
+  ceiling default rose from 10,000 to 100,000 now that it is configurable.
+- A replayed or malformed Beam frame is now logged distinctly from an internal
+  handler error, and a replay-store outage is logged at ERROR rather than being
+  absorbed into a generic warning.
+
 ### Fixed
 - `BeamNode.rotate_key` no longer discards the P2P replay-nonce set. It rebuilt
   the signer from scratch, which silently cleared every recorded nonce and

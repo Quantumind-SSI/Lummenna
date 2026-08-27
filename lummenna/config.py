@@ -103,6 +103,24 @@ class LummennaConfig(BaseSettings):
     encryption_key: str | None = None
     database_encryption_mode: Literal["sqlcipher", "fernet", "none"] = "none"
     p2p_encryption_key: str | None = None
+    # Where Beam remembers the frame nonces it has already accepted
+    # (LUMMENNA_P2P_REPLAY_STORE). "memory" keeps the set in the process, so a
+    # restart empties it and a frame captured just beforehand can be replayed
+    # once, for whatever is left of its window. "persistent" keeps the set in the
+    # Lummenna database, closing that gap and sharing it across processes; it is
+    # a Pro capability (advanced_p2p) and is validated at BeamNode construction.
+    p2p_replay_store: Literal["memory", "persistent"] = "memory"
+    # Clock skew tolerated between a Beam frame's timestamp and local time
+    # (LUMMENNA_P2P_REPLAY_WINDOW_SECONDS). It is also the exact nonce retention
+    # horizon: past this many seconds a frame fails the timestamp check outright,
+    # so its nonce can be discarded. Widen it only for genuinely skewed clocks —
+    # every extra second is another second a captured frame stays replayable.
+    p2p_replay_window_seconds: int = 30
+    # Ceiling on retained Beam nonces (LUMMENNA_P2P_REPLAY_MAX_ENTRIES). Expiry
+    # bounds the set under normal traffic; this bounds it under flood, when
+    # frames arrive faster than the window retires them. Overflow is evicted
+    # nearest-expiry first and logged at WARNING.
+    p2p_replay_max_entries: int = 100_000
 
     # Off-device database replication (lummenna.ops.backup). This exists for
     # hosted deployments whose local disk is ephemeral; it ships a consistent

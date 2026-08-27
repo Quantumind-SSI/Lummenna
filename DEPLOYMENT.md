@@ -169,7 +169,19 @@ export LUMMENNA_TFC_R="3"                 # resolution level (0-5)
 # Sovereign mode
 export LUMMENNA_SOVEREIGN="true"          # block all external API calls
 export LUMMENNA_LOG_LEVEL="info"          # debug | info | warning | error
+
+# P2P Beam replay protection (only relevant when Beam sharing is used)
+export LUMMENNA_P2P_REPLAY_STORE="memory" # memory | persistent ("persistent" is Pro)
+export LUMMENNA_P2P_REPLAY_WINDOW_SECONDS="30"   # clock skew tolerated == nonce retention
+export LUMMENNA_P2P_REPLAY_MAX_ENTRIES="100000"  # nonce ceiling under flood
 ```
+
+`LUMMENNA_P2P_REPLAY_STORE=memory` (the default) keeps the seen-nonce set in the
+process, so a restart empties it and a frame captured just beforehand can be
+replayed once, for whatever remains of its timestamp window. Setting it to
+`persistent` keeps the set in the Lummenna database instead — surviving restarts
+and shared across processes — and requires a Pro license (`advanced_p2p`). See
+SECURITY.md § "P2P Transport Security" for the retention and eviction policies.
 
 ### 3.3 SQLite Tuning for Production
 

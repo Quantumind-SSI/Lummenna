@@ -8,8 +8,8 @@
 # NOT YET BUILT (roadmap, see ROADMAP.md, must not be advertised as available):
 #   * multi-node mesh routing — discovery + transport here are flat mDNS with
 #     direct 1-hop TCP sends; there is no multi-hop/relay/gossip topology.
-#   * persistent replay store — the replay-nonce set held by P2PSign is in-memory
-#     only and resets on restart; it is not durable across restarts.
+#   * key-rotation handshake — rotate_key changes this node's key; peers must be
+#     rotated to the same key out of band, they are not told about the change.
 """C10: P2P Memory Sharing (Beam Protocol).
 
 Household-only, LAN-scoped memory sharing with mandatory encryption,
@@ -17,10 +17,17 @@ HMAC signing, replay protection, and TTL enforcement.
 
 SECURITY POSTURE:
   - Encryption: AES-256-GCM (via P2PCrypto).
-  - Integrity / Authenticity: HMAC-SHA256 with a 30-second replay window and an
-    in-memory replay-nonce set (per-process; not persisted across restarts). A
-    nonce is retained until its frame falls out of the replay window, past which
-    the timestamp check rejects the frame regardless.
+  - Integrity / Authenticity: HMAC-SHA256 over a timestamped frame. A frame is
+    accepted only if its timestamp is within LUMMENNA_P2P_REPLAY_WINDOW_SECONDS
+    (default 30) of local time and its nonce has not been seen before.
+  - Replay-nonce durability: selected by LUMMENNA_P2P_REPLAY_STORE. The default
+    "memory" keeps the nonce set in this process, so a restart empties it and a
+    frame captured just beforehand can be replayed once, for the remainder of its
+    window. "persistent" keeps the set in the Lummenna database, which closes
+    that gap and shares it across processes; it is Pro (advanced_p2p). See
+    lummenna/p2p/replay.py for the retention and capacity policies.
+  - Fail-closed: if the nonce store cannot be consulted, the frame is rejected
+    and the failure is logged at ERROR. Replay checking is never skipped.
   - TTL: packets older than their ttl_hours are dropped at reception.
   - Topology: flat mDNS peer discovery with direct 1-hop TCP delivery (no mesh).
   - Plaintext fallback: REMOVED. Enabling Beam without a p2p_encryption_key
@@ -41,7 +48,14 @@ import msgspec
 from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
-from lummenna.security.crypto import P2PCrypto, P2PSign
+from lummenna.p2p.replay import SqliteNonceStore
+from lummenna.security.crypto import (
+    InMemoryNonceStore,
+    P2PCrypto,
+    P2PSign,
+    ReplayNonceStore,
+    ReplayStoreError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -143,12 +157,59 @@ class BeamNode:
                     "Beam P2P requires a p2p_encryption_key. "
                     "Set LUMMENNA_P2P_ENCRYPTION_KEY or export LUMMENNA_P2P_INSECURE=1 to override (not recommended)."
                 )
+        self._p2p_key = p2p_key
+        # Opened here rather than in start() so that asking for durable replay
+        # protection without an entitlement, or with an unusable store path, is a
+        # construction-time error instead of a silent downgrade at listen time.
+        self._persistent_nonce_store: SqliteNonceStore | None = None
         self._crypto = P2PCrypto(p2p_key)
-        self._signer = P2PSign(p2p_key)
+        self._signer = self._build_signer(self._open_nonce_store())
+
+    @property
+    def replay_store_is_durable(self) -> bool:
+        """Whether accepted-frame nonces survive a restart of this process."""
+        return self._persistent_nonce_store is not None
+
+    def _open_nonce_store(self) -> ReplayNonceStore:
+        """Return the configured replay-nonce store, opening it if it is durable.
+
+        Raises:
+            LicenseRequiredError: If durable replay protection is requested
+                without an ``advanced_p2p`` entitlement.
+            ReplayStoreError: If the durable store cannot be opened.
+        """
+        cfg = self.config
+        max_entries = cfg.p2p_replay_max_entries
+        if cfg.p2p_replay_store != "persistent":
+            self._persistent_nonce_store = None
+            return InMemoryNonceStore(max_entries=max_entries)
+        store = SqliteNonceStore.open(
+            cfg,
+            max_entries=max_entries,
+            # Sweeping about once per window keeps expired rows from
+            # accumulating without putting a DELETE on the per-frame path.
+            prune_interval_seconds=max(1, cfg.p2p_replay_window_seconds),
+        )
+        self._persistent_nonce_store = store
+        logger.info("beam_durable_replay_store_opened device=%s", self.device_name)
+        return store
+
+    def _build_signer(self, nonce_store: ReplayNonceStore) -> P2PSign:
+        """Build a frame signer bound to the current key and *nonce_store*."""
+        return P2PSign(
+            self._p2p_key,
+            replay_window_seconds=self.config.p2p_replay_window_seconds,
+            nonce_store=nonce_store,
+        )
 
     async def start(self) -> None:
         """Register the local mDNS service and start listening for peers."""
         self.config.assert_sovereign("beam_p2p_start")
+        # A previous stop() closed the durable store. Reopen it before accepting
+        # frames again, so a stop/start cycle cannot leave the node running with
+        # a store that rejects every check.
+        if self._persistent_nonce_store is not None and self._persistent_nonce_store.is_closed:
+            self._signer = self._build_signer(self._open_nonce_store())
         self._azc = AsyncZeroconf()
         info = ServiceInfo(
             self.service_type,
@@ -180,6 +241,8 @@ class BeamNode:
             await self._azc.async_unregister_all_services()
             await self._azc.async_close()
             self._azc = None
+        if self._persistent_nonce_store is not None:
+            self._persistent_nonce_store.close()
 
     def rotate_key(self, new_key: str) -> None:
         """Rotate the P2P encryption/signing key without recreating the node.
@@ -191,12 +254,13 @@ class BeamNode:
         After rotation, frames are encrypted/signed with ``new_key``; peers must
         rotate to the same key to keep exchanging frames.
 
-        The signer is rekeyed in place rather than rebuilt, so the seen-nonce set
-        survives the rotation and rotation cannot be used to clear it.
+        The signer is rekeyed in place, so the replay-nonce store stays attached
+        and rotation cannot be used to clear it and reopen a replay window.
         """
         self.config.assert_licensed("advanced_p2p")
         if not new_key:
             raise ValueError("rotate_key requires a non-empty new_key")
+        self._p2p_key = new_key
         self._crypto = P2PCrypto(new_key)
         self._signer.rekey(new_key)
         self.config.p2p_encryption_key = new_key
@@ -251,6 +315,17 @@ class BeamNode:
                 conn.close()
         except asyncio.IncompleteReadError:
             pass
+        except ReplayStoreError as exc:
+            # Fail closed: an unanswerable replay check drops the frame. Logged
+            # at ERROR because the node is still serving but can no longer prove
+            # a frame is fresh, and that needs an operator, not a warning buried
+            # among ordinary rejected packets.
+            logger.error(
+                "beam_replay_store_unavailable — frame rejected without being stored: %s", exc
+            )
+        except ValueError as exc:
+            # Expected rejections: malformed, tampered, expired, or replayed.
+            logger.warning("beam_frame_rejected: %s", exc)
         except Exception as exc:
             logger.warning("beam_handle_peer_error: %s", exc)
         finally:

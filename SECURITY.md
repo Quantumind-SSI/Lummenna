@@ -81,7 +81,16 @@ Encryption at rest is **implemented but opt-in** (`LUMMENNA_DATABASE_ENCRYPTION_
 
 ## P2P Transport Security
 
-Beam P2P sharing is **encrypted and authenticated by default**: every frame is AES-256-GCM encrypted and HMAC-SHA256 signed, with a timestamp window plus nonce cache for replay protection. A Beam listener refuses to start without `LUMMENNA_P2P_ENCRYPTION_KEY` unless `LUMMENNA_P2P_INSECURE=1` is explicitly set (not recommended). Caveats: the replay-nonce cache is in-memory only (resets on restart), and key distribution between peers is manual.
+Beam P2P sharing is **encrypted and authenticated by default**: every frame is AES-256-GCM encrypted and HMAC-SHA256 signed, with a timestamp window plus a seen-nonce set for replay protection. A Beam listener refuses to start without `LUMMENNA_P2P_ENCRYPTION_KEY` unless `LUMMENNA_P2P_INSECURE=1` is explicitly set (not recommended).
+
+Where the seen-nonce set lives is selected by `LUMMENNA_P2P_REPLAY_STORE`:
+
+- **`memory`** (default, Community) — the set is held in the process, so a restart empties it. A frame captured shortly before a restart can be replayed once afterwards, for whatever remains of its timestamp window.
+- **`persistent`** (Pro, `advanced_p2p`) — the set is held in the Lummenna database, so it survives restarts and is shared by every process using that store. Uniqueness is decided by a SQLite primary-key conflict, so concurrent deliveries of the same frame cannot both be accepted.
+
+In either mode a nonce is retained for exactly `LUMMENNA_P2P_REPLAY_WINDOW_SECONDS` (default 30) past its frame's timestamp — beyond that the timestamp check rejects the frame anyway — and the set is capped at `LUMMENNA_P2P_REPLAY_MAX_ENTRIES` (default 100,000), with overflow evicted nearest-expiry first and logged at WARNING. If the store cannot be consulted, the frame is **rejected** and the failure is logged at ERROR; replay checking is never skipped.
+
+Remaining caveats: key distribution between peers is manual, retention is measured against the local clock (a backwards clock jump larger than the window can make pruned nonces acceptable again, so keep the node on NTP), and rotating a key does not notify peers.
 
 ## License Signing Key
 
@@ -99,7 +108,7 @@ Tooling lives in `scripts/issue_license.py` (`keygen` and `issue` subcommands).
 2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMMENNA_API_KEY` is unset. Set it before exposing the server to any network. Additionally, `/health`, `/dashboard`, `/metrics`, and `/v1/dashboard-data` are intentionally public (no API key required) and expose room names, chunk counts, and feedback statistics; do not expose the server to untrusted networks if that metadata is sensitive.
 3. **Rate limiting covers write/search endpoints only** — the five POST endpoints are rate-limited; GET endpoints are not.
 4. **Sovereign mode blocks P2P and downloads** — When `LUMMENNA_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lummenna processes from making network calls.
-5. **P2P replay protection is process-local** — the seen-nonce set is not persisted across restarts; the 30-second timestamp window still applies.
+5. **P2P replay protection is process-local by default** — with `LUMMENNA_P2P_REPLAY_STORE=memory` (the Community default) the seen-nonce set is not persisted across restarts; the timestamp window still applies. Durable, restart-surviving replay protection is available as Pro (`advanced_p2p`) via `LUMMENNA_P2P_REPLAY_STORE=persistent`.
 
 ## Dependency Security
 

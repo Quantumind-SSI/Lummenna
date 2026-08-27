@@ -59,7 +59,7 @@ This document tracks ongoing and future work for Lummenna following the v1.0.0 p
 
 ### 3.2 P2P / Beam Security Audit
 - [x] Transport encryption — AES-256-GCM + HMAC-SHA256 with replay protection shipped in `lummenna/p2p/beam.py` / `lummenna/security/crypto.py`; a Beam listener refuses to start without a key
-- [ ] Harden Beam protocol for adversarial networks (persistent replay-nonce store, key rotation) — target v0.3.0
+- [x] Harden Beam protocol for adversarial networks — key rotation (`BeamNode.rotate_key`) and the durable replay-nonce store (`lummenna/p2p/replay.py`, `LUMMENNA_P2P_REPLAY_STORE=persistent`) are shipped and Pro-gated under `advanced_p2p`. Remaining hardening (mesh routing, key-rotation handshake) is tracked under EP-P6+ below.
 - [x] Document trust model and household-local limitation
 
 ### 3.3 Release Engineering
@@ -159,18 +159,32 @@ Read-replica fan-out and failover (builds on `scale_out`).
 - [ ] Gated by `assert_licensed("ha_topology")`
 
 ### EP-P6+ — Advanced P2P hardening (extends the shipped `advanced_p2p`)
-Today `advanced_p2p` ships **live encryption/signing key-rotation** only
-(`BeamNode.rotate_key`). The following P2P hardening is **not built** — the Beam
-transport is flat mDNS discovery with direct 1-hop TCP delivery and an in-memory
-replay-nonce set. These extend the same gate when delivered.
+Today `advanced_p2p` ships **live encryption/signing key-rotation**
+(`BeamNode.rotate_key`) and the **durable replay-nonce store**
+(`lummenna/p2p/replay.py`). The remaining items below are **not built** — the Beam
+transport is still flat mDNS discovery with direct 1-hop TCP delivery. These
+extend the same gate when delivered.
+- [x] **Persistent replay store** — `SqliteNonceStore` keeps the seen-nonce set in
+      the Lummenna database (`LUMMENNA_P2P_REPLAY_STORE=persistent`, migration
+      0006), so it survives restarts and is shared across processes. Uniqueness is
+      decided by a SQLite primary-key conflict, so concurrent deliveries of the
+      same frame cannot both be accepted, and an unreachable store rejects the
+      frame rather than accepting it. Retention: a nonce is kept until
+      `frame_timestamp + LUMMENNA_P2P_REPLAY_WINDOW_SECONDS`, past which the
+      timestamp check rejects the frame regardless. Eviction: expired rows are
+      swept on an amortised schedule; `LUMMENNA_P2P_REPLAY_MAX_ENTRIES` caps the
+      table under flood, discarding nearest-expiry first and logging at WARNING.
+      Community keeps the process-local store, which is unchanged and ungated.
+- [x] Adversarial-network test coverage for the delivered items —
+      `tests/test_p2p_replay_store.py` covers capture-and-retransmit against the
+      real frame path, retransmission after a listener restart, cross-process and
+      cross-thread races on one nonce, forged and expired frames, flood-driven
+      eviction, and fail-closed behaviour on store outage
 - [ ] **Multi-node mesh routing** — multi-hop relay/forwarding across peers with a
       documented topology and partition handling (currently 1-hop only)
-- [ ] **Persistent replay store** — durable replay-nonce store surviving process
-      restart (currently `P2PSign._seen_nonces` is in-memory, reset on restart),
-      with a documented retention/eviction policy
 - [ ] Key-rotation handshake so peers negotiate the new key rather than relying on
       out-of-band agreement
-- [ ] Adversarial-network test coverage for the above
+- [ ] Adversarial-network test coverage for the two items above
 
 ---
 

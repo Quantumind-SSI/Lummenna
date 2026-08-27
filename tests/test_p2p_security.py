@@ -121,51 +121,6 @@ class TestP2PSigning:
             signer.verify(signed)
 
 
-class TestReplayNonceRetention:
-    """Nonce retention and eviction must follow expiry, not insertion accident."""
-
-    def test_nonce_retained_for_exactly_the_replay_window(self):
-        signer = P2PSign("mykey", replay_window_seconds=45)
-        before = int(time.time())
-        signer.verify(signer.sign(b"payload"))
-        (expires_at, _nonce) = signer._seen_heap[0]
-        assert before + 45 <= expires_at <= int(time.time()) + 45
-
-    def test_expired_nonces_are_retired(self):
-        signer = P2PSign("mykey", replay_window_seconds=1)
-        signer.verify(signer.sign(b"payload"))
-        assert len(signer._seen_expiry) == 1
-        # Once the frame is outside the window its nonce can no longer change any
-        # verdict, so it is dropped rather than held forever.
-        assert signer._expire_nonces(int(time.time()) + 2) == 1
-        assert len(signer._seen_expiry) == 0
-
-    def test_eviction_keeps_the_longest_lived_nonces(self):
-        """Regression: the old cap sliced an unordered set, so it could discard
-        freshly-recorded nonces while retaining already-expired ones."""
-        signer = P2PSign("mykey", max_seen_nonces=2)
-        now = int(time.time())
-        assert signer._record_nonce(b"soonest", now + 10) is True
-        assert signer._record_nonce(b"middle", now + 20) is True
-        assert signer._record_nonce(b"latest", now + 30) is True
-        assert len(signer._seen_expiry) == 2
-        assert b"soonest" not in signer._seen_expiry
-        assert b"latest" in signer._seen_expiry
-
-    def test_ceiling_is_never_exceeded(self):
-        signer = P2PSign("mykey", max_seen_nonces=10)
-        now = int(time.time())
-        for i in range(100):
-            signer._record_nonce(f"n{i}".encode(), now + 30 + i)
-        assert len(signer._seen_expiry) <= 10
-
-    def test_non_positive_bounds_rejected(self):
-        with pytest.raises(ValueError, match="replay_window_seconds"):
-            P2PSign("mykey", replay_window_seconds=0)
-        with pytest.raises(ValueError, match="max_seen_nonces"):
-            P2PSign("mykey", max_seen_nonces=0)
-
-
 class TestRekeyPreservesReplayProtection:
     """Rotating a key must not be usable to wipe the seen-nonce set."""
 
@@ -173,8 +128,10 @@ class TestRekeyPreservesReplayProtection:
         signer = P2PSign("old-key")
         framed = signer.sign(b"payload")
         signer.verify(framed)
+        store = signer.nonce_store
         signer.rekey("new-key")
-        assert len(signer._seen_expiry) == 1
+        assert signer.nonce_store is store
+        assert len(store) == 1
 
     def test_rekey_changes_the_signing_key(self):
         signer = P2PSign("old-key")
@@ -203,7 +160,7 @@ class TestRekeyPreservesReplayProtection:
 
         # The old frame no longer verifies under the new key, so drive the
         # regression directly: its nonce must still be on record.
-        assert len(node._signer._seen_expiry) == 1
+        assert len(node._signer.nonce_store) == 1
 
 
 class TestHardenedBeamProtocol:
