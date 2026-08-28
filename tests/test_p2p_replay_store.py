@@ -317,10 +317,17 @@ class TestDurability:
         assert second == "SEEN", "a restarted process re-accepted an already-seen nonce"
 
     def test_concurrent_processes_cannot_both_accept(self, tmp_path):
-        """Two processes racing the same nonce: exactly one may be told UNSEEN."""
+        """Several processes racing the same nonce: exactly one may be told UNSEEN."""
         db = tmp_path / "lummenna.db"
         conn = sqlite3.connect(db)
+        # Convert to WAL here, before any concurrency exists. Switching journal
+        # mode needs an exclusive lock and can return SQLITE_BUSY without ever
+        # invoking the busy handler, so letting the children race to convert
+        # would make this test flaky for reasons unrelated to what it asserts.
+        # Production never hits that race: get_connection converts on first open.
+        conn.execute("PRAGMA journal_mode = WAL")
         create_nonce_table(conn)
+        conn.commit()
         conn.close()
 
         script = textwrap.dedent(
@@ -328,9 +335,10 @@ class TestDurability:
             import sqlite3, sys
             from lummenna.p2p.replay import SqliteNonceStore
 
-            conn = sqlite3.connect(sys.argv[1], timeout=30)
-            conn.execute("PRAGMA journal_mode = WAL")
-            conn.execute("PRAGMA busy_timeout = 30000")
+            conn = sqlite3.connect(sys.argv[1], timeout=60)
+            # Set before any statement runs: the database is already WAL, so the
+            # only contention left is ordinary writer serialisation.
+            conn.execute("PRAGMA busy_timeout = 60000")
             store = SqliteNonceStore(conn, owns_connection=True)
             print("UNSEEN" if store.record_if_unseen(b"contended", int(sys.argv[2])) else "SEEN")
             store.close()
