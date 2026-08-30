@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Features | Lummenna</title>
+  <meta name="description" content="Explore Lummenna's implemented memory palace, hybrid retrieval, context assembly, lifecycle management, integrations, security controls, and measured evidence.">
+  <link rel="canonical" href="https://lummenna.com/features">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a>
+      <div class="nav-links">
+        <a href="/">Home</a><a href="/features" aria-current="page">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a href="https://github.com/QuantmindSSI/lummenna">GitHub</a><a class="nav-cta" href="/docs#run">Run locally</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content" tabindex="-1">
+    <header class="page-hero">
+      <p class="eyebrow">Capability map / shipped code</p>
+      <h1>Built to remember. <em>Built to let go.</em></h1>
+      <p>Capabilities are separated by edition and described at their implemented scope. Planned work stays on the roadmap rather than appearing here as a shipped feature.</p>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <div class="section-heading"><p class="section-index">01 / Core</p><div><h2>The memory path.</h2><p>The Community Edition includes the complete storage, retrieval, context, lifecycle, and server path.</p></div></div>
+        <div class="ledger">
+          <article><span class="index">01 / Structure</span><h3>Memory palace</h3><p>Rooms contain loci; loci and rooms organize chunks with provenance, temporal validity, and value metadata.</p><span class="edition">Community</span></article>
+          <article><span class="index">02 / Search</span><h3>Hybrid retrieval</h3><p>BM25 through SQLite FTS5, dense vectors, graph traversal when available, and reciprocal rank fusion.</p><span class="edition">Community</span></article>
+          <article><span class="index">03 / Prompt</span><h3>Context assembly</h3><p>Retrieved memories are formatted and reduced to an explicit token budget, including a defined emergency path.</p><span class="edition">Community</span></article>
+          <article><span class="index">04 / Adapt</span><h3>Twin-Force controller</h3><p>A shared controller responds to retrieval interaction signals and exposes its current state to the observatory.</p><span class="edition">Community</span></article>
+          <article><span class="index">05 / Retain</span><h3>Three-layer lifecycle</h3><p>Time decay, same-locus interference, and budget pressure govern value, precision, and eventual release.</p><span class="edition">Community</span></article>
+          <article><span class="index">06 / Observe</span><h3>API and dashboard</h3><p>FastAPI endpoints, OpenAPI output, Prometheus metrics, and a dependency-free live observatory ship with the base install.</p><span class="edition">Community</span></article>
+          <article><span class="index">07 / Encrypt</span><h3>Encryption at rest</h3><p>Licensed deployments can select SQLCipher whole-database encryption or Fernet field encryption.</p><span class="edition">Pro</span></article>
+          <article><span class="index">08 / Isolate</span><h3>Multi-tenant storage</h3><p>Licensed non-default tenants are scoped through storage and retrieval paths with tenant-aware uniqueness.</p><span class="edition">Pro</span></article>
+          <article><span class="index">09 / Govern</span><h3>Compliance operations</h3><p>Licensed safety-forgetting operations provide atomic erasure behavior and audit records at the implemented boundary.</p><span class="edition">Pro</span></article>
+        </div>
+
+        <figure class="feature-image">
+          <img src="/assets/img/lummenna-feature-strip.png" width="902" height="167" loading="lazy" alt="Five original Lummenna brand principles: sovereign, private, persistent, intelligent, and attentive">
+          <figcaption>Original Lummenna brand study retained from the previous frontend. The implementation ledger above is the current capability source.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-heading"><p class="section-index">02 / Observe</p><div><h2>The running system, not a mockup.</h2><p>The application frontend reads tenant-scoped counts, actual file sizes, scheduler state, embedding mode, runtime configuration, feedback, and committed evaluation artifacts.</p></div></div>
+        <figure class="shot">
+          <img src="/assets/img/dashboard.png" width="1440" height="900" alt="Lummenna memory observatory showing a local node's runtime and benchmark evidence" loading="lazy">
+          <figcaption>Local demonstration capture. Values shown belong to that node and its named artifacts; they are not universal performance claims.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-heading"><p class="section-index">03 / Evidence</p><div><h2>Measured, with boundaries attached.</h2><p>The committed artifacts validate the harness at limited scale. They do not establish an external leaderboard rank.</p></div></div>
+        <div class="table-wrap" role="region" aria-label="Scrollable benchmark evidence table" tabindex="0">
+          <table>
+            <caption>Results committed under <code>benchmarks/*/results</code> in the repository.</caption>
+            <thead><tr><th scope="col">Suite</th><th scope="col">Measured result</th><th scope="col">Scope</th><th scope="col">Interpretation</th></tr></thead>
+            <tbody>
+              <tr><td>End-to-end memory</td><td><strong>Recall@1 0.964</strong></td><td>7 sessions, 28 queries, MiniLM</td><td>Synthetic, same-embedder self-grading with expected facts stored verbatim; no LLM judge or external comparison.</td></tr>
+              <tr><td>BEIR subset</td><td><strong>Hybrid macro nDCG@10 0.439</strong></td><td>5 datasets, 500 passages and 20 queries each, BGE</td><td>Subset signal only; not a full-corpus BEIR score.</td></tr>
+              <tr><td>Synthetic retrieval</td><td><strong>Hybrid mean latency 13.9 ms</strong></td><td>1,000 passages, 50 queries, 3 seeds, BGE</td><td>Committed harness result; hardware metadata is not recorded.</td></tr>
+              <tr><td>External leaderboard</td><td>Not ranked</td><td>No full-corpus submission</td><td>No Mem0, Zep, Letta, LongMemEval, or LoCoMo head-to-head result is committed.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="band"><div class="wrap band-inner"><div><p class="kicker">Inspect it yourself</p><h2>The benchmark limitations ship with the numbers.</h2><p>Runners, dataset identifiers/loaders, and result artifacts are available in the repository.</p></div><div class="hero-actions"><a class="btn btn-dark" href="https://github.com/QuantmindSSI/lummenna/tree/main/benchmarks">View benchmark artifacts</a></div></div></section>
+  </main>
+
+  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav><nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="https://github.com/QuantmindSSI/lummenna">Source</a><a href="https://github.com/QuantmindSSI/lummenna/blob/main/ROADMAP.md">Roadmap</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lummenna | Local-First Memory for AI Agents</title>
+  <meta name="description" content="Lummenna is a local-first memory and context framework for AI agents, with structured storage, hybrid retrieval, managed forgetting, and measured evaluation artifacts.">
+  <link rel="canonical" href="https://lummenna.com/">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/">
+        <img src="/assets/img/favicon.svg" alt="">
+        <span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span>
+      </a>
+      <div class="nav-links">
+        <a href="/" aria-current="page">Home</a>
+        <a href="/features">Features</a>
+        <a href="/pricing">Licensing</a>
+        <a href="/docs">Docs</a>
+        <a href="https://github.com/QuantmindSSI/lummenna">GitHub</a>
+        <a class="nav-cta" href="/docs#run">Run locally</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main-content" tabindex="-1">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Local-first memory and context framework</p>
+        <h1>Memory, <em>illuminated locally.</em></h1>
+        <p class="lede">Lummenna gives agents a structured memory palace, hybrid lexical and vector retrieval, token-budgeted context assembly, and a managed memory lifecycle. The default runtime stays on your hardware; network-backed operations are explicit configuration choices.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/docs#install">Install Community</a>
+          <a class="btn" href="https://github.com/QuantmindSSI/lummenna">Inspect the source</a>
+        </div>
+        <p class="hero-note">Python 3.10+ / AGPL-3.0-or-later or commercial license / API version 1.0.0</p>
+      </div>
+      <div class="core-chamber" aria-label="Lummenna crystalline memory core">
+        <img class="core-portrait" src="/assets/img/lummenna-icon.png" width="255" height="178" alt="Crystalline Lummenna memory core with jade and amber Twin-Force rings">
+        <p class="core-caption">Original crystalline core / memory, illumination, sovereignty, balance</p>
+      </div>
+    </header>
+
+    <section class="proof-strip" aria-label="Committed benchmark snapshot">
+      <article>
+        <span class="proof-label">E2E memory / Recall@1</span>
+        <strong class="proof-value">0.964</strong>
+        <p>28 queries across 7 synthetic sessions; MiniLM embedder.</p>
+      </article>
+      <article>
+        <span class="proof-label">BEIR subset / nDCG@10</span>
+        <strong class="proof-value">0.439</strong>
+        <p>Hybrid macro mean across 5 datasets, each sampled to 500 passages and 20 queries.</p>
+      </article>
+      <article>
+        <span class="proof-label">Leaderboard status</span>
+        <strong class="proof-value">Unranked</strong>
+        <p>No full-corpus BEIR/MTEB submission or external memory-system comparison is committed.</p>
+      </article>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="section-index">01 / Why</p>
+          <div>
+            <h2>A memory system with an inspectable shape.</h2>
+            <p>Each statement below maps to an implementation in the repository. Optional services and commercial controls are named rather than hidden behind broad claims.</p>
+          </div>
+        </div>
+        <div class="ledger">
+          <article><span class="index">01 / Structure</span><h3>Rooms, loci, chunks</h3><p>Memories carry location, provenance, validity, value, and retrieval state instead of living in an undifferentiated vector collection.</p><span class="edition">Community</span></article>
+          <article><span class="index">02 / Retrieval</span><h3>Signals, then fusion</h3><p>SQLite FTS5, dense vectors, optional graph traversal, and reciprocal rank fusion form the retrieval path.</p><span class="edition">Community</span></article>
+          <article><span class="index">03 / Context</span><h3>Budgeted assembly</h3><p>Retrieved memories are ranked and assembled into a bounded prompt context with explicit truncation behavior.</p><span class="edition">Community</span></article>
+          <article><span class="index">04 / Lifecycle</span><h3>Retention has pressure</h3><p>Time decay, interference, and budget-driven precision changes prevent an unbounded store from masquerading as useful memory.</p><span class="edition">Community</span></article>
+          <article><span class="index">05 / Interfaces</span><h3>Use the same palace</h3><p>Python, MCP, FastAPI, LangChain, and LangGraph adapters connect different agents to the same underlying memory model.</p><span class="edition">Community</span></article>
+          <article><span class="index">06 / Controls</span><h3>Enterprise boundaries</h3><p>Encryption at rest, multi-tenant isolation, compliance operations, and advanced P2P controls are license-enforced Pro capabilities.</p><span class="edition">Pro</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="section-index">02 / Flow</p>
+          <div><h2>A palace, a searchlight, a gardener.</h2><p>The operating model stays legible from storage through retrieval and eventual release.</p></div>
+        </div>
+        <div class="process-grid">
+          <article><p class="section-index">01 / Organize</p><h3>Place memory</h3><p>Store a chunk in a named room and optional locus, with provenance and temporal validity recorded beside it.</p></article>
+          <article><p class="section-index">02 / Retrieve</p><h3>Fuse evidence</h3><p>Lexical and semantic candidates are combined, reranked, tenant-scoped, and reinforced when used.</p></article>
+          <article><p class="section-index">03 / Maintain</p><h3>Release deliberately</h3><p>Scheduled decay and budget passes alter value and precision according to explicit, inspectable rules.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="section-index">03 / Connect</p>
+          <div><h2>One palace, multiple agent surfaces.</h2><p>The repository includes integration configurations or adapters for the interfaces listed here. Optional Python packages are installed separately.</p></div>
+        </div>
+        <div class="integration-list" aria-label="Available integrations">
+          <span><strong>MCP</strong>stdio server</span><span><strong>OpenCode</strong>MCP setup + skill example</span><span><strong>Copilot</strong>extension source</span><span><strong>Claude</strong>desktop config</span>
+          <span><strong>Codex CLI</strong>MCP config</span><span><strong>Cline</strong>MCP config</span><span><strong>Goose</strong>extension config</span><span><strong>Zed</strong>context server guide</span>
+          <span><strong>Aider</strong>command guide</span><span><strong>Devin</strong>tool definition</span><span><strong>LangChain</strong>optional adapter</span><span><strong>LangGraph</strong>optional saver</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="wrap band-inner">
+        <div><p class="kicker">Start with evidence</p><h2>Run the same observatory on your own node.</h2><p>The dashboard reads current database state and clearly separates live measurements from committed benchmark artifacts.</p></div>
+        <div class="hero-actions"><a class="btn btn-dark" href="/docs#run">Open the runbook</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="foot-grid">
+        <div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div>
+        <nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav>
+        <nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="https://github.com/QuantmindSSI/lummenna">Source</a><a href="https://github.com/QuantmindSSI/lummenna/blob/main/ROADMAP.md">Roadmap</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav>
+      </div>
+      <div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Local API reference generated from the running Lummenna OpenAPI schema.">
+  <meta name="theme-color" content="#101b19">
+  <title>Lummenna API | Local Reference</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #eee9dd;
+      --paper-bright: #f8f5ec;
+      --paper-deep: #ded7c7;
+      --ink: #101b19;
+      --ink-soft: #344440;
+      --forest: #173b33;
+      --forest-deep: #0d2722;
+      --jade: #0d745b;
+      --jade-bright: #28a982;
+      --amber: #bd6d19;
+      --amber-ink: #84470d;
+      --amber-bright: #e8a84a;
+      --rust: #a44431;
+      --line: #b9b1a1;
+      --line-dark: #355149;
+      --white: #fffdf7;
+      --display: Georgia, "Times New Roman", serif;
+      --sans: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased; padding-right: env(safe-area-inset-right); padding-left: env(safe-area-inset-left); }
+    ::selection { background: var(--amber-bright); color: var(--ink); }
+    a { color: inherit; }
+    button, input { font: inherit; }
+    :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    .skip-link { position: fixed; top: .75rem; left: .75rem; z-index: 10; padding: .7rem 1rem; background: var(--paper-bright); transform: translateY(-160%); }
+    .skip-link:focus { transform: translateY(0); }
+    .site-header { border-bottom: 1px solid var(--line); background: rgba(238, 233, 221, .96); }
+    .topbar, main, .footer-inner { width: min(1180px, calc(100% - 3rem)); margin: 0 auto; }
+    .topbar { min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: inline-flex; align-items: center; gap: .75rem; text-decoration: none; }
+    .brand img { width: 38px; height: 38px; }
+    .brand strong, .eyebrow, .method, .tag, .schema-label { font-family: var(--mono); text-transform: uppercase; letter-spacing: .12em; }
+    .brand strong { font-size: .9rem; }
+    .brand small { display: block; color: var(--ink-soft); font-size: .72rem; }
+    .topnav { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .topnav a { min-height: 44px; display: inline-flex; align-items: center; padding: .55rem .75rem; font-family: var(--mono); font-size: .72rem; text-transform: uppercase; text-decoration: none; }
+    .topnav a:hover { background: var(--paper-deep); }
+    main { padding: clamp(3.5rem, 7vw, 7rem) 0; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .7fr); gap: clamp(2rem, 7vw, 6rem); align-items: end; padding-bottom: 3rem; border-bottom: 1px solid var(--ink); }
+    .eyebrow { margin: 0 0 1rem; color: var(--jade); font-size: .74rem; font-weight: 700; }
+    h1 { max-width: 12ch; margin: 0; font-weight: 400; font-size: clamp(3rem, 7vw, 6.5rem); line-height: .94; font-family: var(--display); letter-spacing: -.05em; }
+    h1 em { color: var(--amber); font-weight: 400; }
+    .intro { max-width: 42ch; margin: 1.5rem 0 0; color: var(--ink-soft); font-size: 1.05rem; }
+    .schema-card { padding: 1.5rem; color: var(--paper-bright); background: var(--forest); border: 1px solid var(--ink); }
+    .schema-card dl { margin: 1.25rem 0 0; }
+    .schema-card div { display: flex; justify-content: space-between; gap: 1rem; padding: .65rem 0; border-top: 1px solid rgba(248,245,236,.2); }
+    .schema-card dt { color: rgba(248,245,236,.68); }
+    .schema-card dd { margin: 0; font-family: var(--mono); }
+    .tools { display: flex; gap: 1rem; align-items: end; justify-content: space-between; margin: 3rem 0 1.2rem; }
+    .tools h2 { margin: 0; font-weight: 400; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1; font-family: var(--display); }
+    .filter { width: min(100%, 360px); }
+    .filter label { display: block; margin-bottom: .4rem; font-family: var(--mono); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .filter input { width: 100%; padding: .75rem .9rem; border: 1px solid var(--ink); border-radius: 0; background: var(--paper-bright); color: var(--ink); }
+    .endpoint-list { border-top: 1px solid var(--ink); }
+    .endpoint { border-bottom: 1px solid var(--line); }
+    .endpoint summary { display: grid; grid-template-columns: 5rem minmax(12rem, 1fr) minmax(12rem, 1.4fr) auto; gap: 1rem; align-items: center; padding: 1.1rem .4rem; cursor: pointer; list-style: none; }
+    .endpoint summary::-webkit-details-marker { display: none; }
+    .endpoint summary::after { content: "+"; justify-self: end; font-family: var(--mono); grid-column: 4; }
+    .endpoint[open] summary::after { content: "-"; }
+    .method { width: max-content; padding: .25rem .42rem; color: var(--paper-bright); background: var(--jade); font-size: .67rem; font-weight: 700; }
+    .method.post { background: var(--amber-ink); color: var(--white); }
+    .path { overflow-wrap: anywhere; font-family: var(--mono); font-size: .88rem; }
+    .summary { color: var(--ink-soft); }
+    .endpoint-body { display: grid; gap: 1.25rem; padding: 0 .4rem 1.5rem 6.4rem; }
+    .endpoint-body p { max-width: 72ch; margin: 0; color: var(--ink-soft); }
+    .tag { color: var(--jade); font-size: .68rem; }
+    pre { margin: 0; padding: 1rem; overflow-x: auto; background: var(--forest); color: var(--paper-bright); font-weight: 400; font-size: .78rem; line-height: 1.55; font-family: var(--mono); }
+    .schema-section { margin-top: 4rem; }
+    .schema-section h2 { font-weight: 400; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1; font-family: var(--display); }
+    .schema { margin-bottom: .7rem; border: 1px solid var(--line); background: var(--paper-bright); }
+    .schema summary { display: flex; gap: 1rem; align-items: center; justify-content: space-between; cursor: pointer; padding: .9rem 1rem; list-style: none; font-family: var(--mono); font-size: .78rem; font-weight: 700; }
+    .schema summary::-webkit-details-marker { display: none; }
+    .schema summary::after { content: "+"; flex: 0 0 auto; color: var(--jade); }
+    .schema[open] summary::after { content: "-"; }
+    .schema pre { border-top: 1px solid var(--line); }
+    .empty { padding: 2rem 0; color: var(--rust); }
+    .load-status { min-height: 1.5em; margin: .8rem 0 0; color: var(--ink-soft); font-weight: 400; font-size: .7rem; line-height: normal; font-family: var(--mono); }
+    .retry { min-height: 44px; margin-top: .75rem; padding: .65rem .85rem; border: 1px solid var(--forest); border-radius: 0; background: var(--forest); color: var(--white); cursor: pointer; font-weight: 700; font-size: .68rem; line-height: normal; font-family: var(--mono); text-transform: uppercase; }
+    .retry:hover { background: var(--jade); }
+    .retry[hidden] { display: none; }
+    .noscript-notice { width: min(1180px, calc(100% - 3rem)); margin: 0 auto; padding: .8rem 1rem; border: 1px solid var(--line); border-top: 0; background: #f5dfd7; color: var(--rust); font-weight: 400; font-size: .72rem; line-height: 1.5; font-family: var(--mono); }
+    footer { border-top: 1px solid var(--line); }
+    .footer-inner { display: flex; justify-content: space-between; gap: 1rem; padding: 2rem 0; color: var(--ink-soft); font-size: .84rem; }
+    @media (max-width: 780px) {
+      .hero { grid-template-columns: 1fr; }
+      .tools, .topbar, .footer-inner { align-items: flex-start; flex-direction: column; }
+      .topbar { padding: .8rem 0; }
+      .endpoint summary { grid-template-columns: 4.5rem minmax(0, 1fr) auto; }
+      .endpoint summary .summary { grid-column: 1 / -1; grid-row: 2; }
+      .endpoint summary::after { grid-column: 3; grid-row: 1; }
+      .endpoint-body { padding-left: .4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#reference">Skip to API reference</a>
+  <header class="site-header">
+    <div class="topbar">
+      <a class="brand" href="/">
+        <img src="/favicon.svg" alt="">
+        <span><strong>Lummenna</strong><small>Local API reference</small></span>
+      </a>
+      <nav class="topnav" aria-label="API navigation">
+        <a href="/">Observatory</a>
+        <a href="/openapi.json">Raw OpenAPI</a>
+      </nav>
+    </div>
+  </header>
+  <noscript>
+    <div class="noscript-notice">This generated reference requires JavaScript. Read the same schema directly at <a href="/openapi.json">/openapi.json</a>.</div>
+  </noscript>
+  <main id="reference" tabindex="-1">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Interface ledger / generated locally</p>
+        <h1 id="page-title">The API, <em>in plain view.</em></h1>
+        <p class="intro">This reference is rendered directly from the OpenAPI schema exposed by the running process. When API authentication is configured, send <code>X-API-Key</code> on operational requests; use <code>X-Tenant-ID</code> to select a licensed tenant scope.</p>
+      </div>
+      <aside class="schema-card" aria-label="OpenAPI schema status">
+        <span class="schema-label">Schema status</span>
+        <dl>
+          <div><dt>Service</dt><dd id="serviceName">Loading</dd></div>
+          <div><dt>Version</dt><dd id="serviceVersion">--</dd></div>
+          <div><dt>Operations</dt><dd id="operationCount">--</dd></div>
+        </dl>
+      </aside>
+    </section>
+    <section aria-labelledby="operations-title">
+      <div class="tools">
+        <h2 id="operations-title">Operations</h2>
+        <div class="filter">
+          <label for="filter">Filter paths and summaries</label>
+          <input id="filter" type="search" autocomplete="off" placeholder="Search the schema" disabled>
+        </div>
+      </div>
+      <p class="load-status" id="loadStatus" role="status" aria-live="polite">Reading the schema from this node.</p>
+      <button class="retry" id="retryButton" type="button" hidden>Retry schema load</button>
+      <div class="endpoint-list" id="endpointList" aria-busy="true">
+        <p>Reading <code>/openapi.json</code> from this node.</p>
+      </div>
+    </section>
+    <section class="schema-section" aria-labelledby="schemas-title">
+      <p class="eyebrow">Data contracts</p>
+      <h2 id="schemas-title">Schemas</h2>
+      <div id="schemaList"></div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-inner">
+      <span>Lummenna API reference</span>
+      <a href="/">Return to the memory observatory</a>
+    </div>
+  </footer>
+  <script>
+    const endpointList = document.getElementById("endpointList");
+    const schemaList = document.getElementById("schemaList");
+    const filter = document.getElementById("filter");
+    const loadStatus = document.getElementById("loadStatus");
+    const retryButton = document.getElementById("retryButton");
+    const operationNodes = [];
+    const REQUEST_TIMEOUT_MS = 8000;
+    let schemaController = null;
+
+    function textElement(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function renderOperation(path, method, operation) {
+      const details = document.createElement("details");
+      details.className = "endpoint";
+      details.dataset.search = `${method} ${path} ${operation.summary || ""} ${(operation.tags || []).join(" ")}`.toLowerCase();
+      const summary = document.createElement("summary");
+      summary.append(
+        textElement("span", `method ${method}`, method),
+        textElement("code", "path", path),
+        textElement("span", "summary", operation.summary || operation.operationId || "Documented operation")
+      );
+      const body = document.createElement("div");
+      body.className = "endpoint-body";
+      if (operation.tags && operation.tags.length) body.append(textElement("span", "tag", operation.tags.join(" / ")));
+      if (operation.description) body.append(textElement("p", "", operation.description));
+      body.append(textElement("pre", "", JSON.stringify({
+        security: operation.security || [],
+        parameters: operation.parameters || [],
+        requestBody: operation.requestBody || null,
+        responses: operation.responses || {}
+      }, null, 2)));
+      details.append(summary, body);
+      endpointList.append(details);
+      operationNodes.push(details);
+    }
+
+    function renderSchema(name, schema) {
+      const details = document.createElement("details");
+      details.className = "schema";
+      details.append(
+        textElement("summary", "", name),
+        textElement("pre", "", JSON.stringify(schema, null, 2))
+      );
+      schemaList.append(details);
+    }
+
+    function applyFilter() {
+      const query = filter.value.trim().toLowerCase();
+      let visible = 0;
+      operationNodes.forEach((node) => {
+        node.hidden = Boolean(query) && !node.dataset.search.includes(query);
+        if (!node.hidden) visible += 1;
+      });
+      loadStatus.textContent = query
+        ? `${visible} of ${operationNodes.length} operations shown.`
+        : `${operationNodes.length} operations loaded.`;
+    }
+
+    async function loadSchema() {
+      if (schemaController) schemaController.abort();
+      const controller = new AbortController();
+      schemaController = controller;
+      let timedOut = false;
+      const timeout = window.setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, REQUEST_TIMEOUT_MS);
+
+      filter.disabled = true;
+      retryButton.hidden = true;
+      endpointList.setAttribute("aria-busy", "true");
+      loadStatus.textContent = "Reading the schema from this node.";
+      operationNodes.length = 0;
+      endpointList.replaceChildren(textElement("p", "", "Reading /openapi.json from this node."));
+      schemaList.replaceChildren(textElement("p", "", "Schema contracts will appear after the endpoint ledger loads."));
+      try {
+        const response = await fetch("/openapi.json", {
+          headers: { Accept: "application/json" },
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`OpenAPI request failed with ${response.status}`);
+        const schema = await response.json();
+        if (!schema.paths || typeof schema.paths !== "object" || Array.isArray(schema.paths)) {
+          throw new Error("The OpenAPI response does not contain a valid paths object.");
+        }
+        document.getElementById("serviceName").textContent = schema.info && schema.info.title ? schema.info.title : "Lummenna";
+        document.getElementById("serviceVersion").textContent = schema.info && schema.info.version ? schema.info.version : "--";
+        endpointList.replaceChildren();
+        const methods = ["get", "post", "put", "patch", "delete", "options", "head"];
+        Object.entries(schema.paths || {}).forEach(([path, pathItem]) => {
+          methods.forEach((method) => {
+            if (pathItem[method]) renderOperation(path, method, pathItem[method]);
+          });
+        });
+        document.getElementById("operationCount").textContent = String(operationNodes.length);
+        if (operationNodes.length === 0) endpointList.append(textElement("p", "empty", "No operations are declared in this schema."));
+        schemaList.replaceChildren();
+        Object.entries((schema.components && schema.components.schemas) || {}).forEach(([name, value]) => renderSchema(name, value));
+        if (!schemaList.children.length) schemaList.append(textElement("p", "empty", "No component schemas are declared."));
+        filter.disabled = false;
+        applyFilter();
+      } catch (error) {
+        const message = timedOut
+          ? "The OpenAPI request timed out after eight seconds."
+          : error instanceof Error
+            ? error.message
+            : "The schema could not be loaded.";
+        endpointList.replaceChildren(textElement("p", "empty", message));
+        schemaList.replaceChildren(textElement("p", "empty", "Schemas are unavailable until the endpoint ledger loads."));
+        document.getElementById("serviceName").textContent = "Unavailable";
+        document.getElementById("serviceVersion").textContent = "--";
+        document.getElementById("operationCount").textContent = "0";
+        loadStatus.textContent = message;
+        retryButton.hidden = false;
+      } finally {
+        window.clearTimeout(timeout);
+        if (schemaController === controller) schemaController = null;
+        endpointList.removeAttribute("aria-busy");
+      }
+    }
+
+    filter.addEventListener("input", applyFilter);
+    retryButton.addEventListener("click", loadSchema);
+    window.addEventListener("beforeunload", () => {
+      if (schemaController) schemaController.abort();
+    });
+    loadSchema();
+  </script>
+</body>
+</html>

@@ -1,8 +1,10 @@
 """FastAPI server exposing Lummenna memory operations.
 
 Endpoints:
+  GET  /                 — canonical memory observatory (HTML)
   GET  /health           — liveness probe
-  GET  /dashboard        — effectiveness dashboard (HTML)
+  GET  /dashboard        — stable observatory alias (HTML)
+  GET  /docs             — local OpenAPI reference (HTML)
   GET  /metrics          — machine-readable metrics
   GET  /v1/status        — palace overview
   POST /v1/search       — semantic + lexical hybrid search
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import secrets as _secrets
 import sqlite3
 import time
@@ -26,17 +29,21 @@ from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from lummenna import __version__
 from lummenna._init import initialize_palace
 from lummenna.audit import log_audit_event
+from lummenna.brand.errors import LicenseError
 from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.conversation import ConversationMemory
+from lummenna.force.mnemonic.forgetting_l3_budget import BYTES_PER_CHUNK_ESTIMATE
 from lummenna.fusion import RetrievedChunk
 from lummenna.logging import get_console_logger
 from lummenna.observability import normalize_route
@@ -56,10 +63,56 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[_config.api_rate_
 
 app = FastAPI(
     title="Lummenna Memory API",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    version=__version__,
+    description=(
+        "Local-first memory API. When LUMMENNA_API_KEY is configured, send it "
+        "in X-API-Key for every /v1 operation. X-Tenant-ID selects the tenant scope."
+    ),
+    docs_url=None,
+    redoc_url=None,
 )
+
+
+def _custom_openapi() -> dict:
+    """Add middleware-enforced API-key and tenant headers to OpenAPI."""
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    components = schema.setdefault("components", {})
+    security_schemes = components.setdefault("securitySchemes", {})
+    security_schemes["ApiKeyAuth"] = {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Required for /v1 operations when LUMMENNA_API_KEY is configured.",
+    }
+    tenant_parameter = {
+        "name": "X-Tenant-ID",
+        "in": "header",
+        "required": False,
+        "schema": {"type": "string", "default": "default", "maxLength": 128},
+        "description": "Tenant scope. Non-default tenants require the multi_tenant entitlement.",
+    }
+    for path, path_item in schema.get("paths", {}).items():
+        if not path.startswith("/v1/") or not isinstance(path_item, dict):
+            continue
+        for operation in path_item.values():
+            if not isinstance(operation, dict) or "responses" not in operation:
+                continue
+            operation["security"] = [{"ApiKeyAuth": []}]
+            parameters = operation.setdefault("parameters", [])
+            if not any(parameter.get("name") == "X-Tenant-ID" for parameter in parameters):
+                parameters.append(dict(tenant_parameter))
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = _custom_openapi  # type: ignore[method-assign]
 
 v1_router = APIRouter(prefix="/v1")
 
@@ -123,41 +176,56 @@ def _record_auth_failure(remote_addr: str) -> None:
 # ---------------------------------------------------------------------------
 async def _auth_middleware(request: Request, call_next):
     public_paths = (
+        "/",
         "/health",
         "/ready",
         "/docs",
         "/redoc",
         "/openapi.json",
         "/dashboard",
-        "/v1/dashboard-data",
+        "/favicon.svg",
         "/metrics",
         "/metrics/prometheus",
     )
-    # Allow CORS preflight without authentication
-    if request.method == "OPTIONS":
-        response = await call_next(request)
-        return response
-
-    remote_addr = get_remote_address(request)
-
-    if _config.api_key and request.url.path not in public_paths:
-        if _check_brute_force(remote_addr):
-            return JSONResponse(
-                status_code=429, content={"detail": "Too many failed authentication attempts"}
-            )
-        provided = request.headers.get("X-API-Key") or request.query_params.get("api_key")
-        if not provided or not _secrets.compare_digest(provided, _config.api_key):
-            _record_auth_failure(remote_addr)
-            return JSONResponse(status_code=401, content={"detail": "Invalid or missing API key"})
-        # Successful auth: reset failures
-        _auth_failures.pop(remote_addr, None)
-
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
     tenant_id = (
         request.headers.get("X-Tenant-ID") or request.query_params.get("tenant_id") or "default"
     )
     request.state.tenant_id = tenant_id
+
+    # Allow CORS preflight without authentication
+    if request.method == "OPTIONS":
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+    remote_addr = get_remote_address(request)
+
+    if _config.api_key and request.url.path not in public_paths:
+        provided = request.headers.get("X-API-Key")
+        if not provided:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Missing API key"},
+                headers={"X-Request-ID": request_id},
+            )
+        if not _secrets.compare_digest(provided, _config.api_key):
+            if _check_brute_force(remote_addr):
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Too many failed authentication attempts"},
+                    headers={"X-Request-ID": request_id},
+                )
+            _record_auth_failure(remote_addr)
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid API key"},
+                headers={"X-Request-ID": request_id},
+            )
+        # Successful auth: reset failures
+        _auth_failures.pop(remote_addr, None)
+
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
@@ -317,6 +385,74 @@ class StatusResponse(BaseModel):
     embedding_model_available: bool
 
 
+class DashboardRoom(BaseModel):
+    name: str
+    active_chunks: int
+    loci: int
+
+
+class DashboardRuntime(BaseModel):
+    version: str
+    node_name: str
+    device: str
+    edition: str
+    vector_index: str
+    embedding_model: str
+    embedding_model_available: bool
+    scheduler_running: bool
+    sovereign_mode: bool
+    backup_enabled: bool
+    backup_running: bool
+    telemetry_export_enabled: bool
+    api_auth_enabled: bool
+    encryption_mode: str
+
+
+class DashboardPalace(BaseModel):
+    active_chunks: int
+    released_chunks: int
+    rooms: int
+    occupied_rooms: int
+    loci: int
+    topology: list[DashboardRoom]
+
+
+class DashboardStorage(BaseModel):
+    database_mb: float | None
+    wal_mb: float | None
+    vector_index_mb: float | None
+    total_store_mb: float | None
+    estimated_active_mb: float
+    configured_limit_mb: int
+    pressure_pct: float
+    eviction_trigger_pct: int
+
+
+class DashboardLifecycle(BaseModel):
+    decay_scheduler_running: bool
+    interference_mode: str
+    budget_scheduler_running: bool
+    resolution_counts: dict[str, int]
+
+
+class DashboardFeedback(BaseModel):
+    total: int
+    positive: int
+    satisfaction_pct: float | None
+
+
+class DashboardDataResponse(BaseModel):
+    measured_at: int
+    tenant_id: str
+    runtime: DashboardRuntime
+    palace: DashboardPalace
+    storage: DashboardStorage
+    lifecycle: DashboardLifecycle
+    tfc: dict[str, float | int]
+    feedback_7d: DashboardFeedback
+    evaluation: dict
+
+
 class TurnRequest(BaseModel):
     user_msg: str = Field(..., min_length=1, max_length=50000)
     assistant_msg: str = Field(..., min_length=1, max_length=50000)
@@ -351,6 +487,50 @@ def _get_pipeline() -> SearchPipeline | None:
 
 def _get_conversation_memory() -> ConversationMemory | None:
     return _state.get("conversation")
+
+
+def _get_tfc() -> TwinForceController:
+    tfc = _state.get("tfc")
+    if isinstance(tfc, TwinForceController):
+        return tfc
+    pipeline = _get_pipeline()
+    if pipeline is not None:
+        return pipeline.tfc
+    return TwinForceController(config=_get_config())
+
+
+def _resolve_tenant(request: Request, requested_tenant: str = "default") -> str:
+    """Resolve one tenant scope and enforce its entitlement at the API boundary."""
+    explicit_tenant = request.headers.get("X-Tenant-ID") or request.query_params.get("tenant_id")
+    if explicit_tenant and requested_tenant != "default" and explicit_tenant != requested_tenant:
+        raise HTTPException(status_code=400, detail="Tenant header and request body disagree")
+    tenant_id = explicit_tenant or requested_tenant
+    if not tenant_id or len(tenant_id) > 128:
+        raise HTTPException(status_code=422, detail="Tenant ID must contain 1 to 128 characters")
+    if tenant_id != "default":
+        try:
+            _get_config().assert_licensed("multi_tenant")
+        except LicenseError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
+    return tenant_id
+
+
+def _scheduler_running() -> bool:
+    scheduler = _state.get("scheduler")
+    if scheduler is None:
+        return False
+    try:
+        running = scheduler.is_running
+        return bool(running() if callable(running) else running)
+    except (AttributeError, RuntimeError):
+        return False
+
+
+def _size_mb(path: Path) -> float | None:
+    try:
+        return path.stat().st_size / (1024 * 1024)
+    except OSError:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -540,13 +720,18 @@ async def metrics_prometheus() -> Response:
 
 
 @v1_router.get("/status")
-async def status() -> StatusResponse:
+async def status(request: Request) -> StatusResponse:
     conn = _get_conn()
     if conn is None:
         raise HTTPException(status_code=503, detail="Database not initialised")
-    room_count = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
-    chunk_count = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
-    tfc = _state.get("tfc") or TwinForceController()
+    tenant_id = _resolve_tenant(request)
+    room_count = conn.execute(
+        "SELECT COUNT(*) FROM room WHERE tenant_id = ?", (tenant_id,)
+    ).fetchone()[0]
+    chunk_count = conn.execute(
+        "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL AND tenant_id = ?", (tenant_id,)
+    ).fetchone()[0]
+    tfc = _get_tfc()
     return StatusResponse(
         rooms=room_count,
         active_chunks=chunk_count,
@@ -562,7 +747,8 @@ async def search(request: Request, req: SearchRequest) -> SearchResponse:
     pipeline = _get_pipeline()
     if pipeline is None:
         raise HTTPException(status_code=503, detail="Search pipeline not initialised")
-    results = pipeline.execute(req.query, k=req.top_k, tenant_id=req.tenant_id)
+    tenant_id = _resolve_tenant(request, req.tenant_id)
+    results = pipeline.execute(req.query, k=req.top_k, tenant_id=tenant_id)
     latency_ms = (time.perf_counter() - t0) * 1000
 
     serialised = [
@@ -593,7 +779,9 @@ async def search(request: Request, req: SearchRequest) -> SearchResponse:
             resource_type="query",
             resource_id=None,
             action="search",
-            metadata_json=json.dumps({"query": req.query, "results": len(serialised)}),
+            metadata_json=json.dumps(
+                {"query": req.query, "results": len(serialised), "tenant_id": tenant_id}
+            ),
             client_ip=get_remote_address(request),
             request_id=request_id,
         )
@@ -609,6 +797,7 @@ async def store(request: Request, req: StoreRequest) -> StoreResponse:
     conn = _get_conn()
     if conn is None:
         raise HTTPException(status_code=503, detail="Database not initialised")
+    tenant_id = _resolve_tenant(request, req.tenant_id)
     embedder = _state.get("embedder")
     embedding = embedder.encode_single(req.content) if embedder is not None else None
 
@@ -620,7 +809,7 @@ async def store(request: Request, req: StoreRequest) -> StoreResponse:
         source_type=req.source_type,
         embedding=embedding,
         config=config,
-        tenant_id=req.tenant_id,
+        tenant_id=tenant_id,
     )
     request_id = getattr(request.state, "request_id", "unknown")
     log_audit_event(
@@ -630,7 +819,7 @@ async def store(request: Request, req: StoreRequest) -> StoreResponse:
         resource_type="chunk",
         resource_id=chunk_id,
         action="store",
-        metadata_json=json.dumps({"room": req.room, "tenant_id": req.tenant_id}),
+        metadata_json=json.dumps({"room": req.room, "tenant_id": tenant_id}),
         client_ip=get_remote_address(request),
         request_id=request_id,
     )
@@ -643,26 +832,35 @@ async def feedback(request: Request, req: FeedbackRequest) -> FeedbackResponse:
     conversation = _get_conversation_memory()
     if conversation is None:
         raise HTTPException(status_code=503, detail="Conversation memory not initialised")
+    conn = _get_conn()
+    if conn is None:
+        raise HTTPException(status_code=503, detail="Database not initialised")
+    tenant_id = _resolve_tenant(request, req.tenant_id)
+    owner = conn.execute(
+        "SELECT 1 FROM chunk WHERE chunk_id = ? AND tenant_id = ?",
+        (req.chunk_id, tenant_id),
+    ).fetchone()
+    if owner is None:
+        raise HTTPException(status_code=404, detail="Chunk not found in tenant")
     conversation.log_explicit_feedback(
         chunk_id=req.chunk_id,
         was_useful=req.was_useful,
         user_id=req.user_id,
         feedback_type=req.feedback_type,
+        tenant_id=tenant_id,
     )
     request_id = getattr(request.state, "request_id", "unknown")
-    audit_conn = _get_conn()
-    if audit_conn is not None:
-        log_audit_event(
-            conn=audit_conn,
-            event_type="feedback_logged",
-            actor=req.user_id,
-            resource_type="feedback",
-            resource_id=req.chunk_id,
-            action="feedback",
-            metadata_json=json.dumps({"was_useful": req.was_useful}),
-            client_ip=get_remote_address(request),
-            request_id=request_id,
-        )
+    log_audit_event(
+        conn=conn,
+        event_type="feedback_logged",
+        actor=req.user_id,
+        resource_type="feedback",
+        resource_id=req.chunk_id,
+        action="feedback",
+        metadata_json=json.dumps({"was_useful": req.was_useful, "tenant_id": tenant_id}),
+        client_ip=get_remote_address(request),
+        request_id=request_id,
+    )
     return FeedbackResponse(success=True)
 
 
@@ -673,7 +871,8 @@ async def assemble(request: Request, req: SearchRequest) -> dict:
     conversation = _get_conversation_memory()
     if conversation is None:
         raise HTTPException(status_code=503, detail="Conversation memory not initialised")
-    turn = conversation.retrieve_and_assemble(req.query, top_k=req.top_k)
+    tenant_id = _resolve_tenant(request, req.tenant_id)
+    turn = conversation.retrieve_and_assemble(req.query, top_k=req.top_k, tenant_id=tenant_id)
     latency_ms = (time.perf_counter() - t0) * 1000
     return {
         "query": req.query,
@@ -692,6 +891,7 @@ async def turn(request: Request, req: TurnRequest) -> TurnResponse:
     conn = _get_conn()
     if conn is None:
         raise HTTPException(status_code=503, detail="Database not initialised")
+    tenant_id = _resolve_tenant(request, req.tenant_id)
 
     stubs = []
     for cid in req.retrieved_chunk_ids:
@@ -702,8 +902,8 @@ async def turn(request: Request, req: TurnRequest) -> TurnResponse:
                FROM chunk c
                JOIN room r ON r.room_id = c.room_id
                LEFT JOIN locus l ON l.locus_id = c.locus_id
-               WHERE c.chunk_id = ? AND c.valid_to IS NULL""",
-            (cid,),
+               WHERE c.chunk_id = ? AND c.valid_to IS NULL AND c.tenant_id = ?""",
+            (cid, tenant_id),
         ).fetchone()
         if row:
             stubs.append(
@@ -726,6 +926,7 @@ async def turn(request: Request, req: TurnRequest) -> TurnResponse:
         assistant_msg=req.assistant_msg,
         retrieved_chunks=stubs,
         room_name=req.room,
+        tenant_id=tenant_id,
     )
     request_id = getattr(request.state, "request_id", "unknown")
     log_audit_event(
@@ -735,7 +936,7 @@ async def turn(request: Request, req: TurnRequest) -> TurnResponse:
         resource_type="chunk",
         resource_id=user_id,
         action="turn",
-        metadata_json=json.dumps({"room": req.room}),
+        metadata_json=json.dumps({"room": req.room, "tenant_id": tenant_id}),
         client_ip=get_remote_address(request),
         request_id=request_id,
     )
@@ -743,7 +944,7 @@ async def turn(request: Request, req: TurnRequest) -> TurnResponse:
         user_chunk_id=user_id,
         assistant_chunk_id=assistant_id,
         room=req.room,
-        feedback_logged_for=req.retrieved_chunk_ids,
+        feedback_logged_for=[stub.chunk_id for stub in stubs],
     )
 
 
@@ -752,102 +953,198 @@ async def turn(request: Request, req: TurnRequest) -> TurnResponse:
 # ---------------------------------------------------------------------------
 
 _DASHBOARD_HTML_PATH = Path(__file__).with_name("dashboard.html")
+_API_DOCS_HTML_PATH = Path(__file__).with_name("api_docs.html")
+_FAVICON_PATH = Path(__file__).with_name("favicon.svg")
+
+
+def _read_html(path: Path, missing_detail: str) -> str:
+    if path.is_file():
+        return path.read_text(encoding="utf-8")
+    raise HTTPException(status_code=404, detail=missing_detail)
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def home() -> str:
+    """Serve the observatory as the application's canonical frontend."""
+    return _read_html(_DASHBOARD_HTML_PATH, "Dashboard HTML not found")
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard() -> str:
     """Serve the Lummenna effectiveness dashboard."""
-    if _DASHBOARD_HTML_PATH.exists():
-        return _DASHBOARD_HTML_PATH.read_text(encoding="utf-8")
-    raise HTTPException(status_code=404, detail="Dashboard HTML not found")
+    return _read_html(_DASHBOARD_HTML_PATH, "Dashboard HTML not found")
 
 
-def _load_retrieval_benchmarks() -> dict:
-    """Load committed retrieval benchmark metrics (shared loader).
-
-    Returns the same artifact-backed keys as the MCP server so every
-    user-facing surface reports identical numbers; unmeasured metrics
-    are ``None``.
-    """
-    from lummenna.bench_results import load_retrieval_benchmarks
-
-    return load_retrieval_benchmarks()
+@app.get("/docs", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/redoc", response_class=HTMLResponse, include_in_schema=False)
+async def api_docs() -> str:
+    """Serve the dependency-free, observatory-themed OpenAPI reference."""
+    return _read_html(_API_DOCS_HTML_PATH, "API documentation HTML not found")
 
 
-@v1_router.get("/dashboard-data")
-async def dashboard_data() -> dict:
-    """Return dynamic data for the dashboard: room topology, memory health, TFC."""
+@app.get("/favicon.svg", include_in_schema=False)
+async def favicon() -> Response:
+    """Serve the canonical Lummenna core mark."""
+    if _FAVICON_PATH.is_file():
+        return Response(_FAVICON_PATH.read_text(encoding="utf-8"), media_type="image/svg+xml")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+
+def _load_evaluation_summary() -> dict:
+    """Load all artifact-backed evaluation evidence for the dashboard."""
+    from lummenna.bench_results import load_evaluation_summary
+
+    return load_evaluation_summary()
+
+
+@v1_router.get("/dashboard-data", response_model=DashboardDataResponse)
+async def dashboard_data(request: Request) -> DashboardDataResponse:
+    """Return a measured, tenant-scoped snapshot for the observatory."""
     conn = _get_conn()
     if conn is None:
         raise HTTPException(status_code=503, detail="Database not initialised")
 
+    config = _get_config()
+    tenant_id = _resolve_tenant(request)
+
     rooms = conn.execute(
         """
-        SELECT r.name, COUNT(c.chunk_id) AS chunks
+        SELECT
+            r.name,
+            COUNT(DISTINCT l.locus_id) AS loci,
+            COUNT(DISTINCT c.chunk_id) AS active_chunks
         FROM room r
-        LEFT JOIN locus l ON l.room_id = r.room_id
-        LEFT JOIN chunk c ON c.locus_id = l.locus_id AND c.valid_to IS NULL
+        LEFT JOIN locus l ON l.room_id = r.room_id AND l.tenant_id = ?
+        LEFT JOIN chunk c
+            ON c.room_id = r.room_id
+            AND c.tenant_id = ?
+            AND c.valid_to IS NULL
+        WHERE r.tenant_id = ?
         GROUP BY r.room_id
-        ORDER BY chunks DESC
-        """
+        HAVING COUNT(DISTINCT c.chunk_id) > 0
+        ORDER BY active_chunks DESC, r.name ASC
+        """,
+        (tenant_id, tenant_id, tenant_id),
     ).fetchall()
 
-    total_chunks = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
+    active_chunks = conn.execute(
+        "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL AND tenant_id = ?", (tenant_id,)
+    ).fetchone()[0]
+    released_chunks = conn.execute(
+        "SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL AND optical_level = 2 AND tenant_id = ?",
+        (tenant_id,),
+    ).fetchone()[0]
+    room_count = conn.execute(
+        "SELECT COUNT(*) FROM room WHERE tenant_id = ?", (tenant_id,)
+    ).fetchone()[0]
+    locus_count = conn.execute(
+        "SELECT COUNT(*) FROM locus WHERE tenant_id = ?", (tenant_id,)
+    ).fetchone()[0]
+    resolution_rows = conn.execute(
+        """
+        SELECT resolution, COUNT(*) AS chunks
+        FROM chunk
+        WHERE valid_to IS NULL AND tenant_id = ?
+        GROUP BY resolution
+        """,
+        (tenant_id,),
+    ).fetchall()
+    resolution_counts = {stage: 0 for stage in ("FP32", "FP16", "INT8", "BINARY")}
+    for row in resolution_rows:
+        if row["resolution"] in resolution_counts:
+            resolution_counts[row["resolution"]] = row["chunks"]
+    resolution_counts["RELEASED"] = released_chunks
 
-    # Measure actual on-disk store size instead of estimating from constants
-    config = _get_config()
-    budget_target_mb = getattr(config, "memory_budget_mb", 64)
-    try:
-        db_size_mb = config.db_path.stat().st_size / (1024 * 1024)
-    except OSError:
-        db_size_mb = 0.0
-    budget_pct = (
-        min(100, round((db_size_mb / budget_target_mb) * 100, 1)) if budget_target_mb else 0
-    )
-
-    # Determine degradation stage based on TFC resolution
-    tfc = _state.get("tfc") or TwinForceController()
-    stage_map = {
-        5: "FP32 (full)",
-        4: "FP32 (full)",
-        3: "FP32 (full)",
-        2: "FP16 (half)",
-        1: "INT8 (quarter)",
-        0: "BINARY (minimal)",
-    }
-    degradation_stage = stage_map.get(tfc.state.r, "FP32 (full)")
-
-    # Load benchmark results if available
-    retrieval = _load_retrieval_benchmarks()
-
-    # Recent feedback stats
-    # created_at is INTEGER unixepoch; comparing it against a TEXT
-    # datetime('now', ...) is always false in SQLite, so use unixepoch().
     feedback_stats = conn.execute(
         """
         SELECT
             COUNT(*) AS total_feedback,
             SUM(CASE WHEN positive = 1 THEN 1 ELSE 0 END) AS positive_feedback
         FROM feedback_log
-        WHERE created_at >= unixepoch('now', '-7 days')
-        """
+        WHERE created_at >= unixepoch('now', '-7 days') AND tenant_id = ?
+        """,
+        (tenant_id,),
     ).fetchone()
+    feedback_total = feedback_stats["total_feedback"] or 0
+    feedback_positive = feedback_stats["positive_feedback"] or 0
 
-    return {
-        "rooms": [{"name": row["name"], "chunks": row["chunks"]} for row in rooms],
-        "total_chunks": total_chunks,
-        "memory_budget_pct": budget_pct,
-        "memory_budget_target_mb": budget_target_mb,
-        "db_size_mb": round(db_size_mb, 2),
-        "degradation_stage": degradation_stage,
-        "tfc": tfc.to_env(),
-        "embedding_model_available": _state.get("embedding_model_available", False),
-        "feedback_7d": {
-            "total": feedback_stats["total_feedback"] or 0,
-            "positive": feedback_stats["positive_feedback"] or 0,
-        },
-        "retrieval": retrieval,
-    }
+    db_size_mb = _size_mb(config.db_path)
+    wal_size_mb = _size_mb(Path(f"{config.db_path}-wal"))
+    vector_size_mb = _size_mb(config.store_path / "vectors.usearch")
+    measured_sizes = [size for size in (db_size_mb, wal_size_mb, vector_size_mb) if size]
+    total_store_mb = sum(measured_sizes) if db_size_mb is not None else None
+    global_active_chunks = conn.execute(
+        "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL"
+    ).fetchone()[0]
+    estimated_active_mb = global_active_chunks * BYTES_PER_CHUNK_ESTIMATE / (1024 * 1024)
+    memory_limit_mb = config.memory_limit_mb
+    pressure_pct = (
+        round((estimated_active_mb / memory_limit_mb) * 100, 3) if memory_limit_mb > 0 else 0.0
+    )
+
+    scheduler_running = _scheduler_running()
+    backup_scheduler = _state.get("backup_scheduler")
+    backup_running = bool(getattr(backup_scheduler, "running", False))
+    tfc = _get_tfc()
+
+    return DashboardDataResponse(
+        measured_at=int(time.time()),
+        tenant_id=tenant_id,
+        runtime=DashboardRuntime(
+            version=__version__,
+            node_name=config.device_name,
+            device=config.device,
+            edition=config.edition,
+            vector_index=config.vector_index,
+            embedding_model=config.embedding_model,
+            embedding_model_available=bool(_state.get("embedding_model_available", False)),
+            scheduler_running=scheduler_running,
+            sovereign_mode=config.sovereign,
+            backup_enabled=config.backup_enabled,
+            backup_running=backup_running,
+            telemetry_export_enabled=bool(os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")),
+            api_auth_enabled=bool(_config.api_key),
+            encryption_mode=config.database_encryption_mode,
+        ),
+        palace=DashboardPalace(
+            active_chunks=active_chunks,
+            released_chunks=released_chunks,
+            rooms=room_count,
+            occupied_rooms=len(rooms),
+            loci=locus_count,
+            topology=[
+                DashboardRoom(
+                    name=row["name"], active_chunks=row["active_chunks"], loci=row["loci"]
+                )
+                for row in rooms
+            ],
+        ),
+        storage=DashboardStorage(
+            database_mb=round(db_size_mb, 3) if db_size_mb is not None else None,
+            wal_mb=round(wal_size_mb, 3) if wal_size_mb is not None else None,
+            vector_index_mb=round(vector_size_mb, 3) if vector_size_mb is not None else None,
+            total_store_mb=round(total_store_mb, 3) if total_store_mb is not None else None,
+            estimated_active_mb=round(estimated_active_mb, 3),
+            configured_limit_mb=memory_limit_mb,
+            pressure_pct=pressure_pct,
+            eviction_trigger_pct=85,
+        ),
+        lifecycle=DashboardLifecycle(
+            decay_scheduler_running=scheduler_running,
+            interference_mode="on_write",
+            budget_scheduler_running=scheduler_running,
+            resolution_counts=resolution_counts,
+        ),
+        tfc=tfc.to_env(),
+        feedback_7d=DashboardFeedback(
+            total=feedback_total,
+            positive=feedback_positive,
+            satisfaction_pct=(
+                round((feedback_positive / feedback_total) * 100, 1) if feedback_total else None
+            ),
+        ),
+        evaluation=_load_evaluation_summary(),
+    )
 
 
 @app.get("/metrics")
@@ -866,15 +1163,19 @@ async def metrics() -> dict:
         "SELECT COUNT(*) AS c, AVG(CASE WHEN positive = 1 THEN 1.0 ELSE 0.0 END) AS sat FROM feedback_log"
     ).fetchone()
 
-    tfc = _state.get("tfc") or TwinForceController()
+    tfc = _get_tfc()
     config = _get_config()
 
     return {
-        "lummenna_version": "1.0.0",
+        "lummenna_version": __version__,
         "system": {
             "device": config.device,
+            "node_name": config.device_name,
+            "edition": config.edition,
+            "vector_index": config.vector_index,
             "embedding_model": config.embedding_model,
             "embedding_model_available": _state.get("embedding_model_available", False),
+            "scheduler_running": _scheduler_running(),
         },
         "palace": {
             "rooms": room_count,
@@ -885,17 +1186,20 @@ async def metrics() -> dict:
         },
         "tfc": tfc.to_env(),
         "effectiveness": {
-            # Artifact-backed values from the shared loader; None = not yet
-            # benchmarked (run python -m benchmarks.retrieval.run).
-            **_load_retrieval_benchmarks(),
+            "evaluation": _load_evaluation_summary(),
             "feedback_total": feedback_row["c"] or 0,
-            "feedback_satisfaction_pct": round((feedback_row["sat"] or 0) * 100, 1),
+            "feedback_satisfaction_pct": (
+                round(feedback_row["sat"] * 100, 1) if feedback_row["sat"] is not None else None
+            ),
         },
-        "business": {
-            "data_sovereignty_pct": 100,
-            "api_cost_per_query_usd": 0.0,
-            "gdpr_native_rtbf": True,
-            "edge_deployable": True,
+        "runtime": {
+            "sovereign_mode": config.sovereign,
+            "backup_enabled": config.backup_enabled,
+            "telemetry_export_enabled": bool(
+                os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
+            ),
+            "encryption_mode": config.database_encryption_mode,
+            "api_auth_enabled": bool(_config.api_key),
             "process_peak_rss_mb": _process_peak_rss_mb(),
         },
     }

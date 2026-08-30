@@ -1,0 +1,68 @@
+{
+  "trailingSlash": "never",
+  "routes": [
+    {
+      "route": "/index.html",
+      "redirect": "/",
+      "statusCode": 301
+    },
+    {
+      "route": "/features.html",
+      "redirect": "/features",
+      "statusCode": 301
+    },
+    {
+      "route": "/pricing.html",
+      "redirect": "/pricing",
+      "statusCode": 301
+    },
+    {
+      "route": "/docs.html",
+      "redirect": "/docs",
+      "statusCode": 301
+    },
+    {
+      "route": "/assets/img/*",
+      "headers": {
+        "Cache-Control": "public, max-age=604800"
+      }
+    },
+    {
+      "route": "/assets/css/*",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    },
+    {
+      "route": "/features",
+      "rewrite": "/features.html"
+    },
+    {
+      "route": "/pricing",
+      "rewrite": "/pricing.html"
+    },
+    {
+      "route": "/docs",
+      "rewrite": "/docs.html"
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/404.html",
+      "statusCode": 404
+    }
+  },
+  "globalHeaders": {
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "Content-Security-Policy": "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+  },
+  "mimeTypes": {
+    ".svg": "image/svg+xml"
+  }
+}

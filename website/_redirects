@@ -1,0 +1,8 @@
+# Generated to mirror staticwebapp.config.json for Cloudflare Pages.
+# Pages would otherwise answer these with its own 308; the config declares
+# 301, so state it explicitly. tests/test_website.py enforces parity.
+
+/index.html  /  301
+/features.html  /features  301
+/pricing.html  /pricing  301
+/docs.html  /docs  301

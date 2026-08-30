@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Quick Start | Lummenna</title>
+  <meta name="description" content="Install Lummenna, provision a local embedding model, run the memory observatory, and connect an MCP-compatible agent.">
+  <link rel="canonical" href="https://lummenna.com/docs">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a>
+      <div class="nav-links"><a href="/">Home</a><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs" aria-current="page">Docs</a><a href="https://github.com/QuantmindSSI/lummenna">GitHub</a><a class="nav-cta" href="#run">Run locally</a></div>
+    </div>
+  </nav>
+
+  <main id="main-content" tabindex="-1">
+    <header class="page-hero">
+      <p class="eyebrow">Quick start / version 1.0.0</p>
+      <h1>From install to <em>first recall.</em></h1>
+      <p>This is the shortest verified path through the current CLI. The repository remains the source for complete API, security, deployment, and integration documentation.</p>
+    </header>
+
+    <section>
+      <div class="wrap docs-layout">
+        <nav class="docs-nav" aria-label="On this page">
+          <a href="#install">01 / Install</a>
+          <a href="#initialize">02 / Initialize</a>
+          <a href="#run">03 / Run</a>
+          <a href="#mcp">04 / Connect MCP</a>
+          <a href="#python">05 / Use Python</a>
+          <a href="#production">06 / Production</a>
+        </nav>
+        <div>
+          <section class="doc-section" id="install">
+            <h2>01. Install the runtime</h2>
+            <p>Lummenna supports Python 3.10 through 3.12. The verified source-install path below includes the optional model-export and MCP dependencies.</p>
+            <pre><code>git clone https://github.com/QuantmindSSI/lummenna.git
+cd lummenna
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[mcp,export]'</code></pre>
+            <p>For development tooling as well, install <code>pip install -e '.[dev,mcp,export]'</code>.</p>
+          </section>
+
+          <section class="doc-section" id="initialize">
+            <h2>02. Initialize the palace</h2>
+            <pre><code>lummenna init --device generic
+LUMMENNA_SOVEREIGN=false lummenna model download bge-small-en-v1.5</code></pre>
+            <p>The one-time model command downloads from Hugging Face and exports with the optional toolchain, so sovereign mode must be explicitly disabled for that command. Air-gapped installations must place a compatible <code>model.onnx</code> and tokenizer files under <code>~/.lummenna/models/bge-small-en-v1.5/</code> before isolation.</p>
+            <pre><code>lummenna memory store "We chose SQLite for the cache layer" --room decisions
+lummenna memory retrieve "cache layer"</code></pre>
+          </section>
+
+          <section class="doc-section" id="run">
+            <h2>03. Run the application</h2>
+            <pre><code>lummenna serve
+
+# Main observatory: http://localhost:8848/
+# Stable alias:     http://localhost:8848/dashboard
+# API reference:   http://localhost:8848/docs</code></pre>
+            <p>The server and dashboard are Community features. Production startup requires a real local embedding model. <code>LUMMENNA_ALLOW_MOCK_EMBEDDER=1</code> exists only for tests and UI development; semantic results in that mode are not meaningful.</p>
+          </section>
+
+          <section class="doc-section" id="mcp">
+            <h2>04. Connect an MCP client</h2>
+            <p>The MCP server exposes seven tools: <code>lummenna_search</code>, <code>lummenna_store</code>, <code>lummenna_assemble</code>, <code>lummenna_turn</code>, <code>lummenna_feedback</code>, <code>lummenna_status</code>, and <code>lummenna_dashboard</code>.</p>
+            <pre><code>{
+  "mcpServers": {
+    "lummenna": {
+      "command": "python",
+      "args": ["-m", "lummenna.integrations.mcp_server"]
+    }
+  }
+}</code></pre>
+            <p>Client-specific examples are maintained in the repository's <a href="https://github.com/QuantmindSSI/lummenna/tree/main/integrations">integrations directory</a>.</p>
+          </section>
+
+          <section class="doc-section" id="python">
+            <h2>05. Use the Python API</h2>
+            <pre><code>from lummenna.config import LummennaConfig
+from lummenna.data.schema import get_connection
+from lummenna.force.mnemonic.store import store_memory
+
+config = LummennaConfig()
+conn = get_connection(config)
+chunk_id = store_memory(
+    conn,
+    content="User prefers concise status updates",
+    room_name="preferences",
+    config=config,
+)
+conn.close()</code></pre>
+            <p>LangChain and LangGraph adapters are optional extras. The REST API publishes its runtime schema at <code>/openapi.json</code>.</p>
+          </section>
+
+          <section class="doc-section" id="production">
+            <h2>06. Prepare production deliberately</h2>
+            <p>Set an API key, choose an encryption mode where required, mount persistent storage and model volumes, and keep the service on loopback unless network access is intentional.</p>
+            <pre><code>export LUMMENNA_API_KEY='replace-with-a-secret'
+export LUMMENNA_DATABASE_ENCRYPTION_MODE='sqlcipher'
+export LUMMENNA_ENCRYPTION_KEY='replace-with-a-separate-secret'
+lummenna serve --host 127.0.0.1</code></pre>
+            <p>Encryption-at-rest and non-default tenant isolation require a valid Pro entitlement. Read the <a href="https://github.com/QuantmindSSI/lummenna/blob/main/DEPLOYMENT.md">deployment guide</a> and <a href="https://github.com/QuantmindSSI/lummenna/blob/main/SECURITY.md">security policy</a> before exposing the API.</p>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav><nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="https://github.com/QuantmindSSI/lummenna">Source</a><a href="https://github.com/QuantmindSSI/lummenna/blob/main/ROADMAP.md">Roadmap</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
+</body>
+</html>
