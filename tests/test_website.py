@@ -144,6 +144,24 @@ def test_pages_do_not_promise_public_artifacts():
         assert unsupported_claim not in site_text, unsupported_claim
 
 
+def test_pages_do_not_expose_internal_build_history():
+    """Visitor-facing copy must not narrate the site's own construction.
+
+    Two figure captions explained that artwork had been "retained from the
+    previous frontend" and pointed at the feature registry as the real source
+    of truth. That is build commentary addressed to maintainers; a customer
+    reading it learns only that the page may be out of date with itself.
+    """
+    site_text = "\n".join((WEBSITE / page).read_text(encoding="utf-8") for page in PAGES)
+    for internal_phrase in (
+        "previous frontend",
+        "retained from",
+        "capability source",
+        "licensed feature registry",
+    ):
+        assert internal_phrase not in site_text, internal_phrase
+
+
 def test_public_evidence_matches_committed_artifacts():
     summary = load_evaluation_summary()
     home = (WEBSITE / "index.html").read_text(encoding="utf-8")
