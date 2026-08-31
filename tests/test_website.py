@@ -8,7 +8,11 @@ from lummenna.bench_results import load_evaluation_summary
 
 ROOT = Path(__file__).resolve().parent.parent
 WEBSITE = ROOT / "website"
-PAGES = ["index.html", "features.html", "pricing.html", "docs.html", "404.html"]
+PAGES = ["index.html", "features.html", "pricing.html", "docs.html", "404.html", "thanks.html"]
+
+#: Pages carrying the full site chrome. 404 and thanks are deliberate
+#: dead ends with a single escape link and no navigation to skip past.
+CHROME_PAGES = ["index.html", "features.html", "pricing.html", "docs.html"]
 
 #: Every stylesheet a member of the public can load. The marketing site ships to
 #: Azure Static Web Apps while the observatory and the API reference are served
@@ -76,7 +80,7 @@ def test_all_pages_use_the_observatory_theme_and_local_favicon():
 
 
 def test_skip_links_target_programmatically_focusable_main_content():
-    for page_name in PAGES[:-1]:
+    for page_name in CHROME_PAGES:
         page = (WEBSITE / page_name).read_text(encoding="utf-8")
         assert 'href="#main-content"' in page
         assert '<main id="main-content" tabindex="-1">' in page
@@ -160,6 +164,57 @@ def test_pages_do_not_expose_internal_build_history():
         "licensed feature registry",
     ):
         assert internal_phrase not in site_text, internal_phrase
+
+
+def test_waitlist_form_posts_same_origin_without_javascript():
+    """The form must work under the site's own Content-Security-Policy.
+
+    The policy is `script-src 'none'; connect-src 'none'; form-action 'self'`,
+    so the form has to be a native POST to a same-origin path. An absolute URL
+    or a fetch() would be blocked at the browser, silently, after deploy.
+    """
+    home = (WEBSITE / "index.html").read_text(encoding="utf-8")
+    form = re.search(r"<form[^>]*class=\"signup\"[^>]*>", home)
+    assert form is not None, "waitlist form is missing"
+    assert 'method="POST"' in form.group(0)
+    action = re.search(r'action="([^"]+)"', form.group(0)).group(1)
+    assert action.startswith("/"), f"form action must be same-origin, got {action}"
+    assert "<script" not in home
+
+
+def test_waitlist_form_requires_explicit_consent_and_traps_bots():
+    home = (WEBSITE / "index.html").read_text(encoding="utf-8")
+    consent = re.search(r'<input[^>]*name="consent"[^>]*>', home)
+    assert consent is not None, "consent checkbox is missing"
+    # Unticked by default: a pre-ticked box is not consent under UK GDPR.
+    assert "checked" not in consent.group(0)
+    assert 'type="checkbox"' in consent.group(0)
+    assert "required" in consent.group(0)
+
+    honeypot = re.search(r'<input[^>]*name="company"[^>]*>', home)
+    assert honeypot is not None, "honeypot field is missing"
+    assert 'tabindex="-1"' in honeypot.group(0)
+
+    email = re.search(r'<input[^>]*name="email"[^>]*>', home)
+    assert email is not None and 'type="email"' in email.group(0)
+    assert "required" in email.group(0)
+    assert 'maxlength="254"' in email.group(0), "RFC 5321 caps the path at 254"
+
+
+def test_waitlist_states_the_software_is_not_yet_published():
+    """Copy must not imply an immediate download while none exists."""
+    home = (WEBSITE / "index.html").read_text(encoding="utf-8")
+    assert "Not yet published" in home
+    for overpromise in ("Download now", "Get your download link", "Download Lummenna"):
+        assert overpromise not in home, overpromise
+
+
+def test_waitlist_input_avoids_the_ios_zoom_threshold():
+    css = stylesheet_source(WEBSITE / "assets" / "css" / "site.css")
+    rule = re.search(r'\.signup input\[type="email"\] \{([^}]*)\}', css)
+    assert rule is not None
+    # Below 16px iOS Safari zooms on focus and never zooms back out.
+    assert "font-size: 16px" in rule.group(1)
 
 
 def test_public_evidence_matches_committed_artifacts():

@@ -266,6 +266,22 @@ td strong, .verified { color: var(--jade); }
 .pro-visual img { width: 100%; }
 .pro-visual figcaption { padding: .7rem 1rem; color: #9db0a9; font-weight: 400; font-size: .62rem; line-height: normal; font-family: var(--mono); }
 
+.signup { max-width: 640px; }
+.signup-row { display: grid; gap: .5rem; }
+.signup label { color: var(--ink-soft); font-weight: 700; font-size: .68rem; line-height: normal; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+/* 16px minimum: iOS Safari zooms the page in on focus below that and never
+   zooms back out, which strands the user at the wrong scale. */
+.signup input[type="email"] { width: 100%; min-height: 52px; padding: .75rem .9rem; border: 1px solid var(--ink); background: var(--paper-bright); color: var(--ink); font-size: 16px; }
+.signup input[type="email"]:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+/* Honeypot: off-screen rather than display:none, because some bots skip
+   undisplayed inputs. aria-hidden and tabindex keep it away from humans. */
+.signup-hidden { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.signup-consent { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; align-items: start; margin-top: 1.4rem; }
+.signup-consent input { width: 22px; height: 22px; margin: 0; accent-color: var(--jade); }
+.signup-consent label { color: var(--ink-soft); font-weight: 400; font-size: .84rem; line-height: 1.5; font-family: var(--sans); letter-spacing: normal; text-transform: none; }
+.signup button { margin-top: 1.4rem; }
+.signup-note { max-width: 62ch; margin: 1.1rem 0 0; color: var(--ink-soft); font-size: .75rem; line-height: 1.55; font-family: var(--mono); }
+
 .faq-stack { max-width: 900px; }
 details.faq { border-top: 1px solid var(--line); }
 details.faq:last-child { border-bottom: 1px solid var(--line); }
