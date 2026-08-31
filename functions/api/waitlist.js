@@ -14,6 +14,12 @@
  * attempted after the row is committed and its failure is swallowed
  * deliberately (and only there).
  *
+ * Location matters: wrangler resolves `functions/` relative to the working
+ * directory it is invoked from, not relative to the asset directory passed to
+ * `pages deploy`. Kept at the repository root so the documented command,
+ * `wrangler pages deploy ./website` run from the root, picks it up. Placing it
+ * under website/ made it invisible to the deploy and left /api/waitlist a 404.
+ *
  * Required Pages bindings:
  *   DB          D1 database, schema in infra/cloudflare/waitlist_schema.sql
  *   SEND_EMAIL  Email Routing send binding (optional; absence disables notify)
