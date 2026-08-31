@@ -14,7 +14,7 @@
   <nav class="nav" aria-label="Primary navigation">
     <div class="nav-inner">
       <a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a>
-      <div class="nav-links"><a href="/">Home</a><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs" aria-current="page">Docs</a><a href="https://github.com/QuantmindSSI/lummenna">GitHub</a><a class="nav-cta" href="#run">Run locally</a></div>
+      <div class="nav-links"><a href="/">Home</a><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs" aria-current="page">Docs</a><a class="nav-cta" href="#run">Run locally</a></div>
     </div>
   </nav>
 
@@ -39,6 +39,7 @@
           <section class="doc-section" id="install">
             <h2>01. Install the runtime</h2>
             <p>Lummenna supports Python 3.10 through 3.12. The verified source-install path below includes the optional model-export and MCP dependencies.</p>
+            <p>The repository is private while an internal review completes, so the clone below needs access granted first. Request it from <a href="mailto:licensing@quantumindssi.com?subject=Lummenna%20source%20access">licensing@quantumindssi.com</a>.</p>
             <pre><code>git clone https://github.com/QuantmindSSI/lummenna.git
 cd lummenna
 python3 -m venv .venv
@@ -77,7 +78,7 @@ lummenna memory retrieve "cache layer"</code></pre>
     }
   }
 }</code></pre>
-            <p>Client-specific examples are maintained in the repository's <a href="https://github.com/QuantmindSSI/lummenna/tree/main/integrations">integrations directory</a>.</p>
+            <p>Client-specific examples for Claude Desktop, Cline, Continue, Zed, Goose, and OpenCode ship in the repository's <code>integrations/</code> directory, included with source access.</p>
           </section>
 
           <section class="doc-section" id="python">
@@ -105,13 +106,13 @@ conn.close()</code></pre>
 export LUMMENNA_DATABASE_ENCRYPTION_MODE='sqlcipher'
 export LUMMENNA_ENCRYPTION_KEY='replace-with-a-separate-secret'
 lummenna serve --host 127.0.0.1</code></pre>
-            <p>Encryption-at-rest and non-default tenant isolation require a valid Pro entitlement. Read the <a href="https://github.com/QuantmindSSI/lummenna/blob/main/DEPLOYMENT.md">deployment guide</a> and <a href="https://github.com/QuantmindSSI/lummenna/blob/main/SECURITY.md">security policy</a> before exposing the API.</p>
+            <p>Encryption-at-rest and non-default tenant isolation require a valid Pro entitlement. The deployment guide and security policy ship with the source; read both before exposing the API.</p>
           </section>
         </div>
       </div>
     </section>
   </main>
 
-  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav><nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="https://github.com/QuantmindSSI/lummenna">Source</a><a href="https://github.com/QuantmindSSI/lummenna/blob/main/ROADMAP.md">Roadmap</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
+  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav><nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="mailto:licensing@quantumindssi.com?subject=Lummenna%20source%20access">Source access</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
 </body>
 </html>

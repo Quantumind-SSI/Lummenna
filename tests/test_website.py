@@ -117,6 +117,33 @@ def test_removed_marketing_claims_do_not_return():
         assert unsupported_claim not in site_text
 
 
+def test_no_public_link_points_at_the_private_repository():
+    """Anchors must not send visitors to a repository they cannot open.
+
+    QuantmindSSI/lummenna is private, so every github.com anchor returned 404
+    for anonymous visitors, including the hero call to action and the
+    "view benchmark artifacts" button. A bare ``git clone`` line inside a code
+    block is fine: it is an instruction for someone who has been granted
+    access, not a link that promises to work.
+    """
+    anchor_href = re.compile(r'<a\b[^>]*\bhref="([^"]+)"', re.IGNORECASE)
+    for page_name in PAGES:
+        page = (WEBSITE / page_name).read_text(encoding="utf-8")
+        for target in anchor_href.findall(page):
+            assert "github.com" not in target, f"{page_name} links to {target}"
+
+
+def test_pages_do_not_promise_public_artifacts():
+    """Copy must not assert that source or artifacts are publicly available."""
+    site_text = "\n".join((WEBSITE / page).read_text(encoding="utf-8") for page in PAGES)
+    for unsupported_claim in (
+        "available in the repository",
+        "Inspect the source",
+        "View benchmark artifacts",
+    ):
+        assert unsupported_claim not in site_text, unsupported_claim
+
+
 def test_public_evidence_matches_committed_artifacts():
     summary = load_evaluation_summary()
     home = (WEBSITE / "index.html").read_text(encoding="utf-8")
