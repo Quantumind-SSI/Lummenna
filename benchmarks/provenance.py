@@ -60,8 +60,14 @@ def _git(*args: str) -> str | None:
         *args: Arguments after ``git``.
 
     Returns:
-        Stripped stdout, or ``None`` if git is absent, this is not a
-        repository, or the command fails or times out.
+        Stripped stdout on success, which may legitimately be the empty string
+        (``git status --porcelain`` prints nothing for a clean tree). ``None``
+        only when the command could not be run: git absent, not a repository,
+        non-zero exit, or timeout.
+
+        Empty output is deliberately not collapsed to ``None``. Doing so makes
+        a verified-clean tree indistinguishable from an undetermined one, and
+        "clean" is precisely the claim a citable artifact rests on.
     """
     try:
         completed = subprocess.run(  # nosec B603 B607
@@ -76,7 +82,7 @@ def _git(*args: str) -> str | None:
         return None
     if completed.returncode != 0:
         return None
-    return completed.stdout.strip() or None
+    return completed.stdout.strip()
 
 
 def _package_versions() -> dict[str, str | None]:
@@ -115,7 +121,8 @@ def capture_environment() -> dict[str, Any]:
         A JSON-serialisable mapping describing the host, interpreter, relevant
         package versions, and repository state.
     """
-    commit = _git("rev-parse", "HEAD")
+    # rev-parse prints the sha on success; treat an empty result as unknown.
+    commit = _git("rev-parse", "HEAD") or None
     dirty_output = _git("status", "--porcelain")
     return {
         "captured_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),

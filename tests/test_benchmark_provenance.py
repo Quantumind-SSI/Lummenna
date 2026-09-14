@@ -45,6 +45,47 @@ class TestCaptureEnvironment:
         for _ in range(3):
             capture_environment()
 
+    def test_clean_tree_is_false_not_unknown(self, monkeypatch):
+        """A verified-clean tree must report False, never None.
+
+        ``git status --porcelain`` prints nothing for a clean tree. Collapsing
+        that empty output to None makes "verified clean" indistinguishable from
+        "could not determine", and clean is the claim a citable artifact rests
+        on.
+        """
+        import benchmarks.provenance as provenance
+
+        monkeypatch.setattr(
+            provenance,
+            "_git",
+            lambda *args: "" if args[0] == "status" else "a" * 40,
+        )
+
+        repository = provenance.capture_environment()["repository"]
+        assert repository["dirty"] is False
+        assert repository["commit"] == "a" * 40
+
+    def test_dirty_tree_is_true(self, monkeypatch):
+        import benchmarks.provenance as provenance
+
+        monkeypatch.setattr(
+            provenance,
+            "_git",
+            lambda *args: " M file.py" if args[0] == "status" else "b" * 40,
+        )
+
+        assert provenance.capture_environment()["repository"]["dirty"] is True
+
+    def test_unavailable_git_is_none_not_false(self, monkeypatch):
+        """Absent git means unknown, which must not be reported as clean."""
+        import benchmarks.provenance as provenance
+
+        monkeypatch.setattr(provenance, "_git", lambda *args: None)
+
+        repository = provenance.capture_environment()["repository"]
+        assert repository["dirty"] is None
+        assert repository["commit"] is None
+
 
 class TestDescribePlatform:
     def test_renders_system_and_machine(self):
