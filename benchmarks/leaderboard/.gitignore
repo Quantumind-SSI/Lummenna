@@ -1,0 +1,5 @@
+# Downloaded source datasets, cached so repeated runs and CI do not refetch.
+# LoCoMo alone is 2.7 MB and LongMemEval's standard haystack is 278 MB; both are
+# reproducible from the URLs recorded in datasets.py, so the artifact's dataset
+# fingerprint is the thing worth committing, not the corpus itself.
+.cache/

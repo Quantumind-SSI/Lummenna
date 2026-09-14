@@ -1,0 +1,67 @@
+{
+  "_comment": "Offline smoke fixture for harness validation. NOT a benchmark. Results on this fixture are never comparable to public-dataset results and are labelled 'fixture:smoke' in every artifact. Its purpose is to let a contributor verify a new adapter, and CI verify the harness, without downloading datasets.",
+  "items": [
+    {"item_id": "s1-t1", "text": "I moved to Lisbon in March 2021 for a backend engineering role.", "session_id": "s1", "speaker": "user", "timestamp": "2021-03-04"},
+    {"item_id": "s1-t2", "text": "That sounds like a big change. How is the weather there?", "session_id": "s1", "speaker": "assistant", "timestamp": "2021-03-04"},
+    {"item_id": "s1-t3", "text": "Much warmer than Helsinki. I am renting a flat in Alfama.", "session_id": "s1", "speaker": "user", "timestamp": "2021-03-04"},
+    {"item_id": "s2-t1", "text": "My sister Marta is visiting next week and she is allergic to shellfish.", "session_id": "s2", "speaker": "user", "timestamp": "2021-06-12"},
+    {"item_id": "s2-t2", "text": "I will keep that in mind for restaurant suggestions.", "session_id": "s2", "speaker": "assistant", "timestamp": "2021-06-12"},
+    {"item_id": "s3-t1", "text": "I switched jobs. I am now a platform engineer at a fintech company.", "session_id": "s3", "speaker": "user", "timestamp": "2022-01-20"},
+    {"item_id": "s3-t2", "text": "Congratulations on the move to platform engineering.", "session_id": "s3", "speaker": "assistant", "timestamp": "2022-01-20"},
+    {"item_id": "s4-t1", "text": "I adopted a greyhound called Pip last month.", "session_id": "s4", "speaker": "user", "timestamp": "2022-05-02"},
+    {"item_id": "s4-t2", "text": "Greyhounds are surprisingly calm indoors.", "session_id": "s4", "speaker": "assistant", "timestamp": "2022-05-02"},
+    {"item_id": "s5-t1", "text": "Pip had surgery on his left hind leg and is recovering well.", "session_id": "s5", "speaker": "user", "timestamp": "2022-09-15"},
+    {"item_id": "s5-t2", "text": "I hope the recovery continues smoothly.", "session_id": "s5", "speaker": "assistant", "timestamp": "2022-09-15"},
+    {"item_id": "s6-t1", "text": "I am learning to play the cello on Tuesday evenings.", "session_id": "s6", "speaker": "user", "timestamp": "2023-02-08"}
+  ],
+  "questions": [
+    {
+      "question_id": "q-single-1",
+      "text": "What is the name of the dog that was adopted?",
+      "answer_item_ids": ["s4-t1"],
+      "category": "single-session-recall"
+    },
+    {
+      "question_id": "q-single-2",
+      "text": "Which instrument is being learned on Tuesday evenings?",
+      "answer_item_ids": ["s6-t1"],
+      "category": "single-session-recall"
+    },
+    {
+      "question_id": "q-multi-1",
+      "text": "Which leg did the adopted greyhound have surgery on?",
+      "answer_item_ids": ["s4-t1", "s5-t1"],
+      "category": "multi-session-recall"
+    },
+    {
+      "question_id": "q-update-1",
+      "text": "What is the current job role?",
+      "answer_item_ids": ["s3-t1"],
+      "category": "knowledge-update"
+    },
+    {
+      "question_id": "q-temporal-1",
+      "text": "What happened in March 2021?",
+      "answer_item_ids": ["s1-t1"],
+      "category": "temporal-reasoning"
+    },
+    {
+      "question_id": "q-detail-1",
+      "text": "What food allergy does the visiting sister have?",
+      "answer_item_ids": ["s2-t1"],
+      "category": "single-session-recall"
+    },
+    {
+      "question_id": "q-abs-1",
+      "text": "What is the registration number of the car that was purchased?",
+      "answer_item_ids": [],
+      "category": "abstention"
+    },
+    {
+      "question_id": "q-abs-2",
+      "text": "Which university degree was completed in 2019?",
+      "answer_item_ids": [],
+      "category": "abstention"
+    }
+  ]
+}

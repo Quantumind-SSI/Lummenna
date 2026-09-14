@@ -13,7 +13,6 @@ aborts the run.
 
 from __future__ import annotations
 
-import json
 import os
 import sqlite3
 import sys
@@ -43,6 +42,7 @@ except ImportError as exc:
 
 import contextlib
 
+from benchmarks.provenance import capture_environment, describe_platform, write_artifact
 from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.mnemonic.store import store_memory
@@ -279,8 +279,11 @@ def run_benchmark() -> dict[str, Any]:
     }
 
     json_path = RESULTS_DIR / "perf_results.json"
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2)
+    # Latency and footprint numbers are meaningless without the hardware they
+    # were measured on, so the envelope records it rather than leaving readers
+    # to infer a platform from prose.
+    digest = write_artifact(json_path, report)
+    print(f"[INFO] perf artifact sha256={digest} platform={describe_platform(capture_environment())}")
 
     md_path = RESULTS_DIR / "perf_results.md"
     lines = [

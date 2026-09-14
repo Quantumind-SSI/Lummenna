@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
-import json
 import sqlite3
 import sys
 import tempfile
@@ -24,6 +23,7 @@ import time
 import tracemalloc
 from pathlib import Path
 
+from benchmarks.provenance import write_artifact
 from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.contextual.embed import MockEmbedder
@@ -218,11 +218,11 @@ def main() -> int:
         }
         print(f"\nResults: {result}")
 
-        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         artifact = RESULTS_DIR / "stress_results.json"
-        with open(artifact, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2)
-        print(f"[INFO] Results written to {artifact}")
+        # Throughput figures are hardware-bound; record the host so no surface
+        # has to assert a platform the artifact does not contain.
+        digest = write_artifact(artifact, result)
+        print(f"[INFO] Results written to {artifact} (sha256={digest})")
         conn.close()
 
     return 0
