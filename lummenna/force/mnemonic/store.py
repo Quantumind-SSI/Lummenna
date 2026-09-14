@@ -8,7 +8,11 @@ Secret sauce: Palace-aware placement + V(m) scoring + interference check on writ
 import hashlib
 import json
 import sqlite3
+import threading
 import uuid
+from collections import OrderedDict
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 
@@ -26,10 +30,77 @@ def _tenant_id_supported(conn: sqlite3.Connection) -> bool:
     return any(row[1] == "tenant_id" for row in conn.execute("PRAGMA table_info(chunk)").fetchall())
 
 
+# Constructing a retrieval channel is not free: the vector channel loads the
+# sqlite-vec extension, issues two CREATE TABLE IF NOT EXISTS statements and
+# probes the KNN grammar, and the lexical channel runs PRAGMA optimize. Building
+# one per write put all of that on every store, and ran DDL inside the caller's
+# transaction. Channels are therefore cached per connection.
+#
+# sqlite3.Connection supports neither weak references nor attribute assignment,
+# so the cache is keyed by id() and holds the connection itself: that strong
+# reference makes id reuse impossible while an entry is live, and each lookup
+# re-verifies identity with `is` before trusting the entry. The cache is bounded
+# so a long-lived process that opens short-lived connections (the sleep
+# scheduler opens one per pass) cannot grow it without limit.
+_CHANNEL_CACHE_MAX = 8
+_channel_lock = threading.Lock()
+_lexical_channels: OrderedDict[int, tuple[sqlite3.Connection, Any]] = OrderedDict()
+_vector_channels: OrderedDict[int, tuple[sqlite3.Connection, Any]] = OrderedDict()
+
+
+def _cached_channel(
+    cache: OrderedDict[int, tuple[sqlite3.Connection, Any]],
+    conn: sqlite3.Connection,
+    factory: Callable[[], Any],
+) -> Any:
+    """Return the cached channel for *conn*, constructing it at most once.
+
+    Args:
+        cache: The per-channel-type cache to use.
+        conn: Connection the channel is bound to.
+        factory: Zero-argument constructor, called only on a miss.
+
+    Returns:
+        The channel bound to *conn*.
+
+    Note:
+        ``factory`` runs outside the lock because it touches SQLite. Two threads
+        racing a miss may both construct; the loser's channel is discarded. That
+        is safe because construction is idempotent (``CREATE TABLE IF NOT
+        EXISTS``) and costs one redundant build, whereas holding the lock across
+        I/O would serialise every writer.
+    """
+    key = id(conn)
+    with _channel_lock:
+        entry = cache.get(key)
+        if entry is not None and entry[0] is conn:
+            cache.move_to_end(key)
+            return entry[1]
+
+    channel = factory()
+
+    with _channel_lock:
+        entry = cache.get(key)
+        if entry is not None and entry[0] is conn:
+            return entry[1]
+        cache[key] = (conn, channel)
+        cache.move_to_end(key)
+        while len(cache) > _CHANNEL_CACHE_MAX:
+            cache.popitem(last=False)
+    return channel
+
+
+def reset_channel_cache() -> None:
+    """Drop all cached channels. Intended for tests and connection teardown."""
+    with _channel_lock:
+        _lexical_channels.clear()
+        _vector_channels.clear()
+
+
 def _get_lexical_channel(conn: sqlite3.Connection):
     from lummenna.force.mnemonic.retrieval_lexical import LexicalChannel
 
-    return LexicalChannel(conn)
+    return _cached_channel(_lexical_channels, conn, lambda: LexicalChannel(conn))
 
 
 def _get_vector_channel(conn: sqlite3.Connection, config=None):
@@ -39,7 +110,8 @@ def _get_vector_channel(conn: sqlite3.Connection, config=None):
         from lummenna.config import LummennaConfig
 
         config = LummennaConfig()
-    return VectorChannel(config, conn)
+    resolved = config
+    return _cached_channel(_vector_channels, conn, lambda: VectorChannel(resolved, conn))
 
 
 def store_memory(
@@ -92,6 +164,8 @@ def store_memory(
     if config.pii_detection_enabled:
         from lummenna.compliance.safety_forgetting import apply_pii_strategy, safety_scan_chunk
 
+        if config.pii_custom_patterns:
+            config.assert_licensed("compliance")
         scan_hits = safety_scan_chunk(content, custom_patterns=config.pii_custom_patterns)
         if scan_hits:
             logger.warning(
@@ -136,6 +210,15 @@ def store_memory(
         from lummenna.licensing import assert_seat_available
 
         assert_seat_available(conn, tenant_id, config)
+
+    # Acquire channels before opening the transaction. Their first construction
+    # issues DDL (CREATE TABLE IF NOT EXISTS) and loads the sqlite-vec
+    # extension; doing that inside `with conn:` mixes schema changes into a data
+    # transaction, whose interaction with sqlite3's implicit transaction control
+    # differs across the supported 3.10 to 3.12 range. After the first call both
+    # are served from the cache.
+    vector_channel = _get_vector_channel(conn, config) if embedding is not None else None
+    lexical_channel = _get_lexical_channel(conn)
 
     with conn:
         # 1. Resolve room
@@ -224,11 +307,11 @@ def store_memory(
         conn.execute("UPDATE chunk SET provenance_root = ? WHERE chunk_id = ?", (prov_id, chunk_id))
 
         # 7. Vector index
-        if embedding is not None:
-            _get_vector_channel(conn, config).add(chunk_id, embedding)
+        if vector_channel is not None and embedding is not None:
+            vector_channel.add(chunk_id, embedding)
 
         # 8. Lexical index (always index plaintext so search works)
-        _get_lexical_channel(conn).index_chunk(chunk_id, _plain_content)
+        lexical_channel.index_chunk(chunk_id, _plain_content)
 
         # 9. Interference check
         _trigger_interference_check(conn, room_id, locus_id, chunk_id, embedding)

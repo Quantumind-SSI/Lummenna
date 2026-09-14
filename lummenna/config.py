@@ -11,7 +11,12 @@ from pathlib import Path
 from typing import Literal, cast
 
 from pydantic import PrivateAttr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    TomlConfigSettingsSource,
+)
 
 
 def _default_config_path() -> Path:
@@ -63,6 +68,13 @@ class LummennaConfig(BaseSettings):
     auto_provision_model: bool = False
     vector_index: Literal["sqlite-vec", "usearch"] = "sqlite-vec"
     enable_frqad: bool = True
+    # Recency shaping for the fusion rerank (lummenna.fusion.fuse_and_rerank).
+    # The final score is a product, so the recency term is bounded to
+    # [recency_floor, 1.0]: it expresses a preference for recently-rehearsed
+    # memories without letting age annihilate relevance. Lower the floor to
+    # weight recency harder; set it to 1.0 to disable recency shaping entirely.
+    recency_tau_hours: float = 168.0
+    recency_floor: float = 0.35
     enable_local_llm: bool = False
     local_llm_model: str = "Qwen3-1.7B-Q4_K_M.gguf"
     consolidation_cpu_percent: float = 5.0
@@ -146,6 +158,37 @@ class LummennaConfig(BaseSettings):
 
     _resolved: bool = PrivateAttr(default=False)
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Register the TOML source declared by ``model_config.toml_file``.
+
+        pydantic-settings does not read ``toml_file`` unless a
+        :class:`TomlConfigSettingsSource` is added here; without this override it
+        emits ``Config key `toml_file` ... will be ignored`` and the file written
+        by ``lummenna init`` is silently inert.
+
+        Precedence, highest first: constructor kwargs, environment
+        (``LUMMENNA_*``), ``.env``, ``~/.lummenna/config.toml``, then secrets.
+        Environment beats the file so a container can override a baked-in config.
+
+        Returns:
+            The ordered settings sources for this model.
+        """
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            TomlConfigSettingsSource(settings_cls),
+            file_secret_settings,
+        )
+
     def assert_sovereign(self, attempted_call: str) -> None:
         """Raise SovereignViolationError if sovereign mode is enabled.
 
@@ -186,17 +229,25 @@ class LummennaConfig(BaseSettings):
         return self.store_path / "lummenna.db"
 
     def resolve_device_defaults(self) -> None:
-        """Apply device-profile defaults for fields still at their generic defaults."""
+        """Apply device-profile defaults to fields the user did not set.
+
+        "Did not set" is decided by ``model_fields_set`` (populated by every
+        source: constructor, env, ``.env``, TOML), not by comparing against the
+        generic default. A value-comparison sentinel cannot distinguish
+        ``LUMMENNA_CONTEXT_BUDGET=2048`` from an unset field, so on an ``rpi5``
+        it would silently rewrite the user's explicit 2048 to 1024.
+        """
         if self._resolved:
             return
         profile = DEVICE_PROFILES.get(self.device, DEVICE_PROFILES["generic"])
-        if self.context_budget == 2048:
+        explicit = self.model_fields_set
+        if "context_budget" not in explicit:
             self.context_budget = int(cast(int, profile.get("context_budget", self.context_budget)))
-        if self.memory_limit_mb == 300:
+        if "memory_limit_mb" not in explicit:
             self.memory_limit_mb = int(
                 cast(int, profile.get("memory_limit_mb", self.memory_limit_mb))
             )
-        if self.vector_index == "sqlite-vec":
+        if "vector_index" not in explicit:
             vector_index = str(profile.get("vector_index", self.vector_index))
             if vector_index in ("sqlite-vec", "usearch"):
                 self.vector_index = cast(Literal["sqlite-vec", "usearch"], vector_index)

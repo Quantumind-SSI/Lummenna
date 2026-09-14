@@ -24,8 +24,16 @@ logger = get_console_logger(__name__)
 K_RRF = 60
 # Graph-channel RRF contributions are down-weighted relative to lexical/dense.
 GRAPH_RRF_WEIGHT = 0.8
-# Recency half-life used in the exp(-age/τ) boost, in hours (168h = 7 days).
+# Recency half-life used in the exp(-idle/τ) boost, in hours (168h = 7 days).
 RECENCY_TAU_HOURS = 168.0
+# Floor under the recency multiplier. The final score is a *product*, so an
+# unbounded exp(-idle/τ) term does not rank memories, it erases them: at τ=168h
+# a one-year-old memory scores exp(-52) ≈ 2.3e-23, while every other factor in
+# the product combined spans barely 145x. Without a floor, no relevance, value
+# or goal match can outweigh age past roughly a month, which defeats the point
+# of a memory palace. The floor makes recency a bounded preference (range
+# 1/RECENCY_FLOOR ≈ 2.9x) rather than an annihilator.
+RECENCY_FLOOR = 0.35
 
 
 def _chunk_has_tenant_column(conn: sqlite3.Connection) -> bool:
@@ -92,12 +100,21 @@ def fuse_and_rerank(
     query with ``AND c.tenant_id = ?`` drops cross-tenant candidates *before*
     decryption/scoring, so other tenants' plaintext is never processed in memory
     (Pro feature ``multi_tenant``; see COMMERCIAL-LICENSE.md). The default tenant
-    and schemas predating tenant support are unrestricted, so single-tenant
-    deployments pay nothing.
+    and schemas predating tenant support are unrestricted. The default tenant
+    is still an explicit scope; it is not an administrator wildcard.
     """
     k_rrf = K_RRF  # standard RRF constant from Cormack et al. (2009)
     if budget_candidates < 1:
         raise ValueError(f"budget_candidates must be >= 1, got {budget_candidates}")
+
+    # Recency shape is tunable per deployment; fall back to module defaults when
+    # no config is threaded through (unit tests, ablation harnesses).
+    recency_tau = float(getattr(config, "recency_tau_hours", RECENCY_TAU_HOURS))
+    recency_floor = float(getattr(config, "recency_floor", RECENCY_FLOOR))
+    if recency_tau <= 0.0:
+        raise ValueError(f"recency_tau_hours must be > 0, got {recency_tau}")
+    if not 0.0 <= recency_floor <= 1.0:
+        raise ValueError(f"recency_floor must be in [0, 1], got {recency_floor}")
 
     # Build candidate pool with RRF
     rrfs: dict[int, float] = {}
@@ -112,7 +129,12 @@ def fuse_and_rerank(
                 rrfs.get(ghit.chunk_id, 0.0) + 1.0 / (k_rrf + rank) * GRAPH_RRF_WEIGHT
             )
 
-    chunk_ids = list(rrfs.keys())[:budget_candidates]
+    # Truncate the candidate pool by *fused rank*, not by dict insertion order.
+    # Insertion order is lexical -> dense -> graph, so an order-based cut drops
+    # high-RRF graph candidates in favour of low-RRF lexical ones whenever the
+    # channels propose more than `budget_candidates` distinct chunks (reachable
+    # via the repair path, which widens fan-out to k=50 per channel).
+    chunk_ids = sorted(rrfs, key=lambda cid: rrfs[cid], reverse=True)[:budget_candidates]
     if not chunk_ids:
         return []
 
@@ -122,12 +144,11 @@ def fuse_and_rerank(
 
     # Multi-tenant isolation at the relational chokepoint: apply the tenant
     # predicate here so cross-tenant candidates are filtered in SQL before any
-    # content is decrypted/scored below. No-op for the default tenant or for
-    # schemas that predate tenant support (single-tenant deployments pay
-    # nothing); tenant_id is a bound parameter, never string-interpolated.
+    # content is decrypted/scored below. No-op only for schemas that predate
+    # tenant support; tenant_id is a bound parameter, never interpolated.
     params: list[object] = list(chunk_ids)
     tenant_clause = ""
-    if tenant_id != "default" and _chunk_has_tenant_column(conn):
+    if _chunk_has_tenant_column(conn):
         tenant_clause = " AND c.tenant_id = ?"
         params.append(tenant_id)
 
@@ -141,6 +162,12 @@ def fuse_and_rerank(
         f"SELECT c.chunk_id, r.name AS room_name, l.name AS locus_name,"  # nosec B608
         f" c.content, c.vm_score, c.provenance_root,"
         f" (strftime('%s','now') - c.created_at) / 3600.0 AS age_hours,"
+        # Hours since the memory was last *touched* (stored or retrieved).
+        # Rehearsal is what keeps a memory salient, so the recency term is
+        # driven by idle time, not by creation time: re-reading an old memory
+        # restores its recency, exactly as re-walking a palace room does.
+        f" (strftime('%s','now') - COALESCE(c.last_access_at, c.created_at)) / 3600.0"
+        f"   AS idle_hours,"
         f" c.resolution, c.encrypted"
         f" FROM chunk c"
         f" LEFT JOIN room r ON r.room_id = c.room_id"
@@ -181,7 +208,7 @@ def fuse_and_rerank(
     _enc = None
 
     for row in rows:
-        cid, room_name, locus_name, content, vm, prov, age_hours, res, encrypted = row
+        cid, room_name, locus_name, content, vm, prov, age_hours, idle_hours, res, encrypted = row
         if encrypted:
             if _enc is None:
                 from lummenna.config import LummennaConfig
@@ -231,7 +258,12 @@ def fuse_and_rerank(
                 frqad_sim = 0.5
 
         rrf = rrfs.get(cid, 0.0)
-        recency_boost = float(np.exp(-(age_hours or 0) / RECENCY_TAU_HOURS))
+        # Bounded recency preference in [recency_floor, 1.0]. See RECENCY_FLOOR
+        # for why an unbounded exponential cannot be used in a product.
+        idle_nn = max(0.0, float(idle_hours if idle_hours is not None else (age_hours or 0.0)))
+        recency_boost = recency_floor + (1.0 - recency_floor) * float(
+            np.exp(-idle_nn / recency_tau)
+        )
 
         # Clamp the two similarity-derived quantities into their contractual
         # [0, 1] range: cosine/FRQAD arithmetic and rounding can push values a

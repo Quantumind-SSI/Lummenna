@@ -9,9 +9,10 @@ because RSS includes Python heap, embedding models, and ONNX runtime
 overhead that are irrelevant to Lummenna's data footprint.
 """
 
-import contextlib
 import sqlite3
 from typing import Literal, cast
+
+import numpy as np
 
 from lummenna.data.locks import maintenance_guard
 from lummenna.logging import get_console_logger
@@ -19,7 +20,7 @@ from lummenna.sovereign.wear import WearAwareBatcher
 
 logger = get_console_logger(__name__)
 
-_BYTES_PER_CHUNK_ESTIMATE = 1800
+BYTES_PER_CHUNK_ESTIMATE = 1800
 
 # Optical-degradation resolution ladder (whitepaper 3.1 / 3.5 L3).
 Resolution = Literal["FP32", "FP16", "INT8", "BINARY", "RELEASED"]
@@ -63,13 +64,13 @@ def budget_curated_eviction(
         # Chunk-count proxy for data-memory footprint (deterministic, testable, excludes interpreter overhead)
         row = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()
         active_chunks = row[0] if row else 0
-        estimated_mb = (active_chunks * _BYTES_PER_CHUNK_ESTIMATE) / (1024 * 1024)
+        estimated_mb = (active_chunks * BYTES_PER_CHUNK_ESTIMATE) / (1024 * 1024)
 
         if estimated_mb < target_ram_mb:
             return 0
 
         needed_eviction_mb = estimated_mb - (memory_limit_mb * 0.75)
-        bytes_per_chunk = _BYTES_PER_CHUNK_ESTIMATE
+        bytes_per_chunk = BYTES_PER_CHUNK_ESTIMATE
         chunks_to_evict = max(1, int((needed_eviction_mb * 1024 * 1024) / bytes_per_chunk))
 
         rows = conn.execute(
@@ -83,60 +84,38 @@ def budget_curated_eviction(
         ).fetchall()
 
         evicted = 0
-        if batcher:
-            tables = {
-                r[0]
-                for r in conn.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'"
-                ).fetchall()
-            }
-            has_vec_fallback = "vec_fallback" in tables
-            has_vec_chunks = "vec_chunks" in tables
-            for chunk_id, _vm, res, _age in rows:
-                new_res = _next_resolution(res)
-                if new_res == "RELEASED":
-                    batcher.queue.append(
-                        (
-                            "UPDATE chunk SET optical_level = 2, valid_to = unixepoch() WHERE chunk_id = ?",
-                            (chunk_id,),
-                        )
-                    )
-                else:
-                    batcher.queue.append(
-                        (
-                            "UPDATE chunk SET resolution = ?, optical_level = 1 WHERE chunk_id = ?",
-                            (new_res, chunk_id),
-                        )
-                    )
-                if has_vec_fallback:
-                    batcher.queue.append(
-                        ("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,))
-                    )
-                if has_vec_chunks:
-                    batcher.queue.append(("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,)))
-                evicted += 1
-        else:
-            for chunk_id, _vm, res, _age in rows:
-                new_res = _next_resolution(res)
-                if new_res == "RELEASED":
-                    conn.execute(
-                        "UPDATE chunk SET optical_level = 2, valid_to = unixepoch() WHERE chunk_id = ?",
+        tables = {
+            r[0]
+            for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
+        # One code path for both batched and immediate writes: the statements
+        # are identical, only their destination differs. Keeping them unified
+        # means the batched path cannot drift from the tested one.
+        for chunk_id, _vm, res, _age in rows:
+            new_res = _next_resolution(res)
+            if new_res == "RELEASED":
+                statements: list[tuple[str, tuple]] = [
+                    (
+                        "UPDATE chunk SET resolution = 'RELEASED', optical_level = 2, "
+                        "valid_to = unixepoch() WHERE chunk_id = ?",
                         (chunk_id,),
                     )
-                else:
-                    conn.execute(
+                ]
+            else:
+                statements = [
+                    (
                         "UPDATE chunk SET resolution = ?, optical_level = 1 WHERE chunk_id = ?",
                         (new_res, chunk_id),
                     )
-                # Remove from vector index as resolution degraded
-                try:
-                    # Simple table-based removal via direct SQL so we don't need a global channel
-                    conn.execute("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,))
-                    with contextlib.suppress(Exception):
-                        conn.execute("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,))
-                except Exception as exc:
-                    logger.debug("budget_evict_vec_delete", chunk_id=chunk_id, error=str(exc))
-                evicted += 1
+                ]
+            statements.extend(_vector_statements(conn, chunk_id, new_res, tables))
+
+            if batcher:
+                batcher.queue.extend(statements)
+            else:
+                for sql, params in statements:
+                    conn.execute(sql, params)
+            evicted += 1
 
         if not batcher:
             conn.commit()
@@ -148,6 +127,87 @@ def budget_curated_eviction(
             target_mb=target_ram_mb,
         )
         return evicted
+
+
+def _vector_statements(
+    conn: sqlite3.Connection,
+    chunk_id: int,
+    new_res: Resolution,
+    tables: set[str],
+) -> list[tuple[str, tuple]]:
+    """Vector-side writes for one step down the optical ladder.
+
+    Degradation re-quantizes the stored vector; it does not discard it.
+    Deleting the vector on the first step (FP32 to FP16) makes the chunk
+    permanently invisible to semantic search and to L2 interference, collapsing
+    a four-step ladder into a one-step cliff. Only ``RELEASED``, the terminal
+    state, removes the vector.
+
+    Falls back to deletion only when the vector genuinely cannot be degraded:
+    no mirror table, no stored vector, or an unavailable/failing quantizer.
+
+    Args:
+        conn: Open connection to the store.
+        chunk_id: Chunk being degraded.
+        new_res: Target resolution from :func:`_next_resolution`.
+        tables: Table names present in the schema, probed once by the caller.
+
+    Returns:
+        ``(sql, params)`` pairs to execute or queue, in order.
+
+    Complexity:
+        One SELECT and O(embedding_dims) quantization work per chunk.
+    """
+    has_fallback = "vec_fallback" in tables
+    has_vec_chunks = "vec_chunks" in tables
+
+    def deletions() -> list[tuple[str, tuple]]:
+        out: list[tuple[str, tuple]] = []
+        if has_fallback:
+            out.append(("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)))
+        if has_vec_chunks:
+            out.append(("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,)))
+        return out
+
+    if new_res == "RELEASED" or not has_fallback:
+        return deletions()
+
+    try:
+        from lummenna.sovereign.optical import QUANTIZERS
+
+        quantizer = QUANTIZERS.get(new_res)
+    except Exception as exc:
+        logger.warning("optical_quantizers_unavailable", error=str(exc))
+        return deletions()
+    if quantizer is None:
+        return deletions()
+
+    row = conn.execute(
+        "SELECT embedding FROM vec_fallback WHERE chunk_id = ?", (chunk_id,)
+    ).fetchone()
+    if row is None or not row[0]:
+        return deletions()
+
+    try:
+        original = np.frombuffer(row[0], dtype=np.float32)
+        blob = np.asarray(quantizer(original), dtype=np.float32).tobytes()
+    except Exception as exc:
+        logger.warning(
+            "vector_quantize_failed", chunk_id=chunk_id, resolution=new_res, error=str(exc)
+        )
+        return deletions()
+
+    statements: list[tuple[str, tuple]] = [
+        ("UPDATE vec_fallback SET embedding = ? WHERE chunk_id = ?", (blob, chunk_id))
+    ]
+    if has_vec_chunks:
+        # vec0 virtual tables do not support in-place UPDATE of the vector
+        # column; replace the row instead.
+        statements.append(("DELETE FROM vec_chunks WHERE chunk_id = ?", (chunk_id,)))
+        statements.append(
+            ("INSERT INTO vec_chunks(chunk_id, embedding) VALUES (?,?)", (chunk_id, blob))
+        )
+    return statements
 
 
 def _next_resolution(current: str) -> Resolution:
