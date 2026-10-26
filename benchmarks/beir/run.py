@@ -246,7 +246,7 @@ def _recall_at_k(retrieved, relevant, k):
     # Defensive: flatten if any nested collections leaked in
     flat = []
     for item in retrieved[:k]:
-        if isinstance(item, (list, set, tuple)):
+        if isinstance(item, list | set | tuple):
             flat.extend(item)
         else:
             flat.append(item)

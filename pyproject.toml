@@ -4,17 +4,15 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lummenna"
-version = "1.0.0"
+version = "1.0.1rc1"
 description = "Twin-force memory and context framework for sovereign AI agents"
-requires-python = ">=3.10"
-readme = "README.md"
+requires-python = ">=3.10,<3.13"
+readme = "PACKAGE-README.md"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE", "LICENSES/*.txt"]
-authors = [
-    { name = "QuantumindSSI", email = "admin@quantumindssi.com" },
-]
+authors = [{ name = "QuantumindSSI", email = "admin@lummenna.com" }]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
@@ -23,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-urls = { Repository = "https://github.com/QuantmindSSI/lummenna" }
+urls = { Homepage = "https://lummenna.com", Documentation = "https://lummenna.com/docs" }
 dependencies = [
     # Force A: Mnemonic
     "sqlite-vec>=0.1.0",
@@ -72,6 +70,9 @@ dev = [
     "pre-commit>=3.6",
     "httpx>=0.27",
 ]
+release = [
+    "build>=1.2",
+]
 langchain = [
     "langchain>=0.3",
 ]
@@ -79,7 +80,7 @@ langgraph = [
     "langgraph>=0.2",
 ]
 mcp = [
-    "mcp>=1.0,<3.0",
+    "mcp>=1.29,<3.0",
 ]
 # Heavy ONNX EXPORT toolchain (optimum pulls torch/CUDA, ~2GB). Only needed to
 # run `lummenna model download/export`. Consumers who use a prebuilt ONNX model
@@ -120,6 +121,29 @@ benchmarks = [
 
 [project.scripts]
 lummenna = "lummenna.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+core-metadata-version = "2.4"
+
+[tool.hatch.build.targets.wheel.force-include]
+"benchmarks/retrieval/results/retrieval_results.json" = "lummenna/benchmark_data/retrieval_results.json"
+"benchmarks/beir/results/beir_results.json" = "lummenna/benchmark_data/beir_results.json"
+"benchmarks/e2e/results/e2e_results.json" = "lummenna/benchmark_data/e2e_results.json"
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
+include = [
+    "/lummenna",
+    "/benchmarks/retrieval/results/retrieval_results.json",
+    "/benchmarks/beir/results/beir_results.json",
+    "/benchmarks/e2e/results/e2e_results.json",
+    "/PACKAGE-README.md",
+    "/pyproject.toml",
+    "/LICENSE",
+    "/LICENSES/AGPL-3.0.txt",
+    "/NOTICE",
+    "/COPYRIGHT",
+]
 
 [tool.ruff]
 target-version = "py310"

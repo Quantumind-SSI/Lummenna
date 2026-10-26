@@ -1,0 +1,723 @@
+{
+  "benchmark": "memory_leaderboard",
+  "dataset": {
+    "name": "locomo",
+    "version": "locomo10",
+    "source": "https://raw.githubusercontent.com/snap-research/locomo/main/data/locomo10.json",
+    "fingerprint": "bc9db8b022d981a8e0c5bcf34c4f8e9d51569ffc52dfe655b98fc1d7c22be7e3",
+    "num_items": 5882,
+    "num_questions": 100,
+    "num_answerable": 87,
+    "num_abstention": 13,
+    "categories": {
+      "locomo-cat-1": 19,
+      "locomo-cat-2": 19,
+      "locomo-cat-3": 4,
+      "locomo-cat-4": 45,
+      "locomo-cat-5": 13
+    }
+  },
+  "protocol": {
+    "top_k": 10,
+    "k_values": [
+      1,
+      5,
+      10
+    ],
+    "seed": 42,
+    "bootstrap_samples": 1000,
+    "scoring": "retrieval-only; no LLM judge; evidence ids compared to dataset ground truth",
+    "abstention_scored_separately": true
+  },
+  "disclosure": {
+    "maintainer": "Lummenna (QuantumindSSI)",
+    "conflict_of_interest": "This leaderboard is published by the maintainer of Lummenna, which is one of the ranked systems. Results are not independently audited. Treat them as a reproducible starting point, not a neutral verdict.",
+    "is_official": false,
+    "official_status_note": "No standards body endorses this leaderboard. It is not an official ranking and does not claim to be one.",
+    "adapters_authored_by_maintainer": [
+      "BM25 (baseline)",
+      "Lummenna",
+      "Recency window (baseline)"
+    ],
+    "adapters_without_independent_verification": [
+      "BM25 (baseline)",
+      "Lummenna",
+      "Recency window (baseline)"
+    ],
+    "reproduction": "python -m benchmarks.leaderboard.run --help"
+  },
+  "results": [
+    {
+      "framework": "BM25 (baseline)",
+      "status": "OK",
+      "reason": "",
+      "adapter": {
+        "framework": "BM25 (baseline)",
+        "version": "okapi-k1.5-b0.75",
+        "authored_by": "lummenna",
+        "verified_by": null,
+        "adapter_verified": false,
+        "self_authored_by_maintainer": true,
+        "config_summary": "Okapi BM25, k1=1.5, b=0.75, flat transcript, no memory model",
+        "homepage": null
+      },
+      "metrics": {
+        "recall_at_1": {
+          "mean": 0.0862,
+          "ci95_lo": 0.0402,
+          "ci95_hi": 0.1381,
+          "n": 87
+        },
+        "recall_at_5": {
+          "mean": 0.2117,
+          "ci95_lo": 0.1322,
+          "ci95_hi": 0.2874,
+          "n": 87
+        },
+        "recall_at_10": {
+          "mean": 0.2577,
+          "ci95_lo": 0.1695,
+          "ci95_hi": 0.3448,
+          "n": 87
+        },
+        "mrr": {
+          "mean": 0.1708,
+          "ci95_lo": 0.109,
+          "ci95_hi": 0.2394,
+          "n": 87
+        },
+        "ndcg_at_10": {
+          "mean": 0.1773,
+          "ci95_lo": 0.1156,
+          "ci95_hi": 0.2387,
+          "n": 87
+        },
+        "abstention_accuracy": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 13
+        },
+        "per_category": {
+          "locomo-cat-1": {
+            "recall_at_1": {
+              "mean": 0.0263,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0789,
+              "n": 19
+            },
+            "recall_at_5": {
+              "mean": 0.0395,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.1053,
+              "n": 19
+            },
+            "recall_at_10": {
+              "mean": 0.0395,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.1053,
+              "n": 19
+            },
+            "mrr": {
+              "mean": 0.0702,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.193,
+              "n": 19
+            },
+            "ndcg_at_10": {
+              "mean": 0.0425,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.1174,
+              "n": 19
+            }
+          },
+          "locomo-cat-2": {
+            "recall_at_1": {
+              "mean": 0.1579,
+              "ci95_lo": 0.0263,
+              "ci95_hi": 0.3164,
+              "n": 19
+            },
+            "recall_at_5": {
+              "mean": 0.3772,
+              "ci95_lo": 0.1842,
+              "ci95_hi": 0.5614,
+              "n": 19
+            },
+            "recall_at_10": {
+              "mean": 0.3772,
+              "ci95_lo": 0.1842,
+              "ci95_hi": 0.5614,
+              "n": 19
+            },
+            "mrr": {
+              "mean": 0.3088,
+              "ci95_lo": 0.1351,
+              "ci95_hi": 0.5018,
+              "n": 19
+            },
+            "ndcg_at_10": {
+              "mean": 0.298,
+              "ci95_lo": 0.1434,
+              "ci95_hi": 0.4575,
+              "n": 19
+            }
+          },
+          "locomo-cat-3": {
+            "recall_at_1": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "recall_at_5": {
+              "mean": 0.125,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.375,
+              "n": 4
+            },
+            "recall_at_10": {
+              "mean": 0.125,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.375,
+              "n": 4
+            },
+            "mrr": {
+              "mean": 0.0833,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.25,
+              "n": 4
+            },
+            "ndcg_at_10": {
+              "mean": 0.0766,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.2299,
+              "n": 4
+            }
+          },
+          "locomo-cat-4": {
+            "recall_at_1": {
+              "mean": 0.0889,
+              "ci95_lo": 0.0222,
+              "ci95_hi": 0.1778,
+              "n": 45
+            },
+            "recall_at_5": {
+              "mean": 0.2222,
+              "ci95_lo": 0.1111,
+              "ci95_hi": 0.3444,
+              "n": 45
+            },
+            "recall_at_10": {
+              "mean": 0.3111,
+              "ci95_lo": 0.1889,
+              "ci95_hi": 0.4444,
+              "n": 45
+            },
+            "mrr": {
+              "mean": 0.1627,
+              "ci95_lo": 0.0808,
+              "ci95_hi": 0.2559,
+              "n": 45
+            },
+            "ndcg_at_10": {
+              "mean": 0.1921,
+              "ci95_lo": 0.1058,
+              "ci95_hi": 0.2909,
+              "n": 45
+            }
+          },
+          "locomo-cat-5": {
+            "abstention_accuracy": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 13
+            }
+          }
+        }
+      },
+      "timings": {
+        "ingest_seconds": 0.03,
+        "ingest_items_per_second": 196373.5,
+        "query_seconds_total": 1.264,
+        "query_latency_ms": {
+          "mean": 12.4803,
+          "ci95_lo": 12.1218,
+          "ci95_hi": 12.8692,
+          "n": 100
+        }
+      },
+      "integrity": {
+        "probe_questions": 8,
+        "nondeterministic_questions": 0,
+        "deterministic": true,
+        "leakage_decidable_questions": 8,
+        "leakage_mismatches": 0,
+        "leakage_detected": false
+      }
+    },
+    {
+      "framework": "Recency window (baseline)",
+      "status": "OK",
+      "reason": "",
+      "adapter": {
+        "framework": "Recency window (baseline)",
+        "version": "last-k",
+        "authored_by": "lummenna",
+        "verified_by": null,
+        "adapter_verified": false,
+        "self_authored_by_maintainer": true,
+        "config_summary": "Returns the last k ingested turns; ignores the query",
+        "homepage": null
+      },
+      "metrics": {
+        "recall_at_1": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 87
+        },
+        "recall_at_5": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 87
+        },
+        "recall_at_10": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 87
+        },
+        "mrr": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 87
+        },
+        "ndcg_at_10": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 87
+        },
+        "abstention_accuracy": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 13
+        },
+        "per_category": {
+          "locomo-cat-1": {
+            "recall_at_1": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "recall_at_5": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "recall_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "mrr": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "ndcg_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            }
+          },
+          "locomo-cat-2": {
+            "recall_at_1": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "recall_at_5": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "recall_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "mrr": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            },
+            "ndcg_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 19
+            }
+          },
+          "locomo-cat-3": {
+            "recall_at_1": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "recall_at_5": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "recall_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "mrr": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "ndcg_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            }
+          },
+          "locomo-cat-4": {
+            "recall_at_1": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 45
+            },
+            "recall_at_5": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 45
+            },
+            "recall_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 45
+            },
+            "mrr": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 45
+            },
+            "ndcg_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 45
+            }
+          },
+          "locomo-cat-5": {
+            "abstention_accuracy": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 13
+            }
+          }
+        }
+      },
+      "timings": {
+        "ingest_seconds": 0.0,
+        "ingest_items_per_second": 40161685.07,
+        "query_seconds_total": 0.0,
+        "query_latency_ms": {
+          "mean": 0.0003,
+          "ci95_lo": 0.0002,
+          "ci95_hi": 0.0003,
+          "n": 100
+        }
+      },
+      "integrity": {
+        "probe_questions": 8,
+        "nondeterministic_questions": 0,
+        "deterministic": true,
+        "leakage_decidable_questions": 8,
+        "leakage_mismatches": 0,
+        "leakage_detected": false
+      }
+    },
+    {
+      "framework": "Lummenna",
+      "status": "OK",
+      "reason": "",
+      "adapter": {
+        "framework": "Lummenna",
+        "version": "1.0.0",
+        "authored_by": "lummenna",
+        "verified_by": null,
+        "adapter_verified": false,
+        "self_authored_by_maintainer": true,
+        "config_summary": "Stock configuration: hybrid RRF fusion (BM25 + dense + graph), default recency shaping, no benchmark-specific tuning",
+        "homepage": "https://github.com/QuantumindSSI/lummenna"
+      },
+      "metrics": {
+        "recall_at_1": {
+          "mean": 0.069,
+          "ci95_lo": 0.023,
+          "ci95_hi": 0.1264,
+          "n": 87
+        },
+        "recall_at_5": {
+          "mean": 0.2034,
+          "ci95_lo": 0.1253,
+          "ci95_hi": 0.2817,
+          "n": 87
+        },
+        "recall_at_10": {
+          "mean": 0.3318,
+          "ci95_lo": 0.2402,
+          "ci95_hi": 0.4295,
+          "n": 87
+        },
+        "mrr": {
+          "mean": 0.1546,
+          "ci95_lo": 0.0968,
+          "ci95_hi": 0.2162,
+          "n": 87
+        },
+        "ndcg_at_10": {
+          "mean": 0.186,
+          "ci95_lo": 0.1259,
+          "ci95_hi": 0.2448,
+          "n": 87
+        },
+        "abstention_accuracy": {
+          "mean": 0.0,
+          "ci95_lo": 0.0,
+          "ci95_hi": 0.0,
+          "n": 13
+        },
+        "per_category": {
+          "locomo-cat-1": {
+            "recall_at_1": {
+              "mean": 0.0263,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0789,
+              "n": 19
+            },
+            "recall_at_5": {
+              "mean": 0.0368,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.1,
+              "n": 19
+            },
+            "recall_at_10": {
+              "mean": 0.0895,
+              "ci95_lo": 0.0105,
+              "ci95_hi": 0.1789,
+              "n": 19
+            },
+            "mrr": {
+              "mean": 0.0778,
+              "ci95_lo": 0.0058,
+              "ci95_hi": 0.1918,
+              "n": 19
+            },
+            "ndcg_at_10": {
+              "mean": 0.0604,
+              "ci95_lo": 0.0069,
+              "ci95_hi": 0.1347,
+              "n": 19
+            }
+          },
+          "locomo-cat-2": {
+            "recall_at_1": {
+              "mean": 0.0789,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.2105,
+              "n": 19
+            },
+            "recall_at_5": {
+              "mean": 0.4211,
+              "ci95_lo": 0.2105,
+              "ci95_hi": 0.6316,
+              "n": 19
+            },
+            "recall_at_10": {
+              "mean": 0.693,
+              "ci95_lo": 0.4825,
+              "ci95_hi": 0.8947,
+              "n": 19
+            },
+            "mrr": {
+              "mean": 0.2656,
+              "ci95_lo": 0.1408,
+              "ci95_hi": 0.4053,
+              "n": 19
+            },
+            "ndcg_at_10": {
+              "mean": 0.3538,
+              "ci95_lo": 0.229,
+              "ci95_hi": 0.4761,
+              "n": 19
+            }
+          },
+          "locomo-cat-3": {
+            "recall_at_1": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "recall_at_5": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "recall_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "mrr": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            },
+            "ndcg_at_10": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 4
+            }
+          },
+          "locomo-cat-4": {
+            "recall_at_1": {
+              "mean": 0.0889,
+              "ci95_lo": 0.0222,
+              "ci95_hi": 0.1778,
+              "n": 45
+            },
+            "recall_at_5": {
+              "mean": 0.2,
+              "ci95_lo": 0.1,
+              "ci95_hi": 0.3222,
+              "n": 45
+            },
+            "recall_at_10": {
+              "mean": 0.3111,
+              "ci95_lo": 0.1889,
+              "ci95_hi": 0.4556,
+              "n": 45
+            },
+            "mrr": {
+              "mean": 0.1539,
+              "ci95_lo": 0.0745,
+              "ci95_hi": 0.2453,
+              "n": 45
+            },
+            "ndcg_at_10": {
+              "mean": 0.1846,
+              "ci95_lo": 0.1015,
+              "ci95_hi": 0.2816,
+              "n": 45
+            }
+          },
+          "locomo-cat-5": {
+            "abstention_accuracy": {
+              "mean": 0.0,
+              "ci95_lo": 0.0,
+              "ci95_hi": 0.0,
+              "n": 13
+            }
+          }
+        }
+      },
+      "timings": {
+        "ingest_seconds": 71.36,
+        "ingest_items_per_second": 82.43,
+        "query_seconds_total": 3.499,
+        "query_latency_ms": {
+          "mean": 34.9187,
+          "ci95_lo": 31.3984,
+          "ci95_hi": 38.7236,
+          "n": 100
+        }
+      },
+      "integrity": {
+        "probe_questions": 8,
+        "nondeterministic_questions": 0,
+        "deterministic": true,
+        "leakage_decidable_questions": 8,
+        "leakage_mismatches": 0,
+        "leakage_detected": false
+      }
+    }
+  ],
+  "summary": {
+    "adapters_total": 3,
+    "adapters_scored": 3,
+    "adapters_not_run": 0,
+    "adapters_errored": 0
+  },
+  "environment": {
+    "captured_at_utc": "2026-09-14T17:35:22+00:00",
+    "platform": {
+      "system": "Darwin",
+      "release": "24.6.0",
+      "machine": "arm64",
+      "processor": "arm",
+      "platform_string": "macOS-15.7.7-arm64-arm-64bit"
+    },
+    "python": {
+      "version": "3.12.13",
+      "implementation": "CPython",
+      "executable": "/Users/oluwaferanmi/lummenna/.venv/bin/python"
+    },
+    "hardware": {
+      "cpu_count_logical": 8,
+      "total_memory_gb": 16.0
+    },
+    "packages": {
+      "lummenna": "1.0.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.1",
+      "sentence-transformers": null,
+      "torch": "2.13.0",
+      "transformers": "4.57.6",
+      "datasets": "5.0.1",
+      "sqlite-vec": "0.1.9",
+      "usearch": "2.26.1",
+      "rank-bm25": null
+    },
+    "repository": {
+      "commit": "d03defa0f112f6e67d64da878f49d944b987c353",
+      "dirty": false
+    }
+  },
+  "schema_version": 1
+}

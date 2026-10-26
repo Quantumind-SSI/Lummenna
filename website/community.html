@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Community Download | Lummenna</title>
+  <meta name="description" content="Download the Lummenna Community 1.0.1rc1 wheel and source archive, or build a checksum-pinned sidecar without repository access.">
+  <link rel="canonical" href="https://lummenna.com/community">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+  <div class="site-backdrop" aria-hidden="true">
+    <video class="site-backdrop-media" width="1280" height="624" autoplay muted loop playsinline preload="metadata">
+      <source src="/assets/video/lummenna-bg.webm" type="video/webm" media="(prefers-reduced-motion: no-preference)">
+      <source src="/assets/video/lummenna-bg.mp4" type="video/mp4" media="(prefers-reduced-motion: no-preference)">
+    </video>
+  </div>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a>
+      <div class="nav-links"><a href="/">Home</a><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a class="nav-cta" href="/community" aria-current="page">Community</a></div>
+    </div>
+  </nav>
+
+  <main id="main-content" tabindex="-1">
+    <header class="page-hero">
+      <p class="eyebrow">Community preview / 1.0.1rc1</p>
+      <h1>Deploy without <em>repository access.</em></h1>
+      <p>The AGPL Community release candidate is distributed through PyPI and directly from lummenna.com as a Python wheel with corresponding source. Neither installation path requires access to a source-control account.</p>
+    </header>
+
+    <section id="artifacts">
+      <div class="wrap">
+        <div class="section-heading"><p class="section-index">01 / Artifacts</p><div><h2>Versioned and verifiable.</h2><p>Both files are immutable release-candidate artifacts. Verify the SHA-256 digest before installation.</p></div></div>
+        <div class="license-grid">
+          <article class="license-card">
+            <p class="tier-name">Runtime package</p>
+            <h2>Python wheel</h2>
+            <p>Installs the Community runtime on Python 3.10 through 3.12. Dependencies are resolved from the configured Python package index.</p>
+            <p><code>7d7aa3e88f8bf15899439a978d23650db7bf7235953652c56bfef26be18eb97d</code></p>
+            <a class="btn btn-paper" href="/downloads/lummenna-1.0.1rc1-py3-none-any.whl" download>Download wheel</a>
+          </article>
+          <article class="license-card pro">
+            <p class="tier-name">Corresponding source</p>
+            <h2>Source archive</h2>
+            <p>Contains the package source, build metadata, required benchmark artifacts, notices, and Community license.</p>
+            <p><code>4fa14b53d04383246dd8a342619e6121c824462ba4c445e625749cefdaceda2b</code></p>
+            <a class="btn" href="/downloads/lummenna-1.0.1rc1.tar.gz" download>Download source</a>
+          </article>
+        </div>
+        <p><a href="/downloads/lummenna-community-1.0.1rc1.Dockerfile" download>Download sidecar Dockerfile</a> / <a href="/downloads/SHA256SUMS" download>Download SHA256SUMS</a></p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap docs-layout">
+        <nav class="docs-nav" aria-label="On this page">
+          <a href="#python">02 / Python</a>
+          <a href="#sidecar">03 / Sidecar</a>
+          <a href="#model">04 / Model</a>
+          <a href="#run">05 / Run</a>
+          <a href="#boundaries">06 / Boundaries</a>
+        </nav>
+        <div>
+          <section class="doc-section" id="python">
+            <h2>02. Install the Community preview</h2>
+            <pre><code># PyPI prerelease
+python -m pip install --pre "lummenna[export]==1.0.1rc1"
+
+# Or download and install the same wheel directly
+curl --fail --show-error --silent --remote-name \
+  https://lummenna.com/downloads/lummenna-1.0.1rc1-py3-none-any.whl
+curl --fail --show-error --silent --remote-name \
+  https://lummenna.com/downloads/SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+python -m pip install "./lummenna-1.0.1rc1-py3-none-any.whl[export]"</code></pre>
+            <p>The <code>export</code> extra is needed only to create the local ONNX embedding model. A node using an already-provisioned model can install the wheel without that extra.</p>
+          </section>
+
+          <section class="doc-section" id="sidecar">
+            <h2>03. Build the sidecar</h2>
+            <p>The published Dockerfile pins the wheel by SHA-256 and refuses to build if the download differs. It also refuses to start without an API key.</p>
+            <pre><code>curl --fail --show-error --silent --remote-name \
+  https://lummenna.com/downloads/lummenna-community-1.0.1rc1.Dockerfile
+
+docker build --pull \
+  --file lummenna-community-1.0.1rc1.Dockerfile \
+  --tag lummenna-community:1.0.1rc1 .
+
+umask 077
+printf 'LUMMENNA_API_KEY=%s\n' "$(openssl rand -hex 32)" > lummenna.env</code></pre>
+          </section>
+
+          <section class="doc-section" id="model">
+            <h2>04. Provision the model once</h2>
+            <pre><code>docker volume create lummenna-models
+
+docker run --rm \
+  --env-file lummenna.env \
+  --env LUMMENNA_SOVEREIGN=false \
+  --volume lummenna-models:/data/models \
+  lummenna-community:1.0.1rc1 \
+  lummenna model download bge-small-en-v1.5</code></pre>
+            <p>This is the only required network-backed model operation. The model persists in the named volume and subsequent inference is local.</p>
+          </section>
+
+          <section class="doc-section" id="run">
+            <h2>05. Run beside an agent</h2>
+            <pre><code>docker network create agent-memory
+docker volume create lummenna-store
+
+docker run --detach \
+  --name lummenna \
+  --restart unless-stopped \
+  --network agent-memory \
+  --env-file lummenna.env \
+  --publish 127.0.0.1:8848:8848 \
+  --volume lummenna-store:/data/store \
+  --volume lummenna-models:/data/models \
+  lummenna-community:1.0.1rc1</code></pre>
+            <p>Attach the agent container to <code>agent-memory</code> and use <code>http://lummenna:8848</code> as its memory API endpoint. Send the generated value from <code>lummenna.env</code> in the <code>X-API-Key</code> header on every <code>/v1</code> request. The host binding remains loopback-only.</p>
+          </section>
+
+          <section class="doc-section" id="boundaries">
+            <h2>06. Release boundaries</h2>
+            <p>This is a release candidate, not a stable release. It is single-node by design, the embedding model is not bundled, and the public Python API may change. Community use is governed by AGPL-3.0-or-later. Pro capabilities remain license-enforced.</p>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a href="/community">Community</a></nav><nav class="foot-nav" aria-label="Contact"><h2>Contact</h2><a href="/#download">Stable waitlist</a><!--email_off--><a href="mailto:support@lummenna.com">support@lummenna.com</a><a href="mailto:admin@lummenna.com">admin@lummenna.com</a><a href="mailto:engineering@lummenna.com">engineering@lummenna.com</a><a href="mailto:hello@lummenna.com">hello@lummenna.com</a><a href="mailto:license@lummenna.com">license@lummenna.com</a><!--/email_off--></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
+</body>
+</html>

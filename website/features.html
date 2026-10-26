@@ -10,21 +10,27 @@
   <link rel="stylesheet" href="/assets/css/site.css">
 </head>
 <body>
+  <div class="site-backdrop" aria-hidden="true">
+    <video class="site-backdrop-media" width="1280" height="624" autoplay muted loop playsinline preload="metadata">
+      <source src="/assets/video/lummenna-bg.webm" type="video/webm" media="(prefers-reduced-motion: no-preference)">
+      <source src="/assets/video/lummenna-bg.mp4" type="video/mp4" media="(prefers-reduced-motion: no-preference)">
+    </video>
+  </div>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <nav class="nav" aria-label="Primary navigation">
     <div class="nav-inner">
       <a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a>
       <div class="nav-links">
-        <a href="/">Home</a><a href="/features" aria-current="page">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a class="nav-cta" href="/docs#run">Run locally</a>
+        <a href="/">Home</a><a href="/features" aria-current="page">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a class="nav-cta" href="/community">Community</a>
       </div>
     </div>
   </nav>
 
   <main id="main-content" tabindex="-1">
     <header class="page-hero">
-      <p class="eyebrow">Capability map / shipped code</p>
+      <p class="eyebrow">Capability map / implemented code</p>
       <h1>Built to remember. <em>Built to let go.</em></h1>
-      <p>Capabilities are separated by edition and described at their implemented scope. Planned work stays on the roadmap rather than appearing here as a shipped feature.</p>
+      <p>Capabilities are separated by edition and described at their implemented scope. Planned work stays on the roadmap rather than appearing here as an available feature.</p>
     </header>
 
     <section>
@@ -36,7 +42,7 @@
           <article><span class="index">03 / Prompt</span><h3>Context assembly</h3><p>Retrieved memories are formatted and reduced to an explicit token budget, including a defined emergency path.</p><span class="edition">Community</span></article>
           <article><span class="index">04 / Adapt</span><h3>Twin-Force controller</h3><p>A shared controller responds to retrieval interaction signals and exposes its current state to the observatory.</p><span class="edition">Community</span></article>
           <article><span class="index">05 / Retain</span><h3>Three-layer lifecycle</h3><p>Time decay, same-locus interference, and budget pressure govern value, precision, and eventual release.</p><span class="edition">Community</span></article>
-          <article><span class="index">06 / Observe</span><h3>API and dashboard</h3><p>FastAPI endpoints, OpenAPI output, Prometheus metrics, and a dependency-free live observatory ship with the base install.</p><span class="edition">Community</span></article>
+          <article><span class="index">06 / Observe</span><h3>API and dashboard</h3><p>FastAPI endpoints, OpenAPI output, Prometheus metrics, and a dependency-free live observatory are implemented in the current code.</p><span class="edition">Community</span></article>
           <article><span class="index">07 / Encrypt</span><h3>Encryption at rest</h3><p>Licensed deployments can select SQLCipher whole-database encryption or Fernet field encryption.</p><span class="edition">Pro</span></article>
           <article><span class="index">08 / Isolate</span><h3>Multi-tenant storage</h3><p>Licensed non-default tenants are scoped through storage and retrieval paths with tenant-aware uniqueness.</p><span class="edition">Pro</span></article>
           <article><span class="index">09 / Govern</span><h3>Compliance operations</h3><p>Licensed safety-forgetting operations provide atomic erasure behavior and audit records at the implemented boundary.</p><span class="edition">Pro</span></article>
@@ -76,9 +82,9 @@
       </div>
     </section>
 
-    <section class="band"><div class="wrap band-inner"><div><p class="kicker">Scope stated</p><h2>The benchmark limitations ship with the numbers.</h2><p>Every figure above carries its corpus size, query count, and seed count beside it. Runners, dataset loaders, and result artifacts are released with the source under evaluation access.</p></div><div class="hero-actions"><a class="btn btn-dark" href="mailto:licensing@quantumindssi.com?subject=Lummenna%20evaluation%20artifacts">Request evaluation access</a></div></div></section>
+    <section class="band"><div class="wrap band-inner"><div><p class="kicker">Scope stated</p><h2>The benchmark limitations stay with the numbers.</h2><p>Every figure above carries its corpus size, query count, and seed count beside it. Runners, dataset loaders, and result artifacts exist in the current source and are available to approved evaluators.</p></div><div class="hero-actions"><!--email_off--><a class="btn btn-dark" href="mailto:engineering@lummenna.com?subject=Lummenna%20evaluation%20artifacts">Request evaluation access</a><!--/email_off--></div></div></section>
   </main>
 
-  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav><nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="mailto:licensing@quantumindssi.com?subject=Lummenna%20source%20access">Source access</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
+  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a href="/community">Community</a></nav><nav class="foot-nav" aria-label="Contact"><h2>Contact</h2><a href="/#download">Stable waitlist</a><!--email_off--><a href="mailto:support@lummenna.com">support@lummenna.com</a><a href="mailto:admin@lummenna.com">admin@lummenna.com</a><a href="mailto:engineering@lummenna.com">engineering@lummenna.com</a><a href="mailto:hello@lummenna.com">hello@lummenna.com</a><a href="mailto:license@lummenna.com">license@lummenna.com</a><!--/email_off--></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Lummenna demo platform on Azure. One deployment plane, no second cloud.
 //
 // Provisions the full public footprint:
-//   * Container Apps environment + the Lumena API container app
+//   * Container Apps environment + the Lummenna API container app
 //   * Static Web App for the marketing site
 //   * ACR for the image supply chain
 //   * Storage account: blob container for database backups, file share for the
@@ -9,12 +9,23 @@
 //   * Log Analytics + Application Insights
 //   * A user-assigned identity with exactly two grants: pull images, write backups
 //
-//   az deployment group create -g rg-lumena-leaderboard -f main.bicep \
-//     -p namePrefix=lumena apiKey=<key>
+//   az deployment group create -g rg-lummenna-dev -f main.bicep \
+//     -p apiKey=<key> containerImage=<registry>/lummenna:<sha>
 //
-// Cloudflare sits in front of this as an edge policy layer only: DNS, WAF,
-// caching, TLS. It hosts nothing and deploys nothing. Every artefact that
-// reaches production passes through this template.
+// Division of responsibility with Cloudflare, as of 2026-08-31:
+//
+//   Cloudflare Pages is production for the public website. It serves
+//   lummenna.com and www.lummenna.com from the `lummenna-site` project,
+//   executes functions/api/waitlist.js, and owns the D1 database behind the
+//   download waitlist. Its configuration lives in wrangler.toml at the
+//   repository root. None of that passes through this template.
+//
+//   This template provisions the API container app and a Static Web App used
+//   as a pre-production surface. Do not describe its Static Web App as the
+//   production site, and do not assume a change verified here is verified for
+//   production: Azure Static Web Apps cannot execute Pages Functions and
+//   cannot bind D1, so the waitlist path is untestable on this tier. See
+//   WEB-DEPLOYMENT.md.
 //
 // Deliberately NOT provisioned, and why:
 //
@@ -38,7 +49,12 @@
 @description('Prefix for all resource names (3-12 lowercase alphanumerics).')
 @minLength(3)
 @maxLength(12)
-param namePrefix string = 'lumena'
+// Changed from the pre-rename 'lumena' on 2026-08-31. This default names every
+// resource below, so the old value is what produced the stranded `lumena-site`
+// Static Web App. Deployments made with the previous default do not migrate:
+// Azure resources cannot be renamed, so a redeploy creates a parallel set under
+// the new names and the old ones must be deleted explicitly.
+param namePrefix string = 'lummenna'
 
 @description('Azure region for all resources.')
 param location string = resourceGroup().location
@@ -46,7 +62,7 @@ param location string = resourceGroup().location
 @description('Container image to run, including registry and tag. Never "latest": deploys are pinned to an immutable tag so a rollback is a redeploy of a known digest.')
 param containerImage string
 
-@description('API key required by the Lumena API. Stored as a Container Apps secret, never as a plaintext environment variable.')
+@description('API key required by the Lummenna API. Stored as a Container Apps secret, never as a plaintext environment variable.')
 @secure()
 param apiKey string
 

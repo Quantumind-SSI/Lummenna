@@ -5,6 +5,7 @@ Output wire: C2 (fusion engine), D10 (progressive quantization)
 Secret sauce: FRQAD distance metric switch-in (Task A4)
 """
 
+import heapq
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,12 @@ import numpy as np
 from lummenna.logging import get_console_logger
 
 logger = get_console_logger(__name__)
+
+#: Soft cap on the fallback brute-force cosine scan. Past this, the scan's
+#: linear pass over every stored embedding degrades dense retrieval past
+#: usefulness, so we truncate, log a WARNING with the remediation, and keep
+#: serving degraded results rather than erroring or exhausting memory.
+_BRUTE_FORCE_MAX_ROWS = 100_000
 
 
 @dataclass(frozen=True)
@@ -128,17 +135,42 @@ class SqliteVecBackend:
             return self._brute_force_search(query_vector, k)
 
     def _brute_force_search(self, query_vector: np.ndarray, k: int) -> list[DenseHit]:
-        rows = self.conn.execute("SELECT chunk_id, embedding FROM vec_fallback").fetchall()
+        """Cosine scan over ``vec_fallback`` keeping a bounded top-k heap.
+
+        Memory guard: the old implementation materialised every embedding in
+        the store (100k chunks x 384 dims x 4B = ~150 MB plus per-row numpy
+        views) before sorting, so one query on a large store without the
+        sqlite-vec extension could exhaust RAM. This version streams rows and
+        keeps only the k best, and caps the scan at
+        ``_BRUTE_FORCE_MAX_ROWS`` so a pathological store degrades dense
+        retrieval loudly (WARNING) instead of taking the process down.
+        """
         q = query_vector.astype(np.float32)
         qn = np.linalg.norm(q)
-        hits = []
-        for cid, emb_blob in rows:
+        # Bounded min-heap of (similarity, chunk_id, vector): worst entries
+        # evict as better ones arrive, so memory is O(k), not O(store).
+        heap: list[tuple[float, int, np.ndarray]] = []
+        cursor = self.conn.execute("SELECT chunk_id, embedding FROM vec_fallback")
+        for scanned, (cid, emb_blob) in enumerate(cursor):
+            if scanned >= _BRUTE_FORCE_MAX_ROWS:
+                logger.warning(
+                    "brute_force_scan_capped",
+                    cap=_BRUTE_FORCE_MAX_ROWS,
+                    effect="dense candidates truncated; install sqlite-vec "
+                    "or reduce the store to restore full recall",
+                )
+                break
             vec = np.frombuffer(emb_blob, dtype=np.float32)
             vn = np.linalg.norm(vec)
             sim = 0.0 if vn == 0 or qn == 0 else float(np.dot(q, vec) / (qn * vn))
-            hits.append(DenseHit(cid, sim, vec))
-        hits.sort(key=lambda x: x.score, reverse=True)
-        return hits[:k]
+            if len(heap) < k:
+                heapq.heappush(heap, (sim, cid, vec))
+            elif sim > heap[0][0]:
+                heapq.heapreplace(heap, (sim, cid, vec))
+        # Convert the min-heap to best-first order and repair the heap
+        # invariant damage sort() causes (heap remains usable if reused).
+        heap.sort(key=lambda h: h[0], reverse=True)
+        return [DenseHit(cid, sim, vec) for sim, cid, vec in heap[:k]]
 
     def remove(self, chunk_id: int) -> None:
         self.conn.execute("DELETE FROM vec_fallback WHERE chunk_id = ?", (chunk_id,))

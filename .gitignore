@@ -7,6 +7,8 @@ build/
 develop-eggs/
 dist/
 downloads/
+!website/downloads/
+!website/downloads/**
 eggs/
 .eggs/
 lib/
@@ -27,7 +29,6 @@ MANIFEST
 *.spec
 
 # Virtual environments
-.env
 .venv
 env/
 venv/
@@ -38,7 +39,6 @@ venv.bak/
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
@@ -75,6 +75,7 @@ coverage.json
 # Benchmarks
 benchmarks/results/
 
+temp_auto_push.bat
 # Secrets / credentials (safety)
 *.pem
 *.key
@@ -83,7 +84,6 @@ benchmarks/results/
 *.crt
 secrets/
 credentials/
-.env*
 !.env.example
 !*.env.sample
 
@@ -106,12 +106,54 @@ docs/gumroad/dist/
 # NOTE: AGENTS.md is intentionally TRACKED — it is the enforced engineering
 # constitution (No-Vaporware / No-False-Claims) that coding agents load every
 # session and CI references. Keeping it out of the repo would defeat its purpose.
+/docs/
 dev-docs/
 docs/internal/
 .opencode/
 ios/
+
+# Per-developer OpenCode config. The working config must point at a real
+# interpreter, so in practice it holds absolute machine-specific paths (a
+# .venv/bin/python, a local browser binary). This repository is intended to
+# become public, and until 2026-09-10 this file was untracked but NOT ignored,
+# so any `git add -A` would have committed those paths verbatim.
+#
+# Ignoring it also protects it: `git clean -fd` removes untracked files but
+# respects .gitignore, so only `git clean -fdx` can now delete your config.
+#
+# The portable, checked-in template contributors should copy is
+# integrations/opencode/opencode.json.
+/opencode.json
+/opencode.jsonc
 tmp/
 lummenna/benchmarks/*/results/
 
 # Local Lummenna runtime store + provisioned models (per-machine, never committed)
 .lummenna/
+
+# Wrangler's local state cache (local D1 shards, build metadata). Per-machine
+# and regenerated on demand; committing it would leak local database contents.
+# wrangler.toml itself IS tracked: it is the source of truth for Pages bindings.
+.wrangler/
+
+# Internal documentation. Brand bible, technical documentation, technical
+# summary, whitepaper, key custody runbook, CLA and status notes are kept on
+# disk but must not be tracked: this repository is intended to become public and
+# these are internal or commercially sensitive.
+#
+# WARNING, and the reason this comment is worded carefully: a .gitignore entry
+# has NO effect on a file that is already tracked. Until 2026-09-01 this block
+# claimed the directory had been "untracked via `git rm -r --cached docs/`", but
+# that had only ever been done on `main` (1 file). This branch still tracked 9,
+# including LICENSE_SIGNING_KEY_CUSTODY.md and the CLA ownership attestation, so
+# the entry below was silently doing nothing for them and the comment gave false
+# assurance. They were untracked on 2026-09-01; verify with `git ls-files docs/`,
+# which must print nothing, rather than trusting this comment.
+#
+# Untracking removes them from future commits only. The blobs remain reachable
+# in history (30 paths across all refs) and still require a history rewrite
+# before this repository is made public. See WEB-DEPLOYMENT.md.
+docs/
+branch_structure.json
+config.bat
+node_modules

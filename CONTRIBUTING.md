@@ -43,7 +43,7 @@ represent and agree that:
 **How to sign:** For your first contribution, add your name to `AUTHORS` and
 include the line `I agree to the Lummenna CLA (see CONTRIBUTING.md).` in your pull
 request description. For significant contributions, a signed CLA may be
-requested and stored under `docs/cla/`.
+requested and stored privately outside the public repository.
 
 > Without an agreed CLA, contributions **cannot be merged**, because they could
 > not lawfully be offered under the commercial license.
@@ -174,7 +174,7 @@ Rooms are top-level categories in the palace. To add one:
 2. Add retrieval path in `lummenna/force/mnemonic/retrieval_*.py`
 3. Register in `lummenna/search.py` pipeline
 4. Add test in `tests/test_retrieval_*.py`
-5. Document in `docs/palace.md`
+5. Update the relevant official root document when public behavior changes
 
 ### Adding a Forgetting Level
 
@@ -192,8 +192,12 @@ The forgetting stack is L1-L4. If you need L5:
 Docs live in:
 - `README.md` — project overview and quickstart
 - `DEPLOYMENT.md` — production guide
-- `docs/` (future) — full documentation site
+- `SECURITY.md` — security model and disclosure policy
+- `INTEGRATIONS.md` — supported integration setup
 - Inline docstrings — API reference
+
+The local `docs/` directory contains internal development and brand material and
+is intentionally excluded from Git. Do not reference it from public changes.
 
 When documenting:
 - Use the Lummenna lexicon (Memory Palace, Context Window, Dimming, Consolidation, etc.)

@@ -8,9 +8,7 @@ from __future__ import annotations
 import ast
 import asyncio
 import json
-import os
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -124,9 +122,8 @@ def _ast_guardrails(source: str, filename: str = "<unknown>") -> list[dict]:
                     # FastAPI routes OK — skip blanket warning
                     pass
         if isinstance(node, ast.JoinedStr):
-            # f-string used in SQL-like contexts — heuristic
-            line = getattr(node, "lineno", 1)
-            # We can't know context easily from AST alone, so keep light
+            # f-string used in SQL-like contexts — heuristic. We can't know
+            # context easily from AST alone, so no issue is recorded here.
             pass
     return issues
 

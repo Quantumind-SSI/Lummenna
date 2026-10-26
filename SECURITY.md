@@ -98,14 +98,14 @@ Lummenna Pro entitlements are authorised by an **Ed25519 signing key**; only the
 matching public key is embedded in the shipped code (`lummenna/licensing.py`), and
 verification is fully offline. The private signing key is the root of trust for
 all commercial licenses and is **never committed to this repository**. Its
-generation, storage, rotation, and revocation are governed by the custody
-runbook: [`docs/LICENSE_SIGNING_KEY_CUSTODY.md`](docs/LICENSE_SIGNING_KEY_CUSTODY.md).
+generation, storage, rotation, and revocation are governed by an internal,
+access-controlled custody runbook that is intentionally not published.
 Tooling lives in `scripts/issue_license.py` (`keygen` and `issue` subcommands).
 
 ## Known Limitations
 
 1. **Encryption at rest is off by default** — see above; plaintext SQLite unless a mode is configured.
-2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMMENNA_API_KEY` is unset. Set it before exposing the server to any network. Additionally, `/health`, `/dashboard`, `/metrics`, and `/v1/dashboard-data` are intentionally public (no API key required) and expose room names, chunk counts, and feedback statistics; do not expose the server to untrusted networks if that metadata is sensitive.
+2. **API authentication is opt-in** — `X-API-Key` header validation is implemented but disabled when `LUMMENNA_API_KEY` is unset. Set it before exposing the server to any network. The HTML shell at `/` and `/dashboard`, health/readiness probes, API reference, OpenAPI schema, and aggregate `/metrics` endpoint remain public. `/v1/dashboard-data` is protected when an API key is configured because it exposes tenant-scoped room names, chunk counts, and feedback statistics.
 3. **Rate limiting covers write/search endpoints only** — the five POST endpoints are rate-limited; GET endpoints are not.
 4. **Sovereign mode blocks P2P and downloads** — When `LUMMENNA_SOVEREIGN=true` (default), P2P Beam sharing and HuggingFace model downloads are blocked with `SovereignViolationError`. The API CORS policy is also clamped to localhost origins. Sovereign mode does not sandbox the host OS or prevent other non-Lummenna processes from making network calls.
 5. **P2P replay protection is process-local by default** — with `LUMMENNA_P2P_REPLAY_STORE=memory` (the Community default) the seen-nonce set is not persisted across restarts; the timestamp window still applies. Durable, restart-surviving replay protection is available as Pro (`advanced_p2p`) via `LUMMENNA_P2P_REPLAY_STORE=persistent`.

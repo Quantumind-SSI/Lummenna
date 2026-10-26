@@ -165,9 +165,14 @@ def normalize_route(path: str) -> str:
     pass through, anything else becomes ``other``.
     """
     known = {
+        "/",
         "/health",
         "/ready",
         "/dashboard",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/favicon.svg",
         "/metrics",
         "/metrics/prometheus",
         "/v1/status",

@@ -6,10 +6,10 @@ description: >-
   SQLite with one writer; Lummenna does not support horizontal scaling or HA.
 type: application
 version: 0.1.0
-appVersion: "1.0.0"
-home: https://github.com/QuantmindSSI/lummenna
+appVersion: "1.0.1rc1"
+home: https://lummenna.com/community
 sources:
-  - https://github.com/QuantmindSSI/lummenna
+  - https://lummenna.com/downloads/lummenna-1.0.1rc1.tar.gz
 maintainers:
   - name: Lummenna Maintainers
-    url: https://github.com/QuantmindSSI/lummenna
+    url: https://lummenna.com

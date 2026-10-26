@@ -28,12 +28,13 @@ class SearchRepair:
         self.pipeline = pipeline
         self._attempts = 0
 
-    def attempt_repair(self, query: str, reason: str) -> list:
+    def attempt_repair(self, query: str, reason: str, tenant_id: str = "default") -> list:
         """Attempt to repair a failed search by mutating TFC and re-executing.
 
         Args:
             query: Original query string.
             reason: One of "empty_results", "budget_exceeded", "low_confidence".
+            tenant_id: Tenant scope to preserve during the retry.
 
         Returns:
             List of RetrievedChunk from the repaired query, or empty list.
@@ -49,21 +50,21 @@ class SearchRepair:
             new_a = min(1.0, old_a + 0.3)
             self.tfc.state = self.tfc.state.model_copy(update={"a": new_a})
             logger.info("search_repair", reason=reason, old_a=old_a, new_a=new_a)
-            return self.pipeline.execute(query, max_repair_attempts=0, k=50)
+            return self.pipeline.execute(query, max_repair_attempts=0, k=50, tenant_id=tenant_id)
 
         if reason == "budget_exceeded":
             old_r = self.tfc.state.r
             new_r = max(0, old_r - 1)
             self.tfc.state = self.tfc.state.model_copy(update={"r": new_r})
             logger.info("search_repair", reason=reason, old_r=old_r, new_r=new_r)
-            return self.pipeline.execute(query, max_repair_attempts=0)
+            return self.pipeline.execute(query, max_repair_attempts=0, tenant_id=tenant_id)
 
         if reason == "low_confidence":
             old_a = self.tfc.state.a
             new_a = min(1.0, old_a + 0.15)
             self.tfc.state = self.tfc.state.model_copy(update={"a": new_a})
             logger.info("search_repair", reason=reason, old_a=old_a, new_a=new_a)
-            return self.pipeline.execute(query, max_repair_attempts=0)
+            return self.pipeline.execute(query, max_repair_attempts=0, tenant_id=tenant_id)
 
         logger.warning("search_repair_unknown_reason", reason=reason)
         return []

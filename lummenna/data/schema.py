@@ -133,13 +133,21 @@ def init_db(conn: sqlite3.Connection) -> None:
     migrate(conn)
 
 
-def get_connection(config) -> sqlite3.Connection:
+def get_connection(config, ensure: bool = True) -> sqlite3.Connection:
     """Return a SQLite connection initialised with the Lummenna schema and optimised pragmas.
 
     Supports three encryption modes:
       - sqlcipher : Transparent page-level AES-256 encryption via SQLCipher.
       - fernet    : Field-level encryption for chunk.content only (fallback).
       - none      : Plaintext SQLite (not recommended for production).
+
+    Args:
+        config: LummennaConfig selecting store path and encryption mode.
+        ensure: When True (default), run ``ensure_schema`` and the store-wide
+            permission sweep before returning. The connection pool passes
+            ``ensure=False``: the first pooled connection runs the full setup,
+            and later ones skip the O(store-files) permission walk that would
+            otherwise run on every request.
     """
     from lummenna.config import LummennaConfig
 
@@ -221,8 +229,9 @@ def get_connection(config) -> sqlite3.Connection:
     # Register compat shims (e.g. unixepoch on SQLite < 3.38) before any schema
     # DDL/DML runs on this connection.
     register_compat_functions(conn)
-    ensure_schema(conn)
-    _enforce_permissions(cfg.store_path.parent)
+    if ensure:
+        ensure_schema(conn)
+        _enforce_permissions(cfg.store_path.parent)
     return cast(sqlite3.Connection, conn)
 
 

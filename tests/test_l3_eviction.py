@@ -94,3 +94,16 @@ class TestL3Eviction:
         ).fetchone()
         assert row is not None
         assert row[0] != "FP32"
+
+    def test_terminal_eviction_records_released_resolution(self, l3_conn, l3_config):
+        _ingest_n_chunks(l3_conn, l3_config, 1)
+
+        for _ in range(4):
+            budget_curated_eviction(l3_conn, l3_config, target_ram_mb=0)
+
+        row = l3_conn.execute(
+            "SELECT resolution, optical_level, valid_to FROM chunk WHERE chunk_id = 1"
+        ).fetchone()
+        assert row["resolution"] == "RELEASED"
+        assert row["optical_level"] == 2
+        assert row["valid_to"] is not None

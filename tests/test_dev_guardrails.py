@@ -39,6 +39,20 @@ def test_detects_os_system():
     assert "no-os-system" in _rules(r)
 
 
+def test_os_system_rule_ignores_unrelated_system_attributes():
+    """Only os.system() executes a shell.
+
+    Matching every ``x.system()`` flagged ``platform.system()``, which merely
+    returns the OS name. A security rule that fires on stdlib introspection
+    gets suppressed wholesale, costing more than it catches.
+    """
+    r = scan_source("import platform\nname = platform.system()\n", "x.py")
+    assert "no-os-system" not in _rules(r)
+
+    r = scan_source("value = config.system()\n", "x.py")
+    assert "no-os-system" not in _rules(r)
+
+
 def test_detects_shell_true():
     r = scan_source("import subprocess\nsubprocess.run(cmd, shell=True)\n", "x.py")
     assert "no-shell-true" in _rules(r)

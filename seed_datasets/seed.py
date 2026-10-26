@@ -22,9 +22,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from lummenna.config import LummennaConfig
-from lummenna.data.schema import ensure_schema, get_connection
-from lummenna.force.mnemonic.store import store_memory
+from lummenna.config import LummennaConfig  # noqa: E402 - path bootstrap above
+from lummenna.data.schema import get_connection  # noqa: E402
+from lummenna.force.mnemonic.store import store_memory  # noqa: E402
 
 
 def _get_embedder(model_name: str = "all-MiniLM-L6-v2"):
@@ -74,7 +74,7 @@ def main():
         print(f"[ERROR] Corpus file not found: {corpus_path}")
         return 1
 
-    with open(corpus_path, "r", encoding="utf-8") as f:
+    with open(corpus_path, encoding="utf-8") as f:
         corpus = json.load(f)
 
     print(f"[INFO] Loaded corpus: {corpus['name']} — {corpus['description']}")
@@ -89,7 +89,6 @@ def main():
     embedder = _get_embedder(args.embedder)
 
     total_chunks = 0
-    total_rooms = 0
     total_loci = 0
 
     print(f"\n[INFO] Seeding palace with embedder: {args.embedder}")
@@ -106,7 +105,7 @@ def main():
         # Batch embed for efficiency
         embeddings = embedder.encode(all_texts)
 
-        for chunk, emb, locus_name in zip(all_room_chunks, embeddings, all_loci):
+        for chunk, emb, locus_name in zip(all_room_chunks, embeddings, all_loci, strict=False):
             store_memory(
                 conn,
                 content=f"[{room_name}/{locus_name}] {chunk['content']}",
@@ -123,7 +122,6 @@ def main():
                 print(f"    ... {total_chunks} chunks stored")
 
         conn.commit()
-        total_rooms += 1
         total_loci += len(set(all_loci))
         print(f"    {len(all_room_chunks)} chunks across {len(set(all_loci))} loci stored")
 
@@ -137,7 +135,7 @@ def main():
     vec_count = conn.execute("SELECT COUNT(*) FROM vec_fallback").fetchone()[0]
 
     print(f"\n{'='*60}")
-    print(f"Seeding Complete")
+    print("Seeding Complete")
     print(f"{'='*60}")
     print(f"  Elapsed:        {elapsed:.1f}s")
     print(f"  Rooms created:  {room_count}")

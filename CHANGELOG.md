@@ -9,7 +9,14 @@ All notable changes to Lummenna will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.1rc1] (prepared 2026-09-04, pending website deployment)
+
 ### Added
+- Community distribution through PyPI and lummenna.com as a versioned wheel and
+  corresponding source archive, with published SHA-256 checksums.
+- A checksum-pinned Community sidecar Dockerfile that requires API
+  authentication and runs as a non-root user.
+- A public Community deployment page that requires no source repository access.
 - **Durable replay-nonce store for the Beam P2P transport** (Pro, `advanced_p2p`).
   `LUMMENNA_P2P_REPLAY_STORE=persistent` keeps the set of already-accepted frame
   nonces in the Lummenna database (`lummenna/p2p/replay.py`, schema migration
@@ -33,6 +40,21 @@ All notable changes to Lummenna will be documented in this file.
   configurable; it was previously fixed at 30 seconds and unreachable from config.
 
 ### Changed
+- **BREAKING (read scope): `tenant_id="default"` is now an ordinary tenant, not
+  an administrator wildcard.** `SearchPipeline._filter_by_tenant` previously
+  returned early whenever the caller was the default tenant, so a default-scoped
+  search skipped the ownership check entirely and could return chunks belonging
+  to *every* tenant. It now validates every result against `chunk.tenant_id` for
+  the default scope too, and only rows genuinely owned by `default` are
+  returned. The licence gate is unchanged: `default` remains ungated for
+  Community, and a named tenant still requires the `multi_tenant` Pro feature.
+  Single-tenant deployments see no difference, because in them every row already
+  carries `default`. Callers that relied on the old behaviour to read across
+  tenants were relying on a tenant-isolation defect.
+- The repair loop now preserves tenant scope. `SearchRepair.attempt_repair`
+  takes `tenant_id` and forwards it to the retried `execute` call. Previously the
+  retry dropped the scope and fell back to `default`, so a failed search inside a
+  named tenant could return another tenant's chunks on its second attempt.
 - The replay-nonce set moved behind a `ReplayNonceStore` interface with two
   implementations (`InMemoryNonceStore`, `SqliteNonceStore`). `P2PSign` takes a
   `nonce_store` argument in place of `max_seen_nonces`, and its process-local
@@ -55,18 +77,30 @@ All notable changes to Lummenna will be documented in this file.
   that point the timestamp check rejects the frame regardless — and the ceiling
   only binds under flood, evicting nearest-expiry first.
 
-## [1.0.0] — 2026-08-07
+## [1.0.0] (prepared 2026-08-07, NOT RELEASED)
 
 ### Overview
 
-**Inaugural public release.** Lummenna v1.0.0 is the first stable, production-ready release of the sovereign agentic memory framework. This release consolidates all beta-phase development into a publicly documented, benchmark-validated, and integration-ready system.
+> **This version was prepared but never released.** No `v1.0.0` tag exists, no
+> distribution was published to PyPI, and no container image was pushed. The
+> entries below record the work done under that version number in
+> `pyproject.toml`; they do not record a shipped release. Treat this section as
+> the contents of the pending first release, not as history.
+
+Lummenna v1.0.0 consolidates the beta-phase development into a documented,
+benchmark-validated, integration-ready system.
 
 ### Added
-- Consolidated introductory whitepaper (`docs/Lummenna_Whitepaper.md`) for public review.
+- Consolidated introductory whitepaper. Held internally and not tracked in this
+  repository; `docs/` is excluded because it holds commercially sensitive
+  material. Request it directly rather than looking for it in the tree.
 - Unified version numbering across source code, documentation, and APIs.
 
 ### Changed
-- Project status upgraded from **beta** to **production-ready/stable**.
+- Version number advanced from `0.2.0-beta` to `1.0.0` to denote feature
+  completeness of the intended first release. This is a version-string change
+  only; it does not assert that a release was published or that the API has been
+  held stable, since neither version was ever tagged or distributed.
 - Version bumped from `0.2.0-beta` to `1.0.0` across `pyproject.toml`, package `__version__`, API server, MCP server, and all documentation.
 
 ### Known Limitations (from v0.2.0-beta, still applicable)
@@ -78,10 +112,10 @@ All notable changes to Lummenna will be documented in this file.
 
 ### Added
 - Domain corpus dataset (`datasets/domain_corpus.json`) — a hand-crafted knowledge corpus with 111 fact chunks across 8 rooms (machine_learning, nlp, cybersecurity, distributed_systems, healthcare_ai, quantum_computing, open_source, climate_tech), each with 4 structured loci. Designed for both palace seeding (`python -m datasets.seed`) and benchmarking.
-- Palace seed script (`datasets/seed.py`) — populates a Lummenna instance from the domain corpus JSON with real embeddings, creating a production-ready knowledge base in ~2 seconds.
+- Palace seed script (`datasets/seed.py`) populates a Lummenna instance from the domain corpus JSON with real embeddings, creating a populated, queryable knowledge base in ~2 seconds.
 - Palace Navigation Efficiency (PNE) benchmark (`benchmarks/navigation/`) — proprietary evaluation suite measuring latency speedup, recall retention, intent-routing accuracy, and pruning efficiency of Lummenna's room/locus topology vs. flat global search. Outputs JSON + Markdown.
 - End-to-End Memory Quality benchmark (`benchmarks/e2e/`) — multi-turn conversational memory persistence benchmark with 7 agent personas, 28 queries across 7 sessions. Measures R@k recall, similarity scores, and per-query latency using embedding-similarity self-grading (no LLM judge, no comparison against MemGPT/Mem0/Zep).
-- LangGraph integration (`lummenna.integrations.langgraph`) — `LummennaCheckpointSaver` for graph state persistence and `LummennaGraphStore` for cross-thread long-term memory. Installable via `pip install lummenna[langgraph]`. Includes 9 test cases.
+- LangGraph integration (`lummenna.integrations.langgraph`) provides `LummennaCheckpointSaver` for graph state persistence and `LummennaGraphStore` for cross-thread long-term memory. Installable via `pip install -e '.[langgraph]'`. Includes 9 test cases.
 - Centralized logging helper (`lummenna.logging`) — `get_console_logger()` with structlog preference and stdlib `logging` fallback, eliminating the project-wide `except Exception: pass` anti-pattern from 32 modules.
 - API versioning (`/v1/` prefix) for all operational endpoints with backward-compatible public paths (`/health`, `/dashboard`, `/metrics`).
 - Subresource Integrity (SRI) hash for Chart.js CDN resource in dashboard HTML.

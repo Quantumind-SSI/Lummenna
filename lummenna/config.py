@@ -98,6 +98,17 @@ class LummennaConfig(BaseSettings):
     api_port: int = 8848
     api_key: str | None = None
     api_rate_limit: str = "60/minute"
+    # Bounded SQLite connection pool for the API server (lummenna.data.pool).
+    # Each request checks one connection out; WAL serialises writers, so more
+    # connections mostly buy read concurrency up to contention. Clamped to
+    # [2, 16] by the pool itself.
+    api_db_pool_size: int = 4
+    # Hard cap on active (non-forgotten) chunks per tenant. 0 disables the
+    # quota (default: community/single-tenant behaviour unchanged). When set,
+    # a write that would push a tenant past the cap is rejected with
+    # TenantQuotaError (HTTP 429 at the API boundary), so one noisy tenant
+    # cannot evict every other tenant's memories via L3 memory pressure.
+    tenant_max_active_chunks: int = 0
     allowed_origins: str = "http://localhost:8000,http://localhost:8848"
     request_max_size_bytes: int = 1_048_576
     pii_detection_enabled: bool = True

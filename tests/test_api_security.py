@@ -21,6 +21,8 @@ def client():
     try:
         with TestClient(app) as c:
             yield c
+        # TestClient.__exit__ ran the lifespan shutdown, which closes the
+        # pool. Keep the reference for clarity but do not double-close.
     finally:
         _config.api_key = original_key
         _config.allow_mock_embedder = original_allow_mock
@@ -34,6 +36,23 @@ class TestBruteForceProtection:
         resp = client.get("/health")
         assert resp.status_code == 200
 
+    def test_dashboard_shell_is_public_but_data_requires_key(self, client):
+        assert client.get("/").status_code == 200
+        assert client.get("/dashboard").status_code == 200
+        assert client.get("/v1/dashboard-data").status_code == 401
+        assert (
+            client.get("/v1/dashboard-data", headers={"X-API-Key": "test-api-key"}).status_code
+            == 200
+        )
+
+    def test_auth_failures_include_request_id(self, client):
+        missing = client.get("/v1/dashboard-data")
+        invalid = client.get("/v1/dashboard-data", headers={"X-API-Key": "wrong"})
+
+        assert len(missing.headers["X-Request-ID"]) == 8
+        assert len(invalid.headers["X-Request-ID"]) == 8
+        assert missing.headers["X-Request-ID"] != invalid.headers["X-Request-ID"]
+
     def test_brute_force_throttle(self, client):
         # Fire 6 failed auth attempts quickly against a protected endpoint
         for _ in range(6):
@@ -42,9 +61,16 @@ class TestBruteForceProtection:
         assert resp.status_code == 429
         assert "Too many failed authentication attempts" in resp.text
 
-        # Reset by waiting 61 seconds (not feasible in unit test), so we
-        # verify the endpoint is reachable again after providing correct key.
-        # This test at least proves the throttle mechanism exists.
+        accepted = client.post(
+            "/v1/search", headers={"X-API-Key": "test-api-key"}, json={"query": "x"}
+        )
+        assert accepted.status_code == 200
+
+    def test_missing_key_does_not_increment_brute_force_counter(self, client):
+        for _ in range(8):
+            assert client.get("/v1/dashboard-data").status_code == 401
+
+        assert _auth_failures == {}
 
 
 class TestSecurityHeaders:

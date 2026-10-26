@@ -24,7 +24,7 @@ import secrets as _secrets
 import sqlite3
 import time
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
@@ -39,7 +39,7 @@ from slowapi.util import get_remote_address
 from lummenna import __version__
 from lummenna._init import initialize_palace
 from lummenna.audit import log_audit_event
-from lummenna.brand.errors import LicenseError
+from lummenna.brand.errors import LicenseError, TenantQuotaError
 from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.conversation import ConversationMemory
@@ -135,6 +135,27 @@ app.add_middleware(
 # Module-level state (single instance for pilot)
 _state: dict = {}
 
+
+def _get_pool():
+    """Return the connection pool, or None before lifespan startup."""
+    return _state.get("pool")
+
+
+def _get_config() -> LummennaConfig:
+    return _state.get("config", _config)  # type: ignore[no-any-return]
+
+
+def _get_conn() -> sqlite3.Connection | None:
+    """Return the shared administrative connection (probes, gauges, dashboard).
+
+    Request handlers must NOT use this: they check connections out of the pool
+    so concurrent requests never share one connection (and its implicit
+    transaction state). The admin connection exists only for single-threaded
+    operational reads (/health, /ready, /metrics, /dashboard-data).
+    """
+    return _state.get("conn")
+
+
 # Simple in-memory brute-force tracker for failed API-key attempts.
 # Maps remote_address -> (failure_count, first_failure_timestamp)
 _auth_failures: dict[str, tuple[int, float]] = {}
@@ -184,9 +205,13 @@ async def _auth_middleware(request: Request, call_next):
         "/openapi.json",
         "/dashboard",
         "/favicon.svg",
-        "/metrics",
-        "/metrics/prometheus",
     )
+    # NOTE: /metrics and /metrics/prometheus are deliberately NOT public.
+    # They disclose version, edition, device, encryption mode, sovereign and
+    # backup posture, and store size — recon-grade data for an internet-facing
+    # deployment. Scrapers authenticate with the same X-API-Key as /v1
+    # (Prometheus scrape_configs support Authorization/secret headers), or
+    # the endpoint is bound behind a network policy to the scraper only.
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
     tenant_id = (
@@ -473,14 +498,6 @@ class TurnResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _get_config() -> LummennaConfig:
-    return _state.get("config", _config)  # type: ignore[no-any-return]
-
-
-def _get_conn() -> sqlite3.Connection | None:
-    return _state.get("conn")
-
-
 def _get_pipeline() -> SearchPipeline | None:
     return _state.get("pipeline")
 
@@ -489,14 +506,104 @@ def _get_conversation_memory() -> ConversationMemory | None:
     return _state.get("conversation")
 
 
-def _get_tfc() -> TwinForceController:
-    tfc = _state.get("tfc")
-    if isinstance(tfc, TwinForceController):
-        return tfc
-    pipeline = _get_pipeline()
-    if pipeline is not None:
-        return pipeline.tfc
-    return TwinForceController(config=_get_config())
+def _get_tfc(tenant_id: str = "default") -> TwinForceController:
+    """Return the TFC controller for a tenant.
+
+    TFC state is mutated on every search (Stage 5) and by the repair loop, so
+    one shared instance made retrieval quality order-dependent across requests
+    AND tenants. State is therefore scoped per tenant: tenants are independent
+    palaces, and concurrent requests within one tenant still share that
+    tenant's equilibrium (single-process API).
+    """
+    tfcs: dict[str, TwinForceController] = _state.setdefault("tfcs", {})
+    tfc = tfcs.get(tenant_id)
+    if not isinstance(tfc, TwinForceController):
+        tfc = TwinForceController(config=_get_config())
+        tfcs[tenant_id] = tfc
+    return tfc
+
+
+def _request_pipeline(conn: sqlite3.Connection, tenant_id: str) -> SearchPipeline:
+    """Build a request-scoped pipeline over a pooled connection.
+
+    The heavy per-connection work (vector index extension load, KNN grammar
+    probe, FTS optimize) is amortised by the per-connection channel cache in
+    ``lummenna.force.mnemonic.store``, so after a pooled connection's first
+    use this is a cache hit on every channel. The TFC comes from the
+    per-tenant registry so one tenant's repair-loop mutation cannot bleed
+    into another tenant's search.
+    """
+    from lummenna.force.contextual.embed import MockEmbedder
+    from lummenna.force.mnemonic.store import _get_lexical_channel, _get_vector_channel
+
+    pipeline = SearchPipeline.__new__(SearchPipeline)
+    pipeline.conn = conn
+    pipeline.config = _get_config()
+    pipeline.tfc = _get_tfc(tenant_id)
+    if _state.get("intent_router") is None:
+        from lummenna.intent import IntentRouter
+
+        _state["intent_router"] = IntentRouter()
+    pipeline.intent_router = _state["intent_router"]
+    pipeline.lexical = _get_lexical_channel(conn)
+    pipeline.vector = _get_vector_channel(conn, _get_config())
+    embedder = _state.get("embedder")
+    if embedder is None:
+        embedder = MockEmbedder(dims=_get_config().embedding_dims)
+    pipeline.embedder = embedder
+    pipeline.graph = None
+    return pipeline
+
+
+def _request_conversation(conn: sqlite3.Connection, tenant_id: str) -> ConversationMemory:
+    """Build a request-scoped ConversationMemory over a pooled connection.
+
+    Construction cost is a handful of index reads (goals, epistemic state,
+    user profile) after the pipeline's channel cache has warmed; the embedder
+    is the process-wide instance, and the TFC is per tenant.
+    """
+    from lummenna.force.contextual.embed import MockEmbedder
+
+    embedder = _state.get("embedder")
+    if embedder is None:
+        embedder = MockEmbedder(dims=_get_config().embedding_dims)
+    return ConversationMemory(
+        config=_get_config(),
+        conn=conn,
+        tfc=_get_tfc(tenant_id),
+        embedder=embedder,
+        tenant_id=tenant_id,
+    )
+
+
+@contextmanager
+def pooled_conn(timeout: float = 30.0):
+    """Check a pooled connection out for the duration of a request handler.
+
+    Usage in sync handlers (which FastAPI runs on its threadpool)::
+
+        with pooled_conn() as conn:
+            ...
+
+    Yields:
+        An exclusive sqlite3.Connection. Broken connections (sqlite3.Error on
+        release) are discarded and replaced lazily by the pool.
+    """
+    pool = _get_pool()
+    if pool is None:
+        raise HTTPException(status_code=503, detail="Database not initialised")
+    conn = pool.acquire(timeout=timeout)
+    try:
+        yield conn
+    except sqlite3.Error:
+        pool.discard(conn)
+        raise
+    else:
+        # Roll back any uncommitted implicit transaction so the next borrower
+        # never inherits this handler's partial write state.
+        with contextlib.suppress(sqlite3.Error):
+            conn.rollback()
+        pool.release(conn)
 
 
 def _resolve_tenant(request: Request, requested_tenant: str = "default") -> str:
@@ -590,7 +697,16 @@ async def lifespan(app: FastAPI):
     # here must stop startup rather than fall through to an empty store.
     _restore_store_if_configured()
 
-    _state.update(initialize_palace(_config))
+    palace = initialize_palace(_config)
+
+    # Connection pool: the first pooled connection runs the full schema setup
+    # (WAL, migrations, permission sweep); later ones open lean. Handlers then
+    # check connections out per request instead of sharing one.
+    from lummenna.data.pool import ConnectionPool
+
+    pool = ConnectionPool(_config, size=_config.api_db_pool_size)
+    _state.update(palace)
+    _state["pool"] = pool
     _start_backup_scheduler()
     # Start background forgetting scheduler so L1/L3 run without a separate daemon
     try:
@@ -621,7 +737,17 @@ async def lifespan(app: FastAPI):
         # made since the last interval fired.
         _state["backup_scheduler"].run_cycle()
         _state["backup_scheduler"].stop()
-    _state.get("conn", sqlite3).close()
+    # Close the pool first: in-flight pooled connections were already checked
+    # in; the admin connection is closed last so probes stay answerable while
+    # the schedulers drain. (Regression guard: the old code called
+    # _state.get("conn", sqlite3).close(), i.e. .close() on the sqlite3 module
+    # itself when the key was absent.)
+    shutdown_pool = _state.get("pool")
+    if isinstance(shutdown_pool, ConnectionPool):
+        shutdown_pool.close()
+    conn = _state.get("conn")
+    if conn is not None:
+        conn.close()
     logger.info("server_stopped")
 
 
@@ -629,14 +755,18 @@ app.router.lifespan_context = lifespan
 
 
 # ---------------------------------------------------------------------------
-# Error handler
-# ---------------------------------------------------------------------------
-
-
 @app.exception_handler(Exception)
 async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "unknown")
-    logger.error("unhandled_error", request_id=request_id, error=str(exc), path=request.url.path)
+    # logger.exception renders the traceback (structlog's default processor
+    # chain includes format_exc_info); the response body stays generic so
+    # internals never leak to the caller, but on-call gets the stack.
+    logger.exception(
+        "unhandled_error",
+        request_id=request_id,
+        error_type=type(exc).__name__,
+        path=request.url.path,
+    )
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error", "request_id": request_id},
@@ -649,7 +779,7 @@ async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSON
 
 
 @app.get("/health")
-async def health() -> dict:
+def health() -> dict:
     conn = _get_conn()
     if conn is None:
         raise HTTPException(status_code=503, detail="Database not initialised")
@@ -661,7 +791,7 @@ async def health() -> dict:
 
 
 @app.get("/ready")
-async def ready() -> dict:
+def ready() -> dict:
     """Kubernetes readiness probe: serve traffic only when fully initialised.
 
     Liveness (``/health``) answers "is the process alive"; readiness answers
@@ -688,7 +818,7 @@ async def ready() -> dict:
 
 
 @app.get("/metrics/prometheus")
-async def metrics_prometheus() -> Response:
+def metrics_prometheus() -> Response:
     """Prometheus text exposition: request counters/latency + palace gauges.
 
     Scrape target for Prometheus, Azure Monitor managed Prometheus, or the
@@ -719,68 +849,51 @@ async def metrics_prometheus() -> Response:
     return Response(content=body, media_type="text/plain; version=0.0.4; charset=utf-8")
 
 
-@v1_router.get("/status")
-async def status(request: Request) -> StatusResponse:
-    conn = _get_conn()
-    if conn is None:
-        raise HTTPException(status_code=503, detail="Database not initialised")
-    tenant_id = _resolve_tenant(request)
-    room_count = conn.execute(
-        "SELECT COUNT(*) FROM room WHERE tenant_id = ?", (tenant_id,)
-    ).fetchone()[0]
-    chunk_count = conn.execute(
-        "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL AND tenant_id = ?", (tenant_id,)
-    ).fetchone()[0]
-    tfc = _get_tfc()
-    return StatusResponse(
-        rooms=room_count,
-        active_chunks=chunk_count,
-        tfc=tfc.to_env(),
-        embedding_model_available=_state.get("embedding_model_available", False),
-    )
-
-
 @v1_router.post("/search")
 @limiter.limit(_config.api_rate_limit)
-async def search(request: Request, req: SearchRequest) -> SearchResponse:
+def search(request: Request, req: SearchRequest) -> SearchResponse:
+    """Sync handler: FastAPI runs it on the threadpool so ONNX inference and
+    SQLite work never block the event loop. Uses a pooled connection and a
+    per-tenant TFC, so concurrent searches never share mutable state."""
     t0 = time.perf_counter()
-    pipeline = _get_pipeline()
-    if pipeline is None:
-        raise HTTPException(status_code=503, detail="Search pipeline not initialised")
     tenant_id = _resolve_tenant(request, req.tenant_id)
-    results = pipeline.execute(req.query, k=req.top_k, tenant_id=tenant_id)
-    latency_ms = (time.perf_counter() - t0) * 1000
+    with pooled_conn() as conn:
+        pipeline = _request_pipeline(conn, tenant_id)
+        results = pipeline.execute(req.query, k=req.top_k, tenant_id=tenant_id)
 
-    serialised = [
-        {
-            "chunk_id": rc.chunk_id,
-            "room": rc.room_name,
-            "locus": rc.locus_name,
-            "content": rc.content,
-            "score": round(rc.final_score, 4),
-            "vm_score": round(rc.vm_score, 4),
-            "provenance_id": rc.provenance_id,
-        }
-        for rc in results[: req.top_k]
-    ]
-    logger.info(
-        "search_completed",
-        query=req.query[:100],
-        results=len(serialised),
-        latency_ms=round(latency_ms, 2),
-    )
-    request_id = getattr(request.state, "request_id", "unknown")
-    audit_conn = _get_conn()
-    if audit_conn is not None:
+        serialised = [
+            {
+                "chunk_id": rc.chunk_id,
+                "room": rc.room_name,
+                "locus": rc.locus_name,
+                "content": rc.content,
+                "score": round(rc.final_score, 4),
+                "vm_score": round(rc.vm_score, 4),
+                "provenance_id": rc.provenance_id,
+            }
+            for rc in results[: req.top_k]
+        ]
+        latency_ms = (time.perf_counter() - t0) * 1000
+        logger.info(
+            "search_completed",
+            query=req.query[:100],
+            results=len(serialised),
+            latency_ms=round(latency_ms, 2),
+        )
+        request_id = getattr(request.state, "request_id", "unknown")
         log_audit_event(
-            conn=audit_conn,
+            conn=conn,
             event_type="api_request",
             actor="anonymous",
             resource_type="query",
             resource_id=None,
             action="search",
             metadata_json=json.dumps(
-                {"query": req.query, "results": len(serialised), "tenant_id": tenant_id}
+                {
+                    "query_prefix": req.query[:100],
+                    "results": len(serialised),
+                    "tenant_id": tenant_id,
+                }
             ),
             client_ip=get_remote_address(request),
             request_id=request_id,
@@ -790,89 +903,110 @@ async def search(request: Request, req: SearchRequest) -> SearchResponse:
 
 @v1_router.post("/store")
 @limiter.limit(_config.api_rate_limit)
-async def store(request: Request, req: StoreRequest) -> StoreResponse:
+def store(request: Request, req: StoreRequest) -> StoreResponse:
     from lummenna.force.mnemonic.store import store_memory
 
     config = _get_config()
-    conn = _get_conn()
-    if conn is None:
-        raise HTTPException(status_code=503, detail="Database not initialised")
     tenant_id = _resolve_tenant(request, req.tenant_id)
     embedder = _state.get("embedder")
+    # Inference before touching the pool: keeps the expensive CPU work off the
+    # writer connection so its slot is held for the transaction only.
     embedding = embedder.encode_single(req.content) if embedder is not None else None
 
-    chunk_id = store_memory(
-        conn,
-        content=req.content,
-        room_name=req.room,
-        locus_name=req.locus,
-        source_type=req.source_type,
-        embedding=embedding,
-        config=config,
-        tenant_id=tenant_id,
-    )
-    request_id = getattr(request.state, "request_id", "unknown")
-    log_audit_event(
-        conn=conn,
-        event_type="memory_stored",
-        actor="anonymous",
-        resource_type="chunk",
-        resource_id=chunk_id,
-        action="store",
-        metadata_json=json.dumps({"room": req.room, "tenant_id": tenant_id}),
-        client_ip=get_remote_address(request),
-        request_id=request_id,
-    )
+    with pooled_conn() as conn:
+        try:
+            chunk_id = store_memory(
+                conn,
+                content=req.content,
+                room_name=req.room,
+                locus_name=req.locus,
+                source_type=req.source_type,
+                embedding=embedding,
+                config=config,
+                tenant_id=tenant_id,
+            )
+        except TenantQuotaError as exc:
+            # 429, not 403: the tenant may retry once the operator raises the
+            # quota or memories are forgotten. Rate-limit semantics, permanent
+            # fix is administrative.
+            raise HTTPException(status_code=429, detail=str(exc)) from exc
+        request_id = getattr(request.state, "request_id", "unknown")
+        log_audit_event(
+            conn=conn,
+            event_type="memory_stored",
+            actor="anonymous",
+            resource_type="chunk",
+            resource_id=chunk_id,
+            action="store",
+            metadata_json=json.dumps({"room": req.room, "tenant_id": tenant_id}),
+            client_ip=get_remote_address(request),
+            request_id=request_id,
+        )
     return StoreResponse(chunk_id=chunk_id, room=req.room)
+
+
+@v1_router.get("/status")
+def status(request: Request) -> StatusResponse:
+    with pooled_conn() as conn:
+        tenant_id = _resolve_tenant(request)
+        room_count = conn.execute(
+            "SELECT COUNT(*) FROM room WHERE tenant_id = ?", (tenant_id,)
+        ).fetchone()[0]
+        chunk_count = conn.execute(
+            "SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL AND tenant_id = ?",
+            (tenant_id,),
+        ).fetchone()[0]
+        tfc = _get_tfc(tenant_id)
+        return StatusResponse(
+            rooms=room_count,
+            active_chunks=chunk_count,
+            tfc=tfc.to_env(),
+            embedding_model_available=_state.get("embedding_model_available", False),
+        )
 
 
 @v1_router.post("/feedback")
 @limiter.limit(_config.api_rate_limit)
-async def feedback(request: Request, req: FeedbackRequest) -> FeedbackResponse:
-    conversation = _get_conversation_memory()
-    if conversation is None:
-        raise HTTPException(status_code=503, detail="Conversation memory not initialised")
-    conn = _get_conn()
-    if conn is None:
-        raise HTTPException(status_code=503, detail="Database not initialised")
+def feedback(request: Request, req: FeedbackRequest) -> FeedbackResponse:
     tenant_id = _resolve_tenant(request, req.tenant_id)
-    owner = conn.execute(
-        "SELECT 1 FROM chunk WHERE chunk_id = ? AND tenant_id = ?",
-        (req.chunk_id, tenant_id),
-    ).fetchone()
-    if owner is None:
-        raise HTTPException(status_code=404, detail="Chunk not found in tenant")
-    conversation.log_explicit_feedback(
-        chunk_id=req.chunk_id,
-        was_useful=req.was_useful,
-        user_id=req.user_id,
-        feedback_type=req.feedback_type,
-        tenant_id=tenant_id,
-    )
-    request_id = getattr(request.state, "request_id", "unknown")
-    log_audit_event(
-        conn=conn,
-        event_type="feedback_logged",
-        actor=req.user_id,
-        resource_type="feedback",
-        resource_id=req.chunk_id,
-        action="feedback",
-        metadata_json=json.dumps({"was_useful": req.was_useful, "tenant_id": tenant_id}),
-        client_ip=get_remote_address(request),
-        request_id=request_id,
-    )
+    with pooled_conn() as conn:
+        owner = conn.execute(
+            "SELECT 1 FROM chunk WHERE chunk_id = ? AND tenant_id = ?",
+            (req.chunk_id, tenant_id),
+        ).fetchone()
+        if owner is None:
+            raise HTTPException(status_code=404, detail="Chunk not found in tenant")
+        conversation = _request_conversation(conn, tenant_id)
+        conversation.log_explicit_feedback(
+            chunk_id=req.chunk_id,
+            was_useful=req.was_useful,
+            user_id=req.user_id,
+            feedback_type=req.feedback_type,
+            tenant_id=tenant_id,
+        )
+        request_id = getattr(request.state, "request_id", "unknown")
+        log_audit_event(
+            conn=conn,
+            event_type="feedback_logged",
+            actor=req.user_id,
+            resource_type="feedback",
+            resource_id=req.chunk_id,
+            action="feedback",
+            metadata_json=json.dumps({"was_useful": req.was_useful, "tenant_id": tenant_id}),
+            client_ip=get_remote_address(request),
+            request_id=request_id,
+        )
     return FeedbackResponse(success=True)
 
 
 @v1_router.post("/assemble")
 @limiter.limit(_config.api_rate_limit)
-async def assemble(request: Request, req: SearchRequest) -> dict:
+def assemble(request: Request, req: SearchRequest) -> dict:
     t0 = time.perf_counter()
-    conversation = _get_conversation_memory()
-    if conversation is None:
-        raise HTTPException(status_code=503, detail="Conversation memory not initialised")
     tenant_id = _resolve_tenant(request, req.tenant_id)
-    turn = conversation.retrieve_and_assemble(req.query, top_k=req.top_k, tenant_id=tenant_id)
+    with pooled_conn() as conn:
+        conversation = _request_conversation(conn, tenant_id)
+        turn = conversation.retrieve_and_assemble(req.query, top_k=req.top_k, tenant_id=tenant_id)
     latency_ms = (time.perf_counter() - t0) * 1000
     return {
         "query": req.query,
@@ -884,62 +1018,58 @@ async def assemble(request: Request, req: SearchRequest) -> dict:
 
 @v1_router.post("/turn")
 @limiter.limit(_config.api_rate_limit)
-async def turn(request: Request, req: TurnRequest) -> TurnResponse:
-    conversation = _get_conversation_memory()
-    if conversation is None:
-        raise HTTPException(status_code=503, detail="Conversation memory not initialised")
-    conn = _get_conn()
-    if conn is None:
-        raise HTTPException(status_code=503, detail="Database not initialised")
+def turn(request: Request, req: TurnRequest) -> TurnResponse:
     tenant_id = _resolve_tenant(request, req.tenant_id)
 
-    stubs = []
-    for cid in req.retrieved_chunk_ids:
-        row = conn.execute(
-            """SELECT c.content, r.name AS room_name, l.name AS locus_name,
-                      c.vm_score, c.provenance_root,
-                      (strftime('%s','now') - c.created_at) / 3600.0 AS age_hours
-               FROM chunk c
-               JOIN room r ON r.room_id = c.room_id
-               LEFT JOIN locus l ON l.locus_id = c.locus_id
-               WHERE c.chunk_id = ? AND c.valid_to IS NULL AND c.tenant_id = ?""",
-            (cid, tenant_id),
-        ).fetchone()
-        if row:
-            stubs.append(
-                RetrievedChunk(
-                    chunk_id=cid,
-                    room_name=row["room_name"] or "unknown",
-                    locus_name=row["locus_name"] or "none",
-                    content=row["content"] or "",
-                    provenance_id=row["provenance_root"],
-                    rrf_score=0.0,
-                    vm_score=row["vm_score"] or 0.0,
-                    frqad_score=0.0,
-                    recency_hours=row["age_hours"] or 0.0,
-                    final_score=0.0,
+    with pooled_conn() as conn:
+        conversation = _request_conversation(conn, tenant_id)
+        stubs = []
+        for cid in req.retrieved_chunk_ids:
+            row = conn.execute(
+                """SELECT c.content, r.name AS room_name, l.name AS locus_name,
+                          c.vm_score, c.provenance_root,
+                          (strftime('%s','now') - c.created_at) / 3600.0 AS age_hours
+                   FROM chunk c
+                   JOIN room r ON r.room_id = c.room_id
+                   LEFT JOIN locus l ON l.locus_id = c.locus_id
+                   WHERE c.chunk_id = ? AND c.valid_to IS NULL AND c.tenant_id = ?""",
+                (cid, tenant_id),
+            ).fetchone()
+            if row:
+                stubs.append(
+                    RetrievedChunk(
+                        chunk_id=cid,
+                        room_name=row["room_name"] or "unknown",
+                        locus_name=row["locus_name"] or "none",
+                        content=row["content"] or "",
+                        provenance_id=row["provenance_root"],
+                        rrf_score=0.0,
+                        vm_score=row["vm_score"] or 0.0,
+                        frqad_score=0.0,
+                        recency_hours=row["age_hours"] or 0.0,
+                        final_score=0.0,
+                    )
                 )
-            )
 
-    user_id, assistant_id = conversation.store_turn(
-        user_msg=req.user_msg,
-        assistant_msg=req.assistant_msg,
-        retrieved_chunks=stubs,
-        room_name=req.room,
-        tenant_id=tenant_id,
-    )
-    request_id = getattr(request.state, "request_id", "unknown")
-    log_audit_event(
-        conn=conn,
-        event_type="turn_stored",
-        actor="anonymous",
-        resource_type="chunk",
-        resource_id=user_id,
-        action="turn",
-        metadata_json=json.dumps({"room": req.room, "tenant_id": tenant_id}),
-        client_ip=get_remote_address(request),
-        request_id=request_id,
-    )
+        user_id, assistant_id = conversation.store_turn(
+            user_msg=req.user_msg,
+            assistant_msg=req.assistant_msg,
+            retrieved_chunks=stubs,
+            room_name=req.room,
+            tenant_id=tenant_id,
+        )
+        request_id = getattr(request.state, "request_id", "unknown")
+        log_audit_event(
+            conn=conn,
+            event_type="turn_stored",
+            actor="anonymous",
+            resource_type="chunk",
+            resource_id=user_id,
+            action="turn",
+            metadata_json=json.dumps({"room": req.room, "tenant_id": tenant_id}),
+            client_ip=get_remote_address(request),
+            request_id=request_id,
+        )
     return TurnResponse(
         user_chunk_id=user_id,
         assistant_chunk_id=assistant_id,
@@ -998,12 +1128,13 @@ def _load_evaluation_summary() -> dict:
 
 
 @v1_router.get("/dashboard-data", response_model=DashboardDataResponse)
-async def dashboard_data(request: Request) -> DashboardDataResponse:
+def dashboard_data(request: Request) -> DashboardDataResponse:
     """Return a measured, tenant-scoped snapshot for the observatory."""
-    conn = _get_conn()
-    if conn is None:
-        raise HTTPException(status_code=503, detail="Database not initialised")
+    with pooled_conn() as conn:
+        return _dashboard_data_impl(request, conn)
 
+
+def _dashboard_data_impl(request: Request, conn: sqlite3.Connection) -> DashboardDataResponse:
     config = _get_config()
     tenant_id = _resolve_tenant(request)
 
@@ -1085,7 +1216,7 @@ async def dashboard_data(request: Request) -> DashboardDataResponse:
     scheduler_running = _scheduler_running()
     backup_scheduler = _state.get("backup_scheduler")
     backup_running = bool(getattr(backup_scheduler, "running", False))
-    tfc = _get_tfc()
+    tfc = _get_tfc(tenant_id)
 
     return DashboardDataResponse(
         measured_at=int(time.time()),
@@ -1148,20 +1279,21 @@ async def dashboard_data(request: Request) -> DashboardDataResponse:
 
 
 @app.get("/metrics")
-async def metrics() -> dict:
+def metrics() -> dict:
     """Return machine-readable effectiveness metrics for monitoring integrations."""
-    conn = _get_conn()
-    if conn is None:
-        raise HTTPException(status_code=503, detail="Database not initialised")
+    with pooled_conn() as conn:
+        room_count = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
+        chunk_count = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[
+            0
+        ]
+        locus_count = conn.execute("SELECT COUNT(*) FROM locus").fetchone()[0]
+        forgotten = conn.execute(
+            "SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL"
+        ).fetchone()[0]
 
-    room_count = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
-    chunk_count = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
-    locus_count = conn.execute("SELECT COUNT(*) FROM locus").fetchone()[0]
-    forgotten = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL").fetchone()[0]
-
-    feedback_row = conn.execute(
-        "SELECT COUNT(*) AS c, AVG(CASE WHEN positive = 1 THEN 1.0 ELSE 0.0 END) AS sat FROM feedback_log"
-    ).fetchone()
+        feedback_row = conn.execute(
+            "SELECT COUNT(*) AS c, AVG(CASE WHEN positive = 1 THEN 1.0 ELSE 0.0 END) AS sat FROM feedback_log"
+        ).fetchone()
 
     tfc = _get_tfc()
     config = _get_config()

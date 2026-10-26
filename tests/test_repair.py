@@ -1,5 +1,7 @@
 """D12: Tests for Search Repair Loop."""
 
+import pytest
+
 from lummenna.controller import TFCState, TwinForceController
 from lummenna.fusion import RetrievedChunk
 from lummenna.repair import SearchRepair
@@ -12,7 +14,9 @@ class FakePipeline:
         self.call_count = 0
         self.kwargs_log = []
 
-    def execute(self, query, goal_tree_keywords=None, k=20, max_repair_attempts=1):
+    def execute(
+        self, query, goal_tree_keywords=None, k=20, max_repair_attempts=1, tenant_id="default"
+    ):
         self.call_count += 1
         self.kwargs_log.append(
             {
@@ -20,6 +24,7 @@ class FakePipeline:
                 "goal_tree_keywords": goal_tree_keywords,
                 "k": k,
                 "max_repair_attempts": max_repair_attempts,
+                "tenant_id": tenant_id,
             }
         )
         if self.call_count <= len(self.results_sequence):
@@ -27,9 +32,32 @@ class FakePipeline:
         return []
 
 
-def _make_chunk(final_score=0.5):
+def _seed_chunk(conn, tenant_id="default"):
+    """Insert a real chunk owned by ``tenant_id`` and return its id.
+
+    ``SearchPipeline._filter_by_tenant`` validates every result against the
+    ``chunk`` table, including for the default tenant, because "default" is a
+    real scope rather than an administrator wildcard. A synthetic
+    ``RetrievedChunk`` whose id is absent from the database is therefore dropped
+    before it reaches the caller. Tests that assert on returned results must
+    seed a row that genuinely exists.
+    """
+    conn.execute("INSERT INTO room(name, tenant_id) VALUES(?, ?)", ("repair-room", tenant_id))
+    room_id = conn.execute(
+        "SELECT room_id FROM room WHERE name = ? AND tenant_id = ?",
+        ("repair-room", tenant_id),
+    ).fetchone()[0]
+    cur = conn.execute(
+        "INSERT INTO chunk(room_id, content, content_hash, tenant_id) VALUES(?, ?, ?, ?)",
+        (room_id, "seeded", f"repair-hash-{tenant_id}", tenant_id),
+    )
+    conn.commit()
+    return cur.lastrowid
+
+
+def _make_chunk(final_score=0.5, chunk_id=1):
     return RetrievedChunk(
-        chunk_id=1,
+        chunk_id=chunk_id,
         room_name="r",
         locus_name="l",
         content="hello",
@@ -112,15 +140,49 @@ def test_unknown_reason_returns_empty():
     assert repair.attempt_repair("q", "unknown") == []
 
 
+def test_repair_defaults_to_default_tenant():
+    """An unscoped caller must not have its retry silently widened."""
+    tfc = TwinForceController(TFCState(a=0.5))
+    fake = FakePipeline([[_make_chunk()]])
+    repair = SearchRepair(tfc, fake)
+    repair.attempt_repair("q", "empty_results")
+    assert fake.kwargs_log[-1]["tenant_id"] == "default"
+
+
+@pytest.mark.parametrize(
+    ("reason", "state"),
+    [
+        ("empty_results", TFCState(a=0.5, r=3)),
+        ("budget_exceeded", TFCState(r=3)),
+        ("low_confidence", TFCState(a=0.5)),
+    ],
+)
+def test_repair_preserves_tenant_scope(reason, state):
+    """The retry must stay inside the caller's tenant.
+
+    The repair loop re-executes the query with mutated TFC parameters. If the
+    tenant were dropped on that second call it would default to "default" and
+    return another tenant's chunks, turning a failed search into a cross-tenant
+    disclosure. Every repair reason is covered because each one is a separate
+    call site in ``SearchRepair.attempt_repair``.
+    """
+    tfc = TwinForceController(state)
+    fake = FakePipeline([[_make_chunk()]])
+    repair = SearchRepair(tfc, fake)
+    repair.attempt_repair("q", reason, tenant_id="acme")
+    assert fake.kwargs_log[-1]["tenant_id"] == "acme"
+
+
 def test_no_repair_when_results_good(monkeypatch, memory_db, test_config, mock_embedder):
     tfc = TwinForceController(TFCState(a=0.5))
     pipe = SearchPipeline(memory_db, test_config, tfc=tfc, embedder=mock_embedder)
+    chunk_id = _seed_chunk(memory_db)
 
     call_count = [0]
 
     def fake_fuse(*args, **kwargs):
         call_count[0] += 1
-        return [_make_chunk(final_score=0.5)]
+        return [_make_chunk(final_score=0.5, chunk_id=chunk_id)]
 
     monkeypatch.setattr("lummenna.search.fuse_and_rerank", fake_fuse)
 
@@ -151,12 +213,13 @@ def test_repair_triggered_on_empty_results(monkeypatch, memory_db, test_config, 
 def test_repair_triggered_on_low_confidence(monkeypatch, memory_db, test_config, mock_embedder):
     tfc = TwinForceController(TFCState(a=0.5))
     pipe = SearchPipeline(memory_db, test_config, tfc=tfc, embedder=mock_embedder)
+    chunk_id = _seed_chunk(memory_db)
 
     call_count = [0]
 
     def fake_fuse(*args, **kwargs):
         call_count[0] += 1
-        return [_make_chunk(final_score=0.005)]
+        return [_make_chunk(final_score=0.005, chunk_id=chunk_id)]
 
     monkeypatch.setattr("lummenna.search.fuse_and_rerank", fake_fuse)
 

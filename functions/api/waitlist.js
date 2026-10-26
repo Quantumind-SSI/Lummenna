@@ -1,9 +1,9 @@
 /**
- * Download waitlist endpoint (Cloudflare Pages Function).
+ * Stable-release waitlist endpoint (Cloudflare Pages Function).
  *
- * Lummenna 1.0 is not publicly distributed yet: it is absent from PyPI, has no
- * git tag, and no published container image. This collects addresses so the
- * download link can be sent when that changes.
+ * Lummenna Community 1.0.1rc1 is distributed directly from lummenna.com, but
+ * the stable package is not on PyPI. This collects addresses for one stable
+ * release notification.
  *
  * The form posts natively, with no JavaScript, so the site keeps its
  * `script-src 'none'; connect-src 'none'` policy. `form-action 'self'` permits
@@ -16,14 +16,14 @@
  *
  * Location matters: wrangler resolves `functions/` relative to the working
  * directory it is invoked from, not relative to the asset directory passed to
- * `pages deploy`. Kept at the repository root so the documented command,
- * `wrangler pages deploy ./website` run from the root, picks it up. Placing it
- * under website/ made it invisible to the deploy and left /api/waitlist a 404.
+ * `pages deploy`. Kept at the repository root so `wrangler pages deploy`, run
+ * from the root with `pages_build_output_dir` configured, picks it up. Placing
+ * it under website/ made it invisible and left /api/waitlist a 404.
  *
  * Required Pages bindings:
  *   DB          D1 database, schema in infra/cloudflare/waitlist_schema.sql
  *   SEND_EMAIL  Email Routing send binding (optional; absence disables notify)
- *   NOTIFY_TO   plain text var, defaults to licensing@quantumindssi.com
+ *   NOTIFY_TO   plain text var, defaults to admin@lummenna.com
  *   NOTIFY_FROM plain text var, must be on a zone you control
  */
 
@@ -100,7 +100,7 @@ export function buildMessage(parts) {
  */
 async function notify(env, email, source) {
   if (!env.SEND_EMAIL) return false;
-  const to = env.NOTIFY_TO || "licensing@quantumindssi.com";
+  const to = env.NOTIFY_TO || "admin@lummenna.com";
   const from = env.NOTIFY_FROM;
   if (!from) return false;
   try {
@@ -108,9 +108,9 @@ async function notify(env, email, source) {
     const raw = buildMessage({
       from,
       to,
-      subject: "Lummenna download waitlist signup",
+      subject: "Lummenna stable-release waitlist signup",
       body:
-        `A new address joined the download waitlist.\n\n` +
+        `A new address joined the stable-release waitlist.\n\n` +
         `Address: ${email}\n` +
         `Source:  ${source}\n` +
         `Time:    ${new Date().toISOString()}\n\n` +

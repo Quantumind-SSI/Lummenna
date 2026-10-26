@@ -59,6 +59,9 @@ def test_initialize_palace_creates_pipeline_and_conversation(temp_config):
     result = initialize_palace(temp_config)
     assert isinstance(result["pipeline"], SearchPipeline)
     assert isinstance(result["conversation"], ConversationMemory)
+    assert result["pipeline"].tfc is result["tfc"]
+    assert result["conversation"].tfc is result["tfc"]
+    assert result["conversation"].pipeline.tfc is result["tfc"]
     result["conn"].close()
 
 

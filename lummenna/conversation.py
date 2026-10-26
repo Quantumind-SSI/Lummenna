@@ -8,6 +8,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
+from lummenna.brand.errors import FeedbackLogError
 from lummenna.config import LummennaConfig
 from lummenna.controller import TwinForceController
 from lummenna.data.schema import get_connection
@@ -115,6 +116,7 @@ class ConversationMemory:
         active_goals: list[str] | None = None,
         system_prompt_override: str | None = None,
         top_k: int = 5,
+        tenant_id: str | None = None,
     ) -> TurnResult:
         """Retrieve memories for *query* and assemble a context window.
 
@@ -124,12 +126,14 @@ class ConversationMemory:
                 If omitted, the persistent :attr:`goals` tree is queried.
             system_prompt_override: Replace the default palace system prompt.
             top_k: Max memories to retrieve.
+            tenant_id: Optional tenant override for this request.
 
         Returns:
             :class:`TurnResult` containing assembled prompt and raw chunks.
         """
         goals = active_goals if active_goals is not None else self.goals.active_path_keywords()
-        results = self.pipeline.execute(query, goal_tree_keywords=goals, tenant_id=self.tenant_id)
+        active_tenant = tenant_id if tenant_id is not None else self.tenant_id
+        results = self.pipeline.execute(query, goal_tree_keywords=goals, tenant_id=active_tenant)
         top = results[:top_k]
 
         if not top:
@@ -161,6 +165,7 @@ class ConversationMemory:
         assistant_msg: str,
         retrieved_chunks: list[RetrievedChunk] | None = None,
         room_name: str = "conversations",
+        tenant_id: str | None = None,
     ) -> tuple[int | None, int | None]:
         """Store a conversation turn and log implicit feedback.
 
@@ -170,6 +175,7 @@ class ConversationMemory:
             retrieved_chunks: Chunks that were injected into the prompt for this
                 turn. Implicit positive feedback is logged for each.
             room_name: Room to store the turn in. Defaults to ``conversations``.
+            tenant_id: Optional tenant override for this turn.
 
         Returns:
             Tuple of ``(user_chunk_id, assistant_chunk_id)``.
@@ -177,6 +183,7 @@ class ConversationMemory:
         user_emb = self.embedder.encode_single(user_msg)
         assistant_emb = self.embedder.encode_single(assistant_msg)
 
+        active_tenant = tenant_id if tenant_id is not None else self.tenant_id
         user_chunk_id = store_memory(
             self.conn,
             content=user_msg,
@@ -184,7 +191,7 @@ class ConversationMemory:
             source_type="user_input",
             embedding=user_emb,
             config=self.config,
-            tenant_id=self.tenant_id,
+            tenant_id=active_tenant,
         )
         assistant_chunk_id = store_memory(
             self.conn,
@@ -193,12 +200,12 @@ class ConversationMemory:
             source_type="agent_reasoning",
             embedding=assistant_emb,
             config=self.config,
-            tenant_id=self.tenant_id,
+            tenant_id=active_tenant,
         )
 
         if retrieved_chunks:
             for rc in retrieved_chunks:
-                self._log_implicit_feedback(rc.chunk_id, positive=True)
+                self._log_implicit_feedback(rc.chunk_id, positive=True, tenant_id=active_tenant)
 
         # Mark retrieved chunk IDs as known facts
         if retrieved_chunks:
@@ -220,6 +227,7 @@ class ConversationMemory:
         was_useful: bool,
         user_id: str | None = None,
         feedback_type: str = "explicit",
+        tenant_id: str | None = None,
     ) -> None:
         """Log explicit user feedback for a retrieved chunk.
 
@@ -228,9 +236,12 @@ class ConversationMemory:
             was_useful: ``True`` for positive, ``False`` for negative.
             user_id: Multi-tenancy identifier. Defaults to :attr:`user_id`.
             feedback_type: ``explicit``, ``implicit``, or ``repair``.
+            tenant_id: Optional tenant override for this feedback event.
         """
         uid = user_id or self.user_id
-        self._write_feedback(chunk_id, 1 if was_useful else 0, uid, feedback_type)
+        self._write_feedback(
+            chunk_id, 1 if was_useful else 0, uid, feedback_type, tenant_id=tenant_id
+        )
         self._maybe_learn_weights(uid)
 
     def learn_weights(self, user_id: str | None = None) -> dict[str, float]:
@@ -242,9 +253,17 @@ class ConversationMemory:
         uid = user_id or self.user_id
         return self._maybe_learn_weights(uid, force=True)
 
-    def _log_implicit_feedback(self, chunk_id: int, positive: bool = True) -> None:
+    def _log_implicit_feedback(
+        self, chunk_id: int, positive: bool = True, tenant_id: str | None = None
+    ) -> None:
         """Write an implicit feedback row."""
-        self._write_feedback(chunk_id, 1 if positive else 0, self.user_id, "implicit")
+        self._write_feedback(
+            chunk_id,
+            1 if positive else 0,
+            self.user_id,
+            "implicit",
+            tenant_id=tenant_id,
+        )
 
     def _write_feedback(
         self,
@@ -257,6 +276,14 @@ class ConversationMemory:
         """Insert a row into ``feedback_log``."""
         tid = tenant_id if tenant_id is not None else self.tenant_id
         if _tenant_id_supported(self.conn):
+            if tid != "default":
+                self.config.assert_licensed("multi_tenant")
+            owner = self.conn.execute(
+                "SELECT 1 FROM chunk WHERE chunk_id = ? AND tenant_id = ?",
+                (chunk_id, tid),
+            ).fetchone()
+            if owner is None:
+                raise FeedbackLogError("chunk does not belong to the selected tenant")
             self.conn.execute(
                 """INSERT INTO feedback_log (chunk_id, user_id, positive, feedback_type, created_at, tenant_id)
                    VALUES (?, ?, ?, ?, unixepoch(), ?)""",

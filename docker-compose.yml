@@ -21,6 +21,10 @@ services:
       - LUMMENNA_DEVICE=${LUMMENNA_DEVICE:-generic}
       - LUMMENNA_CONTEXT_BUDGET=${LUMMENNA_CONTEXT_BUDGET:-2048}
       - LUMMENNA_MEMORY_LIMIT_MB=${LUMMENNA_MEMORY_LIMIT_MB:-512}
+      # Trusted reverse-proxy CIDRs for X-Forwarded-For. Without this, rate
+      # limiting keys on the proxy IP and one abusive client throttles all
+      # customers. Set to your LB/ingress range when not running bare.
+      - FORWARDED_ALLOW_IPS=${FORWARDED_ALLOW_IPS:-127.0.0.1}
     healthcheck:
       # Liveness. Readiness (/ready) is model-aware and intentionally 503s
       # until an embedding model is provisioned into the models volume.

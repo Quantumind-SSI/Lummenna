@@ -3,6 +3,7 @@ import sqlite3
 import numpy as np
 import pytest
 
+from lummenna.brand.errors import LicenseRequiredError
 from lummenna.config import LummennaConfig
 from lummenna.data.schema import init_db
 from lummenna.force.mnemonic.store import store_memory
@@ -35,6 +36,17 @@ def test_store_memory_returns_chunk_id(db_conn, config):
     )
     assert isinstance(chunk_id, int)
     assert chunk_id > 0
+
+
+def test_custom_pii_patterns_require_compliance_license(db_conn, tmp_path):
+    config = LummennaConfig(
+        store_path=tmp_path / "store",
+        model_path=tmp_path / "models",
+        pii_custom_patterns=r"INTERNAL-\d+",
+    )
+
+    with pytest.raises(LicenseRequiredError):
+        store_memory(db_conn, "INTERNAL-42", room_name="private", config=config)
 
 
 def test_store_memory_persists_chunk(db_conn, config):

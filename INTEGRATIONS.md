@@ -35,8 +35,13 @@ lummenna serve --host 0.0.0.0 --port 8848
 Or use the built-in MCP stdio server (no HTTP required):
 
 ```bash
-python -m lummenna.integrations.mcp_server
+lummenna mcp              # serve over stdio
+lummenna mcp --check      # diagnose a deployment, then exit
 ```
+
+`lummenna mcp` is equivalent to `python -m lummenna.integrations.mcp_server`;
+use the module form when the console script is not on `PATH`. Both require the
+`mcp` extra: `pip install "lummenna[mcp]"`.
 
 ---
 
@@ -46,7 +51,9 @@ OpenCode supports [MCP servers](https://modelcontextprotocol.io) natively. The c
 
 ### Option A: MCP Stdio Server (Recommended)
 
-Create `.opencode/opencode.json` in your project root:
+Create `opencode.json` in your project root. It must be the repository root, not
+`.opencode/`: that directory holds agents, commands, and skills, and OpenCode
+does not read a config file from it.
 
 ```json
 {
@@ -54,16 +61,52 @@ Create `.opencode/opencode.json` in your project root:
   "mcp": {
     "lummenna": {
       "type": "local",
-      "command": ["python", "-m", "lummenna.integrations.mcp_server"],
+      "command": ["lummenna", "mcp"],
       "enabled": true,
-      "env": {
+      "timeout": 60000,
+      "environment": {
         "LUMMENNA_DEVICE": "generic",
-        "LUMMENNA_API_KEY": ""
+        "LUMMENNA_STORE_PATH": "./.lummenna/store",
+        "LUMMENNA_MODEL_PATH": "./.lummenna/models",
+        "LUMMENNA_AUTO_PROVISION_MODEL": "1"
       }
     }
   }
 }
 ```
+
+A copy of this file lives at `integrations/opencode/opencode.json`.
+
+Three details that decide whether the server appears at all:
+
+- The key is `environment`, not `env`. `env` is not in OpenCode's
+  `McpLocalConfig` schema, so those variables never reach the server.
+- `lummenna` must be on the `PATH` of the process that launches OpenCode. If it
+  is not (a virtualenv you do not activate first), use the absolute path,
+  `["/path/to/.venv/bin/lummenna", "mcp"]`, or the module form,
+  `["/path/to/.venv/bin/python", "-m", "lummenna.integrations.mcp_server"]`.
+  Avoid bare `python`: most Linux distributions ship only `python3`.
+- Set `timeout`. OpenCode's default is 5000 ms and a server that misses it is
+  dropped silently: no error, it simply does not appear in the tool list. First
+  launch with `LUMMENNA_AUTO_PROVISION_MODEL=1` downloads and exports the
+  embedding model, which takes far longer than 5 seconds.
+
+If the tools do not appear, ask the server itself rather than guessing:
+
+```bash
+lummenna mcp --check
+```
+
+It runs the same startup path the server uses and prints a table of what
+passed, exiting non-zero on the first condition that would leave a client with
+no tools. A mock embedder counts as a failure: the server would start and every
+result would be noise.
+
+`LUMMENNA_API_KEY` is deliberately absent: it authenticates the HTTP API
+(`lummenna/api/server.py`) and has no effect on the stdio MCP server, which
+inherits the trust boundary of the process that spawned it.
+
+Restart OpenCode after editing the config; MCP servers are started once at boot.
 
 **What the agent can now do (7 tools):**
 
@@ -75,9 +118,30 @@ Create `.opencode/opencode.json` in your project root:
 - `lummenna_status` — show palace health (rooms, active chunks, TFC state)
 - `lummenna_dashboard` — effectiveness dashboard (health, locally measured benchmarks, lifecycle state)
 
+**And two read-only resources, for clients that consume JSON rather than call tools:**
+
+- `dashboard://lummenna/effectiveness` — full metrics document (version, system,
+  palace, tfc, evaluation, feedback, runtime, design_properties)
+- `dashboard://lummenna/capabilities` — the design_properties, evaluation, and
+  runtime sections only
+
 ### Option B: HTTP API (remote / Docker deployments)
 
-The MCP server is **stdio-only** — Lummenna does not currently expose an MCP endpoint over HTTP. For remote hosts or Docker, use the REST API directly:
+The MCP server supports three transports: `stdio` (one process per client),
+`streamable-http`, and `sse`. For several editor sessions against one palace,
+serve a single shared process and point every client at its URL — each stdio
+server loads its own embedder (~750 MB resident), so N sessions cost N times
+that, while one HTTP server costs it once:
+
+```bash
+lummenna mcp --transport streamable-http --host 127.0.0.1 --port 8849
+# MCP endpoint: http://127.0.0.1:8849/mcp
+```
+
+Network MCP transports are unauthenticated by design: bind them to loopback
+or a trusted LAN interface only. For remote hosts outside a trusted network,
+use the REST API directly instead — it is a different protocol with a
+different surface, and it is the path that enforces the API key:
 
 ```bash
 # On the remote host
@@ -162,8 +226,8 @@ For dedicated memory management, define a subagent:
 
 Lummenna's MCP server (stdio) and HTTP API are supported by any platform that speaks MCP or JSON/REST, including
 OpenCode, Claude Desktop, and any custom agent using the Python SDK. The OpenCode section above provides
-configuration examples; the same `python -m lummenna.integrations.mcp_server` command works for any MCP-compatible
-platform.
+configuration examples; the same `lummenna mcp` command (or its module form,
+`python -m lummenna.integrations.mcp_server`) works for any MCP-compatible platform.
 
 ---
 

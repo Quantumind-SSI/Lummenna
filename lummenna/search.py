@@ -51,20 +51,19 @@ class SearchPipeline:
 
         Enforces multi-tenant isolation as a post-retrieval scope: fusion ranks
         across the whole palace, then this restricts the visible set to the
-        caller's tenant. No-op when the schema predates tenant support or when
-        the caller is the default tenant (single-tenant deployments pay nothing).
+        caller's tenant. No-op only when the schema predates tenant support.
 
         Extracted from ``execute`` so the primary path and the repair-loop path
         share one implementation — previously the same query/placeholder/filter
         block was duplicated verbatim, so tenant-scoping logic could silently
         drift between the two.
         """
-        if not results or tenant_id == "default" or not _tenant_id_supported(self.conn):
+        if not results or not _tenant_id_supported(self.conn):
             return results
-        # Multi-tenant isolation is a Pro capability: gate any non-default tenant
-        # scope. Community (or an unlicensed key) requesting a real tenant gets a
-        # clear LicenseRequiredError rather than silent free Pro (AGENTS.md R2).
-        self.config.assert_licensed("multi_tenant")
+        # Multi-tenant isolation is a Pro capability; the default scope remains
+        # available to Community but is never an administrator wildcard.
+        if tenant_id != "default":
+            self.config.assert_licensed("multi_tenant")
         chunk_ids = [r.chunk_id for r in results]
         # placeholders is a generated "?,?,..." string; all values are bound
         # parameters, so the f-string cannot inject SQL (bandit B608).
@@ -116,6 +115,8 @@ class SearchPipeline:
         max_repair_attempts: int = 1,
         tenant_id: str = "default",
     ) -> list[RetrievedChunk]:
+        if tenant_id != "default" and _tenant_id_supported(self.conn):
+            self.config.assert_licensed("multi_tenant")
         start = time.perf_counter()
 
         # Stage 1: Intent classification
@@ -199,14 +200,17 @@ class SearchPipeline:
                 from lummenna.repair import SearchRepair
 
                 repair = SearchRepair(self.tfc, self)
-                repaired = repair.attempt_repair(query, reason)
+                repaired = repair.attempt_repair(query, reason, tenant_id=tenant_id)
                 if repaired:
                     results = self._filter_by_tenant(repaired, tenant_id)
 
         elapsed_ms = (time.perf_counter() - start) * 1000
         logger.info(
             "search_executed",
-            query=query,
+            # Log a bounded preview, never the full query: queries are raw
+            # user input and frequently contain PII, and log aggregation
+            # systems rarely apply the store's retention policy.
+            query=query[:100],
             intent=intent,
             results=len(results),
             latency_ms=round(elapsed_ms, 2),

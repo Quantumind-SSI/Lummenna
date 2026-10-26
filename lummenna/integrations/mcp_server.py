@@ -28,7 +28,7 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
@@ -41,6 +41,7 @@ else:
     _MCP_AVAILABLE = True
     _MCP_ERROR = None
 
+from lummenna import __version__
 from lummenna._init import initialize_palace
 from lummenna.config import LummennaConfig
 from lummenna.contracts import FeedbackType, SourceType
@@ -214,8 +215,9 @@ class _UnavailableMCP:
         )
 
 
-mcp = FastMCP("lummenna", lifespan=app_lifespan) if _MCP_AVAILABLE else _UnavailableMCP()
-
+mcp: FastMCP | _UnavailableMCP = (
+    FastMCP("lummenna", lifespan=app_lifespan) if _MCP_AVAILABLE else _UnavailableMCP()
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -271,7 +273,7 @@ def _preview(content: str, max_chars: int) -> str:
 
 
 @mcp.tool()
-async def lummenna_search(query: str, top_k: int = 5, ctx: Context = None) -> str:
+async def lummenna_search(query: str, top_k: int = 5, ctx: Context | None = None) -> str:
     """Search the Lummenna memory palace with semantic + lexical hybrid retrieval.
 
     Args:
@@ -307,7 +309,7 @@ async def lummenna_store(
     room: str,
     locus: str | None = None,
     source_type: str = "user_input",
-    ctx: Context = None,
+    ctx: Context | None = None,
 ) -> str:
     """Store a memory chunk in the Lummenna palace.
 
@@ -349,7 +351,7 @@ async def lummenna_store(
 
 
 @mcp.tool()
-async def lummenna_assemble(query: str, top_k: int = 5, ctx: Context = None) -> str:
+async def lummenna_assemble(query: str, top_k: int = 5, ctx: Context | None = None) -> str:
     """Retrieve memories and assemble a ready-to-use context string.
 
     Args:
@@ -376,7 +378,7 @@ async def lummenna_turn(
     user_msg: str,
     assistant_msg: str,
     room: str = "conversations",
-    ctx: Context = None,
+    ctx: Context | None = None,
 ) -> str:
     """Store a full conversation turn and log implicit feedback.
 
@@ -411,7 +413,7 @@ async def lummenna_feedback(
     chunk_id: int,
     was_useful: bool,
     feedback_type: str = "explicit",
-    ctx: Context = None,
+    ctx: Context | None = None,
 ) -> str:
     """Log explicit or implicit feedback for a retrieved memory chunk.
 
@@ -443,7 +445,7 @@ async def lummenna_feedback(
 
 
 @mcp.tool()
-async def lummenna_status(ctx: Context = None) -> str:
+async def lummenna_status(ctx: Context | None = None) -> str:
     """Show current palace status: room count, active chunks, TFC state."""
     try:
         state = _state(ctx)
@@ -460,7 +462,7 @@ async def lummenna_status(ctx: Context = None) -> str:
             f"  Context budget: {state.config.context_budget} tokens\n"
             f"  TFC → e={env['e']:.2f} a={env['a']:.2f} tau={env['tau']:.1f} r={env['r']}\n"
             f"  Embedding model available: {state.embedding_model_available}\n"
-            f"\nDashboard: http://localhost:{state.config.api_port}/dashboard\n"
+            f"\nDashboard: http://localhost:{state.config.api_port}/\n"
             f"Run `lummenna serve` or `lummenna_dashboard` for real-time effectiveness metrics."
         )
     except Exception as exc:
@@ -468,8 +470,8 @@ async def lummenna_status(ctx: Context = None) -> str:
 
 
 @mcp.tool()
-async def lummenna_dashboard(ctx: Context = None) -> str:
-    """Display a real-time effectiveness dashboard: system health, locally measured benchmark results (when present), and memory lifecycle state.
+async def lummenna_dashboard(ctx: Context | None = None) -> str:
+    """Display runtime health, committed benchmark evidence, and memory state.
     Call this when the user asks about Lummenna's effectiveness, performance, or wants to see the dashboard.
     Metrics come from committed benchmark artifacts; anything not yet measured is shown as N/A.
     """
@@ -477,16 +479,20 @@ async def lummenna_dashboard(ctx: Context = None) -> str:
         state = _state(ctx)
         metrics = _dashboard_metrics(state)
         m = metrics
+        retrieval = m["evaluation"]["retrieval"]
+        recall = retrieval["recall_at_10"]
+        latency = retrieval["latency_mean_ms"]
+        feedback_pct = m["feedback"]["satisfaction_pct"]
 
         room_lines = (
-            "  " + ", ".join(f"{r['name']}({r['chunks']})" for r in m["palace"]["topology"])
+            "  " + ", ".join(f"{r['name']}({r['active_chunks']})" for r in m["palace"]["topology"])
             if m["palace"]["topology"]
             else "  (none)"
         )
 
         return (
             f"╔══════════════════════════════════════════════╗\n"
-            f"║     Lummenna Effectiveness Dashboard v1.0.0    ║\n"
+            f"║     Lummenna Effectiveness Dashboard v{__version__}    ║\n"
             f"╠══════════════════════════════════════════════╣\n"
             f"║ System Health                               ║\n"
             f"╠══════════════════════════════════════════════╣\n"
@@ -494,16 +500,16 @@ async def lummenna_dashboard(ctx: Context = None) -> str:
             f"  Embedder:       {m['system']['embedder']} ({'LOADED' if m['system']['embedder_loaded'] else 'MOCK'})\n"
             f"  Active Chunks:  {m['palace']['active_chunks']:,}\n"
             f"  Rooms / Loci:   {m['palace']['rooms']} / {m['palace']['loci']}\n"
-            f"  Retention Rate: {m['palace']['retention_pct']}%\n"
+            f"  Released:       {m['palace']['released_chunks']:,}\n"
             f"\n"
-            f"  Retrieval Benchmarks (corpus: {m['retrieval']['corpus'] or 'not run'}):\n"
-            f"  BM25 R@10:         {_fmt_metric(m['retrieval']['bm25_r10'])}\n"
-            f"  Hybrid R@10:       {_fmt_metric(m['retrieval']['hybrid_r10_bge'])}\n"
-            f"  Dense R@10:        {_fmt_metric(m['retrieval']['dense_r10_minilm'])}\n"
-            f"  nDCG@10:           {_fmt_metric(m['retrieval']['ndcg10'])}\n"
-            f"  p50 Latency BM25:  {_fmt_metric(m['retrieval']['latency_bm25_ms'])} ms\n"
-            f"  p50 Latency Dense: {_fmt_metric(m['retrieval']['latency_dense_ms'])} ms\n"
-            f"  p50 Latency Hybrid:{_fmt_metric(m['retrieval']['latency_hybrid_ms'])} ms\n"
+            f"  Retrieval Evidence (corpus: {retrieval['corpus'] or 'not available'}):\n"
+            f"  BM25 R@10:          {_fmt_metric(recall['bm25'])}\n"
+            f"  Hybrid R@10:        {_fmt_metric(recall['hybrid'])}\n"
+            f"  Dense R@10:         {_fmt_metric(recall['dense'])}\n"
+            f"  Mean latency BM25:  {_fmt_metric(latency['bm25'])} ms\n"
+            f"  Mean latency Dense: {_fmt_metric(latency['dense'])} ms\n"
+            f"  Mean latency Hybrid:{_fmt_metric(latency['hybrid'])} ms\n"
+            f"  External rank:      {_fmt_metric(m['evaluation']['official_leaderboard_rank'])}\n"
             f"\n"
             f"╔══════════════════════════════════════════════╗\n"
             f"║ TFC State                                  ║\n"
@@ -521,33 +527,23 @@ async def lummenna_dashboard(ctx: Context = None) -> str:
             f"╔══════════════════════════════════════════════╗\n"
             f"║ Memory Lifecycle                           ║\n"
             f"╠══════════════════════════════════════════════╣\n"
-            f"  L1 Time Decay:           {m['forgetting']['l1_ebbinghaus']} (horizon={m['forgetting']['half_life_days']:.0f}d)\n"
-            f"  L2 Interference:         {m['forgetting']['l2_interference']}\n"
-            f"  L3 Budget Eviction:      {m['forgetting']['l3_budget']}\n"
+            f"  Scheduled L1/L3 state:   NOT OBSERVED BY MCP\n"
+            f"  L2 Interference:         ON WRITE\n"
             f"  Degradation Chain:       FP32 → FP16 → INT8 → BINARY → RELEASED\n"
-            f"  Current Stage:           {m['forgetting']['degradation_stage']}\n"
-            f"  Forgotten Chunks:        {m['palace']['forgotten']}\n"
+            f"  Active resolution mix:   {m['palace']['resolution_counts']}\n"
+            f"  Released Chunks:         {m['palace']['released_chunks']}\n"
             f"\n"
             f"╔══════════════════════════════════════════════╗\n"
-            f"║ Business Impact                             ║\n"
+            f"║ Runtime Configuration                       ║\n"
             f"╠══════════════════════════════════════════════╣\n"
-            f"  API Cost / Query:         ${m['business']['cost_per_query_usd']:.2f}\n"
-            f"  Data Sovereignty:         {m['business']['data_sovereignty_pct']}% (on-device)\n"
-            f"  GDPR Native RTBF:         {'YES' if m['business']['gdpr_native_rtbf'] else 'NO'}\n"
-            f"  Edge Deployable:          {'YES' if m['business']['edge_deployable'] else 'NO'} ({m['system']['device']})\n"
-            f"  Feedback Satisfaction:    {m['business']['feedback_satisfaction_pct']}%\n"
-            f"  Feedback Total:           {m['business']['feedback_total']}\n"
+            f"  Sovereign mode:           {'ENABLED' if m['runtime']['sovereign_mode'] else 'DISABLED'}\n"
+            f"  Off-device backup:        {'ENABLED' if m['runtime']['backup_enabled'] else 'DISABLED'}\n"
+            f"  Encryption mode:          {m['runtime']['encryption_mode']}\n"
+            f"  Edition:                  {m['runtime']['edition']}\n"
+            f"  Feedback Satisfaction:    {_fmt_metric(feedback_pct)}%\n"
+            f"  Feedback Total:           {m['feedback']['total']}\n"
             f"\n"
-            f"╔══════════════════════════════════════════════╗\n"
-            f"║ Capability Highlights                      ║\n"
-            f"╠══════════════════════════════════════════════╣\n"
-            f"  BM25 + Vector + Graph retrieval\n"
-            f"  Edge deployment (RPi5): {'YES' if m['business']['edge_deployable'] else 'NO'}\n"
-            f"  Memory lifecycle: 3-layer decay/interference/eviction\n"
-            f"  LangGraph checkpoint saver: built-in\n"
-            f"  MCP / LangChain / FastAPI integrations\n"
-            f"\n"
-            f"Web dashboard: http://localhost:{state.config.api_port}/dashboard\n"
+            f"Web dashboard: http://localhost:{state.config.api_port}/\n"
             f"Machine metrics: http://localhost:{state.config.api_port}/metrics\n"
             f"Run `lummenna serve` to start the full API + dashboard."
         )
@@ -569,16 +565,16 @@ def _fmt_metric(value) -> str:
     return str(value)
 
 
-def _load_retrieval_benchmarks() -> dict:
-    """Load committed retrieval benchmark metrics (shared loader).
+def _load_evaluation_summary() -> dict:
+    """Load committed evaluation metrics (shared loader).
 
     Delegates to :mod:`lummenna.bench_results` so the MCP dashboard and the
     HTTP API report identical artifact-backed numbers; unmeasured metrics
     are ``None`` — no hardcoded fallback numbers, ever.
     """
-    from lummenna.bench_results import load_retrieval_benchmarks
+    from lummenna.bench_results import load_evaluation_summary
 
-    return load_retrieval_benchmarks()
+    return load_evaluation_summary()
 
 
 def _dashboard_metrics(state: LummennaAppState) -> dict:
@@ -590,7 +586,9 @@ def _dashboard_metrics(state: LummennaAppState) -> dict:
     room_count = conn.execute("SELECT COUNT(*) FROM room").fetchone()[0]
     chunk_count = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NULL").fetchone()[0]
     locus_count = conn.execute("SELECT COUNT(*) FROM locus").fetchone()[0]
-    forgotten = conn.execute("SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL").fetchone()[0]
+    released = conn.execute(
+        "SELECT COUNT(*) FROM chunk WHERE valid_to IS NOT NULL AND optical_level = 2"
+    ).fetchone()[0]
 
     feedback_row = conn.execute(
         "SELECT COUNT(*) AS c, AVG(CASE WHEN positive = 1 THEN 1.0 ELSE 0.0 END) AS sat FROM feedback_log"
@@ -598,20 +596,23 @@ def _dashboard_metrics(state: LummennaAppState) -> dict:
 
     rooms = conn.execute(
         """
-        SELECT r.name, COUNT(c.chunk_id) AS chunks
+        SELECT r.name, COUNT(c.chunk_id) AS active_chunks
         FROM room r
-        LEFT JOIN locus l ON l.room_id = r.room_id
-        LEFT JOIN chunk c ON c.locus_id = l.locus_id AND c.valid_to IS NULL
+        LEFT JOIN chunk c ON c.room_id = r.room_id AND c.valid_to IS NULL
         GROUP BY r.room_id
-        ORDER BY chunks DESC
+        HAVING COUNT(c.chunk_id) > 0
+        ORDER BY active_chunks DESC
         """
     ).fetchall()
 
-    stage_map = {5: "FP32", 4: "FP32", 3: "FP32", 2: "FP16", 1: "INT8", 0: "BINARY"}
-    degradation_stage = stage_map.get(int(env["r"]), "FP32")
+    resolution_rows = conn.execute(
+        "SELECT resolution, COUNT(*) AS chunks FROM chunk WHERE valid_to IS NULL GROUP BY resolution"
+    ).fetchall()
+    resolution_counts = {row["resolution"]: row["chunks"] for row in resolution_rows}
+    feedback_total = feedback_row["c"] or 0
 
     return {
-        "version": "1.0.0",
+        "version": __version__,
         "system": {
             "device": state.config.device,
             "embedder": state.config.embedding_model,
@@ -621,69 +622,79 @@ def _dashboard_metrics(state: LummennaAppState) -> dict:
             "rooms": room_count,
             "loci": locus_count,
             "active_chunks": chunk_count,
-            "forgotten": forgotten,
-            "retention_pct": round((chunk_count / max(1, chunk_count + forgotten)) * 100, 1),
-            "topology": [{"name": r["name"], "chunks": r["chunks"]} for r in rooms],
+            "released_chunks": released,
+            "resolution_counts": resolution_counts,
+            "topology": [{"name": r["name"], "active_chunks": r["active_chunks"]} for r in rooms],
         },
         "tfc": {
             "e": env["e"],
             "a": env["a"],
             "tau": env["tau"],
             "r": env["r"],
-            "degradation_stage": degradation_stage,
         },
-        "retrieval": _load_retrieval_benchmarks(),
-        "business": {
-            "cost_per_query_usd": 0.0,
-            "data_sovereignty_pct": 100,
-            "gdpr_native_rtbf": True,
-            "edge_deployable": True,
-            "feedback_total": feedback_row["c"] or 0,
-            "feedback_satisfaction_pct": round((feedback_row["sat"] or 0) * 100, 1),
+        "evaluation": _load_evaluation_summary(),
+        "feedback": {
+            "total": feedback_total,
+            "satisfaction_pct": (
+                round(feedback_row["sat"] * 100, 1) if feedback_row["sat"] is not None else None
+            ),
         },
-        "forgetting": {
-            "l1_ebbinghaus": "ACTIVE",
-            "l2_interference": "ACTIVE",
-            "l3_budget": "ACTIVE",
-            "half_life_days": env["tau"],
-            "degradation_stage": degradation_stage,
+        "runtime": {
+            "sovereign_mode": state.config.sovereign,
+            "backup_enabled": state.config.backup_enabled,
+            "encryption_mode": state.config.database_encryption_mode,
+            "edition": state.config.edition,
         },
         "design_properties": {
             "bm25": "Lummenna uses SQLite FTS5; standard BM25",
             "dense": "Cosine similarity via sqlite-vec or brute-force",
             "hybrid": "RRF fusion; no external-system comparison has been run",
-            "edge": "Designed for edge devices; RAM footprint not yet benchmarked (perf suite has no results)",
+            "edge": (
+                "Device profiles are implemented; the committed perf artifact "
+                "records no host platform, so it attests to no specific hardware"
+            ),
             "memory_lifecycle": "3-layer decay/interference/eviction",
         },
     }
 
 
+# NOTE: these two resource functions deliberately take NO parameters, not even
+# an optional `ctx`. FastMCP's @resource decorator branches on
+# `has_uri_params or has_func_params` (mcp.server.fastmcp.FastMCP.resource);
+# any function parameter sends the resource down the *template* path. A
+# template whose URI carries no `{placeholder}` is unreachable: it never
+# appears in list_resources() and read_resource() raises
+# "Unknown resource: ...". Both resources were registered that way, and thus
+# dead, until 2026-09-10. State is resolved through the module-level fallback
+# in _state(), which app_lifespan populates.
+
+
 @mcp.resource("dashboard://lummenna/effectiveness")
-async def dashboard_effectiveness(ctx: Context = None) -> str:
+async def dashboard_effectiveness() -> str:
     """Lummenna memory store effectiveness overview.
-    Shows real-time system health, retrieval metrics (if benchmarks available), TFC state, and business impact.
+    Shows real-time system health, artifact-backed evaluation, and TFC state.
     """
     try:
-        state = _state(ctx)
+        state = _state()
         return json.dumps(_dashboard_metrics(state), indent=2, default=str)
     except Exception as exc:
         return _tool_error("dashboard_effectiveness", exc)
 
 
 @mcp.resource("dashboard://lummenna/capabilities")
-async def dashboard_capabilities(ctx: Context = None) -> str:
+async def dashboard_capabilities() -> str:
     """Lummenna capability highlights (qualitative design properties).
-    Includes locally measured retrieval metrics when benchmark artifacts exist;
+    Includes committed retrieval metrics when benchmark artifacts exist;
     contains no comparisons to external systems.
     """
     try:
-        state = _state(ctx)
+        state = _state()
         metrics = _dashboard_metrics(state)
         return json.dumps(
             {
                 "design_properties": metrics["design_properties"],
-                "retrieval": metrics["retrieval"],
-                "business": metrics["business"],
+                "evaluation": metrics["evaluation"],
+                "runtime": metrics["runtime"],
             },
             indent=2,
             default=str,
@@ -697,7 +708,36 @@ async def dashboard_capabilities(ctx: Context = None) -> str:
 # ---------------------------------------------------------------------------
 
 
-def main() -> None:
+#: Transports this server can serve. ``stdio`` is one process per client, which
+#: is the MCP default and the right choice for a single editor session.
+#: ``streamable-http`` serves many clients from one process, which is what makes
+#: a multi-session setup affordable: palace init costs ~750 MB resident (the
+#: ONNX runtime plus the tokenizer stack), so N concurrent stdio servers cost
+#: N times that for one shared database.
+TRANSPORTS = ("stdio", "streamable-http", "sse")
+
+
+def main(
+    transport: str = "stdio",
+    host: str | None = None,
+    port: int | None = None,
+) -> None:
+    """Serve the palace over an MCP transport.
+
+    Args:
+        transport: One of :data:`TRANSPORTS`. ``stdio`` speaks the protocol on
+            stdin/stdout for a client that spawned this process.
+            ``streamable-http`` listens so that many sessions can share one
+            process, one loaded embedder and one database connection.
+        host: Bind address for network transports. Defaults to the configured
+            ``api_host`` (loopback), never all-interfaces implicitly.
+        port: Listen port for network transports. Defaults to ``api_port + 1``
+            so an MCP endpoint never collides with the REST API.
+
+    Raises:
+        SystemExit: On an unknown transport, a missing ``mcp`` package, or a
+            fatal serving error.
+    """
     if not _MCP_AVAILABLE:
         print(
             "ERROR: The 'mcp' package is required for the MCP server. "
@@ -705,10 +745,40 @@ def main() -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+    if transport not in TRANSPORTS:
+        print(
+            f"ERROR: unknown transport '{transport}'; choose from {', '.join(TRANSPORTS)}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
     try:
-        mcp.run(transport="stdio")
+        if transport == "stdio":
+            mcp.run(transport="stdio")
+            return
+
+        config = LummennaConfig()
+        bind_host = host if host is not None else config.api_host
+        bind_port = port if port is not None else config.api_port + 1
+        # FastMCP reads its bind address from settings rather than run() args.
+        # main() already exited when the mcp package is absent, so the cast
+        # is safe here; it exists purely to keep mypy from re-deriving the
+        # union it cannot narrow across module scope.
+        fastmcp_server = cast("FastMCP", mcp)
+        fastmcp_server.settings.host = bind_host
+        fastmcp_server.settings.port = bind_port
+        # Network transports are a deliberate LAN exposure decision, so say so
+        # on stderr rather than binding silently.
+        print(
+            f"Lummenna MCP serving {transport} on http://{bind_host}:{bind_port}/mcp\n"
+            f"  store: {config.db_path}\n"
+            f"  One process serves every connected session; "
+            f"point clients at this URL instead of spawning per-session servers.",
+            file=sys.stderr,
+        )
+        mcp.run(transport=transport)  # type: ignore[arg-type]
     except Exception as exc:
-        logger.error("mcp_server_fatal_error", exc=str(exc))
+        logger.error("mcp_server_fatal_error", transport=transport, exc=str(exc))
         sys.exit(1)
 
 

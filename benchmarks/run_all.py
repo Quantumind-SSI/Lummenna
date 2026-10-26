@@ -41,7 +41,7 @@ RESULT_FILENAMES = {
 
 def _fmt(value: Any, spec: str) -> str:
     """Format a numeric value, or return 'N/A' for missing/non-numeric data."""
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return format(value, spec)
     return "N/A"
 
