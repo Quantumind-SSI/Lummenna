@@ -92,21 +92,32 @@ class TestServerEndpoints:
         conn = get_connection(config)
         init_db(conn)
         embedder = MockEmbedder(dims=config.embedding_dims)
-        server_mod._state = {
-            "config": config,
-            "conn": conn,
-            "conversation": ConversationMemory(config=config, conn=conn, embedder=embedder),
-            "tfc": None,
-            "embedder": embedder,
-            "embedding_model_available": False,
-        }
+        server_mod._state.clear()
+        server_mod._state.update(
+            {
+                "config": config,
+                "conn": conn,
+                "conversation": ConversationMemory(config=config, conn=conn, embedder=embedder),
+                "tfc": None,
+                "embedder": embedder,
+                "embedding_model_available": False,
+            }
+        )
+        # Handlers check pooled connections out; seed a pool for this store
+        # so pre-seeded state (conn is set) short-circuits the lifespan and
+        # pooled_conn() still works.
+        from lummenna.data.pool import ConnectionPool
+
+        server_mod._state["pool"] = ConnectionPool(config, size=2)
         server_mod._state["pipeline"] = SearchPipeline(conn, config, embedder=embedder)
         original_allow_mock = server_mod._config.allow_mock_embedder
         server_mod._config.allow_mock_embedder = True
         with TestClient(server_mod.app) as c:
             yield c, server_mod
+        server_mod._state.get("pool").close()
         server_mod._config.allow_mock_embedder = original_allow_mock
         conn.close()
+        server_mod._state.clear()
 
     def test_ready_with_mock_optin(self, client):
         c, server_mod = client
@@ -137,12 +148,26 @@ class TestServerEndpoints:
         assert "lummenna_active_chunks" in body
         assert "lummenna_embedding_model_available 0" in body
 
-    def test_prometheus_is_public_even_with_api_key(self, client):
+    def test_metrics_require_api_key_when_configured(self, client):
+        """Metrics disclose version/edition/store posture, so they authenticate.
+
+        Regression guard: /metrics and /metrics/prometheus were public paths
+        before 1.0.1rc1, leaking recon-grade data on internet-facing deploys.
+        Scrapers send the same X-API-Key header as /v1 callers.
+        """
         c, server_mod = client
         original = server_mod._config.api_key
         server_mod._config.api_key = "secret-key"
         try:
-            assert c.get("/metrics/prometheus").status_code == 200
+            assert c.get("/metrics/prometheus").status_code == 401
+            assert c.get("/metrics").status_code == 401
+            assert (
+                c.get(
+                    "/metrics/prometheus", headers={"X-API-Key": "secret-key"}
+                ).status_code
+                == 200
+            )
+            # Readiness stays public for k8s probes (they run before auth).
             assert c.get("/ready").status_code == 200
         finally:
             server_mod._config.api_key = original

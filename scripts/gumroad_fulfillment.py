@@ -8,8 +8,8 @@ un-refunded, not-yet-fulfilled sale, and writes:
 1. a **fulfillment CSV** (``--out``) with one row per newly issued license —
    ready for a mail-merge that sends each buyer their key; and
 2. a **license register** (``--register``, append-only) — the authoritative
-   custody record (license id, subject, tier, seats, expiry) required by
-   ``docs/LICENSE_SIGNING_KEY_CUSTODY.md`` §5. On refund/chargeback, the
+   custody record (license id, subject, tier, seats, expiry) required by the
+   internal signing-key custody runbook. On refund/chargeback, the
    register row's ``license_id`` is what goes into ``REVOKED_LICENSE_IDS``.
 
 The run is **atomic per invocation**: every data row is validated first, and if

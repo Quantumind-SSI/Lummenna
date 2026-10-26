@@ -470,7 +470,7 @@ def test_multi_tenant_write_allowed_with_pro(tmp_path, signing_keypair):
 def test_multi_tenant_read_filter_blocks_community(tmp_path):
     licensing.clear_license_cache()
     from lummenna.data.schema import get_connection
-    from lummenna.force.mnemonic.store import _tenant_id_supported
+    from lummenna.force.mnemonic.store import _tenant_id_supported, store_memory
 
     cfg = _tenant_cfg(tmp_path)
     conn = get_connection(cfg)
@@ -478,14 +478,23 @@ def test_multi_tenant_read_filter_blocks_community(tmp_path):
         pytest.skip("schema predates tenant support")
 
     pipeline = _SearchPipelineForTenant(conn, cfg)
-    # _filter_by_tenant only reads .chunk_id; a light stub avoids constructing a
-    # full RetrievedChunk (many required fields) unrelated to the gate under test.
-    fake = [_ChunkStub(1)]
     try:
+        # A real row, because _filter_by_tenant validates every id against the
+        # chunk table for the default scope too. "default" is an ordinary tenant,
+        # not an administrator wildcard, so an id that owns no row is dropped.
+        cid = store_memory(conn, "visible to default", "room", tenant_id="default", config=cfg)
+        # _filter_by_tenant only reads .chunk_id; a light stub avoids constructing a
+        # full RetrievedChunk (many required fields) unrelated to the gate under test.
+        fake = [_ChunkStub(cid)]
+
+        # Community requesting a named tenant is refused outright.
         with pytest.raises(LicenseRequiredError):
             pipeline._filter_by_tenant(fake, "acme")
-        # default tenant must never be gated
-        assert pipeline._filter_by_tenant(fake, "default") == fake
+
+        # The default scope is never licence-gated, and still returns the rows it
+        # genuinely owns. Asserting the ids rather than the stub identity keeps
+        # this about the gate and the ownership check, not object equality.
+        assert [c.chunk_id for c in pipeline._filter_by_tenant(fake, "default")] == [cid]
     finally:
         conn.close()
 
@@ -669,18 +678,14 @@ def test_fusion_query_isolates_tenants(tmp_path, signing_keypair):
         assert [r.chunk_id for r in res_b] == [b]
         # B's content must never surface in A's results.
         assert all("beta" not in (r.content or "") for r in res_a)
-        # Default tenant is unrestricted (single-tenant deployments unaffected).
-        assert sorted(r.chunk_id for r in res_default) == sorted([a, b])
+        # Default is its own scope, not an administrator wildcard.
+        assert res_default == []
     finally:
         conn.close()
 
 
-def test_fusion_default_tenant_unrestricted_on_legacy_schema(memory_db):
-    """On a schema WITH tenant support, default tenant still sees all chunks;
-
-    the predicate is a no-op for 'default'. Uses the in-memory fixture to prove
-    the fast path adds no restriction and no error.
-    """
+def test_fusion_default_tenant_reads_default_scope(memory_db):
+    """The default tenant reads default rows without requiring a license."""
     import hashlib
 
     from lummenna.force.mnemonic.retrieval_lexical import LexicalHit

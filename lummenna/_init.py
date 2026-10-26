@@ -48,10 +48,16 @@ def initialize_palace(config: LummennaConfig) -> dict:
 
         if not config.allow_mock_embedder:
             conn.close()
+            # Re-raise with the original path plus the specific model alias.
+            # Passing `str(exc)` as model_path would nest the previous message
+            # inside this one and print the provisioning advice twice.
             raise ModelNotAvailableError(
-                f"{exc}. Download it with 'lummenna model download "
-                f"{config.embedding_model}', or set LUMMENNA_ALLOW_MOCK_EMBEDDER=1 "
-                f"(testing only — semantic search will be meaningless)."
+                exc.model_path,
+                hint=(
+                    f"Here <alias> is '{config.embedding_model}'. For tests "
+                    f"only, LUMMENNA_ALLOW_MOCK_EMBEDDER=1 substitutes a mock "
+                    f"embedder, which makes semantic search meaningless."
+                ),
             ) from exc
         logger.warning(
             "embedder_mock_substituted",
@@ -67,9 +73,9 @@ def _assemble_palace(
     conn, config: LummennaConfig, embedder, embedding_model_available: bool
 ) -> dict:
     """Build the pipeline/conversation/TFC around a ready connection + embedder."""
-    pipeline = SearchPipeline(conn, config, embedder=embedder)
-    conversation = ConversationMemory(config=config, conn=conn, embedder=embedder)
-    tfc = TwinForceController()
+    tfc = TwinForceController(config=config)
+    pipeline = SearchPipeline(conn, config, tfc=tfc, embedder=embedder)
+    conversation = ConversationMemory(config=config, conn=conn, tfc=tfc, embedder=embedder)
 
     return {
         "conn": conn,

@@ -8,11 +8,27 @@ from lummenna.bench_results import load_evaluation_summary
 
 ROOT = Path(__file__).resolve().parent.parent
 WEBSITE = ROOT / "website"
-PAGES = ["index.html", "features.html", "pricing.html", "docs.html", "404.html", "thanks.html"]
+PAGES = [
+    "index.html",
+    "features.html",
+    "pricing.html",
+    "docs.html",
+    "community.html",
+    "404.html",
+    "thanks.html",
+]
 
 #: Pages carrying the full site chrome. 404 and thanks are deliberate
 #: dead ends with a single escape link and no navigation to skip past.
-CHROME_PAGES = ["index.html", "features.html", "pricing.html", "docs.html"]
+CHROME_PAGES = ["index.html", "features.html", "pricing.html", "docs.html", "community.html"]
+
+PUBLIC_CONTACT_EMAILS = {
+    "support@lummenna.com",
+    "admin@lummenna.com",
+    "engineering@lummenna.com",
+    "hello@lummenna.com",
+    "license@lummenna.com",
+}
 
 #: Every stylesheet a member of the public can load. The marketing site ships to
 #: Azure Static Web Apps while the observatory and the API reference are served
@@ -49,9 +65,21 @@ THEME_TOKENS = {
     "--line": "#b9b1a1",
     "--line-dark": "#355149",
     "--white": "#fffdf7",
-    "--display": 'Georgia, "Times New Roman", serif',
-    "--sans": '"Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif',
-    "--mono": 'SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+    "--display": 'Georgia, Gelasio, "Noto Serif", "DejaVu Serif", "Times New Roman", "Liberation Serif", serif',
+    "--sans": '"Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, "Nimbus Sans", "Liberation Sans", Arimo, Cantarell, Ubuntu, "Noto Sans", "DejaVu Sans", sans-serif',
+    "--mono": 'SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Noto Sans Mono", monospace',
+}
+
+DARK_SITE_TOKENS = {
+    "--canvas": "#071310",
+    "--surface": "#0d2722",
+    "--surface-raised": "#12342c",
+    "--surface-muted": "#173b33",
+    "--text": "#f8f5ec",
+    "--text-soft": "#bac7c2",
+    "--text-muted": "#91a49e",
+    "--border": "#355149",
+    "--border-strong": "#527067",
 }
 
 #: ``font:`` shorthand whose family arrives through ``var()``. The shorthand
@@ -166,6 +194,36 @@ def test_pages_do_not_expose_internal_build_history():
         assert internal_phrase not in site_text, internal_phrase
 
 
+def test_frontend_omits_nonpublic_email_addresses():
+    site_text = "\n".join((WEBSITE / page).read_text(encoding="utf-8") for page in PAGES)
+    assert "lummenna@outlook.com" not in site_text
+    assert "licensing@quantumindssi.com" not in site_text
+
+
+def test_frontend_mailto_targets_are_approved_aliases():
+    mailto_pattern = re.compile(r'href="mailto:([^?"]+)(?:\?[^\"]*)?"', re.IGNORECASE)
+    for page_name in PAGES:
+        page = (WEBSITE / page_name).read_text(encoding="utf-8")
+        assert set(mailto_pattern.findall(page)) <= PUBLIC_CONTACT_EMAILS, page_name
+
+
+def test_mailto_links_disable_cloudflare_obfuscation():
+    for page_name in PAGES:
+        page = (WEBSITE / page_name).read_text(encoding="utf-8")
+        for match in re.finditer(r'href="mailto:[^"]+"', page, re.IGNORECASE):
+            before = page[: match.start()]
+            assert before.rfind("<!--email_off-->") > before.rfind("<!--/email_off-->")
+            assert page.find("<!--/email_off-->", match.end()) != -1
+
+
+def test_chrome_pages_display_every_public_contact():
+    for page_name in CHROME_PAGES:
+        page = (WEBSITE / page_name).read_text(encoding="utf-8")
+        for email in PUBLIC_CONTACT_EMAILS:
+            assert f'href="mailto:{email}"' in page, f"{page_name} is missing {email}"
+            assert f">{email}</a>" in page, f"{page_name} does not display {email}"
+
+
 def test_waitlist_form_posts_same_origin_without_javascript():
     """The form must work under the site's own Content-Security-Policy.
 
@@ -201,12 +259,39 @@ def test_waitlist_form_requires_explicit_consent_and_traps_bots():
     assert 'maxlength="254"' in email.group(0), "RFC 5321 caps the path at 254"
 
 
-def test_waitlist_states_the_software_is_not_yet_published():
-    """Copy must not imply an immediate download while none exists."""
+def test_waitlist_is_for_the_stable_package():
     home = (WEBSITE / "index.html").read_text(encoding="utf-8")
-    assert "Not yet published" in home
+    assert "Community release candidate is available from PyPI and lummenna.com" in home
+    assert "stable release remains pending" in home
     for overpromise in ("Download now", "Get your download link", "Download Lummenna"):
         assert overpromise not in home, overpromise
+
+
+def test_public_acquisition_paths_use_the_community_distribution():
+    site_text = "\n".join((WEBSITE / page).read_text(encoding="utf-8") for page in PAGES)
+    folded_site_text = site_text.casefold()
+    for unavailable_action in (
+        "Install Community",
+        "Run locally",
+        "Open the runbook",
+        "Source access",
+        'href="/docs#install"',
+        'href="/docs#run"',
+        "git clone https://github.com/QuantmindSSI/lummenna.git",
+    ):
+        assert unavailable_action.casefold() not in folded_site_text, unavailable_action
+
+    for page_name in CHROME_PAGES:
+        page = (WEBSITE / page_name).read_text(encoding="utf-8")
+        nav_cta = re.search(r'<a class="nav-cta" href="([^"]+)"[^>]*>([^<]+)</a>', page)
+        assert nav_cta is not None, f"{page_name} has no primary navigation CTA"
+        assert nav_cta.groups() == ("/community", "Community"), page_name
+
+    home = (WEBSITE / "index.html").read_text(encoding="utf-8")
+    pricing = (WEBSITE / "pricing.html").read_text(encoding="utf-8")
+    assert '<a class="btn btn-primary" href="/community">Deploy Community</a>' in home
+    assert '<a class="btn btn-paper" href="/community">Deploy Community</a>' in pricing
+    assert 'href="#download">Join stable waitlist</a>' in home
 
 
 def test_waitlist_input_avoids_the_ios_zoom_threshold():
@@ -232,6 +317,17 @@ def test_every_public_surface_declares_the_same_theme_palette():
         text = path.read_text(encoding="utf-8")
         for token, value in THEME_TOKENS.items():
             assert f"{token}: {value};" in text, f"{path.name} is missing {token}: {value}"
+
+
+def test_marketing_site_defaults_to_the_dark_semantic_palette():
+    text = stylesheet_source(WEBSITE / "assets" / "css" / "site.css")
+    assert "color-scheme: dark;" in text
+    for token, value in DARK_SITE_TOKENS.items():
+        assert f"{token}: {value};" in text
+    body = re.search(r"\nbody \{([^}]*)\}", text)
+    assert body is not None
+    assert "background: var(--canvas);" in body.group(1)
+    assert "color: var(--text);" in body.group(1)
 
 
 def test_public_surfaces_share_one_typographic_baseline():
@@ -408,17 +504,23 @@ def test_azure_static_site_routes_and_security_headers():
         "/features": "/features.html",
         "/pricing": "/pricing.html",
         "/docs": "/docs.html",
+        "/community": "/community.html",
     }
     assert redirects == {
         "/index.html": ("/", 301),
         "/features.html": ("/features", 301),
         "/pricing.html": ("/pricing", 301),
         "/docs.html": ("/docs", 301),
+        "/community.html": ("/community", 301),
     }
     assert config["responseOverrides"]["404"]["statusCode"] == 404
     assert config["trailingSlash"] == "never"
     image_route = next(route for route in config["routes"] if route["route"] == "/assets/img/*")
     assert image_route["headers"]["Cache-Control"] == "public, max-age=604800"
+    download_route = next(route for route in config["routes"] if route["route"] == "/downloads/*")
+    assert download_route["headers"]["Cache-Control"] == ("public, max-age=31536000, immutable")
+    assert config["mimeTypes"][".whl"] == "application/zip"
+    assert config["mimeTypes"][".gz"] == "application/gzip"
     csp = config["globalHeaders"]["Content-Security-Policy"]
     assert "script-src 'none'" in csp
     assert "unsafe-inline" not in csp

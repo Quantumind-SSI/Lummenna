@@ -114,7 +114,7 @@ The GitHub Actions workflows form an end-to-end Azure pipeline:
 |---|---|---|
 | `AZURE_RESOURCE_GROUP` | infra | `rg-lummenna` |
 | `AZURE_LOCATION` | infra | `westeurope` |
-| `ACR_LOGIN_SERVER` | image, deploy | `lumenaacr1234.azurecr.io` |
+| `ACR_LOGIN_SERVER` | image, deploy | `lummennaacr1234.azurecr.io` |
 | `AKS_RESOURCE_GROUP` | deploy | `rg-lummenna` |
 | `AKS_CLUSTER_NAME` | deploy | `lummenna-aks` |
 

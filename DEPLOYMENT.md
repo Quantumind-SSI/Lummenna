@@ -1,6 +1,6 @@
 # Lummenna Production Deployment Guide
 
-**Version:** v1.0.0  
+**Version:** v1.0.1rc1
 **Platforms:** Raspberry Pi 5, Jetson Orin Nano, Generic x86_64, ARM64 SBCs
 
 ---
@@ -49,22 +49,21 @@ sudo systemctl disable dphys-swapfile
 python3 -m venv ~/.venvs/lummenna
 source ~/.venvs/lummenna/bin/activate
 
-# Install Lummenna from PyPI (when published)
-pip install lummenna
-
-# Or install from source
-git clone https://github.com/QuantmindSSI/lummenna.git
-cd lummenna
-pip install -e ".[dev]"
+# Install the Community release candidate from PyPI.
+python -m pip install --pre "lummenna[export]==1.0.1rc1"
 ```
+
+> **Prerelease package.** Use `--pre` or pin `1.0.1rc1`. For an
+> index-independent installation, use the direct wheel and checksums published
+> at `https://lummenna.com/community`.
 
 ### 2.2 Edge-Optimized Installation
 
 ```bash
 # For Raspberry Pi 5 (low-RAM, flash-wear conscious)
-pip install lummenna \
-  --no-binary :all: \
-  --prefer-binary onnxruntime
+python -m pip install \
+  "lummenna @ https://lummenna.com/downloads/lummenna-1.0.1rc1-py3-none-any.whl" \
+  --prefer-binary
 
 # Download spaCy model for NER
 python -m spacy download en_core_web_sm
@@ -74,6 +73,10 @@ pip install llama-cpp-python
 ```
 
 ### 2.3 Docker Deployment
+
+For a repository-free sidecar build, use the checksum-pinned Dockerfile and
+commands at `https://lummenna.com/community`. The source build below is for
+maintainers working from an approved source tree.
 
 ```bash
 # Build
@@ -254,7 +257,7 @@ This is **sovereignty-gated and fail-loud**:
 - Set `APPLICATIONINSIGHTS_CONNECTION_STRING` (standard Azure convention).
 - Set `LUMMENNA_SOVEREIGN=false` — export while sovereign mode is on raises
   `SovereignViolationError` at startup instead of silently leaking traces.
-- Install the extra: `pip install "lummenna[azure]"`. If the connection string
+- Install the extra: `pip install -e ".[azure]"`. If the connection string
   is set but the package is missing, startup fails with an actionable error —
   Lummenna never runs without telemetry the operator configured.
 
@@ -290,7 +293,7 @@ kubectl create namespace lummenna
 kubectl -n lummenna create secret generic lummenna-auth \
   --from-literal=api-key="$(openssl rand -hex 32)"
 helm upgrade --install lummenna charts/lummenna -n lummenna \
-  --set image.repository="$ACR/lummenna" --set image.tag=1.0.0 \
+  --set image.repository="$ACR/lummenna" --set image.tag=1.0.1rc1 \
   --set auth.existingSecret=lummenna-auth \
   --set model.url="https://<blob>/models/bge-small-en-v1.5-r5c38ec7.tar.gz" \
   --set model.sha256="<tarball sha256>"
@@ -341,7 +344,17 @@ curl -H "X-API-Key: $LUMMENNA_API_KEY" \
 
 ### 5.2 Encryption at Rest
 
-Lummenna does not yet implement built-in database encryption. Use OS-level full-disk encryption:
+Lummenna ships built-in encryption at rest (a Pro entitlement — `encryption_at_rest`):
+
+* **`sqlcipher`** — whole-database AES-256 page encryption via SQLCipher, with a PBKDF2-derived passphrase and a persisted per-store salt.
+* **`fernet`** — field-level encryption for `chunk.content` (AES-128-CBC + HMAC-SHA256) when the SQLCipher driver is unavailable.
+
+```bash
+export LUMMENNA_DATABASE_ENCRYPTION_MODE='sqlcipher'   # or 'fernet'
+export LUMMENNA_ENCRYPTION_KEY='replace-with-a-secret'
+```
+
+Without a valid Pro license, enabling either mode fails closed at startup with a license error. The Community default is `none`: plaintext SQLite with OS-level file permissions. On Community (or wherever DB-level encryption is not enabled), use OS-level full-disk encryption:
 
 | OS | Technology | Enable |
 |---|---|---|
@@ -350,12 +363,7 @@ Lummenna does not yet implement built-in database encryption. Use OS-level full-
 | Linux | LUKS/dm-crypt | `cryptsetup luksFormat /dev/sdX` |
 | Raspberry Pi | LUKS + initramfs | See [Raspberry Pi LUKS guide](https://www.raspberrypi.com/documentation/computers/configuration.html) |
 
-SQLCipher integration is planned for v0.3.0. On startup, Lummenna logs a reminder:
-
-```
-encryption_at_rest_disabled
-recommendation='Use OS-level disk encryption (FileVault, BitLocker, LUKS) for production'
-```
+When encryption is disabled the startup log records `encryption_at_rest_disabled` — treat that line as the reminder to apply disk encryption.
 
 ### 5.3 File Permissions
 
@@ -481,7 +489,7 @@ find /backup/lummenna -name "*.tar.gz" -mtime +14 -delete
 
 ### 7.1 Footprints
 
-Runtime RAM and storage footprints have **not yet been measured** — the perf suite (`python -m benchmarks.perf.run`) is a ready harness with no committed results. Until measured artifacts exist, size your deployment empirically: run the perf suite on your target hardware and check `process_peak_rss_mb` on the `/metrics` endpoint and `db_size_mb` on `/v1/dashboard-data`, which report real measured values for a running instance.
+The repository contains an x86_64 performance artifact, but it is not a sizing guarantee for other hardware. Size each deployment empirically: run `python -m benchmarks.perf.run` on the target system, inspect `process_peak_rss_mb` on `/metrics`, and inspect `storage.total_store_mb` on `/v1/dashboard-data`. `storage.pressure_pct` is the lifecycle algorithm's chunk-count heuristic, not measured RAM or disk utilization.
 
 ### 7.2 Performance Tuning
 
@@ -520,9 +528,12 @@ lummenna-backup.sh
 # 2. Stop service
 sudo systemctl stop lummenna
 
-# 3. Upgrade
+# 3. Upgrade. Until a release is published, upgrading means moving the clone to
+#    the desired commit and reinstalling; there is no version to pull from PyPI.
 source ~/.venvs/lummenna/bin/activate
-pip install --upgrade lummenna
+git -C /path/to/lummenna fetch origin
+git -C /path/to/lummenna checkout <commit-or-branch>
+pip install -e /path/to/lummenna
 
 # 4. Migrations run automatically on DB connect; nothing to do manually
 # 5. Restart
@@ -539,8 +550,10 @@ curl http://localhost:8848/health
 # Restore from backup
 sudo systemctl stop lummenna
 sqlite3 ~/.lummenna/store/lummenna.db ".restore '${BACKUP_DIR}/lummenna.db'"
-# Reinstall previous version
-pip install lummenna==$PREVIOUS_VERSION
+# Reinstall the previous version. With no published release, roll back by
+# checking out the commit that was previously deployed and reinstalling.
+git -C /path/to/lummenna checkout "$PREVIOUS_COMMIT"
+pip install -e /path/to/lummenna
 sudo systemctl start lummenna
 ```
 
@@ -580,7 +593,7 @@ curl -X POST http://localhost:8848/v1/search \
 
 ## 10. Support & Community
 
-- **Documentation:** https://github.com/QuantmindSSI/lummenna/tree/main/docs
+- **Documentation:** https://lummenna.com/docs
 - **Issues:** https://github.com/QuantmindSSI/lummenna/issues
 - **Discussions:** https://github.com/QuantmindSSI/lummenna/discussions
 - **Security:** security@lummenna.ai

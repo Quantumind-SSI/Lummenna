@@ -71,7 +71,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE_REPOSITORY: lumena
+  # Renamed from the pre-rename 'lumena' on 2026-08-31, matching namePrefix in
+  # infra/azure/main.bicep. This is the repository name inside ACR, so the first
+  # deploy after this change pushes to a new repository rather than a new tag of
+  # the old one. Any previously pushed 'lumena' tags are not reachable by a
+  # rollback through this workflow and must be retagged or repushed if wanted.
+  IMAGE_REPOSITORY: lummenna
 
 jobs:
   # --------------------------------------------------------------------
@@ -329,7 +334,7 @@ jobs:
           # server.py goes falsy, and this endpoint answers 200 to an
           # anonymous caller. A 401 is the ONLY acceptable result.
           FQDN="${{ needs.deploy.outputs.api_fqdn }}"
-          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$FQDN/v1/memories")
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$FQDN/v1/status")
           if [ "$code" != "401" ]; then
             echo "::error::Unauthenticated request returned $code, expected 401. API authentication is NOT enforced; the LUMMENNA_ environment prefix is probably not being read."
             exit 1
@@ -341,7 +346,7 @@ jobs:
           FQDN="${{ needs.deploy.outputs.api_fqdn }}"
           code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
             -H "X-API-Key: $API_KEY" \
-            "https://$FQDN/v1/memories")
+            "https://$FQDN/v1/status")
           if [ "$code" != "200" ]; then
             echo "::error::Authenticated request returned $code, expected 200. The configured key does not match the running key."
             exit 1
@@ -391,8 +396,8 @@ jobs:
 
       - name: Confirm security headers survived the deploy
         run: |
-          # website/_headers carries the CSP and HSTS policy. A deploy that
-          # drops it degrades the site silently, so assert rather than assume.
+          # staticwebapp.config.json carries the CSP and HSTS policy. A deploy
+          # that drops it degrades the site silently, so assert rather than assume.
           HOST="${{ needs.deploy.outputs.site_hostname }}"
           sleep 15
           missing=0

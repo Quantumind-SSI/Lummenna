@@ -22,19 +22,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml PACKAGE-README.md LICENSE ./
 COPY lummenna/ lummenna/
+COPY benchmarks/retrieval/results/retrieval_results.json benchmarks/retrieval/results/retrieval_results.json
+COPY benchmarks/beir/results/beir_results.json benchmarks/beir/results/beir_results.json
+COPY benchmarks/e2e/results/e2e_results.json benchmarks/e2e/results/e2e_results.json
 
 # Build a wheel and install into an isolated prefix that the runtime copies.
-RUN pip install --prefix=/install .
+RUN pip install --prefix=/install '.[azure]'
 
 # --- Runtime stage ---------------------------------------------------------
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="Lummenna Memory API"
 LABEL org.opencontainers.image.description="Local-first memory and context framework for sovereign AI agents"
-LABEL org.opencontainers.image.source="https://github.com/QuantmindSSI/lummenna"
-LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL org.opencontainers.image.source="https://lummenna.com/community"
+LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -42,7 +45,15 @@ ENV PYTHONUNBUFFERED=1 \
     LUMMENNA_API_HOST=0.0.0.0 \
     LUMMENNA_API_PORT=8848 \
     LUMMENNA_STORE_PATH=/data/store \
-    LUMMENNA_MODEL_PATH=/data/models
+    LUMMENNA_MODEL_PATH=/data/models \
+    FORWARDED_ALLOW_IPS=127.0.0.1
+
+# FORWARDED_ALLOW_IPS: rate limiting and brute-force throttling key on the
+# client IP uvicorn reports. Behind a reverse proxy/ingress that is the
+# PROXY's IP unless X-Forwarded-For is trusted — which would throttle ALL
+# customers as one shared bucket. uvicorn reads FORWARDED_ALLOW_IPS (IPs or
+# CIDRs of trusted proxies) natively; set it to your ingress/LB range at
+# runtime, e.g. -e FORWARDED_ALLOW_IPS=10.0.0.0/8 for cluster-internal LBs.
 
 COPY --from=build /install /usr/local
 
@@ -54,7 +65,7 @@ RUN groupadd --gid 10001 lummenna \
 
 USER 10001:10001
 
-VOLUME ["/data/store", "/data/models"]
+CMD ["uvicorn", "lummenna.api.server:app", "--host", "0.0.0.0", "--port", "8848", "--log-level", "info", "--proxy-headers", "--forwarded-allow-ips", "127.0.0.1"]
 
 EXPOSE 8848
 
@@ -62,4 +73,3 @@ EXPOSE 8848
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8848/health')" || exit 1
 
-CMD ["uvicorn", "lummenna.api.server:app", "--host", "0.0.0.0", "--port", "8848", "--log-level", "info"]

@@ -13,14 +13,13 @@
 <p><strong>Local-first memory and context framework for sovereign AI agents.</strong></p>
 
 <p>
-  <a href="https://github.com/QuantmindSSI/lummenna/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantumindSSI/lummenna/ci.yml?branch=main&style=flat-square" alt="CI"></a>
+  <a href="https://github.com/QuantmindSSI/lummenna/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantmindSSI/lummenna/ci.yml?branch=main&style=flat-square" alt="CI"></a>
   <a href="https://github.com/QuantmindSSI/lummenna/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%7C%20Commercial-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
-  <img src="https://img.shields.io/badge/coverage-75%25-brightgreen?style=flat-square" alt="Coverage">
-  <img src="https://img.shields.io/badge/tests-320%20passed-brightgreen?style=flat-square" alt="Tests">
+  <a href="https://codecov.io/gh/QuantmindSSI/lummenna"><img src="https://img.shields.io/codecov/c/github/QuantmindSSI/lummenna?style=flat-square" alt="Coverage"></a>
 </p>
 
-<p><em>Production-ready. API-stable; actively developed. Contributions welcome.</em></p>
+<p><em>Community 1.0.1rc1 is available from PyPI and directly from lummenna.com. It remains single-node by design, and its public API may change before the stable release.</em></p>
 
 </div>
 
@@ -41,38 +40,55 @@ Lummenna is a **local-first memory store for LLM agents** — it organizes agent
 ## Quick Start
 
 ```bash
-# Clone and install (lean runtime — no torch/CUDA)
-git clone https://github.com/QuantmindSSI/lummenna.git
-cd lummenna
-pip install -e .            # runtime: sqlite-vec, onnxruntime, transformers tokenizer…
+# Install the runtime plus one-time model export tools
+python -m pip install --pre 'lummenna[export]==1.0.1rc1'
 
 # Initialize
 lummenna init --device generic
 
+# One-time networked model export; subsequent inference is local
+LUMMENNA_SOVEREIGN=false lummenna model download bge-small-en-v1.5
+
 # Start the server
 lummenna serve
-# Dashboard at http://localhost:8848/dashboard
-# API docs at http://localhost:8848/docs
+# Main observatory at http://localhost:8848/
+# Stable dashboard alias at http://localhost:8848/dashboard
+# Local API reference at http://localhost:8848/docs
 ```
 
-> **First run needs an embedding model.** By default `lummenna` will try to export
-> one, which requires the heavy `[export]` toolchain. The lean, recommended path
-> is a **prebuilt model bundle** (no toolchain): set `LUMMENNA_PREBUILT_MODEL_URL`
-> or use the one-command installer.
+> **First run needs an embedding model.** The command above performs a one-time
+> network fetch and ONNX export using the heavy `[export]` toolchain. For an
+> air-gapped install, provision `model.onnx` and the tokenizer files under
+> `~/.lummenna/models/bge-small-en-v1.5/` before isolation.
 
 ### Install options (extras)
 
+> **Prerelease package.** Use `--pre` or pin `1.0.1rc1`; pip does not select a
+> prerelease when no version is specified unless prereleases are explicitly
+> enabled. The same wheel is available directly from lummenna.com.
+
 The base install is deliberately **lean** (no torch/CUDA). Add extras only when needed:
 
-| Install | Adds | When |
+```bash
+WHEEL_URL=https://lummenna.com/downloads/lummenna-1.0.1rc1-py3-none-any.whl
+python -m pip install "lummenna[mcp] @ ${WHEEL_URL}"
+```
+
+Replace `mcp` with the required selector:
+
+| Selector | Adds | When |
 |---|---|---|
-| `pip install lummenna` | Core runtime + inference | Always |
-| `pip install 'lummenna[mcp]'` | MCP server for coding agents | Using OpenCode/Copilot/Claude/etc. |
-| `pip install 'lummenna[export]'` | ONNX export toolchain (optimum → torch, ~2GB) | Only to *build* a model yourself |
-| `pip install 'lummenna[wizard]'` | spaCy onboarding wizard | `lummenna illuminate` |
-| `pip install 'lummenna[localllm]'` | On-device LLM (llama-cpp) | Narrative consolidation |
-| `pip install 'lummenna[langchain]'` / `[langgraph]` | Framework adapters | Those frameworks |
-| `pip install 'lummenna[full]'` | Everything above | Kitchen-sink local dev |
+| `lummenna` | Core runtime + inference | Using a provisioned model |
+| `lummenna[mcp]` | MCP server for coding agents | Using OpenCode, Copilot, or Claude |
+| `lummenna[export]` | ONNX export toolchain | Building the model locally |
+| `lummenna[wizard]` | spaCy onboarding wizard | Running `lummenna illuminate` |
+| `lummenna[localllm]` | On-device LLM | Narrative consolidation |
+| `lummenna[langchain]` / `lummenna[langgraph]` | Framework adapters | Using those frameworks |
+| `lummenna[azure]` | Azure Blob backup backend | Off-device backup |
+| `lummenna[full]` | All runtime integrations | Evaluation environments |
+
+Development tooling and benchmark runners are available in the corresponding
+source archive linked from `https://lummenna.com/community`.
 
 ### Store and retrieve
 
@@ -120,7 +136,9 @@ TFC → e=0.50 a=0.50 tau=7.0 r=3
 
 ```
 GET  /health            Liveness probe (unversioned)
-GET  /dashboard         Effectiveness dashboard (HTML)
+GET  /                  Main memory observatory (HTML)
+GET  /dashboard         Stable observatory alias (HTML)
+GET  /docs              Local OpenAPI reference (HTML)
 GET  /metrics           Machine-readable metrics
 GET  /v1/status        Palace overview
 POST /v1/search       Semantic + lexical hybrid search
@@ -128,7 +146,7 @@ POST /v1/store        Store a memory chunk
 POST /v1/feedback     Log explicit or implicit feedback
 POST /v1/assemble     Retrieve + assemble context in one call
 POST /v1/turn         Store full conversation turn
-GET  /v1/dashboard-data Dashboard data as JSON
+GET  /v1/dashboard-data Tenant-scoped dashboard data (authenticated when API key is set)
 ```
 
 ---
@@ -152,11 +170,20 @@ User Input → Intent Router → Parallel Retrieval (BM25 + Dense + Graph)
 
 ## State of the Project
 
-Lummenna is **production-ready software**. It works end-to-end with API versioning, comprehensive tests, and documented security limitations. It is suitable for production, evaluation, development, and trusted-LAN deployments.
+Lummenna Community `1.0.1rc1` is a **public release candidate that works
+end-to-end**. It has API versioning, a substantial test suite, and documented
+security limitations. It is suitable for evaluation, development, sidecars,
+and trusted-LAN deployments.
+
+It is distributed through PyPI and directly from lummenna.com as a wheel and
+corresponding source archive, but it has no published container image. It is
+single-node by design, because the store is single-writer SQLite; the Helm chart refuses
+`replicaCount > 1` and the Azure template pins `maxReplicas` to 1. Judge
+"production" against that shape.
 
 | Dimension | Status | Detail |
 |---|---|---|
-| **Tests** | 320 passing, 7 skipped | 75% coverage. 43 test files. |
+| **Tests** | 662 passing, 11 skipped | 78.7% coverage. |
 | **Storage** | Working | SQLite with WAL, FTS5, bi-temporal tracking, provenance chains. |
 | **Retrieval** | Working | BM25 + dense + graph with RRF fusion. |
 | **Forgetting** | Working | L1 decay (Ebbinghaus), L2 interference, L3 budget eviction. |
@@ -183,11 +210,11 @@ All run with a single command from the repo root:
 | Navigation efficiency | `python -m benchmarks.navigation.run` | Run |
 | Ablation (component isolation) | `python -m benchmarks.ablation.run` | Run |
 | Forgetting (90-day survival) | `python -m benchmarks.forgetting.run` | Run (results available) |
-| Performance (latency/footprint) | `python -m benchmarks.perf.run` | Run (results available; x86_64) |
+| Performance (latency/footprint) | `python -m benchmarks.perf.run` | Run (results available; host not recorded in artifact) |
 | BEIR subset evaluation | `python -m benchmarks.beir.run` | Run (500-doc/20-query subset results available) |
 | Optical degradation | `python -m benchmarks.optical.run` | Run (results available) |
 | TFC sensitivity | `python -m benchmarks.tfc.run` | Run (results available) |
-| Stress (bulk ingest) | `python -m benchmarks.stress.run` | Run (20k-chunk results available; x86_64) |
+| Stress (bulk ingest) | `python -m benchmarks.stress.run` | Run (20k-chunk results available; host not recorded in artifact) |
 | Cross-system (vs Chroma/FAISS) | `python -m benchmarks.cross_system.run` | Harness ready; no results yet |
 | All suites | `python -m benchmarks.run_all` | Wraps all 11 suites |
 
@@ -199,7 +226,7 @@ All run with a single command from the repo root:
 
 | Integration | What it does | How to use |
 |---|---|---|
-| **MCP Server** | Exposes Lummenna tools to OpenCode, Claude Desktop | `python -m lummenna.integrations.mcp_server` |
+| **MCP Server** | Exposes Lummenna tools to OpenCode, Claude Desktop | `lummenna mcp` |
 | **LangChain** | `LummennaChatMemory` adapter | `pip install langchain` |
 | **LangGraph** | `LummennaCheckpointSaver` for graph state | `pip install langgraph` |
 | **FastAPI** | REST API with auth/rate-limiting | `lummenna serve` |
@@ -272,7 +299,6 @@ ruff check lummenna/ tests/             # Lint
 | [`SECURITY.md`](SECURITY.md) | Security policy and known limitations |
 | [`INTEGRATIONS.md`](INTEGRATIONS.md) | Integration guides for each platform |
 | [`ROADMAP.md`](ROADMAP.md) | Development milestones and open work |
-| [`docs/Lummenna_Whitepaper.md`](docs/Lummenna_Whitepaper.md) | Introductory white paper |
 
 ---
 
@@ -298,7 +324,7 @@ Lummenna is **dual-licensed**:
 
 Versions up to and including v1.0.0 were released under Apache 2.0
 ([`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt)); that grant on those
-releases is irrevocable. Commercial inquiries: **licensing@quantumindssi.com**.
+releases is irrevocable. Commercial inquiries: **license@lummenna.com**.
 
 ---
 

@@ -87,6 +87,8 @@ spec:
               value: /data/store
             - name: LUMMENNA_MODEL_PATH
               value: /data/models
+            - name: FORWARDED_ALLOW_IPS
+              value: {{ .Values.config.forwardedAllowIps | quote }}
             - name: LUMMENNA_EMBEDDING_MODEL
               value: {{ .Values.model.name | quote }}
             - name: LUMMENNA_DEVICE

@@ -1,6 +1,12 @@
 # Lummenna Production Readiness Roadmap
 
-This document tracks ongoing and future work for Lummenna following the v1.0.0 public release.
+This document tracks ongoing and future work for Lummenna.
+
+> **Release status: Community preview prepared.** Version `1.0.1rc1` is built as
+> an audited wheel and corresponding source archive for PyPI and direct
+> distribution from lummenna.com. It has no published container image. The
+> artifacts become public when Trusted Publishing and the website deployment
+> complete. Section 3.3 tracks the remaining stable-release work.
 
 ---
 
@@ -64,10 +70,80 @@ This document tracks ongoing and future work for Lummenna following the v1.0.0 p
 
 ### 3.3 Release Engineering
 - [x] PGP key for vulnerability reporting — generated and published in SECURITY.md
+- [x] Build an audited `1.0.1rc1` Community wheel and corresponding source
+      archive with checksums and no private repository or incident material.
+- [ ] Deploy the direct-download Community artifacts at lummenna.com.
 - [ ] CI/CD: add `pip-audit`, fuzz tests, backend matrix tests
-- [x] Tag `v0.2.0-beta`
-- [x] Tag `v1.0.0` — inaugural public release
-- [x] Publish release notes with closed/open gaps
+- [ ] Tag the first stable release after the `1.0.1rc1` Community preview. `release.yml` is wired and
+      triggers on `v*.*.*`, but no tag has ever been pushed (`git tag -l` is
+      empty), so the release workflow has never run.
+- [ ] Publish the source distribution and wheel to PyPI. The `publish-pypi` job
+      exists in `release.yml`; `pip install lummenna` fails until it runs.
+- [ ] Publish the container image to GHCR. `docker-publish.yml` targets
+      `ghcr.io/${{ github.repository_owner }}/lummenna`; no image is currently
+      pullable.
+- [ ] Publish release notes with closed/open gaps
+
+---
+
+## Phase 4: Remote MCP Transport (OPEN, Community)
+
+### 4.1 Streamable HTTP transport for the MCP server
+
+**Not built today.** `lummenna/integrations/mcp_server.py` calls
+`mcp.run(transport="stdio")` and nothing else. A client must be able to spawn
+the process, so Lummenna's MCP surface is unavailable to remote hosts,
+containers, and browser-based clients. The documented workaround is the REST
+API (`INTEGRATIONS.md`, "Option B"), which is a different protocol with a
+different tool surface, not MCP.
+
+Scope note: the target is **Streamable HTTP**, the transport introduced in MCP
+revision 2025-03-26. The MCP specification defines exactly two standard
+transports, stdio and Streamable HTTP; the standalone HTTP+SSE transport from
+revision 2024-11-05 is deprecated, and SSE now appears only as the response
+streaming mechanism *inside* Streamable HTTP. The pinned SDK still exposes
+`transport="sse"` and `FastMCP.sse_app()` for backward compatibility. Shipping
+that legacy transport is explicitly **out of scope**: it would be a new public
+surface born deprecated.
+
+This is Community work, not Pro. The stdio MCP server and the HTTP REST API are
+both Community, so gating the transport that joins them would be arbitrary. It
+is therefore deliberately **absent** from `PLANNED_PRO_FEATURES`.
+
+Acceptance criteria:
+
+- [ ] `lummenna mcp --transport streamable-http` serves the identical tool and
+      resource surface as stdio, verified by a test asserting both transports
+      report the same tool names, input schemas, and resource URIs
+- [ ] **Per-session state.** `_state()` currently falls back to the module-level
+      `_module_state` singleton, which is correct for stdio (one client, one
+      process) and wrong for concurrent HTTP sessions. State must be resolved
+      per request from the lifespan context, with a test proving two concurrent
+      sessions cannot observe each other's request state
+- [ ] **Concurrency against single-writer SQLite.** The palace is one SQLite
+      database and `lummenna serve` may already hold it. Concurrent tool calls
+      must serialise through the existing advisory locks (`lummenna/data/locks.py`)
+      with a bounded timeout and a clear error, never a silent `database is
+      locked` failure. Covered by a test that runs writes from concurrent
+      sessions while a second process holds the lock
+- [ ] **Authentication on by default.** stdio inherits the trust boundary of the
+      spawning process; HTTP does not. The endpoint must refuse to start on a
+      non-loopback interface without an auth credential configured, mirroring
+      the REST API's `X-API-Key` check (`lummenna/api/server.py`). Tests prove
+      unauthenticated requests are rejected and that startup fails closed
+- [ ] **Origin validation and loopback default.** Bind `127.0.0.1` unless
+      explicitly overridden, and validate the `Origin` header to prevent DNS
+      rebinding attacks against a locally bound server, as the MCP transport
+      security guidance requires. Tests cover a forged `Origin` and a
+      non-loopback bind attempt
+- [ ] **Sovereign posture preserved.** Exposing the server on a network
+      interface is opt-in and never the default; `LUMMENNA_SOVEREIGN` semantics
+      and the documented local-first claim remain accurate afterwards
+- [ ] Documented in `INTEGRATIONS.md` with a worked remote/Docker example, and
+      the "MCP server is stdio-only" limitation removed **in the same change**
+      rather than left contradicting the code
+- [ ] `lummenna mcp --check` extended to diagnose the HTTP path (bind address,
+      auth configured, reachable endpoint) with the same fail-closed semantics
 
 ---
 
@@ -190,8 +266,21 @@ extend the same gate when delivered.
 
 ## Honest Claim Posture
 
-As stated in the whitepaper:
+What Lummenna is, stated without inflation:
 
-> Lummenna is a production-grade framework for sovereign agentic memory with unique lifecycle management and native integrations; its retrieval quality is competitive in controlled settings and validated by synthetic benchmarks, with full BEIR/MTEB leaderboard evaluation as ongoing work.
+> Lummenna is a working, unreleased framework for sovereign agentic memory, with
+> lifecycle management and native integrations. It runs entirely on-device and is
+> single-node by design, because the store is single-writer SQLite. Retrieval
+> quality is validated against synthetic corpora in controlled settings; no
+> BEIR/MTEB leaderboard run has been published, so no competitive claim is made
+> against other systems. Nothing has been tagged, published to PyPI, or released
+> as an image.
 
-This roadmap tracks continued improvement beyond the v1.0.0 public release.
+Earlier revisions of this section described the project as "production-grade".
+That was not supportable: the same repository describes its own Azure surface as
+a "demo/leaderboard surface" (`infra/azure/main.bicep`), pins replicas to one,
+and keeps the database on ephemeral local disk. Capability claims must match the
+code, per `AGENTS.md` Rule 2.
+
+This roadmap tracks the work required to reach the first stable public release, and
+the continued improvement planned beyond it.

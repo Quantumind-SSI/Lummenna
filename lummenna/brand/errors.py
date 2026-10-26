@@ -127,15 +127,27 @@ class SovereignViolationError(LummennaError):
 
 
 class ModelNotAvailableError(LummennaError):
-    """Required ONNX embedding model is missing or cannot be loaded."""
+    """Required ONNX embedding model is missing or cannot be loaded.
+
+    ``model_path`` is retained as an attribute so a caller that wants to add
+    context can re-raise with the *same* path plus a ``hint``, instead of
+    passing the previous message back in as ``model_path``. Doing the latter
+    nests the whole sentence inside "Embedding model not available at '...'"
+    and repeats the provisioning advice twice, which is what `_init.py` did
+    until 2026-09-10.
+    """
 
     code = "LME-2001"
 
-    def __init__(self, model_path: str) -> None:
-        super().__init__(
+    def __init__(self, model_path: str, hint: str = "") -> None:
+        self.model_path = model_path
+        msg = (
             f"Embedding model not available at '{model_path}'. "
             "Run 'lummenna model download <alias>' or 'lummenna init --download-model' to provision it."
         )
+        if hint:
+            msg += f" {hint}"
+        super().__init__(msg)
 
 
 class FeedbackLogError(LummennaError):
@@ -165,7 +177,7 @@ class LicenseRequiredError(LicenseError):
         super().__init__(
             f"'{feature}' is a Lummenna Pro feature and requires a commercial license. "
             "Set LUMMENNA_LICENSE_KEY (or license_key in config), or contact "
-            "licensing@quantumindssi.com. See COMMERCIAL-LICENSE.md."
+            "license@lummenna.com. See https://lummenna.com/pricing."
         )
         self.feature = feature
 
@@ -179,7 +191,7 @@ class LicenseInvalidError(LicenseError):
         msg = "The supplied Lummenna license key is invalid or expired."
         if reason:
             msg += f" ({reason})"
-        msg += " Contact licensing@quantumindssi.com."
+        msg += " Contact license@lummenna.com."
         super().__init__(msg)
         self.reason = reason
 
@@ -193,10 +205,32 @@ class SeatLimitError(LicenseError):
         super().__init__(
             f"This Lummenna Pro license permits {seats} tenant seat(s); "
             f"{current} are already in use, so a new tenant cannot be created. "
-            "Reduce active tenants or upgrade your seat count — contact "
-            "licensing@quantumindssi.com. See COMMERCIAL-LICENSE.md."
+            "Reduce active tenants or upgrade your seat count; contact "
+            "license@lummenna.com. See https://lummenna.com/pricing."
         )
         self.seats = seats
+        self.current = current
+
+
+
+class TenantQuotaError(LummennaError):
+    """A write would push a tenant past its configured active-chunk quota.
+
+    Raised by the store write path when ``tenant_max_active_chunks > 0``.
+    Unlike seat limits this is an operational quota, not a licensing gate.
+    """
+
+    code = "LME-6001"
+
+    def __init__(self, tenant_id: str, limit: int, current: int) -> None:
+        super().__init__(
+            f"Tenant '{tenant_id}' already holds {current} active memories; "
+            f"the configured quota is {limit}. The write was rejected so this "
+            "tenant cannot evict other tenants' memories via storage pressure. "
+            "Raise LUMMENNA_TENANT_MAX_ACTIVE_CHUNKS or forget memories first."
+        )
+        self.tenant_id = tenant_id
+        self.limit = limit
         self.current = current
 
 

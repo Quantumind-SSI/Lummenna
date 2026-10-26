@@ -11,8 +11,8 @@ Key format (must match ``lummenna.licensing.parse_license_key``)::
 
     LUMMENNA-<base64url(payload_json)>.<base64url(ed25519_signature)>
 
-See ``docs/LICENSE_SIGNING_KEY_CUSTODY.md`` for the full generate / safeguard /
-rotate / revoke runbook.
+The full generate / safeguard / rotate / revoke procedure lives in the private,
+access-controlled signing-key custody runbook.
 
 Usage
 -----

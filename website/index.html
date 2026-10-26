@@ -10,6 +10,12 @@
   <link rel="stylesheet" href="/assets/css/site.css">
 </head>
 <body>
+  <div class="site-backdrop" aria-hidden="true">
+    <video class="site-backdrop-media" width="1280" height="624" autoplay muted loop playsinline preload="metadata">
+      <source src="/assets/video/lummenna-bg.webm" type="video/webm" media="(prefers-reduced-motion: no-preference)">
+      <source src="/assets/video/lummenna-bg.mp4" type="video/mp4" media="(prefers-reduced-motion: no-preference)">
+    </video>
+  </div>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <nav class="nav" aria-label="Primary navigation">
     <div class="nav-inner">
@@ -23,7 +29,7 @@
         <a href="/pricing">Licensing</a>
         <a href="/docs">Docs</a>
         
-        <a class="nav-cta" href="/docs#run">Run locally</a>
+        <a class="nav-cta" href="/community">Community</a>
       </div>
     </div>
   </nav>
@@ -35,10 +41,10 @@
         <h1>Memory, <em>illuminated locally.</em></h1>
         <p class="lede">Lummenna gives agents a structured memory palace, hybrid lexical and vector retrieval, token-budgeted context assembly, and a managed memory lifecycle. The default runtime stays on your hardware; network-backed operations are explicit configuration choices.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/docs#install">Install Community</a>
-          <a class="btn" href="/features">See what ships</a>
+          <a class="btn btn-primary" href="/community">Deploy Community</a>
+          <a class="btn" href="#download">Join stable waitlist</a>
         </div>
-        <p class="hero-note">Python 3.10+ / AGPL-3.0-or-later or commercial license / API version 1.0.0</p>
+        <p class="hero-note">Community 1.0.1rc1 / PyPI + direct download / Stable release pending</p>
       </div>
       <div class="core-chamber" aria-label="Lummenna crystalline memory core">
         <img class="core-portrait" src="/assets/img/lummenna-icon.png" width="255" height="178" alt="Crystalline Lummenna memory core with jade and amber Twin-Force rings">
@@ -102,7 +108,7 @@
       <div class="wrap">
         <div class="section-heading">
           <p class="section-index">03 / Connect</p>
-          <div><h2>One palace, multiple agent surfaces.</h2><p>The repository includes integration configurations or adapters for the interfaces listed here. Optional Python packages are installed separately.</p></div>
+          <div><h2>One palace, multiple agent surfaces.</h2><p>The repository includes integration configurations or adapters for the interfaces listed here. Optional integrations have separate dependency groups in the current package metadata.</p></div>
         </div>
         <div class="integration-list" aria-label="Available integrations">
           <span><strong>MCP</strong>stdio server</span><span><strong>OpenCode</strong>MCP setup + skill example</span><span><strong>Copilot</strong>extension source</span><span><strong>Claude</strong>desktop config</span>
@@ -114,18 +120,18 @@
 
     <section class="band">
       <div class="wrap band-inner">
-        <div><p class="kicker">Start with evidence</p><h2>Run the same observatory on your own node.</h2><p>The dashboard reads current database state and clearly separates live measurements from committed benchmark artifacts.</p></div>
-        <div class="hero-actions"><a class="btn btn-dark" href="/docs#run">Open the runbook</a></div>
+        <div><p class="kicker">Community sidecar</p><h2>Run the observatory beside your agent.</h2><p>The direct Community package and checksum-pinned sidecar recipe are available without source-control access.</p></div>
+        <div class="hero-actions"><a class="btn btn-dark" href="/community#sidecar">Open sidecar guide</a></div>
       </div>
     </section>
 
     <section id="download">
       <div class="wrap">
         <div class="section-heading">
-          <p class="section-index">04 / Download</p>
+          <p class="section-index">04 / Stable release</p>
           <div>
-            <h2>Not yet published.</h2>
-            <p>Lummenna 1.0 is not on a public package index and has no published release. Leave an address and the download link goes out when that changes. Nothing else is sent to it.</p>
+            <h2>Get the stable release notice.</h2>
+            <p>The Community release candidate is available from PyPI and lummenna.com, while the stable release remains pending. Join the waitlist for one notice when the stable package is published.</p>
           </div>
         </div>
         <form class="signup" method="POST" action="/api/waitlist">
@@ -139,10 +145,10 @@
           </p>
           <div class="signup-consent">
             <input id="waitlist-consent" name="consent" type="checkbox" value="yes" required>
-            <label for="waitlist-consent">Send me the download link when Lummenna is published. I understand my address is stored only for that purpose and that I can ask for its removal at any time.</label>
+            <label for="waitlist-consent">Email me once the stable Lummenna package is published. I understand my address is stored only for that purpose and that I can ask for its removal at any time.</label>
           </div>
           <button class="btn btn-primary" type="submit">Join the waitlist</button>
-          <p class="signup-note">Your address is used for this one notification and nothing else. No newsletter, no analytics, no third-party processor. Removal on request to licensing@quantumindssi.com.</p>
+          <p class="signup-note">Your address is used for one release notice and nothing else. No newsletter, no analytics, no third-party processor. Removal on request to <!--email_off--><a href="mailto:support@lummenna.com?subject=Lummenna%20waitlist%20data%20removal">support@lummenna.com</a><!--/email_off-->.</p>
         </form>
       </div>
     </section>
@@ -152,8 +158,18 @@
     <div class="footer-inner">
       <div class="foot-grid">
         <div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div>
-        <nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav>
-        <nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="mailto:licensing@quantumindssi.com?subject=Lummenna%20source%20access">Source access</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav>
+        <nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a href="/community">Community</a></nav>
+        <nav class="foot-nav" aria-label="Contact">
+          <h2>Contact</h2>
+          <a href="/#download">Stable waitlist</a>
+          <!--email_off-->
+          <a href="mailto:support@lummenna.com">support@lummenna.com</a>
+          <a href="mailto:admin@lummenna.com">admin@lummenna.com</a>
+          <a href="mailto:engineering@lummenna.com">engineering@lummenna.com</a>
+          <a href="mailto:hello@lummenna.com">hello@lummenna.com</a>
+          <a href="mailto:license@lummenna.com">license@lummenna.com</a>
+          <!--/email_off-->
+        </nav>
       </div>
       <div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div>
     </div>

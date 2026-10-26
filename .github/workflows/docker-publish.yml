@@ -1,7 +1,7 @@
 name: Docker Publish
 
 # Publishes the runtime image to two registries:
-#   * GHCR  — public distribution (docker pull ghcr.io/quantumindssi/lummenna)
+#   * GHCR: public distribution (docker pull ghcr.io/quantmindssi/lummenna)
 #   * ACR   — private pull source for AKS (deploy-aks.yml pulls from here)
 #
 # Both push identical semver + sha tags so a given release is bit-for-bit the
@@ -10,7 +10,7 @@ name: Docker Publish
 #
 # Required configuration for the ACR job (see infra/azure/README.md):
 #   secrets:   AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
-#   variables: ACR_LOGIN_SERVER  (e.g. lumenaacr1234.azurecr.io)
+#   variables: ACR_LOGIN_SERVER  (e.g. lummennaacr1234.azurecr.io)
 
 on:
   push:
@@ -107,7 +107,7 @@ jobs:
       - name: Compute image tags
         id: tags
         run: |
-          # ACR_LOGIN_SERVER is e.g. lumenaacr1234.azurecr.io; the registry
+          # ACR_LOGIN_SERVER is e.g. lummennaacr1234.azurecr.io; the registry
           # name is the first label. Build the same semver + sha tags GHCR uses.
           ACR="${{ vars.ACR_LOGIN_SERVER }}"
           REGISTRY="${ACR%%.*}"

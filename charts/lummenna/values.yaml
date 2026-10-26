@@ -11,7 +11,15 @@
 #   serving degraded lexical-only results.
 
 image:
-  repository: ghcr.io/quantumindssi/lummenna
+  # Must match what .github/workflows/docker-publish.yml actually pushes, which
+  # is ghcr.io/${{ github.repository_owner }}/lummenna, lowercased by
+  # docker/metadata-action. The owner is the organisation QuantmindSSI (no "u"),
+  # not the personal account QuantumindSSI. The previous value carried the "u"
+  # and so named an image that is never published.
+  #
+  # No image is pullable yet: publishing is tracked in ROADMAP.md. Until then
+  # this chart cannot deploy without an image built and pushed by hand.
+  repository: ghcr.io/quantmindssi/lummenna
   tag: ""            # defaults to .Chart.AppVersion
   pullPolicy: IfNotPresent
 
@@ -56,7 +64,12 @@ config:
   rateLimit: "60/minute"
   allowedOrigins: "http://localhost:8848"
   contextBudget: "2048"
-  memoryLimitMb: "512"
+  # Trust X-Forwarded-For from these proxies (IPs or CIDRs). Required behind
+  # an ingress/LB: without it, rate limiting and brute-force throttling key
+  # on the LB's IP and throttle every customer as one shared bucket. The
+  # default covers RFC1918 cluster-internal ranges; tighten to your ingress
+  # pod CIDR in production.
+  forwardedAllowIps: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
   # Sovereign mode blocks all outbound calls from Lummenna itself (model
   # downloads, P2P, telemetry export). Keep "true" unless you enable
   # Azure Monitor export below.

@@ -3,8 +3,9 @@
   "mcp": {
     "lummenna": {
       "type": "local",
-      "command": ["python3", "-m", "lummenna.integrations.mcp_server"],
+      "command": ["lummenna", "mcp"],
       "enabled": true,
+      "timeout": 60000,
       "environment": {
         "LUMMENNA_DEVICE": "generic",
         "LUMMENNA_STORE_PATH": "./.lummenna/store",

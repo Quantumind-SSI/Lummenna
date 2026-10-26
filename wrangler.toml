@@ -1,0 +1,56 @@
+# Cloudflare Pages configuration for the public site (production plane).
+#
+# This file exists because the site was previously deployed by hand, with its
+# bindings configured only in the dashboard. The result was a silent outage:
+# the `DB` binding was never attached, so functions/api/waitlist.js took its
+# `!env.DB` branch and answered every signup with 503 "Waitlist storage is not
+# configured." The database and its schema were both fine; only the wiring was
+# missing, and nothing in the repository recorded that the wiring was required.
+#
+# Declaring it here makes the binding reviewable, diffable, and impossible to
+# forget on a rebuild. Per Cloudflare's Pages documentation this file is now the
+# SOURCE OF TRUTH: the same fields become read-only in the dashboard, so a
+# binding added there and not added here will be dropped by the next deploy.
+# Add bindings to this file, never to the dashboard.
+#
+# Deploy from the repository ROOT, with no directory argument:
+#
+#   wrangler pages deploy
+#
+# The root matters. Wrangler resolves `functions/` relative to its working
+# directory, not relative to pages_build_output_dir. Deploying from inside
+# website/, or passing `./website` positionally from elsewhere, leaves the
+# Function undiscovered and /api/waitlist a 404. See the header comment in
+# functions/api/waitlist.js.
+
+name = "lummenna-site"
+
+# Static assets only. The Pages Function lives at <root>/functions/, which is
+# deliberately OUTSIDE this directory so it is not served as a static file.
+pages_build_output_dir = "./website"
+
+# Pinned to the date the live project was already running, so introducing this
+# file changes the deployment's wiring and nothing else. Moving this date
+# changes Workers runtime semantics and must be a separate, deliberate commit.
+compatibility_date = "2026-08-24"
+
+# The waitlist store. `binding` must stay "DB": functions/api/waitlist.js reads
+# env.DB and fails closed with a 503 when it is absent, on the grounds that
+# silently discarding a signup is worse than an error. Schema lives in
+# infra/cloudflare/waitlist_schema.sql.
+#
+# No preview override is declared, so preview deployments resolve to this same
+# database. That is acceptable only because Cloudflare is the production plane
+# and pre-production work happens on Azure. If a preview deployment is ever
+# introduced here, give it its own database via [[env.preview.d1_databases]]
+# before the first preview build, or preview traffic will write real signups.
+[[d1_databases]]
+binding = "DB"
+database_name = "lummenna-waitlist"
+database_id = "bca688b9-d172-45cc-85f9-1bed82f17fc2"
+
+# SEND_EMAIL / NOTIFY_FROM are intentionally absent. notify() treats the send
+# binding as optional and returns false when it is unset, so signups are still
+# committed to D1; only the operator notification is skipped. Adding an Email
+# Routing send binding here turns notifications on, and NOTIFY_FROM must then be
+# an address on a zone this account controls or the send is rejected.

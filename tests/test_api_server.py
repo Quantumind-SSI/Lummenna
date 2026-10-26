@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from lummenna.api.server import app
 from lummenna.config import LummennaConfig
+from lummenna.controller import TwinForceController
 from lummenna.conversation import ConversationMemory
 from lummenna.data.schema import get_connection, init_db
 from lummenna.force.contextual.embed import MockEmbedder
@@ -31,24 +32,40 @@ def client(tmp_path, monkeypatch):
     # Pre-seed module state
     from lummenna.api import server as server_mod
 
-    server_mod._state = {
-        "config": config,
-        "conn": conn,
-        "pipeline": None,  # built below
-        "conversation": ConversationMemory(config=config, conn=conn, embedder=embedder),
-        "tfc": None,
-        "embedder": embedder,
-    }
+    tfc = TwinForceController(config=config)
+    server_mod._state.clear()
+    server_mod._state.update(
+        {
+            "config": config,
+            "conn": conn,
+            "pipeline": None,  # built below
+            "conversation": ConversationMemory(
+                config=config, conn=conn, tfc=tfc, embedder=embedder
+            ),
+            "tfc": tfc,
+            "embedder": embedder,
+            "embedding_model_available": False,
+        }
+    )
 
     # Build pipeline after state is set
     from lummenna.search import SearchPipeline
 
-    server_mod._state["pipeline"] = SearchPipeline(conn, config, embedder=embedder)
+    server_mod._state["pipeline"] = SearchPipeline(conn, config, tfc=tfc, embedder=embedder)
+
+    # Handlers check connections out of a pool; seed one matching this store.
+    from lummenna.data.pool import ConnectionPool
+
+    server_mod._state["pool"] = ConnectionPool(config, size=2)
 
     with TestClient(app) as c:
         yield c
 
+    pooled = server_mod._state.get("pool")
+    if pooled is not None:
+        pooled.close()
     conn.close()
+    server_mod._state.clear()
 
 
 class TestSecurityHeaders:
@@ -102,6 +119,54 @@ class TestAuthMiddleware:
             assert resp.status_code == 200
         finally:
             server_mod._config.api_key = original_key
+
+
+class TestTenantBoundary:
+    @pytest.mark.parametrize(
+        ("method", "path", "payload"),
+        [
+            ("get", "/v1/status", None),
+            ("get", "/v1/dashboard-data", None),
+            ("post", "/v1/search", {"query": "x", "tenant_id": "team"}),
+            (
+                "post",
+                "/v1/store",
+                {"content": "x", "room": "r", "tenant_id": "team"},
+            ),
+            ("post", "/v1/assemble", {"query": "x", "tenant_id": "team"}),
+            (
+                "post",
+                "/v1/feedback",
+                {"chunk_id": 1, "was_useful": True, "tenant_id": "team"},
+            ),
+            (
+                "post",
+                "/v1/turn",
+                {"user_msg": "u", "assistant_msg": "a", "tenant_id": "team"},
+            ),
+        ],
+    )
+    def test_non_default_tenant_requires_multi_tenant_entitlement(
+        self, client, method, path, payload
+    ):
+        response = client.request(
+            method,
+            path,
+            headers={"X-Tenant-ID": "team"},
+            json=payload,
+        )
+
+        assert response.status_code == 403
+
+    def test_conflicting_header_and_body_tenants_are_rejected(self, client):
+        response = client.post(
+            "/v1/search",
+            headers={"X-Tenant-ID": "tenant-a"},
+            json={"query": "x", "tenant_id": "tenant-b"},
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Tenant header and request body disagree"
 
 
 class TestRateLimiting:
@@ -268,11 +333,42 @@ class TestTurn:
 
 
 class TestDashboard:
+    def test_root_is_canonical_dashboard(self, client):
+        resp = client.get("/")
+        assert resp.status_code == 200
+        assert "Lummenna Memory Palace" in resp.text
+        assert "The evidence ledger" in resp.text
+
     def test_dashboard_serves_html(self, client):
         resp = client.get("/dashboard")
         assert resp.status_code == 200
         assert "text/html" in resp.headers.get("content-type", "")
         assert "Lummenna Memory Palace" in resp.text
+
+    def test_themed_api_docs_are_generated_from_openapi(self, client):
+        resp = client.get("/docs")
+        assert resp.status_code == 200
+        assert "Lummenna API | Local Reference" in resp.text
+        assert 'fetch("/openapi.json"' in resp.text
+
+    def test_openapi_documents_api_key_and_tenant_headers(self, client):
+        schema = client.get("/openapi.json").json()
+
+        assert schema["components"]["securitySchemes"]["ApiKeyAuth"] == {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+            "description": "Required for /v1 operations when LUMMENNA_API_KEY is configured.",
+        }
+        operation = schema["paths"]["/v1/search"]["post"]
+        assert operation["security"] == [{"ApiKeyAuth": []}]
+        assert any(parameter["name"] == "X-Tenant-ID" for parameter in operation["parameters"])
+
+    def test_favicon_is_served_locally(self, client):
+        resp = client.get("/favicon.svg")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("image/svg+xml")
+        assert "#28a982" in resp.text
 
     def test_dashboard_data(self, client):
         # Seed a room
@@ -287,20 +383,63 @@ class TestDashboard:
         resp = client.get("/v1/dashboard-data")
         assert resp.status_code == 200
         body = resp.json()
-        assert "rooms" in body
-        assert "total_chunks" in body
+        assert body["tenant_id"] == "default"
+        assert body["palace"]["active_chunks"] == 1
+        assert body["palace"]["rooms"] == 1
+        assert body["palace"]["occupied_rooms"] == 1
+        assert body["palace"]["topology"] == [
+            {"name": "dashboard_test", "active_chunks": 1, "loci": 1}
+        ]
         assert "tfc" in body
-        assert "memory_budget_pct" in body
-        assert "degradation_stage" in body
-        assert any(r["name"] == "dashboard_test" for r in body["rooms"])
+        assert body["runtime"]["embedding_model_available"] is False
+        assert body["runtime"]["scheduler_running"] is False
+        assert body["storage"]["configured_limit_mb"] == 512
+        assert body["storage"]["database_mb"] is not None
+        assert body["lifecycle"]["resolution_counts"]["FP32"] == 1
+        assert body["lifecycle"]["resolution_counts"]["RELEASED"] == 0
+        assert body["feedback_7d"]["satisfaction_pct"] is None
+        assert body["evaluation"]["official_leaderboard_rank"] is None
+        assert body["evaluation"]["retrieval"]["artifact_sha256"]
+
+    def test_dashboard_data_does_not_leak_other_tenants(self, client):
+        from lummenna.api import server as server_mod
+
+        conn = server_mod._state["conn"]
+        conn.execute("INSERT INTO room(name, tenant_id) VALUES(?, ?)", ("private", "other"))
+        room_id = conn.execute(
+            "SELECT room_id FROM room WHERE name = ? AND tenant_id = ?", ("private", "other")
+        ).fetchone()[0]
+        conn.execute(
+            """
+            INSERT INTO chunk(room_id, content, content_hash, tenant_id)
+            VALUES(?, ?, ?, ?)
+            """,
+            (room_id, "other tenant secret", "other-tenant-hash", "other"),
+        )
+        conn.commit()
+
+        body = client.get("/v1/dashboard-data").json()
+
+        assert body["palace"]["active_chunks"] == 0
+        assert body["palace"]["topology"] == []
+
+    def test_dashboard_reports_controller_mutated_by_live_search(self, client):
+        before = client.get("/v1/dashboard-data").json()["tfc"]["a"]
+
+        search = client.post("/v1/search", json={"query": "nothing has been stored", "top_k": 5})
+        after = client.get("/v1/dashboard-data").json()["tfc"]["a"]
+
+        assert search.status_code == 200
+        assert search.json()["results"] == []
+        assert after > before
 
     def test_metrics(self, client):
         resp = client.get("/metrics")
         assert resp.status_code == 200
         body = resp.json()
-        assert body["lummenna_version"] == "1.0.0"
+        assert body["lummenna_version"] == "1.0.1rc1"
         assert "system" in body
         assert "palace" in body
-        assert "business" in body
-        assert body["business"]["data_sovereignty_pct"] == 100
-        assert body["business"]["api_cost_per_query_usd"] == 0.0
+        assert "runtime" in body
+        assert body["runtime"]["sovereign_mode"] is True
+        assert body["effectiveness"]["evaluation"]["official_leaderboard_rank"] is None

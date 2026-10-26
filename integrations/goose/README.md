@@ -55,6 +55,12 @@ Goose will automatically route these to the Lummenna MCP tools.
 Use Goose with Lummenna for persistent CI/CD agents:
 
 ```bash
-export LUMMENNA_API_KEY=your-key
+export LUMMENNA_STORE_PATH=/var/lib/lummenna/store
 goose session --instructions "Always search Lummenna before making architectural decisions."
 ```
+
+Point `LUMMENNA_STORE_PATH` at a persisted volume so the palace survives between
+runs; a default in-workspace store is discarded with the build container.
+`LUMMENNA_API_KEY` is not used here: it authenticates the HTTP API, and the MCP
+server communicates over stdio, inheriting the trust boundary of the process
+that spawned it.

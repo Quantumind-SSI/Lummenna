@@ -34,8 +34,9 @@ into your existing `opencode.json` / global `~/.config/opencode/opencode.json`):
   "mcp": {
     "lummenna": {
       "type": "local",
-      "command": ["python3", "-m", "lummenna.integrations.mcp_server"],
+      "command": ["lummenna", "mcp"],
       "enabled": true,
+      "timeout": 60000,
       "environment": {
         "LUMMENNA_DEVICE": "generic",
         "LUMMENNA_STORE_PATH": "./.lummenna/store",
@@ -49,17 +50,39 @@ into your existing `opencode.json` / global `~/.config/opencode/opencode.json`):
 
 Notes:
 
-- Use `python3` explicitly. Many systems (including most Linux distros) do not
-  ship a bare `python` alias, and OpenCode does not run the command through a
-  login shell, so `python` will fail with "command not found".
+- `lummenna` must be on the `PATH` of the process that launches OpenCode.
+  OpenCode does not run the command through a login shell, so a virtualenv you
+  activate in your terminal is not necessarily visible to it. When in doubt use
+  the absolute path, `["/path/to/.venv/bin/lummenna", "mcp"]`, or the module
+  form, `["/path/to/.venv/bin/python", "-m", "lummenna.integrations.mcp_server"]`.
+  Avoid bare `python`: most Linux distributions ship only `python3`.
 - Paths are relative to the OpenCode launch directory. Use absolute paths in a
   **global** config so Lummenna resolves the same store regardless of which
   project you launch from.
 - `command` must be an array of strings, and the key is `environment` (not
   `env`) — this is OpenCode's schema, which differs from some other agents.
+- Keep the explicit `timeout`. OpenCode's default is 5000 ms, and a server that
+  exceeds it is dropped **silently**: there is no log line and no error, the
+  tools simply never appear. A first launch with
+  `LUMMENNA_AUTO_PROVISION_MODEL=1` downloads and exports the embedding model,
+  which takes far longer than 5 seconds.
 
 After editing config, **quit and restart OpenCode** — config is loaded once at
 startup and is not hot-reloaded.
+
+## Troubleshooting
+
+If Lummenna's tools do not appear, do not guess at the config. Ask the server:
+
+```bash
+lummenna mcp --check
+```
+
+This runs the same startup path the server uses (dependency, store paths,
+schema, embedder, tool/resource registry) and prints a table of results,
+exiting non-zero on the first condition that would leave a client with no
+tools. A mock embedder is reported as a failure: the server would start
+normally and every semantic result would be noise.
 
 ## Usage
 
@@ -78,6 +101,10 @@ OpenCode will invoke:
 - `lummenna_assemble` for context-rich tasks
 - `lummenna_turn` after completing conversation turns
 - `lummenna_status` / `lummenna_dashboard` for health and effectiveness
+
+Two read-only resources are published alongside the tools:
+`dashboard://lummenna/effectiveness` (the full metrics document) and
+`dashboard://lummenna/capabilities` (design properties, evaluation, runtime).
 
 ## Persistent memory instructions
 

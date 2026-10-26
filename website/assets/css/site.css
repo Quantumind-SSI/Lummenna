@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --paper: #eee9dd;
   --paper-bright: #f8f5ec;
   --paper-deep: #ded7c7;
@@ -16,13 +16,28 @@
   --line: #b9b1a1;
   --line-dark: #355149;
   --white: #fffdf7;
-  --display: Georgia, "Times New Roman", serif;
-  --sans: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --canvas: #071310;
+  --surface: #0d2722;
+  --surface-raised: #12342c;
+  --surface-muted: #173b33;
+  --text: #f8f5ec;
+  --text-soft: #bac7c2;
+  --text-muted: #91a49e;
+  --border: #355149;
+  --border-strong: #527067;
+  /* Each stack names the macOS and Windows faces first, then the families a
+     Linux or BSD desktop actually ships, ordered by measured closeness to the
+     macOS target. Naming them matters: with only the proprietary faces listed,
+     every entry misses on Linux and the generic keyword resolves to DejaVu,
+     which sets 14.9% wider than Georgia and 10.2% wider than Avenir Next. That
+     is enough extra width to burst the navigation and the card grids. */
+  --display: Georgia, Gelasio, "Noto Serif", "DejaVu Serif", "Times New Roman", "Liberation Serif", serif;
+  --sans: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, "Nimbus Sans", "Liberation Sans", Arimo, Cantarell, Ubuntu, "Noto Sans", "DejaVu Sans", sans-serif;
   /* Named fallbacks only. `ui-monospace` is deliberately absent: it resolves to
      SF Mono in Blink but to a different face in WebKit, so including it makes
-     the two engines disagree. Measured widths for this stack are identical in
-     both. */
-  --mono: SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+     the two engines disagree. Every face named here measures within 0.3% of
+     SF Mono, so the mono UI keeps its width on every platform. */
+  --mono: SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Noto Sans Mono", monospace;
   --maxw: 1320px;
 }
 
@@ -31,11 +46,17 @@ html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* macOS draws overlay scrollbars that consume no layout width; Linux and
+     Windows draw classic ones that consume about 15px. Reserving the gutter
+     everywhere keeps the centred columns and the measured line length the same
+     on every platform, and stops the sideways jump on the short pages (404,
+     thanks) where no scrollbar appears at all. */
+  scrollbar-gutter: stable;
 }
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--canvas);
+  color: var(--text);
   font-family: var(--sans);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -49,15 +70,48 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  opacity: .28;
+  opacity: .5;
   background-image:
-    linear-gradient(rgba(16, 27, 25, .08) 1px, rgba(16, 27, 25, 0) 1px),
-    linear-gradient(90deg, rgba(16, 27, 25, .08) 1px, rgba(16, 27, 25, 0) 1px);
+    linear-gradient(rgba(248, 245, 236, .045) 1px, rgba(248, 245, 236, 0) 1px),
+    linear-gradient(90deg, rgba(248, 245, 236, .045) 1px, rgba(248, 245, 236, 0) 1px);
   background-size: 72px 72px;
   /* Safari below 15.4 only honours the prefixed property; without it the grid
      covers the full viewport instead of fading out. */
   -webkit-mask-image: linear-gradient(#000, rgba(0, 0, 0, 0) 70%);
   mask-image: linear-gradient(#000, rgba(0, 0, 0, 0) 70%);
+}
+
+/* Site-wide backdrop, present on every page.
+
+   It sits at z-index -2, one layer below the grid above, and is still visible
+   because `html` declares no background of its own: `body`'s colour therefore
+   propagates to the canvas, and the canvas paints beneath negative z-index
+   children rather than on top of them.
+
+   The still is a CSS background rather than the video's `poster` attribute so
+   that it doubles as the reduced-motion fallback. Both `<source>` elements carry
+   `media="(prefers-reduced-motion: no-preference)"`, so for a reader who asks for
+   less motion the resource selection algorithm matches nothing, no video is
+   fetched at all, and this still is what remains. That saves them the download
+   instead of merely hiding it. */
+.site-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background-image: url("/assets/video/lummenna-bg-poster.jpg");
+  background-position: center center;
+  background-size: cover;
+}
+.site-backdrop-media { width: 100%; height: 100%; object-fit: cover; object-position: center center; }
+/* Scrim. The footage peaks at full-intensity jade and amber. Without this veil
+   the near-white body text falls under the contrast floor every time a highlight
+   drifts behind it, which is a legibility failure that moves. */
+.site-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 19, 16, .82);
 }
 a { color: inherit; }
 img { display: block; max-width: 100%; height: auto; }
@@ -65,14 +119,14 @@ button, input { font: inherit; }
 code, pre { font-family: var(--mono); }
 /* Inline code sits in prose, so a long unbreakable token (an env var name, a
    URL) would otherwise push the whole page sideways on a narrow screen. */
-code { padding: .08em .32em; overflow-wrap: anywhere; background: var(--paper-deep); font-size: .88em; }
+code { padding: .08em .32em; overflow-wrap: anywhere; background: var(--surface-muted); color: var(--text); font-size: .88em; }
 pre {
   margin: 1rem 0;
   padding: 1.1rem 1.25rem;
   overflow-x: auto;
   border-left: 3px solid var(--amber-bright);
-  background: var(--forest-deep);
-  color: var(--paper-bright);
+  background: #04110e;
+  color: var(--text);
   font-size: .82rem;
   line-height: 1.65;
 }
@@ -88,8 +142,9 @@ pre code { padding: 0; overflow-wrap: normal; background: transparent; }
   left: .75rem;
   z-index: 100;
   padding: .7rem 1rem;
-  background: var(--white);
-  border: 2px solid var(--ink);
+  background: var(--text);
+  border: 2px solid var(--amber-bright);
+  color: var(--ink);
   transform: translateY(-160%);
 }
 .skip-link:focus { transform: translateY(0); }
@@ -99,8 +154,9 @@ pre code { padding: 0; overflow-wrap: normal; background: transparent; }
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid var(--line);
-  background: rgba(238, 233, 221, .96);
+  border-bottom: 1px solid var(--border);
+  background: rgba(7, 19, 16, .96);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .22);
 }
 .nav-inner {
   width: min(var(--maxw), calc(100% - 3rem));
@@ -109,28 +165,42 @@ pre code { padding: 0; overflow-wrap: normal; background: transparent; }
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  /* The row must be allowed to break. Its width is decided by font metrics and
+     by the desktop text-scaling factor, neither of which a width media query
+     can see: at 800px with GNOME scaling at 1.5x the links overhang by 62px and
+     the whole document scrolls sideways. Wrapping absorbs that instead. */
+  flex-wrap: wrap;
 }
 .nav-brand { display: inline-flex; align-items: center; gap: .7rem; text-decoration: none; }
 .nav-brand img { width: 38px; height: 38px; flex: 0 0 auto; }
 .brand-copy { display: grid; line-height: 1.05; }
 .wordmark { font-family: var(--mono); font-size: .88rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-.brand-copy small { margin-top: .3rem; color: var(--ink-soft); font-weight: 400; font-size: .62rem; line-height: normal; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.nav-links { display: flex; align-items: center; gap: .15rem; margin-left: auto; }
+.brand-copy small { margin-top: .3rem; color: var(--text-muted); font-weight: 400; font-size: .62rem; line-height: normal; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.nav-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .15rem; margin-left: auto; }
 .nav-links a { min-height: 44px; display: inline-flex; align-items: center; padding: .55rem .72rem; font-weight: 700; font-size: .68rem; line-height: normal; font-family: var(--mono); letter-spacing: .07em; text-decoration: none; text-transform: uppercase; }
-.nav-links a:hover, .nav-links a[aria-current="page"] { background: var(--paper-deep); }
-.nav-links .nav-cta { margin-left: .5rem; background: var(--forest); color: var(--paper-bright); }
-.nav-links .nav-cta:hover { background: var(--jade); }
+.nav-links a:hover, .nav-links a[aria-current="page"] { background: var(--surface-muted); }
+.nav-links .nav-cta { margin-left: .5rem; background: var(--jade); color: var(--text); }
+.nav-links .nav-cta:hover { background: var(--jade-bright); color: var(--ink); }
 
 .hero {
   width: min(var(--maxw), calc(100% - 3rem));
   min-height: 620px;
+  /* A virtual-machine window is routinely 600px to 768px tall. An unconditional
+     620px floor then hands the whole first screen to the hero and pushes every
+     proof point below the fold. Capping against the small-viewport height keeps
+     the desktop proportion and yields on a short screen. Declared twice so a
+     browser without `svh` simply keeps the pixel value. */
+  min-height: min(620px, 82svh);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(380px, .88fr);
-  background: var(--ink);
-  color: var(--paper-bright);
+  grid-template-columns: minmax(0, 1.12fr) minmax(min(380px, 100%), .88fr);
+  background: #04110e;
+  color: var(--text);
 }
-.hero-copy { display: flex; flex-direction: column; justify-content: center; padding: clamp(3rem, 6vw, 6.5rem); }
+/* Establishes the query container the headline below is measured against.
+   Width here is set by the grid track, never by content, so inline-size
+   containment changes no geometry. */
+.hero-copy { container-type: inline-size; display: flex; flex-direction: column; justify-content: center; padding: clamp(3rem, 6vw, 6.5rem); }
 .eyebrow, .kicker, .section-index, .proof-label, .status-label, .tier-name {
   font-family: var(--mono);
   font-size: .72rem;
@@ -140,10 +210,20 @@ pre code { padding: 0; overflow-wrap: normal; background: transparent; }
 }
 .eyebrow { margin: 0 0 1.4rem; color: var(--jade-bright); }
 .hero h1, .page-hero h1 {
-  max-width: 12ch;
+  max-width: min(12ch, 100%);
   margin: 0;
   font-weight: 400; font-size: clamp(3.2rem, 7vw, 7rem); line-height: .92; font-family: var(--display);
+  /* `vw` sizes the headline against the window while the column itself stops
+     growing at `--maxw`, so past about 1600px the type outruns its container:
+     "illuminated locally." measures 576px inside a 531px column and lands on
+     top of the core chamber. It does that in Georgia too; DejaVu Serif, the
+     Linux fallback, is a further 11% wider. Capping at 17cqw sizes the type
+     against the column instead. 17 is the measured fit for the longest word in
+     the widest fallback face. `min()` keeps the viewport rule wherever it is
+     already the smaller of the two, so the narrow layouts are untouched. */
+  font-size: min(clamp(3.2rem, 7vw, 7rem), 17cqw);
   letter-spacing: -.055em;
+  overflow-wrap: break-word;
 }
 .hero h1 em, .page-hero h1 em { color: var(--amber-bright); font-weight: 400; }
 .lede { max-width: 58ch; margin: 1.7rem 0 0; color: #bac7c2; font-size: 1rem; }
@@ -152,6 +232,9 @@ pre code { padding: 0; overflow-wrap: normal; background: transparent; }
 .core-chamber {
   position: relative;
   min-height: 500px;
+  /* Purely decorative, so it is the panel that should give way first when the
+     viewport is short. */
+  min-height: min(500px, 66svh);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -180,86 +263,99 @@ pre code { padding: 0; overflow-wrap: normal; background: transparent; }
 .btn-primary:hover { border-color: var(--amber-bright); background: var(--amber-bright); }
 .btn-dark { border-color: var(--forest); background: var(--forest); color: var(--paper-bright); }
 .btn-dark:hover { background: var(--jade); color: var(--white); }
-.btn-paper { border-color: var(--ink); color: var(--ink); }
-.btn-paper:hover { background: var(--ink); color: var(--paper-bright); }
+.btn-paper { border-color: var(--border-strong); color: var(--text); }
+.btn-paper:hover { border-color: var(--text); background: var(--text); color: var(--ink); }
 
-.proof-strip { width: min(var(--maxw), calc(100% - 3rem)); margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); }
-.proof-strip article { min-height: 145px; padding: 1.4rem; border-right: 1px solid var(--line); }
+/* `1fr` is shorthand for `minmax(auto, 1fr)`, and that `auto` floor is the
+   track's min-content width, so a track can refuse to shrink and push the row
+   past its container. Every multi-column grid below therefore states
+   `minmax(0, 1fr)`: measured at 800px with the desktop text scale at 1.5x, the
+   `auto` floor overhung this row by 162px. */
+.proof-strip { width: min(var(--maxw), calc(100% - 3rem)); margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); background: rgba(13, 39, 34, .42); }
+.proof-strip article { min-height: 145px; padding: 1.4rem; border-right: 1px solid var(--border); }
 .proof-strip article:last-child { border-right: 0; }
-.proof-label { color: var(--jade); }
-.proof-value { display: block; margin: .7rem 0 .25rem; font-weight: 400; font-size: 2.1rem; line-height: normal; font-family: var(--display); }
-.proof-strip p { margin: 0; color: var(--ink-soft); font-size: .72rem; }
+.proof-label { color: var(--jade-bright); }
+.proof-value { overflow-wrap: break-word; display: block; margin: .7rem 0 .25rem; font-weight: 400; font-size: 2.1rem; line-height: normal; font-family: var(--display); }
+.proof-strip p { margin: 0; color: var(--text-soft); font-size: .72rem; }
 
 section { padding: clamp(4rem, 8vw, 7rem) 0; }
-.section-heading { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 2rem; align-items: start; margin-bottom: 2.6rem; padding-top: 1.3rem; border-top: 1px solid var(--ink); }
-.section-index, .kicker { margin: .2rem 0 0; color: var(--jade); }
-.section-heading h2, .section-head h1, .section-head h2 { max-width: 16ch; margin: 0; font-weight: 400; font-size: clamp(2.4rem, 5vw, 5rem); line-height: .98; font-family: var(--display); letter-spacing: -.045em; }
-.section-heading p:last-child, .section-head > p:last-child { max-width: 62ch; color: var(--ink-soft); }
+/* The card rows collapse on the width each column actually gets, not on the
+   width of the window. A viewport breakpoint cannot see the desktop text
+   scale: at 800px with GNOME scaling at 1.5x the three-column rule leaves
+   146px of content per card while the display face inside is set at 40px,
+   so single words overhang by 100px. A `rem` floor rises with the user's
+   text size and drops a column before that happens. The 760px rule below
+   still forces the single-column layout, so narrow screens are unchanged. */
+.section-heading { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 2rem; align-items: start; margin-bottom: 2.6rem; padding-top: 1.3rem; border-top: 1px solid var(--border-strong); }
+.section-index, .kicker { margin: .2rem 0 0; color: var(--jade-bright); }
+.section-heading h2, .section-head h1, .section-head h2 { overflow-wrap: break-word; max-width: min(16ch, 100%); margin: 0; font-weight: 400; font-size: clamp(2.4rem, 5vw, 5rem); line-height: .98; font-family: var(--display); letter-spacing: -.045em; }
+.section-heading p:last-child, .section-head > p:last-child { max-width: 62ch; color: var(--text-soft); }
 .section-head { max-width: 880px; margin-bottom: 2.8rem; }
 .section-head.center { margin-right: auto; margin-left: auto; text-align: center; }
 .section-head.center h1, .section-head.center h2 { margin-right: auto; margin-left: auto; }
-.page-hero { width: min(var(--maxw), calc(100% - 3rem)); margin: 0 auto; padding: clamp(4rem, 9vw, 8rem) clamp(1.5rem, 5vw, 5rem); border-bottom: 1px solid var(--line-dark); background: var(--forest-deep); color: var(--paper-bright); }
-.page-hero p:last-child { max-width: 58ch; margin: 1.5rem 0 0; color: #b9c7c2; }
+.page-hero { container-type: inline-size; width: min(var(--maxw), calc(100% - 3rem)); margin: 0 auto; padding: clamp(4rem, 9vw, 8rem) clamp(1.5rem, 5vw, 5rem); border: 1px solid var(--border); border-top: 0; background: linear-gradient(135deg, #061713, var(--surface)); color: var(--text); }
+.page-hero p:last-child { max-width: 58ch; margin: 1.5rem 0 0; color: var(--text-soft); }
 
-.ledger { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.ledger article { min-height: 260px; padding: 1.6rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(248, 245, 236, .45); }
-.ledger .index { color: var(--amber-ink); font-weight: 400; font-size: .68rem; line-height: normal; font-family: var(--mono); }
-.ledger h3 { margin: 3rem 0 .75rem; font-weight: 400; font-size: 1.55rem; line-height: normal; font-family: var(--display); }
-.ledger p { margin: 0; color: var(--ink-soft); font-size: .88rem; }
-.ledger .edition { display: inline-block; margin-top: 1rem; padding: .22rem .4rem; border: 1px solid var(--line); color: var(--jade); font-weight: 700; font-size: .6rem; line-height: normal; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.ledger { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+.ledger article { min-height: 260px; padding: 1.6rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: rgba(13, 39, 34, .72); }
+.ledger .index { color: var(--amber-bright); font-weight: 400; font-size: .68rem; line-height: normal; font-family: var(--mono); }
+.ledger h3 { overflow-wrap: break-word; margin: 3rem 0 .75rem; font-weight: 400; font-size: 1.55rem; line-height: normal; font-family: var(--display); }
+.ledger p { margin: 0; color: var(--text-soft); font-size: .88rem; }
+.ledger .edition { display: inline-block; margin-top: 1rem; padding: .22rem .4rem; border: 1px solid var(--border-strong); color: var(--jade-bright); font-weight: 700; font-size: .6rem; line-height: normal; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 
-.process-grid { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--forest-deep); color: var(--paper-bright); }
+.process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); background: var(--forest-deep); color: var(--paper-bright); }
 .process-grid article { min-height: 300px; padding: 2rem; border-right: 1px solid var(--line-dark); }
 .process-grid article:last-child { border-right: 0; }
 .process-grid .section-index { color: var(--amber-bright); }
-.process-grid h3 { margin: 4rem 0 .8rem; font-weight: 400; font-size: 1.7rem; line-height: normal; font-family: var(--display); }
+.process-grid h3 { overflow-wrap: break-word; margin: 4rem 0 .8rem; font-weight: 400; font-size: 1.7rem; line-height: normal; font-family: var(--display); }
 .process-grid p { color: #aebdb8; font-size: .88rem; }
 
-.brand-study { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .5fr); align-items: center; border: 1px solid var(--line-dark); background: var(--forest-deep); color: var(--paper-bright); }
+.brand-study { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(min(260px, 100%), .5fr); align-items: center; border: 1px solid var(--line-dark); background: var(--forest-deep); color: var(--paper-bright); }
 .brand-study figure { margin: 0; padding: 1.5rem; }
 .brand-study img { width: 100%; border: 1px solid var(--line-dark); }
 .brand-study figcaption { margin-top: .75rem; color: #91a49e; font-weight: 400; font-size: .62rem; line-height: 1.5; font-family: var(--mono); text-transform: uppercase; }
 .brand-study-copy { padding: 2rem; border-left: 1px solid var(--line-dark); }
-.brand-study-copy h3 { margin: 0 0 1rem; font-weight: 400; font-size: 2rem; line-height: normal; font-family: var(--display); }
+.brand-study-copy h3 { overflow-wrap: break-word; margin: 0 0 1rem; font-weight: 400; font-size: 2rem; line-height: normal; font-family: var(--display); }
 .brand-study-copy p { color: #aebdb8; }
 
-.integration-list { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.integration-list span { padding: 1rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-weight: 400; font-size: .72rem; line-height: normal; font-family: var(--mono); }
-.integration-list strong { display: block; margin-bottom: .25rem; color: var(--jade); text-transform: uppercase; }
+.integration-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); background: rgba(13, 39, 34, .42); }
+.integration-list span { overflow-wrap: break-word; padding: 1rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); font-weight: 400; font-size: .72rem; line-height: normal; font-family: var(--mono); }
+.integration-list strong { display: block; margin-bottom: .25rem; color: var(--jade-bright); text-transform: uppercase; }
 
 .band { padding: 0; }
-.band-inner { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center; padding: clamp(2rem, 5vw, 4rem); background: var(--amber-bright); }
-.band h2 { max-width: 18ch; margin: 0; font-weight: 400; font-size: clamp(2rem, 4vw, 4rem); line-height: 1; font-family: var(--display); letter-spacing: -.04em; }
+.band-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: center; padding: clamp(2rem, 5vw, 4rem); background: var(--amber-bright); color: var(--ink); }
+.band .kicker { color: var(--forest-deep); }
+.band h2 { overflow-wrap: break-word; max-width: min(18ch, 100%); margin: 0; font-weight: 400; font-size: clamp(2rem, 4vw, 4rem); line-height: 1; font-family: var(--display); letter-spacing: -.04em; }
 .band p { max-width: 62ch; margin: 1rem 0 0; color: var(--ink-soft); }
 .band .hero-actions { margin: 0; }
 
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); background: var(--paper-bright); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); background: var(--surface); }
 table { width: 100%; min-width: 720px; border-collapse: collapse; }
-caption { padding: 1rem; color: var(--ink-soft); text-align: left; font-size: .78rem; }
-th, td { padding: .9rem 1rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
-th { color: var(--ink-soft); font-weight: 700; font-size: .66rem; line-height: normal; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+caption { padding: 1rem; color: var(--text-soft); text-align: left; font-size: .78rem; }
+th, td { padding: .9rem 1rem; border-top: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { color: var(--text-soft); font-weight: 700; font-size: .66rem; line-height: normal; font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 td { font-size: .85rem; }
-td strong, .verified { color: var(--jade); }
-.status-label { display: inline-block; padding: .25rem .4rem; border: 1px solid currentColor; color: var(--jade); }
-.status-label.pro { color: var(--amber-ink); }
+td strong, .verified { color: var(--jade-bright); }
+.status-label { display: inline-block; padding: .25rem .4rem; border: 1px solid currentColor; color: var(--jade-bright); }
+.status-label.pro { color: var(--amber-bright); }
 
 .feature-image { margin: 2.5rem 0 0; padding: 1rem; border: 1px solid var(--line-dark); background: var(--forest-deep); }
 .feature-image img { width: 100%; }
 .feature-image figcaption { padding: .8rem .2rem 0; color: #aebdb8; font-weight: 400; font-size: .65rem; line-height: normal; font-family: var(--mono); }
-.shot { margin: 0; border: 1px solid var(--line); background: var(--paper-bright); }
+.shot { margin: 0; border: 1px solid var(--border); background: var(--surface); }
 .shot img { width: 100%; height: auto; }
-.shot figcaption { padding: .8rem 1rem; color: var(--ink-soft); font-weight: 400; font-size: .66rem; line-height: 1.5; font-family: var(--mono); }
+.shot figcaption { padding: .8rem 1rem; color: var(--text-soft); font-weight: 400; font-size: .66rem; line-height: 1.5; font-family: var(--mono); }
 
-.license-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.license-card { display: flex; flex-direction: column; padding: clamp(1.6rem, 4vw, 3rem); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper-bright); }
-.license-card.pro { background: var(--forest-deep); color: var(--paper-bright); }
-.tier-name { margin: 0; color: var(--jade); }
+.license-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+.license-card { display: flex; flex-direction: column; padding: clamp(1.6rem, 4vw, 3rem); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface-raised); }
+.license-card.pro { background: #061713; color: var(--text); box-shadow: inset 0 3px 0 var(--amber-bright); }
+.tier-name { margin: 0; color: var(--jade-bright); }
 .license-card.pro .tier-name { color: var(--amber-bright); }
-.license-card h2 { margin: 2.2rem 0 .8rem; font-weight: 400; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1; font-family: var(--display); }
-.license-card > p { color: var(--ink-soft); }
-.license-card.pro > p { color: #aebdb8; }
+.license-card h2 { overflow-wrap: break-word; margin: 2.2rem 0 .8rem; font-weight: 400; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1; font-family: var(--display); }
+.license-card > p { color: var(--text-soft); }
+.license-card.pro > p { color: var(--text-soft); }
 .tier-list { margin: 1rem 0 2rem; padding: 0; list-style: none; }
-.tier-list li { padding: .65rem 0; border-top: 1px solid var(--line); font-size: .86rem; }
+.tier-list li { padding: .65rem 0; border-top: 1px solid var(--border); font-size: .86rem; }
 .license-card.pro .tier-list li { border-color: var(--line-dark); }
 .license-card .btn { margin-top: auto; }
 .pro-visual { margin: 2.5rem 0 0; border: 1px solid var(--line-dark); background: #07111e; }
@@ -268,83 +364,88 @@ td strong, .verified { color: var(--jade); }
 
 .signup { max-width: 640px; }
 .signup-row { display: grid; gap: .5rem; }
-.signup label { color: var(--ink-soft); font-weight: 700; font-size: .68rem; line-height: normal; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.signup label { color: var(--text-soft); font-weight: 700; font-size: .68rem; line-height: normal; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; }
 /* 16px minimum: iOS Safari zooms the page in on focus below that and never
    zooms back out, which strands the user at the wrong scale. */
-.signup input[type="email"] { width: 100%; min-height: 52px; padding: .75rem .9rem; border: 1px solid var(--ink); background: var(--paper-bright); color: var(--ink); font-size: 16px; }
+.signup input[type="email"] { width: 100%; min-height: 52px; padding: .75rem .9rem; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-size: 16px; }
+.signup input[type="email"]::placeholder { color: var(--text-muted); }
 .signup input[type="email"]:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
 /* Honeypot: off-screen rather than display:none, because some bots skip
    undisplayed inputs. aria-hidden and tabindex keep it away from humans. */
 .signup-hidden { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .signup-consent { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; align-items: start; margin-top: 1.4rem; }
 .signup-consent input { width: 22px; height: 22px; margin: 0; accent-color: var(--jade); }
-.signup-consent label { color: var(--ink-soft); font-weight: 400; font-size: .84rem; line-height: 1.5; font-family: var(--sans); letter-spacing: normal; text-transform: none; }
+.signup-consent label { color: var(--text-soft); font-weight: 400; font-size: .84rem; line-height: 1.5; font-family: var(--sans); letter-spacing: normal; text-transform: none; }
 .signup button { margin-top: 1.4rem; }
-.signup-note { max-width: 62ch; margin: 1.1rem 0 0; color: var(--ink-soft); font-size: .75rem; line-height: 1.55; font-family: var(--mono); }
+.signup-note { max-width: 62ch; margin: 1.1rem 0 0; color: var(--text-muted); font-size: .75rem; line-height: 1.55; font-family: var(--mono); }
 
 .faq-stack { max-width: 900px; }
-details.faq { border-top: 1px solid var(--line); }
-details.faq:last-child { border-bottom: 1px solid var(--line); }
+details.faq { border-top: 1px solid var(--border); }
+details.faq:last-child { border-bottom: 1px solid var(--border); }
 details.faq summary { display: flex; gap: 1rem; align-items: baseline; justify-content: space-between; padding: 1.1rem .25rem; cursor: pointer; list-style: none; font-family: var(--display); font-size: 1.15rem; }
 /* Chrome draws the disclosure triangle with ::marker, Safari with
    ::-webkit-details-marker, at different sizes. Suppress both and supply one
    indicator so the control is identical in every engine. */
 details.faq summary::-webkit-details-marker { display: none; }
-details.faq summary::after { content: "+"; flex: 0 0 auto; color: var(--jade); font-family: var(--mono); font-size: .9rem; }
+details.faq summary::after { content: "+"; flex: 0 0 auto; color: var(--jade-bright); font-family: var(--mono); font-size: .9rem; }
 details.faq[open] summary::after { content: "-"; }
-.faq-body { max-width: 70ch; padding: 0 .25rem 1.2rem; color: var(--ink-soft); }
+.faq-body { max-width: 70ch; padding: 0 .25rem 1.2rem; color: var(--text-soft); }
 
-.docs-layout { display: grid; grid-template-columns: 220px minmax(0, 780px); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
+.docs-layout { display: grid; grid-template-columns: min(220px, 34%) minmax(0, 780px); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
 .docs-layout > *, .doc-section { min-width: 0; }
-.docs-nav { position: sticky; top: 105px; border-top: 1px solid var(--ink); }
-.docs-nav a { display: block; padding: .7rem 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-weight: 400; font-size: .68rem; line-height: normal; font-family: var(--mono); text-decoration: none; text-transform: uppercase; }
+.docs-nav { position: sticky; top: 105px; border-top: 1px solid var(--border-strong); }
+.docs-nav a { display: block; padding: .7rem 0; border-bottom: 1px solid var(--border); color: var(--text-soft); font-weight: 400; font-size: .68rem; line-height: normal; font-family: var(--mono); text-decoration: none; text-transform: uppercase; }
 .doc-section { padding: 0 0 3rem; scroll-margin-top: 100px; }
-.doc-section + .doc-section { padding-top: 3rem; border-top: 1px solid var(--line); }
-.doc-section h2 { margin: 0 0 1rem; font-weight: 400; font-size: clamp(1.8rem, 3vw, 2.7rem); line-height: 1.05; font-family: var(--display); }
-.doc-section p, .doc-section li { color: var(--ink-soft); }
-.doc-section a { color: var(--jade); text-underline-offset: .2em; }
+.doc-section + .doc-section { padding-top: 3rem; border-top: 1px solid var(--border); }
+.doc-section h2 { overflow-wrap: break-word; margin: 0 0 1rem; font-weight: 400; font-size: clamp(1.8rem, 3vw, 2.7rem); line-height: 1.05; font-family: var(--display); }
+.doc-section p, .doc-section li { color: var(--text-soft); }
+.doc-section a { color: var(--jade-bright); text-underline-offset: .2em; }
 
 .not-found { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 3rem 1.5rem; }
 .not-found-inner { max-width: 680px; text-align: center; }
 .not-found img { width: 160px; margin: 0 auto 2rem; }
-.not-found h1 { margin: 0; font-weight: 400; font-size: clamp(3rem, 8vw, 6rem); line-height: .95; font-family: var(--display); letter-spacing: -.05em; }
-.not-found p:not(.kicker) { color: var(--ink-soft); }
+.not-found h1 { overflow-wrap: break-word; margin: 0; font-weight: 400; font-size: clamp(3rem, 8vw, 6rem); line-height: .95; font-family: var(--display); letter-spacing: -.05em; }
+.not-found p:not(.kicker) { color: var(--text-soft); }
 .not-found .btn { margin-top: 1rem; }
 
-footer { border-top: 1px solid var(--line); }
+footer { border-top: 1px solid var(--border); background: rgba(4, 17, 14, .58); }
 .footer-inner { width: min(var(--maxw), calc(100% - 3rem)); margin: 0 auto; padding: 3rem 0; }
-.foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
-.foot-brand p { max-width: 42ch; color: var(--ink-soft); font-size: .82rem; }
-.foot-nav { display: grid; align-content: start; gap: .45rem; }
-.foot-nav h2 { margin: 0 0 .45rem; color: var(--ink-soft); font-weight: 700; font-size: .66rem; line-height: normal; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-.foot-nav a { color: var(--ink-soft); font-size: .82rem; text-decoration: none; }
-.foot-nav a:hover { color: var(--jade); }
-.legal { padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--ink-soft); font-weight: 400; font-size: .65rem; line-height: 1.5; font-family: var(--mono); }
+.foot-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; margin-bottom: 2rem; }
+.foot-brand p { max-width: 42ch; color: var(--text-soft); font-size: .82rem; }
+/* Without an explicit track the implicit column is `auto`, which sizes to
+   max-content and so overhangs its own now-shrinkable grid area. */
+.foot-nav { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .45rem; }
+.foot-nav h2 { margin: 0 0 .45rem; color: var(--text-muted); font-weight: 700; font-size: .66rem; line-height: normal; font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+/* An address is one unbreakable token. At 800px with the desktop text scale
+   at 1.5x, `engineering@lummenna.com` is wider than its whole column. */
+.foot-nav a { color: var(--text-soft); font-size: .82rem; text-decoration: none; overflow-wrap: break-word; }
+.foot-nav a:hover { color: var(--jade-bright); }
+.legal { padding-top: 1.2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-weight: 400; font-size: .65rem; line-height: 1.5; font-family: var(--mono); }
 
 @media (max-width: 980px) {
-  .hero { grid-template-columns: 1fr; }
-  .core-chamber { min-height: 440px; border-top: 1px solid var(--line-dark); border-left: 0; }
-  .ledger { grid-template-columns: repeat(2, 1fr); }
-  .integration-list { grid-template-columns: repeat(3, 1fr); }
-  .brand-study { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .core-chamber { min-height: 440px; min-height: min(440px, 42svh); border-top: 1px solid var(--line-dark); border-left: 0; }
+  .ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .integration-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .brand-study { grid-template-columns: minmax(0, 1fr); }
   .brand-study-copy { border-top: 1px solid var(--line-dark); border-left: 0; }
 }
 
 @media (max-width: 760px) {
   .nav { position: static; }
   .nav-inner { align-items: flex-start; flex-direction: column; padding: .8rem 0; }
-  .nav-links { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-left: 0; border: 1px solid var(--line); background: var(--line); }
-  .nav-links a { justify-content: center; padding: .55rem .35rem; background: var(--paper); text-align: center; }
+  .nav-links { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-left: 0; border: 1px solid var(--border); background: var(--border); }
+  .nav-links a { justify-content: center; padding: .55rem .35rem; background: var(--canvas); text-align: center; }
   .nav-links .nav-cta { margin-left: 0; }
-  .proof-strip, .process-grid, .license-grid { grid-template-columns: 1fr; }
-  .proof-strip article, .process-grid article { border-right: 0; border-bottom: 1px solid var(--line); }
-  .section-heading { grid-template-columns: 1fr; gap: .8rem; }
-  .band-inner { grid-template-columns: 1fr; }
+  .proof-strip, .process-grid, .license-grid { grid-template-columns: minmax(0, 1fr); }
+  .proof-strip article, .process-grid article { border-right: 0; border-bottom: 1px solid var(--border); }
+  .section-heading { grid-template-columns: minmax(0, 1fr); gap: .8rem; }
+  .band-inner { grid-template-columns: minmax(0, 1fr); }
   .band .hero-actions { margin-top: 1rem; }
-  .docs-layout { grid-template-columns: 1fr; }
+  .docs-layout { grid-template-columns: minmax(0, 1fr); }
   .docs-nav { position: static; }
   .doc-section { scroll-margin-top: 1rem; }
-  .foot-grid { grid-template-columns: 1fr 1fr; }
+  .foot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -352,14 +453,17 @@ footer { border-top: 1px solid var(--line); }
   .hero-copy { padding: 3rem 1.35rem; }
   .hero h1, .page-hero h1 { font-size: clamp(2.8rem, 15vw, 4.5rem); }
   .page-hero { padding-right: 1.35rem; padding-left: 1.35rem; }
-  .ledger { grid-template-columns: 1fr; }
-  .integration-list { grid-template-columns: repeat(2, 1fr); }
-  .core-chamber { min-height: 340px; }
-  .foot-grid { grid-template-columns: 1fr; }
+  .ledger { grid-template-columns: minmax(0, 1fr); }
+  .integration-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .core-chamber { min-height: 340px; min-height: min(340px, 38svh); }
+  .foot-grid { grid-template-columns: minmax(0, 1fr); }
   .nav-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  /* Belt and braces. The `media` attribute on the sources should already have
+     stopped the fetch; this covers any engine that ignores it and loads anyway. */
+  .site-backdrop-media { display: none; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

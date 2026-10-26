@@ -1,7 +1,7 @@
 """Grounding tests: documented claims must be enforced, not merely asserted.
 
-Each test corresponds to a concrete claim in docs/Lummenna_Whitepaper.md and
-proves the code refuses to violate it.
+Each test corresponds to a concrete public contract and proves the code refuses
+to violate it.
 """
 
 import math

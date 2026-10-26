@@ -3,26 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Quick Start | Lummenna</title>
-  <meta name="description" content="Install Lummenna, provision a local embedding model, run the memory observatory, and connect an MCP-compatible agent.">
+  <title>Documentation | Lummenna</title>
+  <meta name="description" content="Install Lummenna and drive it from the shell with curl, connect coding agents through the MCP server, or build the CLI binary from source. Community 1.0.1rc1 is available from PyPI and lummenna.com.">
   <link rel="canonical" href="https://lummenna.com/docs">
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
   <link rel="stylesheet" href="/assets/css/site.css">
 </head>
 <body>
+  <div class="site-backdrop" aria-hidden="true">
+    <video class="site-backdrop-media" width="1280" height="624" autoplay muted loop playsinline preload="metadata">
+      <source src="/assets/video/lummenna-bg.webm" type="video/webm" media="(prefers-reduced-motion: no-preference)">
+      <source src="/assets/video/lummenna-bg.mp4" type="video/mp4" media="(prefers-reduced-motion: no-preference)">
+    </video>
+  </div>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   <nav class="nav" aria-label="Primary navigation">
     <div class="nav-inner">
       <a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a>
-      <div class="nav-links"><a href="/">Home</a><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs" aria-current="page">Docs</a><a class="nav-cta" href="#run">Run locally</a></div>
+      <div class="nav-links"><a href="/">Home</a><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs" aria-current="page">Docs</a><a class="nav-cta" href="/community">Community</a></div>
     </div>
   </nav>
 
   <main id="main-content" tabindex="-1">
     <header class="page-hero">
-      <p class="eyebrow">Quick start / version 1.0.0</p>
-      <h1>From install to <em>first recall.</em></h1>
-      <p>This is the shortest verified path through the current CLI. The repository remains the source for complete API, security, deployment, and integration documentation.</p>
+      <p class="eyebrow">Community documentation / 1.0.1rc1</p>
+      <h1>Prepare for <em>first recall.</em></h1>
+      <p>The Community release candidate is available from PyPI and directly from lummenna.com. Its Python API may change before the stable release.</p>
     </header>
 
     <section>
@@ -30,22 +36,18 @@
         <nav class="docs-nav" aria-label="On this page">
           <a href="#install">01 / Install</a>
           <a href="#initialize">02 / Initialize</a>
-          <a href="#run">03 / Run</a>
+          <a href="#curl">03 / Use with curl</a>
           <a href="#mcp">04 / Connect MCP</a>
           <a href="#python">05 / Use Python</a>
-          <a href="#production">06 / Production</a>
+          <a href="#build">06 / Build from source</a>
+          <a href="#production">07 / Production</a>
         </nav>
         <div>
           <section class="doc-section" id="install">
-            <h2>01. Install the runtime</h2>
-            <p>Lummenna supports Python 3.10 through 3.12. The verified source-install path below includes the optional model-export and MCP dependencies.</p>
-            <p>The repository is private while an internal review completes, so the clone below needs access granted first. Request it from <a href="mailto:licensing@quantumindssi.com?subject=Lummenna%20source%20access">licensing@quantumindssi.com</a>.</p>
-            <pre><code>git clone https://github.com/QuantmindSSI/lummenna.git
-cd lummenna
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e '.[mcp,export]'</code></pre>
-            <p>For development tooling as well, install <code>pip install -e '.[dev,mcp,export]'</code>.</p>
+            <h2>01. Install the Community preview</h2>
+            <p>Lummenna supports Python 3.10 through 3.12. Install the Community prerelease from PyPI; no source-control account is required.</p>
+            <pre><code>python -m pip install --pre "lummenna[export]==1.0.1rc1"</code></pre>
+            <p>Verify the package against <a href="/downloads/SHA256SUMS">SHA256SUMS</a>, or use the complete <a href="/community">Community sidecar guide</a>.</p>
           </section>
 
           <section class="doc-section" id="initialize">
@@ -57,19 +59,37 @@ LUMMENNA_SOVEREIGN=false lummenna model download bge-small-en-v1.5</code></pre>
 lummenna memory retrieve "cache layer"</code></pre>
           </section>
 
-          <section class="doc-section" id="run">
-            <h2>03. Run the application</h2>
+          <section class="doc-section" id="curl">
+            <h2>03. Use it with curl</h2>
+            <p>Start the server, then drive every operation over HTTP from any language or shell:</p>
             <pre><code>lummenna serve
+# Observatory: http://localhost:8848/   API reference: http://localhost:8848/docs</code></pre>
+            <p>Set an API key before exposing the server to any network, then authenticate every request with the <code>X-API-Key</code> header:</p>
+            <pre><code>export LUMMENNA_API_KEY='replace-with-a-secret'
 
-# Main observatory: http://localhost:8848/
-# Stable alias:     http://localhost:8848/dashboard
-# API reference:   http://localhost:8848/docs</code></pre>
-            <p>The server and dashboard are Community features. Production startup requires a real local embedding model. <code>LUMMENNA_ALLOW_MOCK_EMBEDDER=1</code> exists only for tests and UI development; semantic results in that mode are not meaningful.</p>
+# Store a memory
+curl -s -X POST http://localhost:8848/v1/store \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $LUMMENNA_API_KEY" \
+  -d '{"content": "Ship the release on Friday", "room": "decisions"}'
+
+# Hybrid search (BM25 + dense + graph fusion)
+curl -s -X POST http://localhost:8848/v1/search \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $LUMMENNA_API_KEY" \
+  -d '{"query": "release plans", "top_k": 5}'
+
+# Retrieve and assemble a ready-to-use context block in one call
+curl -s -X POST http://localhost:8848/v1/assemble \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $LUMMENNA_API_KEY" \
+  -d '{"query": "what should I remember about releases"}'</code></pre>
+            <p>Other endpoints: <code>GET /v1/status</code> (palace overview), <code>POST /v1/turn</code> (store a full conversation turn), <code>POST /v1/feedback</code> (reinforce memories), and <code>GET /v1/dashboard-data</code> (tenant-scoped observatory data). The full machine schema is at <code>/openapi.json</code>. Without an API key the server refuses nothing on loopback, but any network exposure requires the key. Production startup requires a real local embedding model; <code>LUMMENNA_ALLOW_MOCK_EMBEDDER=1</code> exists only for tests and UI development.</p>
           </section>
 
           <section class="doc-section" id="mcp">
             <h2>04. Connect an MCP client</h2>
-            <p>The MCP server exposes seven tools: <code>lummenna_search</code>, <code>lummenna_store</code>, <code>lummenna_assemble</code>, <code>lummenna_turn</code>, <code>lummenna_feedback</code>, <code>lummenna_status</code>, and <code>lummenna_dashboard</code>.</p>
+            <p>The MCP server exposes seven tools: <code>lummenna_search</code>, <code>lummenna_store</code>, <code>lummenna_assemble</code>, <code>lummenna_turn</code>, <code>lummenna_feedback</code>, <code>lummenna_status</code>, and <code>lummenna_dashboard</code>. Spawn one server per client over stdio:</p>
             <pre><code>{
   "mcpServers": {
     "lummenna": {
@@ -78,7 +98,10 @@ lummenna memory retrieve "cache layer"</code></pre>
     }
   }
 }</code></pre>
-            <p>Client-specific examples for Claude Desktop, Cline, Continue, Zed, Goose, and OpenCode ship in the repository's <code>integrations/</code> directory, included with source access.</p>
+            <p>For several editor sessions at once, serve one shared process over Streamable HTTP instead of paying the ~750 MB embedder cost per client:</p>
+            <pre><code>lummenna mcp --transport streamable-http --host 127.0.0.1 --port 8849
+# Point every client at http://127.0.0.1:8849/mcp</code></pre>
+            <p>Network MCP transports are a LAN exposure decision: they are unauthenticated by design, so keep them bound to loopback or a trusted interface behind the API key. Client-specific examples for Claude Desktop, Cline, Continue, Zed, Goose, and OpenCode exist in the repository's <code>integrations/</code> directory for approved evaluators.</p>
           </section>
 
           <section class="doc-section" id="python">
@@ -99,8 +122,22 @@ conn.close()</code></pre>
             <p>LangChain and LangGraph adapters are optional extras. The REST API publishes its runtime schema at <code>/openapi.json</code>.</p>
           </section>
 
+          <section class="doc-section" id="build">
+            <h2>06. Build from source</h2>
+            <p>Build the wheel and CLI binary from the source archive — no source-control account required. Clone or download the source, then build with the standard toolchain:</p>
+            <pre><code>git clone https://github.com/Quantumind-SSI/Lummenna.git
+cd Lummenna
+
+python -m venv .venv && source .venv/bin/activate
+python -m pip install --upgrade pip build
+python -m build                    # produces dist/lummenna-1.0.1rc1-*.whl + tar.gz
+python -m pip install "dist/lummenna-1.0.1rc1-py3-none-any.whl[export]"
+lummenna --version                 # the binary entry point is now on PATH</code></pre>
+            <p>To run straight from a checkout without building a wheel, install editable and invoke the CLI module directly: <code>pip install -e ".[dev]"</code> then <code>python -m lummenna.cli.main serve</code>. Verify any downloaded artifact against the published SHA-256 checksums before installing it.</p>
+          </section>
+
           <section class="doc-section" id="production">
-            <h2>06. Prepare production deliberately</h2>
+            <h2>07. Prepare production deliberately</h2>
             <p>Set an API key, choose an encryption mode where required, mount persistent storage and model volumes, and keep the service on loopback unless network access is intentional.</p>
             <pre><code>export LUMMENNA_API_KEY='replace-with-a-secret'
 export LUMMENNA_DATABASE_ENCRYPTION_MODE='sqlcipher'
@@ -113,6 +150,6 @@ lummenna serve --host 127.0.0.1</code></pre>
     </section>
   </main>
 
-  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a></nav><nav class="foot-nav" aria-label="Project"><h2>Project</h2><a href="mailto:licensing@quantumindssi.com?subject=Lummenna%20source%20access">Source access</a><a href="mailto:licensing@quantumindssi.com">Commercial contact</a></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
+  <footer><div class="footer-inner"><div class="foot-grid"><div class="foot-brand"><a class="nav-brand" href="/"><img src="/assets/img/favicon.svg" alt=""><span class="brand-copy"><strong class="wordmark">Lummenna</strong><small>Memory Palace</small></span></a><p>Local-first memory and context infrastructure for AI agents.</p></div><nav class="foot-nav" aria-label="Product"><h2>Product</h2><a href="/features">Features</a><a href="/pricing">Licensing</a><a href="/docs">Docs</a><a href="/community">Community</a></nav><nav class="foot-nav" aria-label="Contact"><h2>Contact</h2><a href="/#download">Stable waitlist</a><!--email_off--><a href="mailto:support@lummenna.com">support@lummenna.com</a><a href="mailto:admin@lummenna.com">admin@lummenna.com</a><a href="mailto:engineering@lummenna.com">engineering@lummenna.com</a><a href="mailto:hello@lummenna.com">hello@lummenna.com</a><a href="mailto:license@lummenna.com">license@lummenna.com</a><!--/email_off--></nav></div><div class="legal">Copyright 2026 QuantumindSSI / Community Edition AGPL-3.0-or-later / Commercial licensing available</div></div></footer>
 </body>
 </html>

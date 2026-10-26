@@ -405,6 +405,27 @@ def _bare_call_name(node: ast.Call) -> str:
     return func.id if isinstance(func, ast.Name) else ""
 
 
+def _is_os_system_call(node: ast.Call) -> bool:
+    """True only for ``os.system(...)``, not for any ``x.system(...)``.
+
+    Matching on the attribute name alone flags every unrelated ``.system()``
+    call. ``platform.system()`` (which returns the OS name and executes
+    nothing) is the common false positive, and a security rule that cries wolf
+    on stdlib introspection gets suppressed wholesale, which costs more than it
+    catches.
+
+    Args:
+        node: The call node under inspection.
+
+    Returns:
+        True when the receiver is literally the name ``os``.
+    """
+    func = node.func
+    if not isinstance(func, ast.Attribute) or func.attr != "system":
+        return False
+    return isinstance(func.value, ast.Name) and func.value.id == "os"
+
+
 def _has_shell_true(node: ast.Call) -> bool:
     return any(kw.arg == "shell" and _is_true(kw.value) for kw in node.keywords)
 
@@ -490,7 +511,7 @@ def _ast_issues(source: str, filename: str, is_test: bool) -> list[GuardrailIssu
                         message=f"Dangerous dynamic execution via '{bare}()'.",
                     )
                 )
-            elif name == "system" and isinstance(node.func, ast.Attribute):
+            elif _is_os_system_call(node):
                 issues.append(
                     GuardrailIssue(
                         rule="no-os-system",

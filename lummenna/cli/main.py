@@ -6,12 +6,15 @@ All commands execute real business logic.
 import asyncio
 import os
 import signal
+import sqlite3
 import sys
 import time
+from importlib import metadata
 from typing import cast, get_args
 
 import typer
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 from lummenna.brand.errors import LicenseRequiredError, ModelNotAvailableError
@@ -172,6 +175,187 @@ def status():
     console.print(f"Context budget: {config.context_budget} tokens")
     env = _state_tfc.to_env()
     console.print(f"TFC → e={env['e']:.2f} a={env['a']:.2f} tau={env['tau']:.1f} r={env['r']}")
+
+
+# ---------------------------------------------------------------------------
+# MCP server command
+# ---------------------------------------------------------------------------
+
+
+def _mcp_preflight() -> int:
+    """Diagnose an MCP deployment without starting the protocol loop.
+
+    Returns a process exit code: 0 when the server would start and serve a real
+    embedder, 1 otherwise. Each check drives the same code path the server uses
+    at startup (``initialize_palace``, the live FastMCP registry) rather than
+    re-deriving the answer, so a pass here means the server starts.
+
+    This exists because the usual failure is silent. An MCP client spawns the
+    server as a subprocess and, when startup fails or exceeds the client's
+    handshake timeout, most clients simply omit the tools with no error shown
+    to the user. Reading the failure directly is the only fast way out.
+    """
+    from lummenna._init import initialize_palace
+    from lummenna.integrations.mcp_server import _MCP_AVAILABLE, _MCP_ERROR
+    from lummenna.integrations.mcp_server import mcp as mcp_server
+
+    table = Table(title="Lummenna MCP preflight")
+    table.add_column("Check", style="cyan")
+    table.add_column("Result")
+    table.add_column("Detail", style="green")
+
+    def _row(name: str, passed: bool, detail: str) -> None:
+        # Details carry filesystem paths and exception text, which legitimately
+        # contain square brackets. Rich would parse those as console markup and
+        # silently delete them: "pip install 'lummenna[mcp]'" renders as
+        # "pip install 'lummenna'", advice that reproduces the very failure
+        # being reported. Only the Result column is intentional markup.
+        table.add_row(name, "[green]PASS[/green]" if passed else "[red]FAIL[/red]", escape(detail))
+
+    def _finish(ok: bool) -> int:
+        """Render the table and the verdict. Every exit goes through here."""
+        console.print(table)
+        if ok:
+            console.print("[bold green]MCP server is ready to serve.[/bold green]")
+        else:
+            console.print(
+                "[bold red]MCP server is not ready. Resolve the failures above.[/bold red]"
+            )
+        return 0 if ok else 1
+
+    def _fail(name: str, detail: str) -> int:
+        """Record a fatal check and stop: later checks would be meaningless."""
+        _row(name, False, detail)
+        return _finish(False)
+
+    # 1. The optional dependency. Without it the module falls back to
+    #    _UnavailableMCP and no later check means anything, so stop here.
+    if not _MCP_AVAILABLE:
+        return _fail(
+            "mcp package",
+            f"{_MCP_ERROR}. Install with: pip install 'lummenna[mcp]'",
+        )
+    try:
+        mcp_version = metadata.version("mcp")
+    except metadata.PackageNotFoundError:
+        # Importable but not installed as a distribution (e.g. vendored or on
+        # PYTHONPATH). Importability is what the server actually requires.
+        mcp_version = "unknown version"
+    _row("mcp package", True, f"mcp {mcp_version}")
+
+    # 2. Writable store and model directories, created exactly as app_lifespan
+    #    creates them.
+    config = LummennaConfig()
+    try:
+        config.store_path.mkdir(parents=True, exist_ok=True)
+        config.model_path.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return _fail("store paths", f"cannot create {config.store_path}: {exc}")
+    _row("store paths", True, f"store={config.store_path} model={config.model_path}")
+
+    # 3. Schema + embedder, via the server's own bootstrap.
+    try:
+        palace = initialize_palace(config)
+    except ModelNotAvailableError as exc:
+        return _fail("embedding model", str(exc))
+    except sqlite3.Error as exc:
+        return _fail("palace database", f"{config.db_path}: {exc}")
+
+    ok = True
+    try:
+        _row("palace database", True, str(config.db_path))
+        if palace["embedding_model_available"]:
+            _row("embedding model", True, config.embedding_model)
+        else:
+            # initialize_palace only reaches here with the mock opt-in set.
+            # The server would start, but every semantic result would be noise,
+            # so this is reported as a failure rather than a warning.
+            ok = False
+            _row(
+                "embedding model",
+                False,
+                "mock embedder active via LUMMENNA_ALLOW_MOCK_EMBEDDER; "
+                "semantic search is meaningless. Provision with: "
+                f"lummenna model download {config.embedding_model}",
+            )
+    finally:
+        palace["conn"].close()
+
+    # 4. The surface a client will actually see.
+    #
+    # Past the _MCP_AVAILABLE guard above, the module-level object is a real
+    # FastMCP rather than the _UnavailableMCP stand-in. mypy cannot narrow a
+    # module-level union through a boolean flag, so the invariant is stated
+    # here instead of giving _UnavailableMCP unreachable stub methods.
+    from mcp.server.fastmcp import FastMCP
+
+    server = cast(FastMCP, mcp_server)
+
+    async def _surface() -> tuple[list[str], list[str]]:
+        tools = sorted(t.name for t in await server.list_tools())
+        resources = sorted(str(r.uri) for r in await server.list_resources())
+        return tools, resources
+
+    tool_names, resource_uris = asyncio.run(_surface())
+    if not tool_names:
+        ok = False
+    if not resource_uris:
+        ok = False
+    _row("tools", bool(tool_names), f"{len(tool_names)}: {', '.join(tool_names) or 'none'}")
+    _row(
+        "resources",
+        bool(resource_uris),
+        f"{len(resource_uris)}: {', '.join(resource_uris) or 'none'}",
+    )
+
+    return _finish(ok)
+
+
+@app.command(name="mcp")
+def mcp_command(
+    check: bool = typer.Option(
+        False,
+        "--check",
+        help="Run preflight diagnostics and exit, instead of serving.",
+    ),
+    transport: str = typer.Option(
+        "stdio",
+        "--transport",
+        help="stdio (one process per client) or streamable-http (one shared process).",
+    ),
+    host: str | None = typer.Option(
+        None, "--host", help="Bind address for http transports. Defaults to api_host."
+    ),
+    port: int | None = typer.Option(
+        None, "--port", help="Port for http transports. Defaults to api_port + 1."
+    ),
+) -> None:
+    """Serve the Model Context Protocol server.
+
+    Default (stdio) is meant to be spawned by an MCP client rather than run by
+    hand, as the `command` in its config:
+
+        {"command": ["lummenna", "mcp"]}
+
+    The protocol owns stdout, so this command writes nothing there; logs go to
+    stderr. `--check` is the exception: it prints a diagnostic table to stdout
+    and exits without ever starting the protocol loop.
+
+    For several editor sessions at once, serve one shared process instead:
+
+        lummenna mcp --transport streamable-http
+
+    and point every client at the printed URL. Each stdio server loads its own
+    embedder and holds its own connection (~750 MB resident), so N sessions
+    cost N times that against a single shared database. One HTTP server costs
+    it once.
+    """
+    if check:
+        raise typer.Exit(_mcp_preflight())
+
+    from lummenna.integrations.mcp_server import main as run_mcp_server
+
+    run_mcp_server(transport=transport, host=host, port=port)
 
 
 @memory_app.command(name="store")

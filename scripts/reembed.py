@@ -6,8 +6,6 @@ that were created before the model was available.
 
 from __future__ import annotations
 
-import sqlite3
-
 from lummenna.config import LummennaConfig
 from lummenna.data.schema import get_connection
 from lummenna.force.contextual.embed import get_embedder

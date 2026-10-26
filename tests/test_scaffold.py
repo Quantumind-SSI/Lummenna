@@ -16,7 +16,7 @@ def test_imports():
     import lummenna.data.schema
     import lummenna.force.mnemonic.event_buffer
 
-    assert lummenna.__version__ == "1.0.0"
+    assert lummenna.__version__ == "1.0.1rc1"
 
 
 def test_schema_init():

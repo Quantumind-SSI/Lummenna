@@ -34,17 +34,21 @@ curl -s -X POST http://localhost:8848/v1/turn \
 curl -s http://localhost:8848/v1/status | jq .
 ```
 
-## Option 2: Sidecar Container (Advanced)
+## Option 2: Community Sidecar Container
 
-Devin's sandbox base images are not publicly distributed, so you cannot bake Lummenna into them. Instead, run Lummenna as a sidecar container on the same network and point Devin's shell commands at it:
+Devin's sandbox base images are not publicly distributed, so run Lummenna as a
+sidecar on the same network. The Community Dockerfile and its pinned package are
+served directly from lummenna.com; no source repository access is required.
 
 ```bash
-docker run -d --name lummenna \
-  -p 8848:8848 \
-  -v lummenna-store:/root/.lummenna \
-  -e LUMMENNA_API_HOST=0.0.0.0 \
-  python:3.11-slim \
-  sh -c "pip install 'lummenna @ git+https://github.com/QuantmindSSI/lummenna' && lummenna init --device generic && lummenna serve --host 0.0.0.0 --port 8848"
+curl --fail --show-error --silent --remote-name \
+  https://lummenna.com/downloads/lummenna-community-1.0.1rc1.Dockerfile
+
+docker build --pull \
+  --file lummenna-community-1.0.1rc1.Dockerfile \
+  --tag lummenna-community:1.0.1rc1 .
 ```
 
-Then use the Option 1 curl commands with `http://host.docker.internal:8848` (or the container's address on your Docker network).
+Follow the model-provisioning and authenticated run commands at
+`https://lummenna.com/community`. Then use the Option 1 API calls with
+`http://lummenna:8848` from another container on the same Docker network.
