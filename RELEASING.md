@@ -16,7 +16,7 @@ project with these exact values:
 | Field | Value |
 |---|---|
 | PyPI project | `lummenna` |
-| GitHub owner | `QuantmindSSI` |
+| GitHub owner | `Quantumind-SSI` |
 | Repository | `lummenna` |
 | Workflow | `release.yml` |
 | Environment | `pypi` |
@@ -49,8 +49,8 @@ After the reviewed release changes are committed on the clean host, create and
 push a tag that exactly matches the package version:
 
 ```bash
-git tag v1.0.1rc1
-git push origin v1.0.1rc1
+git tag v1.0.1rc2
+git push origin v1.0.1rc2
 ```
 
 The Release workflow builds the sanitized source archive and wheel, checks their
@@ -72,10 +72,10 @@ python -m pip download \
   --dest /tmp/lummenna-verify \
   --no-deps \
   --pre \
-  lummenna==1.0.1rc1
+  lummenna==1.0.1rc2
 
 curl --fail --show-error --silent --remote-name \
-  https://lummenna.com/downloads/lummenna-1.0.1rc1-py3-none-any.whl
+  https://lummenna.com/downloads/lummenna-1.0.1rc2-py3-none-any.whl
 curl --fail --show-error --silent --remote-name \
   https://lummenna.com/downloads/SHA256SUMS
 sha256sum --check --ignore-missing SHA256SUMS

@@ -54,12 +54,12 @@ requested and stored privately outside the public repository.
 
 ### 0. Commit identity policy (enforced)
 
-Every commit and push to `origin/main` **must be made by the `QuantumindSSI`
+Every commit and push to `origin/main` **must be made by the `Quantumind-SSI`
 account**. This is enforced at two layers:
 
 - **Server-side (authoritative):** a GitHub repository ruleset on the default
   branch requires the commit *author* and *committer* email to be the
-  `QuantumindSSI` account's address. Non-conforming pushes are rejected by
+  `Quantumind-SSI` account's address. Non-conforming pushes are rejected by
   GitHub.
 - **Local (fast feedback):** versioned git hooks in `.githooks/` block commits
   and pushes with the wrong identity before they leave your machine.
@@ -71,7 +71,7 @@ Enable the local checks once after cloning:
 ```
 
 This sets `core.hooksPath=.githooks` and your local commit identity. Pushing
-also requires a token with write access on the `QuantumindSSI` account (and the
+also requires a token with write access on the `Quantumind-SSI` account (and the
 `workflow` scope when changing `.github/workflows/`).
 
 ### 1. Reporting Bugs
@@ -106,7 +106,7 @@ Open a GitHub Discussion first for major features. For small enhancements, an is
 #### Development Setup
 
 ```bash
-git clone https://github.com/QuantmindSSI/lummenna.git
+git clone https://github.com/Quantumind-SSI/Lummenna.git
 cd lummenna
 python3 -m venv .venv
 source .venv/bin/activate
@@ -250,7 +250,7 @@ Contributors are recognized as **Luminary** members. Significant contributions r
 
 ## Questions?
 
-- GitHub Discussions: https://github.com/QuantmindSSI/lummenna/discussions
+- GitHub Discussions: https://github.com/Quantumind-SSI/Lummenna/discussions
 - Matrix: #lummenna:matrix.org
 - Security: security@lummenna.ai
 

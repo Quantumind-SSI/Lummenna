@@ -162,10 +162,10 @@ Run on the clean host, on a fresh mirror, never on a working clone:
 ```bash
 # 1. Preserve an evidence clone BEFORE rewriting. Required by the incident
 #    procedure and the only way to answer questions afterwards.
-git clone --mirror https://github.com/QuantmindSSI/lummenna.git lummenna-evidence.git
+git clone --mirror https://github.com/Quantumind-SSI/Lummenna.git lummenna-evidence.git
 
 # 2. Rewrite a separate mirror.
-git clone --mirror https://github.com/QuantmindSSI/lummenna.git lummenna-rewrite.git
+git clone --mirror https://github.com/Quantumind-SSI/Lummenna.git lummenna-rewrite.git
 cd lummenna-rewrite.git
 
 # 3. Strip the directory from every ref. git-filter-repo is the supported tool;
@@ -338,16 +338,44 @@ and Cloudflare as production, the changes required are:
 - Add an equivalent assertion for the waitlist, so the 503 condition fixed in
   section 2 cannot recur undetected.
 
-### 3.8 Fix the CI badge
+### 3.8 Fix the CI badge — RESOLVED 2026-10-25 by repository migration
 
-`README.md:16` builds the workflow badge from `QuantumindSSI/lummenna`. That is
-the personal user account. The repository belongs to the organisation
-`QuantmindSSI` (no `u`), as declared in `pyproject.toml:26`, the Dockerfile OCI
-source label, and `LICENSE`. The badge is broken.
+The badge previously pointed at `QuantmindSSI/lummenna`, then at
+`QuantumindSSI/lummenna` — both dead ends after the 2026-10-25 migration.
+Every repo URL, badge, clone instruction, chart image, CODEOWNERS entry and
+commit-identity hook now targets the `Quantumind-SSI` account and the public
+repository `Quantumind-SSI/Lummenna`:
 
-Both accounts are real, which is why this is easy to get wrong:
+| Login | ID | Type | Status |
+|---|---|---|---|
+| `QuantmindSSI` | 297810579 | Organization | Deleted; repo `QuantmindSSI/lummenna` is gone |
+| `QuantumindSSI` | 277343853 | User | Old commit identity; noreply address now dead |
+| `Quantumind-SSI` | 293671494 | User | Current owner of `Quantumind-SSI/Lummenna` (public) |
 
-| Login | ID | Type |
-|---|---|---|
-| `QuantmindSSI` | 297810579 | Organization, owns the repository |
-| `QuantumindSSI` | 277343853 | User, the account `.githooks/allowed-identity.sh` enforces for commits |
+Legal copyright remains `QuantumindSSI` (SPDX headers, LICENSE, CLA) — that is
+the legal entity, not a GitHub account, and is deliberately unchanged.
+
+### 3.9 Migration record, 2026-10-25
+
+`origin` now points at `https://github.com/Quantumind-SSI/Lummenna.git`
+(public, empty at migration time; default branch `main`). Consequences:
+
+- The commit-identity policy files (`.githooks/allowed-identity.sh`,
+  `scripts/setup-identity.sh`, `CONTRIBUTING.md` §0, CODEOWNERS,
+  `dependabot.yml`) enforce the `Quantumind-SSI` account
+  (id 293671494, noreply `293671494+Quantumind-SSI@users.noreply.github.com`,
+  primary `admin@lummenna.com`). Existing history authored by the old
+  `QuantumindSSI` identity is legacy, not a violation.
+- The server-side ruleset and PyPI trusted-publisher entries from the old
+  repository do not carry over. They must be recreated on
+  `Quantumind-SSI/Lummenna` before the first release workflow can publish:
+  branch-protection ruleset on `main` (require the account's author and
+  committer emails), the `pypi` GitHub environment, and the PyPI pending
+  publisher for owner `Quantumind-SSI`, repository `Lummenna`, workflow
+  `release.yml` (and `publish-community.yml`), environment `pypi`.
+- PyPI already serves `lummenna 1.0.1rc1` (uploaded 2026-09-05, wheel
+  `498ba9f8…`) from the stale, non-reproducible build that predates the
+  tenant-isolation, PII-log-bounding and reproducibility fixes. PyPI files are
+  immutable; the corrected wheel must ship as **1.0.1rc2**.
+- This section's host constraint (§ execution note) remains: do not restore
+  old remotes on the affected machine.

@@ -13,10 +13,10 @@
 <p><strong>Local-first memory and context framework for sovereign AI agents.</strong></p>
 
 <p>
-  <a href="https://github.com/QuantmindSSI/lummenna/actions"><img src="https://img.shields.io/github/actions/workflow/status/QuantmindSSI/lummenna/ci.yml?branch=main&style=flat-square" alt="CI"></a>
-  <a href="https://github.com/QuantmindSSI/lummenna/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%7C%20Commercial-blue.svg?style=flat-square" alt="License"></a>
+  <a href="https://github.com/Quantumind-SSI/Lummenna/actions"><img src="https://img.shields.io/github/actions/workflow/status/Quantumind-SSI/Lummenna/ci.yml?branch=main&style=flat-square" alt="CI"></a>
+  <a href="https://github.com/Quantumind-SSI/Lummenna/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0%20%7C%20Commercial-blue.svg?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python">
-  <a href="https://codecov.io/gh/QuantmindSSI/lummenna"><img src="https://img.shields.io/codecov/c/github/QuantmindSSI/lummenna?style=flat-square" alt="Coverage"></a>
+  <a href="https://codecov.io/gh/Quantumind-SSI/Lummenna"><img src="https://img.shields.io/codecov/c/github/Quantumind-SSI/Lummenna?style=flat-square" alt="Coverage"></a>
 </p>
 
 <p><em>Community 1.0.1rc1 is available from PyPI and directly from lummenna.com. It remains single-node by design, and its public API may change before the stable release.</em></p>
@@ -267,7 +267,7 @@ benchmarks/           11 benchmark suites
 We welcome contributions. The best way to start:
 
 1. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md)** — setup, branch naming, code standards.
-2. **Pick a `good first issue`** from the [issues tracker](https://github.com/QuantmindSSI/lummenna/issues).
+2. **Pick a `good first issue`** from the [issues tracker](https://github.com/Quantumind-SSI/Lummenna/issues).
 3. **Run the tests:** `pytest tests/` (must pass with ≥50% coverage).
 4. **Submit a PR** against `main`.
 
@@ -304,9 +304,9 @@ ruff check lummenna/ tests/             # Lint
 
 ## Community
 
-- [GitHub Discussions](https://github.com/QuantmindSSI/lummenna/discussions)
-- [Issue Tracker](https://github.com/QuantmindSSI/lummenna/issues)
-- [Security Advisories](https://github.com/QuantmindSSI/lummenna/security/advisories)
+- [GitHub Discussions](https://github.com/Quantumind-SSI/Lummenna/discussions)
+- [Issue Tracker](https://github.com/Quantumind-SSI/Lummenna/issues)
+- [Security Advisories](https://github.com/Quantumind-SSI/Lummenna/security/advisories)
 - Matrix: `#lummenna:matrix.org`
 
 ---

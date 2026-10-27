@@ -425,7 +425,10 @@ Set baselines in first 30 days; do not manufacture targets.
 - Always label 1.0.1rc1 as release candidate; public API may change.
 - Commercial license contact: license@lummenna.com (website) / licensing@quantumindssi.com (license doc). DECISION REQUIRED: unify domains (lummenna.com vs quantumindssi.com) before broad outreach.
 - Security contact: security@lummenna.ai and GitHub Security advisories. PGP key in SECURITY.md. Domain lummenna.ai for security — DECISION REQUIRED to align with primary brand domain.
-- Entity names: GitHub org QuantmindSSI; legal copyright QuantumindSSI. DECISION REQUIRED to clarify public branding.
+- Entity names: GitHub account Quantumind-SSI (public repository
+  Quantumind-SSI/Lummenna, since 2026-10-25); legal copyright QuantumindSSI.
+  The old org QuantmindSSI is gone. DECISION REQUIRED: whether to align the
+  legal copyright entity name with the public GitHub account name.
 - Do not publish roadmap features as available. Use “planned, not available” wording.
 - Do not use “production-grade” or “enterprise-ready” without qualifier.
 

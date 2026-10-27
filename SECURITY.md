@@ -13,7 +13,7 @@
 
 Lummenna takes security seriously. If you discover a vulnerability, please report it via the GitHub Security Advisory page or email.
 
-**Report via:** https://github.com/QuantmindSSI/lummenna/security/advisories/new
+**Report via:** https://github.com/Quantumind-SSI/Lummenna/security/advisories/new
 
 **PGP Key:** For sensitive disclosures, encrypt emails to:
 ```

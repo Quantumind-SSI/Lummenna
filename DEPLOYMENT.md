@@ -594,8 +594,8 @@ curl -X POST http://localhost:8848/v1/search \
 ## 10. Support & Community
 
 - **Documentation:** https://lummenna.com/docs
-- **Issues:** https://github.com/QuantmindSSI/lummenna/issues
-- **Discussions:** https://github.com/QuantmindSSI/lummenna/discussions
+- **Issues:** https://github.com/Quantumind-SSI/Lummenna/issues
+- **Discussions:** https://github.com/Quantumind-SSI/Lummenna/discussions
 - **Security:** security@lummenna.ai
 - **Matrix:** #lummenna:matrix.org
 
